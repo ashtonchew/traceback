@@ -16,7 +16,7 @@
 | 10 | Replay Witness against v2 | Trace/result showing failure reward |
 | 11 | Rerun legitimate controls | All control traces/results showing success |
 | 12 | Show ReleaseProof | Passing gate, v1/v2 identities |
-| 13 | Publish/display hardened version | Published id or blocked candidate |
+| 13 | Publish/display hardened version | PublicationAttempt plus published id or blocked candidate |
 
 The report records `passed`, `displayed`, `fallback`, or `blocked-with-proof` as appropriate. It must never call a skipped step passed.
 
@@ -49,7 +49,94 @@ Do not display `TBD` as though it were a result after the run.
 
 `published` requires a stable HUD environment/version reference.  
 `permission-blocked` requires a sealed candidate, passing ReleaseProof, attempted trusted command, and authorization error.  
+`blocked-with-proof` requires a passing ReleaseProof, sealed candidate, and a preflight STOP such as absent Wave 1 publish binding, proof mismatch, unauthorized target, mixed environment/grader identity, missing release artifact, or unavailable trusted context.
 `failed` covers other publication errors and is not a completed publication outcome.
+
+## Machine-readable demo report
+
+The demo writes `artifacts/forkproof/demo/<invocation_id>/report.json`. The report is the merge-gate source of truth; terminal output, screenshots, and live UI are derived views.
+
+Required fields:
+
+- `schema_version`
+- `invocation_id`
+- `command_argv`
+- `commit`
+- `started_at`
+- `finished_at`
+- `status`
+- `steps[]`
+- `metrics[]`
+- `release_proof_ref`
+- `publication_attempt_ref`
+- `content_digest`
+
+Each `steps[]` entry contains:
+
+- `step_number`
+- `label`
+- `status`: `passed`, `displayed`, `fallback`, `blocked-with-proof`, or `failed`
+- `evidence_refs[]`
+- `observed_behavior`
+- `started_at`
+- `finished_at`
+
+Each `metrics[]` entry contains:
+
+- `name`
+- `value`, `not-measured`, or `not-applicable`
+- `reason` when the value is absent
+- `evidence_ref` when the value is present
+
+A validator must reject:
+
+- missing or duplicated step numbers;
+- fewer or more than 13 steps;
+- any non-failed step without a non-screenshot evidence ref;
+- `TBD` as a result value;
+- screenshot-only proof;
+- unlabeled prior-run fallback;
+- live-discovery claims without new branch/run ids;
+- `published` without a stable environment/version ref;
+- mismatched ReleaseProof digest, environment identity, grader identity, or target.
+
+## PublicationAttempt record
+
+Plan 006 records one append-only `PublicationAttempt` for every publish/display invocation, including blocked attempts. Secret values never appear in this record.
+
+Required fields:
+
+- `schema_version`
+- `publication_attempt_id`
+- `release_proof_id`
+- `release_proof_digest`
+- `target_id`
+- `publisher_capability_label`
+- `command_key`
+- `command_argv_ref`
+- `trusted_context_ref`
+- `idempotency_key`
+- `outcome`: `published`, `permission-blocked`, `blocked-with-proof`, or `failed`
+- `published_environment_ref` or `release_candidate_ref`
+- `normalized_error_class` when blocked or failed
+- `evidence_refs[]`
+- `created_at`
+- `content_digest`
+
+The idempotency key is derived from ReleaseProof content digest plus target id. Repeating a publish/display operation with the same key must return the existing published ref or blocked candidate and must not mutate sealed ReleaseProof artifacts.
+
+## Self-validation matrix
+
+| Command | Required proof |
+|---|---|
+| `plan-006-tests` | Contract tests reject proof mismatch, unauthorized target, mixed identities, missing artifacts, duplicate retry, fake live branch ids, unlabeled fallback, screenshot-only proof, and invalid report status. |
+| `integration-publication` | Passing ReleaseProof invokes the Wave 1-bound primitive from trusted context and records exactly one publication outcome. |
+| `publication-idempotency` | Duplicate publish/display invocation returns the same published ref or blocked candidate and proves no duplicate version or proof mutation. |
+| `publication-permission-denied` | Missing or denied publish credential records `permission-blocked` with candidate id, attempted trusted action, target, and normalized authorization error. |
+| `publication-trust-boundary` | Untrusted branch, fixer sandbox, and demo UI contexts cannot read publish credentials or invoke the publish primitive. |
+| `demo` | Noninteractive command emits the validating 13-step `report.json`, links every evidence-bearing step, and records live discovery or honest fallback. |
+
+Any `SKIP` from a Plan 006 mapped command is a failed validation. `run_mapped.py` may use `SKIP` for unavailable future commands during planning, but a skipped command cannot complete Plan 006.
 
 ## Screenshot policy
 
