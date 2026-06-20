@@ -1,9 +1,5 @@
 # Agent governance
 
-## Instruction file policy
-
-`AGENTS.md` is the canonical, vendor-neutral project instruction file. Tool-specific files such as `CLAUDE.md`, `GEMINI.md`, Cursor rules, Zed settings, or OpenCode rules must either point here or contain only tool-specific loading notes. Do not duplicate project governance across instruction files.
-
 ## Source priority
 
 Treat the checked-in repository, this bundle, and the supplied Hack2Fix2Hack handoff as the only project sources of truth. Do not infer an API signature, existing file path, runtime behavior, or command from familiarity with HUD, Modal, harden-v0, or another repository. Read `docs/plans/ASSUMPTIONS.md` before implementation. Anything tagged `verify-against-repo` remains unverified until Wave 1 records evidence.
