@@ -1,8 +1,8 @@
 ---
 name: repo-grounding-and-command-freeze
 description: >
-  Grounds ForkProof against the real repository by binding proposed ownership paths, existing integrations, capabilities, fixtures, and exact validation commands without changing product source. Use when a repository-connected executor is starting the bundle; it writes only docs/plans/repo-map/**, this plan/reference, and evidence/001/**, and must merge before any implementation wave.
-owns: ["docs/plans/001-repo-grounding-and-command-freeze.md", "docs/plans/001-repo-grounding-and-command-freeze.REFERENCE.md", "docs/plans/repo-map/**", "docs/plans/evidence/001/**"]
+  Grounds ForkProof against the real repository by binding proposed ownership paths, existing integrations, capabilities, fixtures, dependency bootstrap, environment configuration, and exact validation commands without changing product source. Use when a repository-connected executor is starting the bundle; it writes only its declared setup, spec, repo-map, plan/reference, validator, and evidence paths, and must merge before any implementation wave.
+owns: [".gitignore", ".env.example", ".python-version", "pyproject.toml", "uv.lock", "requirements/harden-v0.txt", "scripts/bootstrap_external_deps.sh", "docs/plans/scripts/validate_evidence.py", "docs/plans/specs/07-environment.md", "docs/plans/001-repo-grounding-and-command-freeze.md", "docs/plans/001-repo-grounding-and-command-freeze.REFERENCE.md", "docs/plans/repo-map/**", "docs/plans/evidence/001/**"]
 depends_on: []
 wave: 1
 ---
@@ -21,9 +21,9 @@ This plan is the mandatory grounding seam. It inspects the real tree, maps seman
 
 ## Constraints
 
-- Write only declared documentation and evidence paths.
+- Write only declared setup, documentation, validator, and evidence paths.
 - Do not rename or “clean up” repository code.
-- Do not install or upgrade production dependencies.
+- Do not install or upgrade production dependencies beyond the minimal checked-in developer bootstrap needed to verify required integration inputs.
 - Do not mark an interface verified from docs alone; cite code path plus observed command/output.
 - Preserve proposed feature-folder ownership when compatible. Remap only to repository-native feature boundaries, not broad shared-layer globs.
 - Record every unresolved codebase claim in `ASSUMPTIONS.md` or the repo map; do not silently resolve by invention.
@@ -119,12 +119,18 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 
 - 2026-06-20T19:48:50Z — Executed repository-connected grounding pass on commit `99c53d2b3a27a682d67bc61a026cdc2bae16eb4e`. The repository currently contains the planning bundle and handoff only; no product source, package config, HUD/Modal/grader/harden-v0 integration, task fixture, artifact store, or sandbox policy is checked in.
 - 2026-06-20T19:48:50Z — Populated `docs/plans/repo-map/` with a blocked-but-executable state: baseline command is verified, ownership bindings are accepted for future feature folders, and missing required surfaces are recorded explicitly.
+- 2026-06-20T20:11:27Z — Added the Plan 001 dependency bootstrap: uv project metadata, lockfile, Python version pin, harden-v0 requirement mirror, and a pinned external checkout script for harden-v0 plus Terminal Wrench.
+- 2026-06-20T20:11:27Z — Added root `.env` handling with committed `.env.example` and canonical environment-variable documentation in `docs/plans/specs/07-environment.md`.
+- 2026-06-20T20:23:06Z — Addressed audit feedback by narrowing `.env` loading in the bootstrap script to `H2F2H_EXTERNAL_DIR`, removing command-line secret examples from docs, and separating verified source checkouts from completed core prerequisites in `STATUS.json`.
 
 ### Surprises & Discoveries
 
 - 2026-06-20T19:48:50Z — `python docs/plans/scripts/run_all.py` is not a safe baseline in this checkout because the global file-size validator scans the 1359-line source handoff HTML. Plan-scoped file-size validation passes for Plan 001.
 - 2026-06-20T19:48:50Z — No `.github` PR template, package manifest, lockfile, CI workflow, source tree, or test tree is checked in.
 - 2026-06-20T20:10:00Z — Confirmed the harden-v0 upstream URL as `https://github.com/few-sh/harden-v0`. This resolves the source-location ambiguity only; the repository integration remains blocked until a pinned fork/submodule/vendor/dependency or external checkout path is recorded with command evidence.
+- 2026-06-20T20:11:27Z — harden-v0 has no `pyproject.toml` at pinned revision `b9dd28c732e7e5435da4a2ac90ae92ac6ea65007`, so it is treated as a source checkout plus requirements file, not a direct Python package dependency.
+- 2026-06-20T20:11:27Z — Terminal Wrench is large at the pinned revision, so the bootstrap uses sparse checkout for `tasks/mongodb-sales-aggregation-engine`. The MongoDB task source exists under `.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine`.
+- 2026-06-20T20:23:06Z — A fresh sparse Terminal Wrench bootstrap updated only 8 checkout files for the MongoDB task path.
 
 ### Decision Log
 
@@ -132,7 +138,10 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 - 2026-06-20T19:48:50Z — Accepted the proposed `src/forkproof/**`, `tests/forkproof/**`, `fixtures/forkproof/**`, `artifacts/forkproof/**`, and `scripts/forkproof-demo*` paths as future repository-native boundaries because there is no existing implementation layout to remap into.
 - 2026-06-20T19:48:50Z — Kept `STATUS.json` as `blocked` instead of `accepted`; accepting Gate 1 would require fabricating missing source trace, HUD/Modal adapters, grader identity, harden-v0 integration, real MongoDB task, artifact store, and sandbox security evidence.
 - 2026-06-20T20:10:00Z — Decided not to treat the upstream harden-v0 URL as satisfying the `harden_v0` prerequisite. Gate 1 requires an executable repo-local integration contract, not only a known GitHub repository.
+- 2026-06-20T20:11:27Z — Split dependency setup from adapter completion: `harden_v0` and `mongodb_task` are now verified as pinned source inputs, while HUD/Modal adapters, source trace, grader, artifact store, and security controls remain Gate 1 blockers.
+- 2026-06-20T20:11:27Z — Chose committed `.env.example` plus ignored root `.env` for local development. Remote Modal execution must use Modal Secrets or service-user environment variables rather than copying local `.env` into branch sandboxes.
 
 ### Outcomes & Retrospective
 
 - 2026-06-20T19:48:50Z — Plan 001 now gives developers a minimal local bootstrap: Python-only validation, a mapped baseline command, accepted future ownership boundaries, and an explicit list of missing surfaces required before implementation waves may begin. Gate 1 remains blocked until those real surfaces are supplied and verified.
+- 2026-06-20T20:11:27Z — Developers can now run `uv sync --all-extras --all-groups` and `scripts/bootstrap_external_deps.sh` to install HUD/Modal/harden support libraries and fetch pinned harden-v0 plus sparse Terminal Wrench task sources. Gate 1 remains blocked until real adapters and proof surfaces are implemented.

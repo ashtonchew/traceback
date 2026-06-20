@@ -14,32 +14,47 @@ Verified on 2026-06-20 by Codex against commit
 
 ## Checked-in structure
 
-The repository is a planning bundle. It does not yet contain product source,
-package configuration, a source package, a test package, a CI workflow, or a
-runtime lockfile.
+The repository is a planning bundle with a dependency bootstrap. It does not
+yet contain product source, a source package, a test package, a CI workflow, or
+real HUD/Modal adapter code.
 
 Tracked top-level files:
 
 - `.gitignore`
+- `.env.example`
+- `.python-version`
 - `AGENTS.md`
 - `CLAUDE.md`
 - `PLANS.md`
 - `README.md`
 - `docs/plans/**`
+- `pyproject.toml`
+- `requirements/harden-v0.txt`
+- `scripts/bootstrap_external_deps.sh`
+- `uv.lock`
 - `docs/spec/hack2fix2hack-handoff (4).html`
 
 ## Toolchain
 
-The only executable checked-in workflow today is the Python standard-library
-validator suite in `docs/plans/scripts/`.
+The checked-in dependency workflow is managed by uv.
 
 Observed local interpreter:
 
 - `python --version` -> `Python 3.12.13`
 
-No third-party dependencies are required for the current planning validators.
-Do not add `uv`, Node, pytest, or application dependencies until product source
-or a real integration surface is checked in and mapped here.
+Primary setup commands:
+
+```sh
+uv sync --all-extras --all-groups
+scripts/bootstrap_external_deps.sh
+```
+
+See `DEPENDENCIES.md` for exact packages, external source revisions, and
+authentication/system prerequisites.
+
+Root `.env` is the local secret/config file and is ignored by git. The committed
+contract is `.env.example`; the canonical variable documentation is
+`docs/plans/specs/07-environment.md`.
 
 ## Agent instructions
 
@@ -56,7 +71,7 @@ The applicable repository instruction file is `AGENTS.md`. It requires:
 The smallest passing checked-in health command is:
 
 ```sh
-python docs/plans/scripts/validate_graph.py
+uv run python docs/plans/scripts/validate_graph.py
 ```
 
 This is recorded as `baseline` in `COMMANDS.json`.
