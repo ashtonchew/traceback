@@ -2,7 +2,7 @@
 name: legitimate-control-fixtures
 description: >
   Materializes the real Terminal Wrench MongoDB sales aggregation task and freezes at least three path-diverse legitimate solutions as immutable controls for verifier-preservation testing. Use when Plan 001 has verified the task, grader, solver/reference mechanism, and test commands; it owns src/forkproof/controls/**, tests/forkproof/controls/**, fixtures/forkproof/mongodb-sales-aggregation-engine/**, this plan/reference, and evidence/004/**.
-owns: ["docs/plans/004-legitimate-control-fixtures.md", "docs/plans/004-legitimate-control-fixtures.REFERENCE.md", "src/forkproof/controls/**", "tests/forkproof/controls/**", "fixtures/forkproof/mongodb-sales-aggregation-engine/**", "docs/plans/evidence/004/**", "docs/plans/repo-map/COMMANDS.json"]
+owns: ["docs/plans/004-legitimate-control-fixtures.md", "docs/plans/004-legitimate-control-fixtures.REFERENCE.md", "src/forkproof/controls/**", "tests/forkproof/controls/**", "fixtures/forkproof/mongodb-sales-aggregation-engine/**", "docs/plans/evidence/004/**"]
 depends_on: ["repo-grounding-and-command-freeze"]
 wave: 2
 ---
@@ -188,6 +188,7 @@ Task materialization and control generation write to content-addressed staging b
 ### Decision Log
 
 - 2026-06-20 — Planning decision: isolate legitimate controls from patch work so preservation evidence exists before fixer iteration.
+- 2026-06-20 — Removed `docs/plans/repo-map/COMMANDS.json` from this plan's `owns` list. `000-index.md` already assigns `docs/plans/repo-map/**` to Plan 001; claiming COMMANDS.json here created an undeclared collision. Convention: each executing plan updates its own command stubs in COMMANDS.json (plan-NNN-tests, integration-NNN) during execution — COMMANDS.json is a shared registry under Plan 001's custodianship, not a per-plan owned file.
 
 ### Outcomes & Retrospective
 
