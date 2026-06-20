@@ -86,7 +86,7 @@ Plan 002 consumes or produces these Packet A runtime fields:
 
 The Plan 001 Modal probe at `docs/plans/repo-map/probes/modal_snapshot_probe.py`, when present, proves only Filesystem Snapshot round-trip and Directory Snapshot creation. Directory Snapshot mode in Plan 002 still requires a task-specific `snapshot_directory` plus `mount_image`/`unmount_image` restore probe that exercises the restored MongoDB task state, history prefix, grader-visible state, and security policy.
 
-If the live HUD env under `envs/mongodb-sales-aggregation-engine/**` is present, use it as the primary repo-owned substrate for task-state inventory and grader digest provenance. The original Terminal Wrench checkout remains provenance/background. If the workspace seen by the agent and the `/app` seen by the grader are different filesystem views, Plan 002 must STOP unless Plan 001 resolves the env wiring or ownership is explicitly updated to let Plan 002 change that env path.
+If the live HUD env under `envs/mongodb-sales-aggregation-engine/**` is present, use it as the primary repo-owned substrate for task-state inventory and grader digest provenance. The original Terminal Wrench checkout remains provenance/background. If the workspace seen by the agent and the `/app` seen by the grader are different filesystem views, Plan 002 must STOP unless Plan 001 resolves the env wiring or ownership is explicitly updated to let Plan 002 change that env path. If PR #4's latest env is present, the agent and grader share `/app`, but `task_assets` live under `/app/task_assets`; treat that as a grader-integrity hazard rather than proof that `/app` is a safe Directory root. Directory capture of `/app` is valid only when trusted grader assets are isolated from branch-writable state, or when the plan explicitly records the branch-writable verifier as the intended vulnerable surface and pins the exact grader digest/source used for that experiment.
 
 ## MongoDB task snapshot probes
 
@@ -116,7 +116,7 @@ Plan 005 owns verifier hardening for this pytest/plugin attack surface, tracked 
 The evidence manifest should link, not duplicate:
 
 - source trace and selected step,
-- QA result and file diff,
+- trace kind, fork reason, QA result when available, and file diff when available,
 - task/environment id,
 - snapshot provider object,
 - history artifact,
