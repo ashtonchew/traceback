@@ -38,9 +38,10 @@ Each entry uses **claim → decision → why → what would change it**. Tags id
 
 - **Tags:** `verify-against-repo`, `integration`
 - **Claim:** The handoff names snapshot profiles and conceptual operations, but exact installed SDK signatures and account capabilities are unknown.
-- **Decision:** The core design requires a Directory-or-Filesystem path selected from verified capabilities; Memory and VM paths remain conditional research work.
-- **Why:** The core must not depend on private Alpha access.
-- **What would change it:** Installed SDK source, capability probes, or an existing wrapper with stable repository-native operations.
+- **Decision:** The core live path runs on a VM-backed Filesystem snapshot (`vm-filesystem`) as the canonical substrate. harden-v0 runs the agent and grader together inside one Docker container via Harbor, so discovery and fix-proof must share one Harbor/Docker grader surface; Modal's VM Sandbox (real Linux kernel, `/var/lib/docker` included in Filesystem Snapshots) is the only way to host that inside Modal's snapshot fabric. VM access is live on this account (see A-018). A Directory/Filesystem snapshot in a converted HUD-native env is retained only as a discovery-only fallback when VM is unavailable; it cannot produce a harden-v0 ReleaseProof because its grader surface differs from the container grader. Memory Snapshots are out of scope.
+- **Why:** harden-v0 is Harbor-only with no non-Harbor evaluation path, and Plan 005 requires patching the exact grader that issued the reward, so discovery and fix-proof must use one grader identity. Only the VM substrate satisfies that while keeping the task inside Modal's fork/snapshot fabric, and it scales to the full Harbor-format dataset (Terminal-Bench, SWE-bench) without per-task gVisor conversion that risks changing the exploit/grader surface.
+- **What would change it:** Loss of VM access (fall back to discovery-only Directory/Filesystem with no ReleaseProof), or a verified non-Harbor harden-v0 evaluation path.
+- **Update (2026-06-20):** VM Sandbox access confirmed live and harden-v0 verified Harbor-only. `vm-filesystem` is the canonical core substrate (not scale-only); Directory/Filesystem demoted to a discovery-only fallback. Memory Snapshots out of scope.
 
 ## A-006 — Persistence backend
 
@@ -142,9 +143,10 @@ Each entry uses **claim → decision → why → what would change it**. Tags id
 
 - **Tags:** `verify-against-repo`, `research`
 - **Claim:** Memory Snapshots and VM Sandboxes may be unavailable or inappropriate.
-- **Decision:** Plan 007 probes capability and task need before adding code. Unavailable paths are recorded as evidence-backed skips; no unused adapter scaffold is created.
-- **Why:** Core delivery must not depend on Alpha access, and unused scaffolding violates the guardrails.
-- **What would change it:** Granted access plus a real task whose state requires the capability.
+- **Decision:** VM Sandbox access is live, and harden-v0/Harbor runs the agent and grader inside one Docker container, so the VM (`vm-filesystem`) profile is the canonical core substrate owned by Plan 001 (capability probe), Plan 002 (capture/restore), Plan 003 (branch fan-out), and Plan 005 (harden-v0 fix-proof with one shared grader identity across discovery and fix-proof). Directory/Filesystem in a converted env is a discovery-only fallback that cannot yield a ReleaseProof. Memory Snapshots remain conditional Plan 007 research and never the durable Witness format. No unused scaffold is created for any still-unverified path.
+- **Why:** Verified: harden-v0 is Harbor-only — every role routes through Harbor's Job API with no non-Harbor evaluation path. Producing a ReleaseProof therefore requires one Harbor/Docker grader surface for both discovery and fix-proof, which only the VM substrate provides inside Modal, and the same substrate scales to the full Harbor-format dataset (Terminal-Bench, SWE-bench).
+- **What would change it:** Loss of VM access, or a verified non-Harbor harden-v0 evaluation path, would return the core to discovery-only Directory/Filesystem and push VM to research.
+- **Update (2026-06-20):** VM access confirmed live; harden-v0 verified Harbor-only. VM is the canonical substrate (001/002/003/005); Directory/Filesystem is a discovery-only fallback; Memory stays research-only.
 
 ## A-019 — Research and training scope
 
