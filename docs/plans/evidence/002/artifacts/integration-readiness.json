@@ -24,13 +24,14 @@
     "task_id",
     "task_visible_probe"
   ],
+  "live_boundary_forkpoint_id": "fp-84e6680b7b6d3152a46bc415",
+  "live_boundary_forkpoint_ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
+  "live_boundary_snapshot_id": "im-01KVKPHRGEMDVT6E5RE3YNMPF6",
   "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
-  "modal_snapshot_id": "im-01KVKP3PZEF2YK4NF5F2JAXT9G",
+  "modal_snapshot_id": "im-01KVKPG2AW1XG6C985WKK201JP",
   "modal_snapshot_mode": "filesystem",
   "remaining_real_system_gaps": [
-    "HUD trace boundary is exported and redacted, but no live executable sandbox remains attached to that historical boundary",
-    "Trace actions are replayed into a fresh Modal sandbox and snapshot/restore passes, but this is replay evidence rather than the original sandbox handle",
-    "Modal Filesystem Snapshot round-trip covers task-relevant paths, but not the historical source trace sandbox state",
+    "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
     "full branch security controls remain located-owned outside Plan 002",
     "environment image digest remains TBD"
   ],
@@ -39,7 +40,7 @@
   "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
   "trace_event_count": 66,
   "trace_raw_events_sha256": "4a856566523b9fc338bbcdf130735e34267ff42ddc9a9aab5a5a3da26d53fa59",
-  "trace_replay_snapshot_id": "im-01KVKP4BZJVFWW7EQTNJYNSAWS",
+  "trace_replay_snapshot_id": "im-01KVKPH0KQK9Z83QB9D8X11HW8",
   "trace_replay_snapshot_ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
   "trace_replay_tool_count": 29
 }

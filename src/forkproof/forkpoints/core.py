@@ -185,9 +185,9 @@ def capture_forkpoint(
                 source["qa_result_ref"],
                 source["file_evidence_ref"],
             ],
-            "network_policy": "not-proven-real-modal-security",
-            "secret_policy": "no-secrets-recorded",
-            "resource_policy": "not-proven-real-modal-limits",
+            "network_policy": snapshot.get("network_policy", "not-proven-real-modal-security"),
+            "secret_policy": snapshot.get("secret_policy", "no-secrets-recorded"),
+            "resource_policy": snapshot.get("resource_policy", "not-proven-real-modal-limits"),
             "created_at": utc_now(),
         }
         store.put(record)

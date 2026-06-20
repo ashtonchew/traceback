@@ -5,7 +5,7 @@
   "wave": 2,
   "status": "in-progress",
   "started_at": "2026-06-20T22:58:25Z",
-  "updated_at": "2026-06-20T23:34:40Z",
+  "updated_at": "2026-06-20T23:41:28Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -25,7 +25,7 @@
         "integration-forkpoint"
       ],
       "exit_code": 0,
-      "observed": "RUN: integration-forkpoint: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'integration']; 1 passed, 8 deselected in 30.16s. This exports the real HUD trace boundary, runs a real Modal Filesystem Snapshot round-trip over task-relevant paths, and replays 29 accepted trace tool calls into a fresh Modal Mongo sandbox before snapshot/restore; it is replay-derived evidence, not the original historical sandbox handle."
+      "observed": "RUN: integration-forkpoint: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'integration']; 1 passed, 8 deselected in 64.49s. This exports the real HUD trace boundary, runs a real Modal Filesystem Snapshot round-trip over task-relevant paths, replays 29 accepted trace tool calls into a fresh Modal Mongo sandbox, then creates and restores an orchestrated live-boundary ForkPoint from the retained Modal sandbox handle."
     },
     {
       "argv": [
@@ -44,7 +44,7 @@
         "002"
       ],
       "exit_code": 0,
-      "observed": "PASS: 17 text file(s) are at most 500 lines"
+      "observed": "PASS: 19 text file(s) are at most 500 lines"
     },
     {
       "argv": [
@@ -84,12 +84,17 @@
     {
       "name": "Integration readiness",
       "status": "pass",
-      "evidence": "tests/forkproof/forkpoints/test_integration_readiness.py runs forkproof.forkpoints.integration_probe, which exports the accepted HUD trace into a redacted boundary summary, runs a real Modal Filesystem Snapshot round-trip over /app, /data/db, and /var/log/mongodb.log markers, replays accepted trace tool calls into a fresh Modal Mongo sandbox, snapshots/restores that replayed state, and writes docs/plans/evidence/002/artifacts/integration-readiness.json."
+      "evidence": "tests/forkproof/forkpoints/test_integration_readiness.py runs forkproof.forkpoints.integration_probe, which exports the accepted HUD trace into a redacted boundary summary, runs a real Modal Filesystem Snapshot round-trip over /app, /data/db, and /var/log/mongodb.log markers, replays accepted trace tool calls, creates/restores an orchestrated live-boundary ForkPoint through the repo-native contract, and writes docs/plans/evidence/002/artifacts/integration-readiness.json."
     },
     {
       "name": "Real HUD/Modal ForkPoint completion",
       "status": "skipped",
-      "evidence": "Not complete: evidence now has a redacted HUD trace boundary export, a real Modal Filesystem Snapshot round-trip, and a replay-derived snapshot/restore of the accepted trace actions. The accepted historical HUD trace still has no live executable sandbox handle attached for atomic state capture at that exact completed-action boundary."
+      "evidence": "Not complete: evidence now has a redacted HUD trace boundary export, a real Modal Filesystem Snapshot round-trip, replay-derived snapshot/restore evidence, and an orchestrated live-boundary ForkPoint created from a retained Modal sandbox handle. The already-finished historical HUD trace still has no live executable sandbox handle attached, environment image digest remains TBD, and full branch security proof remains outside Plan 002."
+    },
+    {
+      "name": "Orchestrated live-boundary ForkPoint",
+      "status": "pass",
+      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json records fork point fp-84e6680b7b6d3152a46bc415, Modal Filesystem Snapshot im-01KVKPHRGEMDVT6E5RE3YNMPF6, boundary token/history hash, MongoDB fsync quiescence, query hash equality after restore, grader-output hash after restore, and block_network/no-secrets/resource labels."
     }
   ],
   "artifacts": [
@@ -124,13 +129,17 @@
     {
       "ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
       "description": "Replay-derived Modal Filesystem Snapshot from accepted HUD trace tool calls: replay count, skipped failed calls, snapshot id, query.py hash, grader-output hashes, and policy labels."
+    },
+    {
+      "ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
+      "description": "Orchestrated accepted-trace rerun ForkPoint from a retained Modal sandbox handle: ForkPoint id, boundary token, history hash, Filesystem Snapshot id, restore handoff keys, MongoDB quiescence, query hash, grader hash, and policy labels."
     }
   ],
   "screenshots": [],
   "skips": [
     {
       "name": "Atomic source-sandbox boundary capture",
-      "reason": "The accepted HUD trace can now be exported, redacted, and replayed into a fresh Modal sandbox, but there is no provider handle to the live executable sandbox from that historical run, so executable state cannot be captured atomically at the selected original boundary."
+      "reason": "The accepted HUD trace can now be exported, redacted, replayed, and captured from a retained Modal sandbox handle during an orchestrated rerun. There is still no provider handle to the already-finished historical sandbox instance from the original HUD run."
     },
     {
       "name": "Full branch security proof",
@@ -140,8 +149,8 @@
   "blockers": [
     {
       "name": "No live executable state for accepted historical boundary",
-      "evidence": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json proves the HUD trace can be exported and identifies the selected final boundary; docs/plans/evidence/002/artifacts/modal-filesystem-probe.json proves Modal Filesystem Snapshot can preserve task-relevant paths; docs/plans/evidence/002/artifacts/trace-replay-snapshot.json proves accepted trace actions can be replayed into a fresh Modal Mongo sandbox, snapshotted, restored, and graded. These are not the same live sandbox transaction as the accepted historical trace, so Plan 002 cannot honestly claim one atomic ForkPoint from the original source run.",
-      "required_next_step": "Run or re-run the accepted source trace through an orchestrator that pauses at the canonical completed-action boundary while retaining the Modal sandbox handle, then snapshot that live sandbox and verify restore fidelity before finalization. The replay probe can seed that orchestrator, but it cannot replace the original atomic boundary proof."
+      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json proves an orchestrated accepted-trace rerun can pause with a retained Modal sandbox handle, create a repo-native ForkPoint, snapshot the filesystem, restore it, and run task-visible probes. It is still not the already-finished historical sandbox instance from the original HUD run; the environment image digest is still TBD; and full branch security proof remains outside Plan 002.",
+      "required_next_step": "Either accept the orchestrated rerun as the canonical source ForkPoint for later plans and update the Plan 002 completion criteria accordingly, or obtain provider-level access to the original historical sandbox instance. Also bind a real environment image digest and complete the branch security proof before setting the manifest complete."
     }
   ],
   "notes": [

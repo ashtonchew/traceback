@@ -1,0 +1,62 @@
+{
+  "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
+  "fork_point_id": "fp-84e6680b7b6d3152a46bc415",
+  "handoff_keys": [
+    "boundary_token",
+    "branch_tag_inputs",
+    "environment_image_digest",
+    "environment_version",
+    "fork_point_id",
+    "grader_digest",
+    "grader_digest_source",
+    "history_hash",
+    "history_prefix_ref",
+    "isolated_writable_root",
+    "network_policy",
+    "parent_node_id",
+    "resource_policy",
+    "secret_policy",
+    "snapshot_digest",
+    "snapshot_id",
+    "snapshot_mode",
+    "snapshot_restore_ref",
+    "snapshot_retention",
+    "source_evidence_refs",
+    "task_id",
+    "task_visible_probe"
+  ],
+  "history_hash": "431934b50d29acd8fe19e0c8b053bd099b6651524b957301814bf1744151b762",
+  "history_prefix_ref": "inline-sha256:431934b50d29acd8fe19e0c8b053bd099b6651524b957301814bf1744151b762",
+  "hud_step_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
+  "hud_trace_id": "92b654c6-cdde-43cf-9096-3681df6df2e1",
+  "limitations": [
+    "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
+    "It is not the already-finished historical sandbox instance from the original HUD run.",
+    "Raw tool commands and outputs are not committed; history and replay evidence are hash-only."
+  ],
+  "network_policy": "block_network=True",
+  "query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
+  "quiesce": {
+    "mongod_after_quiesce": "running",
+    "mongod_before_quiesce": "running",
+    "strategy": "trusted orchestrator MongoDB fsync plus filesystem sync before snapshot"
+  },
+  "replayed_tool_count": 29,
+  "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
+  "resource_policy": "cpu=0.5,memory=1024,timeout=900",
+  "restored_grade_output_sha256": "f20c9ebf4f8dae3bfd7b1f842bac9ebe4890316f60856a76401dae5a1fed58e4",
+  "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
+  "secret_policy": "secrets=[]",
+  "skipped_tool_count": 2,
+  "snapshot_digest": "e9661bd36e90664e4df2d84c894599d1d5fa919305322b0da5af96ff5eef54ff",
+  "snapshot_id": "im-01KVKPHRGEMDVT6E5RE3YNMPF6",
+  "snapshot_mode": "filesystem",
+  "snapshot_restore_ref": "modal-image://im-01KVKPHRGEMDVT6E5RE3YNMPF6",
+  "snapshot_retention": "modal-default-ttl",
+  "source_evidence_refs": [
+    "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",
+    "unavailable-plan-003-owned",
+    "unavailable-plan-003-owned"
+  ],
+  "status": "live-boundary-rerun-forkpoint-pass"
+}
