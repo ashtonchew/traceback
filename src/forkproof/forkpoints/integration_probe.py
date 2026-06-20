@@ -22,6 +22,8 @@ from .core import (
     load_source_trace,
     restore_forkpoint,
 )
+from .modal_probe import run_modal_filesystem_probe
+from .trace_probe import fetch_trace_summary
 
 ROOT = Path(__file__).resolve().parents[3]
 EVIDENCE = ROOT / "docs" / "plans" / "evidence" / "002" / "artifacts"
@@ -41,6 +43,8 @@ def main() -> int:
     args = parser.parse_args()
 
     source = load_source_trace(ROOT / "docs" / "plans" / "repo-map" / "STATUS.json")
+    trace_summary = fetch_trace_summary()
+    modal_summary = run_modal_filesystem_probe()
     provider = InMemorySnapshotProvider()
     try:
         with tempfile.TemporaryDirectory(prefix="forkpoint-readiness-") as tmp:
@@ -77,11 +81,17 @@ def main() -> int:
         "status": "readiness-pass",
         "scope": "checked-in-trace-evidence plus local provider contract",
         "fork_point_id": record["fork_point_id"],
+        "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
+        "trace_event_count": trace_summary["event_count"],
+        "trace_raw_events_sha256": trace_summary["raw_events_sha256"],
+        "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
+        "modal_snapshot_id": modal_summary["snapshot_id"],
+        "modal_snapshot_mode": modal_summary["snapshot_mode"],
         "handoff_keys": sorted(handoff),
         "remaining_real_system_gaps": [
-            "HUD completed-action boundary export is not checked in",
-            "real Modal task filesystem snapshot capture/restore is not implemented",
-            "security controls/resource limits remain located-owned outside Plan 002",
+            "HUD trace boundary is exported and redacted, but no live executable sandbox remains attached to that historical boundary",
+            "Modal Filesystem Snapshot round-trip covers task-relevant paths, but not the historical source trace sandbox state",
+            "full branch security controls remain located-owned outside Plan 002",
             "environment image digest remains TBD",
         ],
     }

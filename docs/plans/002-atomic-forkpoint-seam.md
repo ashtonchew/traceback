@@ -137,6 +137,7 @@ Capture and restore operations must be idempotent by immutable ForkPoint id. On 
 - [ ] Six behavior cases and integration pass.
 - 2026-06-20T22:58:25Z — STOP: implementation did not start because this plan's start precondition is unmet. `docs/plans/repo-map/COMMANDS.json` still marks `plan-002-tests` and `integration-forkpoint` as `not-applicable`, while this plan requires both to have verified mapped argv before source work. The blocker is mirrored in `docs/plans/evidence/002/MANIFEST.json`.
 - 2026-06-20T23:10:49Z — Governance unblocker in progress: accepted a narrow ownership exception for `docs/plans/repo-map/COMMANDS.json` so Plan 002 may bind only `plan-002-tests` and `integration-forkpoint` to verified mapped argv. This unblocks command routing; it is not evidence of real ForkPoint capture, restore fidelity, snapshot selection, or grader identity.
+- 2026-06-20T23:20:13Z — Integration evidence improved: `integration-forkpoint` now exports the accepted HUD trace into a redacted boundary summary and runs a real Modal Filesystem Snapshot round-trip over `/app`, `/data/db`, and `/var/log/mongodb.log` marker paths. STOP remains because those proofs are not one atomic transaction on the live sandbox from the accepted historical source trace.
 
 ### Surprises & Discoveries
 
@@ -148,6 +149,7 @@ Capture and restore operations must be idempotent by immutable ForkPoint id. On 
 - 2026-06-20 — Latest PR #4 review found Gate 1 accepted with a live reward-1 legitimate-solve trace, fixed `/app` workspace/grader identity, and left reward-hack QA classification to Plan 003. The earlier blocked repo-map note is superseded once that PR merges, but Plan 002 remains non-executable until `plan-002-tests` and `integration-forkpoint` have real argv and this plan proves task-specific capture/restore, Directory mount-restore if selected, and security controls.
 - 2026-06-20T22:58:25Z — In latest `origin/main`, `STATUS.json` is accepted and records a live reward-1 trace, but `COMMANDS.json` still has no verified Plan 002 test or integration argv. Running the mapped commands returned `SKIP` for both required Plan 002 gates, so the repo is not yet in an evidence-based executable state for this plan.
 - 2026-06-20T23:10:49Z — Plan 002 can normalize stable env/job/trace ids, reward, trace kind, task/env name, workspace/grader cwd, and the recorded grader digest from checked-in Plan 001 evidence. It still lacks checked-in HUD action-step export, canonical completed-action boundary, real history prefix, task-specific Modal snapshot fidelity, and security-control proof.
+- 2026-06-20T23:20:13Z — HUD platform trace export is available via `hud trace --json`/PlatformClient and returned 66 redacted events for trace `92b654c6-cdde-43cf-9096-3681df6df2e1`. The final event is `scenario_evaluate`; this is useful boundary evidence but not a retained executable-state handle.
 
 ### Decision Log
 
@@ -155,6 +157,7 @@ Capture and restore operations must be idempotent by immutable ForkPoint id. On 
 - 2026-06-20 — Planning decision: Directory Snapshot is acceptable only for a purpose-built task-owned state root or a hashed deterministic reconstruction that cannot mask branch-relevant mutations; otherwise Plan 002 must use Filesystem Snapshot or STOP.
 - 2026-06-20T22:58:25Z — Execution decision: do not edit `COMMANDS.json` from Plan 002 because it is outside Plan 002 ownership, and do not implement unverified local commands because that would bypass the plan's start gate and create false completion evidence.
 - 2026-06-20T23:10:49Z — Execution decision update: after user approval, include the minimal `COMMANDS.json` unblocker in this PR with explicit scope. The mapped integration command is an integration-readiness contract probe until real HUD/Modal capture evidence exists; no final completion claim follows from the mapping alone.
+- 2026-06-20T23:20:13Z — Execution decision: record the Modal Filesystem Snapshot round-trip as capability/fidelity evidence for task-relevant paths, but keep Plan 002 incomplete because it does not snapshot the accepted historical source sandbox at the exported HUD boundary.
 
 ### Outcomes & Retrospective
 

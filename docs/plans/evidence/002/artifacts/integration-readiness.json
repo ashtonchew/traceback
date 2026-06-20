@@ -24,12 +24,18 @@
     "task_id",
     "task_visible_probe"
   ],
+  "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
+  "modal_snapshot_id": "im-01KVKND1WEJS5XPX1KZ2GN7HHJ",
+  "modal_snapshot_mode": "filesystem",
   "remaining_real_system_gaps": [
-    "HUD completed-action boundary export is not checked in",
-    "real Modal task filesystem snapshot capture/restore is not implemented",
-    "security controls/resource limits remain located-owned outside Plan 002",
+    "HUD trace boundary is exported and redacted, but no live executable sandbox remains attached to that historical boundary",
+    "Modal Filesystem Snapshot round-trip covers task-relevant paths, but not the historical source trace sandbox state",
+    "full branch security controls remain located-owned outside Plan 002",
     "environment image digest remains TBD"
   ],
   "scope": "checked-in-trace-evidence plus local provider contract",
-  "status": "readiness-pass"
+  "status": "readiness-pass",
+  "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
+  "trace_event_count": 66,
+  "trace_raw_events_sha256": "4a856566523b9fc338bbcdf130735e34267ff42ddc9a9aab5a5a3da26d53fa59"
 }
