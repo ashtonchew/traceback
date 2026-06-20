@@ -1,96 +1,132 @@
 {
   "schema_version": 1,
-  "status": "unverified",
+  "status": "accepted",
   "bindings": {
     "artifacts/forkproof/demo/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "artifacts/forkproof/demo/**"
+      ],
+      "evidence": "No existing artifact convention is checked in; this proposed demo artifact folder is collision-free and scoped to Plan 006."
     },
     "artifacts/forkproof/releases/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "artifacts/forkproof/releases/**"
+      ],
+      "evidence": "No existing artifact convention is checked in; this proposed release artifact folder is collision-free and scoped to Plan 005."
     },
     "artifacts/forkproof/research/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "artifacts/forkproof/research/**"
+      ],
+      "evidence": "No existing artifact convention is checked in; this proposed research artifact folder is collision-free and scoped to Plan 007."
     },
     "fixtures/forkproof/mongodb-sales-aggregation-engine/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "fixtures/forkproof/mongodb-sales-aggregation-engine/**"
+      ],
+      "evidence": "No existing fixture convention is checked in; this path is reserved for the real MongoDB task fixture once provenance is available."
     },
     "fixtures/forkproof/witnesses/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "fixtures/forkproof/witnesses/**"
+      ],
+      "evidence": "No existing fixture convention is checked in; this proposed witness fixture folder is collision-free and scoped to Plan 003."
     },
     "scripts/forkproof-demo*": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "scripts/forkproof-demo*"
+      ],
+      "evidence": "No root scripts folder or demo command exists; this exact future script prefix is collision-free and scoped to Plan 006."
     },
     "src/forkproof/controls/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/controls/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future control-slice boundary for Plan 004."
     },
     "src/forkproof/demo/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/demo/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future demo-slice boundary for Plan 006."
     },
     "src/forkproof/forkpoints/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/forkpoints/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future ForkPoint-slice boundary for Plan 002."
     },
     "src/forkproof/releases/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/releases/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future release-slice boundary for Plan 005."
     },
     "src/forkproof/research/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/research/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future research-slice boundary for Plan 007."
     },
     "src/forkproof/witnesses/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/witnesses/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future Witness-slice boundary for Plan 003."
     },
     "tests/forkproof/controls/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/controls/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 004."
     },
     "tests/forkproof/demo/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/demo/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 006."
     },
     "tests/forkproof/forkpoints/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/forkpoints/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 002."
     },
     "tests/forkproof/releases/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/releases/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 005."
     },
     "tests/forkproof/research/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/research/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 007."
     },
     "tests/forkproof/witnesses/**": {
-      "status": "unverified",
-      "actual": null,
-      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/witnesses/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 003."
     }
   }
 }

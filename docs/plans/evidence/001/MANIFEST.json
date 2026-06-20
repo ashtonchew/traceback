@@ -3,18 +3,144 @@
   "plan_id": "001",
   "plan_name": "repo-grounding-and-command-freeze",
   "wave": 1,
-  "status": "not-started",
-  "started_at": null,
-  "updated_at": "2026-06-20T17:37:36.163973+00:00",
+  "status": "blocked",
+  "started_at": "2026-06-20T19:48:50Z",
+  "updated_at": "2026-06-20T19:48:50Z",
   "completed_at": null,
-  "commit": null,
-  "commands": [],
-  "checks": [],
-  "artifacts": [],
+  "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/run_mapped.py",
+        "baseline"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: baseline: cwd=. argv=['python', 'docs/plans/scripts/validate_graph.py']; PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_graph.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_sections.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans have valid frontmatter, sections, packets, and goal blocks"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_ownership.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: proposed ownership is collision-free for 7 plans"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_traceability.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 45 requirements map to all 7 plans"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "001"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 9 text file(s) are at most 500 lines"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_ownership.py",
+        "--repo-bound"
+      ],
+      "exit_code": 1,
+      "observed": "ERROR: repo-map/STATUS.json is not accepted; FAIL: 1 validation error(s)"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Repository orientation",
+      "status": "pass",
+      "evidence": "REPOSITORY.md records root, remote, commit, checked-in structure, Python-only toolchain, and baseline command."
+    },
+    {
+      "name": "Required surfaces",
+      "status": "skipped",
+      "evidence": "INTERFACES.md records all required product/integration surfaces as blocked because they are not checked in."
+    },
+    {
+      "name": "Ownership bindings",
+      "status": "pass",
+      "evidence": "OWNERSHIP-BINDINGS.json accepts proposed future feature paths as collision-free because no existing source layout exists."
+    },
+    {
+      "name": "Mapped baseline",
+      "status": "pass",
+      "evidence": "COMMANDS.json maps baseline to graph validation and run_mapped.py baseline exits 0."
+    },
+    {
+      "name": "Gate 1 completion",
+      "status": "skipped",
+      "evidence": "STATUS.json remains blocked until real source trace, MongoDB task, HUD/Modal adapters, grader, harden-v0, artifact store, and security controls are supplied."
+    }
+  ],
+  "artifacts": [
+    {
+      "ref": "docs/plans/repo-map/STATUS.json",
+      "description": "Blocked repository-grounding status with verified baseline and missing core prerequisites."
+    },
+    {
+      "ref": "docs/plans/repo-map/REPOSITORY.md",
+      "description": "Repository orientation and dependency bootstrap."
+    },
+    {
+      "ref": "docs/plans/repo-map/INTERFACES.md",
+      "description": "Required interface inventory with missing surfaces recorded as blocked."
+    },
+    {
+      "ref": "docs/plans/repo-map/COMMANDS.json",
+      "description": "Mapped baseline and future command placeholders."
+    },
+    {
+      "ref": "docs/plans/repo-map/OWNERSHIP-BINDINGS.json",
+      "description": "Accepted proposed future feature ownership paths."
+    },
+    {
+      "ref": "docs/plans/repo-map/DEVELOPMENT.md",
+      "description": "Minimal developer bootstrap instructions."
+    }
+  ],
   "screenshots": [],
-  "skips": [],
-  "blockers": [],
+  "skips": [
+    "Repo-bound ownership completion is skipped because STATUS.json must remain blocked until required real surfaces are present.",
+    "Global run_all.py is not used as baseline because it scans the 1359-line source handoff HTML; plan-scoped file-size validation is used instead."
+  ],
+  "blockers": [
+    "No product source tree or package configuration is checked in.",
+    "No real HUD source trace/export or MongoDB task fixture is checked in.",
+    "No HUD adapter, Modal adapter, grader/verifier, harden-v0 integration, artifact store, or sandbox security policy is checked in."
+  ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed."
+    "This is an evidence-backed STOP state, not Gate 1 completion."
   ]
 }

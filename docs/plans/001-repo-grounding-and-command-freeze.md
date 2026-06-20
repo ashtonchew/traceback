@@ -110,21 +110,27 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 
 ### Progress
 
-- [ ] Repository orientation and instruction chain recorded.
-- [ ] Required surfaces bound.
+- [x] Repository orientation and instruction chain recorded.
+- [x] Required surfaces inspected and recorded as blocked where absent.
 - [ ] Real fixtures and capabilities verified.
-- [ ] Ownership bindings collision-checked.
-- [ ] Mapped commands and baseline verified.
-- [ ] Evidence manifest complete.
+- [x] Ownership bindings collision-checked.
+- [x] Mapped commands and baseline verified.
+- [x] Evidence manifest updated with blocker state.
+
+- 2026-06-20T19:48:50Z — Executed repository-connected grounding pass on commit `99c53d2b3a27a682d67bc61a026cdc2bae16eb4e`. The repository currently contains the planning bundle and handoff only; no product source, package config, HUD/Modal/grader/harden-v0 integration, task fixture, artifact store, or sandbox policy is checked in.
+- 2026-06-20T19:48:50Z — Populated `docs/plans/repo-map/` with a blocked-but-executable state: baseline command is verified, ownership bindings are accepted for future feature folders, and missing required surfaces are recorded explicitly.
 
 ### Surprises & Discoveries
 
-- None yet. Append observations with concise evidence.
+- 2026-06-20T19:48:50Z — `python docs/plans/scripts/run_all.py` is not a safe baseline in this checkout because the global file-size validator scans the 1359-line source handoff HTML. Plan-scoped file-size validation passes for Plan 001.
+- 2026-06-20T19:48:50Z — No `.github` PR template, package manifest, lockfile, CI workflow, source tree, or test tree is checked in.
 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: require a no-source-change grounding wave because repository paths and APIs were unavailable.
+- 2026-06-20T19:48:50Z — Accepted the proposed `src/forkproof/**`, `tests/forkproof/**`, `fixtures/forkproof/**`, `artifacts/forkproof/**`, and `scripts/forkproof-demo*` paths as future repository-native boundaries because there is no existing implementation layout to remap into.
+- 2026-06-20T19:48:50Z — Kept `STATUS.json` as `blocked` instead of `accepted`; accepting Gate 1 would require fabricating missing source trace, HUD/Modal adapters, grader identity, harden-v0 integration, real MongoDB task, artifact store, and sandbox security evidence.
 
 ### Outcomes & Retrospective
 
-- Pending execution.
+- 2026-06-20T19:48:50Z — Plan 001 now gives developers a minimal local bootstrap: Python-only validation, a mapped baseline command, accepted future ownership boundaries, and an explicit list of missing surfaces required before implementation waves may begin. Gate 1 remains blocked until those real surfaces are supplied and verified.

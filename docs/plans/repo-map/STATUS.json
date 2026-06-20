@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "status": "unverified",
-  "repository_root": null,
-  "repository_identity": null,
-  "commit": null,
-  "verified_at": null,
-  "verified_by": null,
+  "status": "blocked",
+  "repository_root": "/Users/ashtonchew/projects/hack2fix2hack",
+  "repository_identity": "https://github.com/ashtonchew/hack2fix2hack.git",
+  "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
+  "verified_at": "2026-06-20T19:48:50Z",
+  "verified_by": "Codex",
   "core_prerequisites": {
     "source_trace": false,
     "mongodb_task": false,
@@ -15,9 +15,13 @@
     "harden_v0": false,
     "artifact_store": false,
     "security_controls": false,
-    "baseline_command": false
+    "baseline_command": true
   },
   "blockers": [
-    "Repository was not available during planning."
+    "No product source tree or package configuration is checked in yet.",
+    "No real source HUD trace/export is checked in or referenced by repository configuration.",
+    "No MongoDB sales aggregation task fixture or materialization command is present.",
+    "No HUD adapter, Modal adapter, grader/verifier, harden-v0 integration, artifact store, or sandbox security policy is present in this repository.",
+    "Gate 1 cannot be accepted until the missing real surfaces are supplied and verified."
   ]
 }
