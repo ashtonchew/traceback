@@ -24,23 +24,23 @@
     "task_id",
     "task_visible_probe"
   ],
-  "live_boundary_forkpoint_id": "fp-84e6680b7b6d3152a46bc415",
+  "live_boundary_forkpoint_id": "fp-6b26341bed5a981c4385e70c",
   "live_boundary_forkpoint_ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
-  "live_boundary_snapshot_id": "im-01KVKPHRGEMDVT6E5RE3YNMPF6",
+  "live_boundary_snapshot_id": "im-01KVKQ16HWKECC8R731B6ZZ9KT",
   "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
-  "modal_snapshot_id": "im-01KVKPG2AW1XG6C985WKK201JP",
+  "modal_snapshot_id": "im-01KVKPZV9FYFVP2FRXAXVNNHSH",
   "modal_snapshot_mode": "filesystem",
   "remaining_real_system_gaps": [
     "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
     "full branch security controls remain located-owned outside Plan 002",
-    "environment image digest remains TBD"
+    "environment image identity is a deterministic source-tree digest, not a registry manifest digest"
   ],
   "scope": "checked-in-trace-evidence plus local provider contract",
   "status": "readiness-pass",
   "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
   "trace_event_count": 66,
   "trace_raw_events_sha256": "4a856566523b9fc338bbcdf130735e34267ff42ddc9a9aab5a5a3da26d53fa59",
-  "trace_replay_snapshot_id": "im-01KVKPH0KQK9Z83QB9D8X11HW8",
+  "trace_replay_snapshot_id": "im-01KVKQ0E0JARNVPR1DHF5762B4",
   "trace_replay_snapshot_ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
   "trace_replay_tool_count": 29
 }

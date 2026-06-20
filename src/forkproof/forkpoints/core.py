@@ -37,6 +37,30 @@ def utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def environment_source_digest(repo_root: Path) -> str:
+    env_root = repo_root / "envs" / "mongodb-sales-aggregation-engine"
+    paths = [
+        env_root / ".hud" / "config.json",
+        env_root / "Dockerfile.hud",
+        env_root / "env.py",
+        env_root / "pyproject.toml",
+        env_root / "tasks.py",
+        env_root / "uv.lock",
+        env_root / "task_assets" / "init_data.py",
+        env_root / "task_assets" / "instruction.md",
+        env_root / "task_assets" / "orders.json",
+        env_root / "task_assets" / "products.json",
+        env_root / "task_assets" / "test_outputs.py",
+    ]
+    if not env_root.exists():
+        return "source-tree-unavailable:" + digest_json({"repo_root": str(repo_root)})
+    payload = {
+        str(path.relative_to(repo_root)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in paths
+    }
+    return "source-tree-sha256:" + digest_json(payload)
+
+
 def load_source_trace(status_path: Path) -> dict[str, Any]:
     status = json.loads(status_path.read_text(encoding="utf-8"))
     live = status.get("live_trace")
@@ -52,7 +76,10 @@ def load_source_trace(status_path: Path) -> dict[str, Any]:
         "task_id": "implement_sales_analyzer",
         "environment_id": live["env_id"],
         "environment_version": live["env_name"],
-        "environment_image_digest": "TBD-plan-002-real-image-digest",
+        "environment_image_digest": live.get(
+            "environment_image_digest",
+            environment_source_digest(status_path.parents[3]),
+        ),
         "reward": live["reward"],
         "trace_kind": live["kind"],
         "fork_reason": "accepted-live-reward1-source-trace",

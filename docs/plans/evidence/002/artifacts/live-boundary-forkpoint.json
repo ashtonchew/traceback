@@ -1,6 +1,7 @@
 {
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
-  "fork_point_id": "fp-84e6680b7b6d3152a46bc415",
+  "environment_image_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
+  "fork_point_id": "fp-6b26341bed5a981c4385e70c",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -32,7 +33,8 @@
   "limitations": [
     "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
     "It is not the already-finished historical sandbox instance from the original HUD run.",
-    "Raw tool commands and outputs are not committed; history and replay evidence are hash-only."
+    "Raw tool commands and outputs are not committed; history and replay evidence are hash-only.",
+    "Environment image identity is a deterministic source-tree digest, not a registry manifest digest."
   ],
   "network_policy": "block_network=True",
   "query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
@@ -47,11 +49,16 @@
   "restored_grade_output_sha256": "f20c9ebf4f8dae3bfd7b1f842bac9ebe4890316f60856a76401dae5a1fed58e4",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
+  "security_probe": {
+    "docker_sock": "absent",
+    "metadata_network": "blocked",
+    "root_env": "absent"
+  },
   "skipped_tool_count": 2,
-  "snapshot_digest": "e9661bd36e90664e4df2d84c894599d1d5fa919305322b0da5af96ff5eef54ff",
-  "snapshot_id": "im-01KVKPHRGEMDVT6E5RE3YNMPF6",
+  "snapshot_digest": "a7536f3bd377372cd0a9d002c52b85945f2e52b35d4dba870868e835f6d4be15",
+  "snapshot_id": "im-01KVKQ16HWKECC8R731B6ZZ9KT",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKPHRGEMDVT6E5RE3YNMPF6",
+  "snapshot_restore_ref": "modal-image://im-01KVKQ16HWKECC8R731B6ZZ9KT",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",

@@ -101,7 +101,7 @@ def main() -> int:
         "remaining_real_system_gaps": [
             "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
             "full branch security controls remain located-owned outside Plan 002",
-            "environment image digest remains TBD",
+            "environment image identity is a deterministic source-tree digest, not a registry manifest digest",
         ],
     }
     EVIDENCE.mkdir(parents=True, exist_ok=True)

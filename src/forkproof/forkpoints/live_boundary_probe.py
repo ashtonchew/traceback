@@ -67,6 +67,26 @@ def _quiesce(sb: Any) -> dict[str, str]:
     }
 
 
+def _security_probe(sb: Any) -> dict[str, str]:
+    script = (
+        "python3 - <<'PY'\n"
+        "from pathlib import Path\n"
+        "import json, socket\n"
+        "result = {\n"
+        "  'root_env': 'present' if Path('/root/.env').exists() else 'absent',\n"
+        "  'docker_sock': 'present' if Path('/var/run/docker.sock').exists() else 'absent',\n"
+        "}\n"
+        "try:\n"
+        "    socket.create_connection(('169.254.169.254', 80), timeout=2).close()\n"
+        "    result['metadata_network'] = 'reachable'\n"
+        "except OSError:\n"
+        "    result['metadata_network'] = 'blocked'\n"
+        "print(json.dumps(result, sort_keys=True))\n"
+        "PY"
+    )
+    return json.loads(_exec(sb, script, timeout=20).strip())
+
+
 class ModalForkPointProvider:
     def __init__(self, sandbox: Any, app: Any):
         self._sandbox = sandbox
@@ -120,11 +140,13 @@ class ModalForkPointProvider:
             "rc=$?; tail -20 /tmp/grade.log; exit $rc",
             timeout=180,
         )
+        security = _security_probe(self._restored)
         return {
             "task_state_root": "/",
             "query_py_sha256": query_sha,
             "restored_grade_output_sha256": digest_json(grader),
             "restored_sandbox_probe": "query hash and pytest grader executed after restore",
+            "security_probe": security,
         }
 
     def cleanup(self, snapshot_id: str) -> None:
@@ -201,6 +223,7 @@ def run_live_boundary_probe() -> dict[str, Any]:
             "query_py_sha256": query_sha,
             "restored_query_py_sha256": handoff["task_visible_probe"]["query_py_sha256"],
             "restored_grade_output_sha256": handoff["task_visible_probe"]["restored_grade_output_sha256"],
+            "environment_image_digest": handoff["environment_image_digest"],
             "replayed_tool_count": len(replay["replayed"]),
             "skipped_tool_count": len(replay["skipped"]),
             "replayed_tools_sha256": digest_json(replay),
@@ -210,10 +233,12 @@ def run_live_boundary_probe() -> dict[str, Any]:
             "secret_policy": record["secret_policy"],
             "resource_policy": record["resource_policy"],
             "source_evidence_refs": record["source_evidence_refs"],
+            "security_probe": handoff["task_visible_probe"]["security_probe"],
             "limitations": [
                 "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
                 "It is not the already-finished historical sandbox instance from the original HUD run.",
                 "Raw tool commands and outputs are not committed; history and replay evidence are hash-only.",
+                "Environment image identity is a deterministic source-tree digest, not a registry manifest digest.",
             ],
         }
         EVIDENCE.mkdir(parents=True, exist_ok=True)
