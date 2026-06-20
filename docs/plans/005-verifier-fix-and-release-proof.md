@@ -36,24 +36,35 @@ This slice owns the adapter to the existing fixer, ProofSet construction, immuta
 
 ### WP1 — Bind the harden-v0 fixer
 
-Use the Wave 1 mapping to invoke the existing fixer with Witness trajectory/evidence and legitimate context. Capture input ids, configuration, output patch, logs, and provenance.
+Use the Wave 1 mapping to invoke the existing fixer (`python -m harden` at `.external/harden-v0`, pinned revision `b9dd28c`) with Witness trajectory/evidence and legitimate context. Before writing the adapter, read the harden-v0 source at `.external/harden-v0/harden/config.py` and record the exact input schema (`HardenConfig` fields) and output schema (`result.json`) that the adapter will use. Do not guess or invent field names — bind them from the source.
 
-**Pass:** A reviewer can trace the patch to a real fixer run targeting the actual grader.  
-**Fail:** The implementation re-creates fixer logic or edits a separate illustrative verifier.
+Record as evidence: the `HardenConfig` fields passed (especially `max_iterations`, `hacker_retries`, `replay_retries`, `replay_enabled`, `legitimate_threshold`), the fixer run id, output patch, `result.json` path, and provenance. Record `max_iterations` explicitly — the default is 10 but must be stated in evidence so any override is traceable.
+
+**Pass:** A reviewer can trace the patch to a real fixer run targeting the actual grader; the adapter input/output schema is derived from `.external/harden-v0` source, not invented; `max_iterations` is recorded in evidence.  
+**Fail:** The implementation re-creates fixer logic, edits a separate illustrative verifier, or adapter field names are guessed without reading the source.
 
 ### WP2 — Build and seal the ProofSet
 
-Assemble all core Witness ids, at least three sealed control ids, and any optional family variants into a repository-native HUD taskset/suite plus immutable manifest.
+Before assembling the ProofSet, verify each candidate Witness and control is fully sealed:
 
-**Pass:** One command can rerun every member and the set has a content digest.  
-**Fail:** Cases are copied into mutable ad hoc scripts or omitted after failure.
+- For each Witness: read its sealed record from `evidence/003/`, confirm content digest verifies, confirm the replay manifest is present and lists three consecutive passing runs.
+- For each control: read its sealed record from `evidence/004/`, confirm all Phase 1 fields (`task_id`, `grader_digest`, `verifier_harness_digest`, `environment_dockerfile_digest`, `solution_ref`, `content_digest`) and all Phase 2 fields (`environment_version`, `task_checksum`, `baseline_runs[]` with three entries, `frozen_at`) are present and non-placeholder.
+
+STOP if any candidate fails this check; do not silently exclude it. Record the query time and the set of ids that passed so a late-arriving Witness cannot be silently added after closure.
+
+Then assemble all verified core Witness ids, at least three verified control ids, and any optional family variants into a repository-native HUD taskset/suite plus immutable manifest.
+
+**Pass:** Pre-closure verification passes for every member; one command can rerun every member; the set has a content digest.  
+**Fail:** Cases are copied into mutable ad hoc scripts or omitted after failure; or the pre-closure check is skipped on the assumption upstream plans ran correctly.
 
 ### WP3 — Establish v1 baseline
 
-Replay every Witness and control against pinned environment/grader v1 from clean state.
+Read the `environment_version` from Plan 004's sealed control records (Phase 2 field, `evidence/004/`). This is the authoritative v1 environment identifier — do not re-derive it from a fresh HUD call or invent it. Verify it matches across all three sealed controls before proceeding; if the values differ, STOP.
 
-**Pass:** Every Witness reproduces success and every control succeeds; results link traces and digests.  
-**Fail:** Any exact Witness no longer reproduces or a control is unstable; stop and return to owning plan.
+Replay every Witness and control against that pinned `environment_version` and the v1 grader digest from clean state.
+
+**Pass:** Every Witness reproduces success and every control succeeds; results link traces, the pinned `environment_version`, and grader digest.  
+**Fail:** Any exact Witness no longer reproduces or a control is unstable; stop and return to owning plan. `environment_version` is re-derived, inconsistent across controls, or absent.
 
 ### WP4 — Apply patch to the exact v2 grader
 
@@ -64,19 +75,27 @@ Create environment/grader v2 through the repository's real versioning path, veri
 
 ### WP5 — Iterate the binary release gate
 
-Run exact Witness replays first and controls second or in a safe equivalent order. A surviving Witness widens the fix; a broken control relaxes it through the existing loop. Repeat from clean state until pass or bounded failure.
+Run exact Witness replays first and controls second or in a safe equivalent order. A surviving Witness widens the fix; a broken control relaxes it through the existing loop. Repeat from clean state until pass or bounded failure. The iteration limit is the `max_iterations` value recorded in WP1 evidence — do not exceed it, and do not silently reset the counter.
 
-**Pass:** All Witnesses score failure and all controls score success under one immutable v2 digest.  
-**Fail:** Results are averaged, skipped, manually relabelled, or produced under mixed grader versions.
+For each rejected candidate patch, record a rejection entry containing: iteration number, fixer run id, patch artifact reference, per-case ProofSet gate results (case id, v2 reward, pass/fail), surviving Witness ids, broken control ids, and the gate decision. This is the "rejection history" required in the ReleaseProof — it is Plan 005's gate-level record, not harden-v0's internal `result.json` outcomes (which track the fixer's internal hack/fix/solver cycle, not the ProofSet evaluation).
+
+When `max_iterations` is exhausted without the gate passing, record status as `bounded_failure` in the ReleaseProof with the full rejection history. Do not invent a passing result or re-run beyond the stated limit.
+
+Family variants are run and recorded but do not participate in the binary gate. A surviving family variant (one that scores success under v2) does not block release — record it in the ReleaseProof under a separate `family_variant_results` field with its v1 baseline and v2 outcome. Plan 005 cannot promote a family variant to a sealed Witness; promotion is Plan 003's responsibility. If a surviving family variant is significant enough to warrant blocking, the path is: return to Plan 003, promote through its full promotion truth table, then re-enter Plan 005 with the newly sealed Witness in the ProofSet.
+
+**Pass:** All Witnesses score failure and all controls score success under one immutable v2 digest; family variant results are recorded separately regardless of their v2 outcome.  
+**Fail:** Results are averaged, skipped, manually relabelled, or produced under mixed grader versions; or a surviving family variant is silently omitted from the ReleaseProof rather than recorded.
 
 ### WP6 — Emit sealed ReleaseProof
 
-Persist v1/v2 identities, ProofSet, patch/fixer references, per-case results, trace links, killed/preserved counts, gate status, and release-candidate reference.
+Persist v1/v2 identities, ProofSet, patch/fixer references, per-case results, trace links, killed/preserved counts, gate status, and release-candidate reference. The `environment_v1` field in the ReleaseProof must be the `environment_version` read from Plan 004's sealed controls — not a value re-derived at emit time.
 
-**Pass:** The artifact round-trips, content-verifies, and independently explains why release passed.  
-**Fail:** It contains only a summary claim or mutable dashboard state.
+**Pass:** The artifact round-trips, content-verifies, and independently explains why release passed; `environment_v1` matches the value recorded in all three of Plan 004's sealed controls.  
+**Fail:** It contains only a summary claim or mutable dashboard state; or `environment_v1` was re-derived rather than read from Plan 004's evidence.
 
 ## Done-when (self-validation gate)
+
+Before running the mapped commands, update `docs/plans/repo-map/COMMANDS.json` entries `plan-005-tests` and `integration-release` from `not-applicable` to `verified` with real argv. `COMMANDS.json` is a shared registry under Plan 001's custodianship; each plan updates its own rows during execution. Until those entries are verified, `run_mapped.py` will SKIP and exit 0 without running anything — a trivially passing gate that proves nothing.
 
 Run from repository root:
 
@@ -126,6 +145,10 @@ Every evaluation is keyed by ProofSet and grader digest, so reruns are append-on
 ### Decision Log
 
 - 2026-06-20 — Planning decision: combine fixer integration and release proof because the patch is not meaningful outside its preservation/attack gate.
+- 2026-06-20 — WP2 amended to require explicit pre-closure seal verification (Phase 1 + Phase 2 fields, content digest, three-replay confirmation) before closing ProofSet membership. Reason: `validate_evidence.py --require-complete` checks MANIFEST.json shape only, not artifact content — a Plan 004 executor could mark complete with Phase 2 fields absent and the merge gate would still open.
+- 2026-06-20 — Done-when amended to require updating `COMMANDS.json` entries to `verified` before running mapped commands. Reason: `run_mapped.py` exits 0 with SKIP for `not-applicable` commands — both `plan-005-tests` and `integration-release` are currently `not-applicable`, so the gate is inert until the executor sets real argv. `COMMANDS.json` is a shared registry under Plan 001's custodianship (Plan 004's prior frontmatter claim of that file was a collision with Plan 001's `repo-map/**` glob; removed in Plan 004 decision log 2026-06-20).
+- 2026-06-20 — WP5 amended to clarify family variant gate behavior: family variants never block release in Plan 005. Plan 005 cannot promote variants to sealed Witnesses (that is Plan 003's responsibility and path). A surviving variant is recorded in the ReleaseProof under `family_variant_results` and reported separately; it does not widen the fix or halt iteration. The "unless promoted/sealed" clause in the REFERENCE gate matrix is effectively dead within Plan 005's scope.
+- 2026-06-20 — WP1 and WP5 amended to address fixer iteration bounds. Confirmed bounds from `.external/harden-v0/harden/config.py`: `max_iterations=10`, `hacker_retries=3`, `replay_retries=1` (all defaults, all configurable). WP1 now requires recording `max_iterations` and adapter input/output schema from source before writing any adapter code. WP5 now requires per-iteration ProofSet rejection entries (gate-level evidence, distinct from harden-v0's internal `result.json` outcomes) and a `bounded_failure` status when the limit is exhausted.
 
 ### Outcomes & Retrospective
 
