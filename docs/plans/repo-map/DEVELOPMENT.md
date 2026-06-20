@@ -29,6 +29,23 @@ Install the Python environment:
 uv sync --all-extras --all-groups
 ```
 
+Install project-level agent skills from the lockfile, including the HUD docs
+skill:
+
+```sh
+npx skills experimental_install
+```
+
+The current project skill was added with:
+
+```sh
+npx skills add https://docs.hud.ai --yes
+```
+
+Codex uses `.agents/skills/hud-environment-builder` as the canonical repo skill
+folder. Claude Code uses `.claude/skills/hud-environment-builder`, which is a
+symlink to the canonical `.agents` skill folder.
+
 Fetch pinned source-only dependencies:
 
 ```sh

@@ -62,6 +62,24 @@ These are not installed by the repository:
 
 See `docs/plans/specs/07-environment.md` for the canonical variable list.
 
+## Project-level agent skills
+
+The repository installs the HUD docs skill as project-local agent guidance:
+
+```sh
+npx skills add https://docs.hud.ai --yes
+```
+
+This creates `.agents/skills/hud-environment-builder/SKILL.md` and records the
+well-known source plus hash in `skills-lock.json`. `.agents/skills` is the
+canonical repo skill location; `.claude/skills/hud-environment-builder` is a
+symlink to the same folder for Claude Code compatibility. Restore project
+skills from the lockfile with:
+
+```sh
+npx skills experimental_install
+```
+
 ## Still blocked
 
 Dependency setup does not create the missing product integration surfaces. Gate
