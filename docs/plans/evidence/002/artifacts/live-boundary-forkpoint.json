@@ -1,7 +1,7 @@
 {
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
   "environment_image_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
-  "fork_point_id": "fp-6b26341bed5a981c4385e70c",
+  "fork_point_id": "fp-b52dd434be5f43b9db0f0f67",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -55,10 +55,10 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "a7536f3bd377372cd0a9d002c52b85945f2e52b35d4dba870868e835f6d4be15",
-  "snapshot_id": "im-01KVKQ16HWKECC8R731B6ZZ9KT",
+  "snapshot_digest": "a084f342dd43e6398bc72b56008ff4a5eddfa7538b1c34796e6bc4449f9ea4e1",
+  "snapshot_id": "im-01KVKQA05SQGQ3KA4W1D8TK5YN",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKQ16HWKECC8R731B6ZZ9KT",
+  "snapshot_restore_ref": "modal-image://im-01KVKQA05SQGQ3KA4W1D8TK5YN",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",

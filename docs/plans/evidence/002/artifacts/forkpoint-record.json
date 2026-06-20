@@ -1,0 +1,32 @@
+{
+  "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
+  "content_digest": "0b24335a9a40c341413a67af950104709946bc32cccf18f2f5d74ddb41822dad",
+  "created_at": "2026-06-20T23:54:25Z",
+  "environment_image_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
+  "environment_version": "mongodb_sales_aggregation_engine_v1",
+  "fork_point_id": "fp-b52dd434be5f43b9db0f0f67",
+  "fork_reason": "accepted-live-reward1-source-trace",
+  "grader_digest": "ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f",
+  "grader_digest_source": "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",
+  "history_hash": "431934b50d29acd8fe19e0c8b053bd099b6651524b957301814bf1744151b762",
+  "history_prefix_ref": "inline-sha256:431934b50d29acd8fe19e0c8b053bd099b6651524b957301814bf1744151b762",
+  "hud_step_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
+  "hud_trace_id": "92b654c6-cdde-43cf-9096-3681df6df2e1",
+  "network_policy": "block_network=True",
+  "parent_node_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
+  "resource_policy": "cpu=0.5,memory=1024,timeout=900",
+  "schema_version": 1,
+  "secret_policy": "secrets=[]",
+  "snapshot_digest": "a084f342dd43e6398bc72b56008ff4a5eddfa7538b1c34796e6bc4449f9ea4e1",
+  "snapshot_id": "im-01KVKQA05SQGQ3KA4W1D8TK5YN",
+  "snapshot_mode": "filesystem",
+  "snapshot_restore_ref": "modal-image://im-01KVKQA05SQGQ3KA4W1D8TK5YN",
+  "snapshot_retention": "modal-default-ttl",
+  "source_evidence_refs": [
+    "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",
+    "unavailable-plan-003-owned",
+    "unavailable-plan-003-owned"
+  ],
+  "task_id": "implement_sales_analyzer",
+  "trace_kind": "legitimate-solve"
+}

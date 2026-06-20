@@ -200,6 +200,7 @@ def run_live_boundary_probe() -> dict[str, Any]:
                 provider=provider,
                 store=store,
             )
+            record = store.get(record["fork_point_id"])
             handoff = restore_forkpoint(
                 record=record,
                 provider=provider,
@@ -244,6 +245,8 @@ def run_live_boundary_probe() -> dict[str, Any]:
         EVIDENCE.mkdir(parents=True, exist_ok=True)
         path = EVIDENCE / "live-boundary-forkpoint.json"
         path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        record_path = EVIDENCE / "forkpoint-record.json"
+        record_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return result
     finally:
         provider.close()
