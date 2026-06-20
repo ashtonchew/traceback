@@ -108,7 +108,7 @@ Plan 008 is implemented when:
 | 003 | `src/forkproof/witnesses/**`, `tests/forkproof/witnesses/**`, `fixtures/forkproof/witnesses/**`, its plan/reference, `evidence/003/**` |
 | 004 | `src/forkproof/controls/**`, `tests/forkproof/controls/**`, `fixtures/forkproof/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/004/**` |
 | 005 | `src/forkproof/releases/**`, `tests/forkproof/releases/**`, `artifacts/forkproof/releases/**`, its plan/reference, `evidence/005/**` |
-| 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**` |
+| 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**`; narrow exception for `docs/plans/repo-map/COMMANDS.json` entries `plan-006-tests`, `integration-publication`, `publication-idempotency`, `publication-permission-denied`, `publication-trust-boundary`, `publication-redaction`, `demo`, `demo-report-replay`, and `demo-presentation-timeout` only |
 | 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, its plan/reference, `evidence/007/**` |
 | 008 | `src/forkproof/qabench/**`, `tests/forkproof/qabench/**`, `fixtures/forkproof/qabench/**`, `artifacts/forkproof/qabench/**`, `envs/qabench/**`, its plan/reference, `evidence/008/**` |
 
