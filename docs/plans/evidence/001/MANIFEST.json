@@ -5,7 +5,7 @@
   "wave": 1,
   "status": "blocked",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T20:28:14Z",
+  "updated_at": "2026-06-20T21:30:00Z",
   "completed_at": null,
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
@@ -246,6 +246,11 @@
       "name": "Gate 1 completion",
       "status": "skipped",
       "evidence": "STATUS.json remains blocked until real source trace, HUD/Modal adapters, grader/verifier, executable harden-v0 integration contract, artifact store, and security controls are supplied."
+    },
+    {
+      "name": "Evidence-packet contracts",
+      "status": "pass",
+      "evidence": "EVIDENCE-PACKETS.md defines the runtime packet (Ashton) and proof/control packet (Katherine), maps every field to its STATUS.json prerequisite/INTERFACES row/COMMANDS key, lists Akhil-owned HUD-facing inputs, and states the prerequisite-flip procedure. Linked from INTERFACES.md and STATUS.json blockers."
     }
   ],
   "artifacts": [
@@ -276,6 +281,10 @@
     {
       "ref": "docs/plans/repo-map/DEPENDENCIES.md",
       "description": "Dependency versions, external source pins, setup commands, and remaining system prerequisites."
+    },
+    {
+      "ref": "docs/plans/repo-map/EVIDENCE-PACKETS.md",
+      "description": "Wave-1 evidence-packet contracts mapping each blocked prerequisite to an owner, packet field, interface row, command key, and prerequisite-flip procedure."
     },
     {
       "ref": "pyproject.toml",

@@ -27,6 +27,7 @@
     "No product source tree is checked in yet.",
     "No real source HUD trace/export is checked in or referenced by repository configuration.",
     "No HUD adapter, Modal adapter, grader/verifier, repo-native harden-v0 integration contract, artifact store, or sandbox security policy is present in this repository.",
-    "Gate 1 cannot be accepted until the missing real surfaces are supplied and verified."
+    "Gate 1 cannot be accepted until the missing real surfaces are supplied and verified.",
+    "Missing surfaces are tracked as evidence-packet fields in repo-map/EVIDENCE-PACKETS.md: runtime packet (Ashton) unblocks modal_adapter/security_controls; proof-control packet (Katherine) unblocks harden_v0/mongodb_task/grader/artifact_store; Akhil records the HUD-facing source_trace/grader/artifact_store inputs."
   ]
 }

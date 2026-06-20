@@ -46,3 +46,10 @@ Gate 1 can become accepted only after the repository gains real, exercisable
 product surfaces for the blocked rows above. Dependency installation and source
 checkouts are necessary, but not sufficient: each adapter needs a checked-in
 path plus command/output evidence.
+
+These inputs arrive as structured evidence packets. `EVIDENCE-PACKETS.md`
+defines the runtime packet (Ashton) and the proof/control packet (Katherine),
+maps every packet field to the prerequisite, interface row, and command it
+unblocks, and states the integration procedure Akhil follows to flip each
+`STATUS.json` prerequisite. The Akhil-owned HUD-facing inputs are listed there
+too.

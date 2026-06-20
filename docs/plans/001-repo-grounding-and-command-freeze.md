@@ -124,6 +124,7 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 - 2026-06-20T20:23:06Z — Addressed audit feedback by narrowing `.env` loading in the bootstrap script to `H2F2H_EXTERNAL_DIR`, removing command-line secret examples from docs, and separating verified source checkouts from completed core prerequisites in `STATUS.json`.
 - 2026-06-20T20:26:54Z — Added the project-level `hud-environment-builder` skill from `https://docs.hud.ai` with `npx skills add https://docs.hud.ai --yes`; recorded the install in `skills-lock.json`.
 - 2026-06-20T20:28:14Z — Added `.claude/skills/hud-environment-builder` as a symlink to the canonical `.agents/skills/hud-environment-builder` project skill so Claude Code and Codex share one skill body.
+- 2026-06-20T21:30:00Z — Akhil: added `repo-map/EVIDENCE-PACKETS.md` defining the two Wave-1 evidence-packet contracts (runtime/Ashton, proof-control/Katherine) and the Akhil-owned HUD-facing inputs. Each packet field maps to the exact `STATUS.json` prerequisite, `INTERFACES.md` row, and `COMMANDS.json` key it unblocks, with the integration procedure Akhil follows to flip prerequisites. This operationalizes the Core Rule that peers feed evidence into the 001 repo map during Wave 1 without implementing their own plans. Linked from `INTERFACES.md` and `STATUS.json` blockers. `STATUS.json` remains `blocked`; no prerequisite is fabricated.
 
 ### Surprises & Discoveries
 
@@ -144,6 +145,7 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 - 2026-06-20T20:10:00Z — Decided not to treat the upstream harden-v0 URL as satisfying the `harden_v0` prerequisite. Gate 1 requires an executable repo-local integration contract, not only a known GitHub repository.
 - 2026-06-20T20:11:27Z — Split dependency setup from adapter completion: `harden_v0` and `mongodb_task` are now verified as pinned source inputs, while HUD/Modal adapters, source trace, grader, artifact store, and security controls remain Gate 1 blockers.
 - 2026-06-20T20:11:27Z — Chose committed `.env.example` plus ignored root `.env` for local development. Remote Modal execution must use Modal Secrets or service-user environment variables rather than copying local `.env` into branch sandboxes.
+- 2026-06-20T21:30:00Z — Made the remaining Gate-1 path packet-driven instead of ad hoc. `EVIDENCE-PACKETS.md` assigns each blocked prerequisite to a named owner (runtime → Ashton, proof/control → Katherine, HUD-facing → Akhil) and requires path+command+output evidence per field. This lets Ashton and Katherine work in parallel during Wave 1 without touching their own plan paths, and makes prerequisite flips mechanical and auditable when packets land.
 
 ### Outcomes & Retrospective
 
