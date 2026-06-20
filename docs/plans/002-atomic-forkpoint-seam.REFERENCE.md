@@ -70,6 +70,24 @@ Modal Directory Snapshots are Beta and capture a specific directory for later mo
 
 Modal Sandboxes have no inbound access and no access to Modal resources by default, but they can make outbound public network connections unless `block_network` or outbound allowlists are configured. Snapshot evidence must therefore include the actual network setting, not only a generic "sandboxed" claim ([Modal Sandbox networking](https://modal.com/docs/guide/sandbox-networking)).
 
+## Plan 001 evidence-packet compatibility
+
+If Plan 001 PR [#4](https://github.com/ashtonchew/hack2fix2hack/pull/4), or an equivalent evidence-packet model, has merged, treat its `located-and-owned` fields as assignment metadata only. Plan 002 may consume only accepted runtime evidence with a checked-in path, command, and observed output.
+
+Plan 002 consumes or produces these Packet A runtime fields:
+
+| Packet A field | Plan 002 treatment |
+|---|---|
+| Modal account/config location | Consume as provider configuration evidence, then re-check it in the Plan 002 integration command. |
+| Snapshot mode available | Consume Plan 001 capability probe only as account/SDK evidence; do not treat it as task fidelity. |
+| Capture + restore executable state proof | Produce through `integration-forkpoint` with the real MongoDB task state and selected ForkPoint. |
+| Branch isolation / secret scoping / egress / resource limits | Consume only if accepted with real negative/security probes; otherwise STOP before capture. |
+| Command that proves the runtime path | Must be the mapped Plan 002 integration command, not a standalone capability probe. |
+
+The Plan 001 Modal probe at `docs/plans/repo-map/probes/modal_snapshot_probe.py`, when present, proves only Filesystem Snapshot round-trip and Directory Snapshot creation. Directory Snapshot mode in Plan 002 still requires a task-specific `snapshot_directory` plus `mount_image`/`unmount_image` restore probe that exercises the restored MongoDB task state, history prefix, grader-visible state, and security policy.
+
+If the live HUD env under `envs/mongodb-sales-aggregation-engine/**` is present, use it as the primary repo-owned substrate for task-state inventory and grader digest provenance. The original Terminal Wrench checkout remains provenance/background. If the workspace seen by the agent and the `/app` seen by the grader are different filesystem views, Plan 002 must STOP unless Plan 001 resolves the env wiring or ownership is explicitly updated to let Plan 002 change that env path.
+
 ## MongoDB task snapshot probes
 
 For the Terminal Wrench `mongodb-sales-aggregation-engine` task, do not treat `/app` as the snapshot boundary until proven. The handoff describes the task's layered pytest/plugin exploit path, and the checked-in Terminal Wrench source shows the task image seeds MongoDB under `/data/db`, starts `mongod` with `/var/log/mongodb.log`, and the verifier script installs/runs pytest and pymongo before executing the tests; the known attack family targets pytest/plugin surfaces rather than MongoDB business logic ([Hack2Fix2Hack handoff](<html-spec/hack2fix2hack-handoff (4).html>), [Terminal Wrench Dockerfile](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/environment/Dockerfile), [Terminal Wrench verifier script](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/tests/test.sh), [Terminal Wrench tests](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/tests/test_outputs.py), [Terminal Wrench task metadata](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/task.json), [Terminal Wrench hack trajectory v5](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/hack_trajectories/v5/metadata.json), [Terminal Wrench hack trajectory v5_2](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/hack_trajectories/v5_2/metadata.json)).
