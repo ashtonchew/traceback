@@ -44,8 +44,9 @@ python docs/plans/scripts/validate_file_sizes.py --plan 001
 
 Do not add `uv`, `pytest`, Node, Modal, HUD, or harden-v0 dependencies until a
 plan owns the path and a real repository surface requires the dependency. The
-current minimal development contract is a verified repo map, not a guessed app
-stack.
+harden-v0 upstream is known at `https://github.com/few-sh/harden-v0`, but it is
+not yet pinned or linked by this checkout. The current minimal development
+contract is a verified repo map, not a guessed app stack.
 
 ## Before source work
 

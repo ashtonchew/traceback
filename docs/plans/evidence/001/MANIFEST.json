@@ -5,7 +5,7 @@
   "wave": 1,
   "status": "blocked",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T19:48:50Z",
+  "updated_at": "2026-06-20T20:10:00Z",
   "completed_at": null,
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
@@ -86,7 +86,7 @@
     {
       "name": "Required surfaces",
       "status": "skipped",
-      "evidence": "INTERFACES.md records all required product/integration surfaces as blocked because they are not checked in."
+      "evidence": "INTERFACES.md records all required product/integration surfaces as blocked because they are not checked in. The harden-v0 upstream URL is known, but no pinned repo integration is present."
     },
     {
       "name": "Ownership bindings",
@@ -138,7 +138,7 @@
   "blockers": [
     "No product source tree or package configuration is checked in.",
     "No real HUD source trace/export or MongoDB task fixture is checked in.",
-    "No HUD adapter, Modal adapter, grader/verifier, harden-v0 integration, artifact store, or sandbox security policy is checked in."
+    "No HUD adapter, Modal adapter, grader/verifier, pinned harden-v0 integration, artifact store, or sandbox security policy is checked in."
   ],
   "notes": [
     "This is an evidence-backed STOP state, not Gate 1 completion."

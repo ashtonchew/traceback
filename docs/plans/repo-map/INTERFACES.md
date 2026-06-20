@@ -19,8 +19,8 @@ guessed SDK call or invented adapter.
 | Modal Memory/VM capability probe | Not present | Not present | No Alpha capability probe is checked in; do not assume access. | blocked |
 | Agent/model gateway | Not present | Not present | No branch runner, model gateway, seed, or sampling configuration code is checked in. | blocked |
 | Grader/verifier run and digest | Not present | Not present | No grader source, executable verifier, or digest mechanism is checked in. | blocked |
-| harden-v0 fixer | Not present | Not present | No harden-v0 dependency, fork, submodule, or adapter is checked in. | blocked |
-| harden-v0 replay/dedup/legitimate handling | Not present | Not present | No replay gate, exploit dedup, or legitimate-control handling code is checked in. | blocked |
+| harden-v0 fixer | Upstream located at `https://github.com/few-sh/harden-v0`; not linked in this repository | Not present | The public upstream exists, but no pinned fork, submodule, vendored copy, package dependency, or adapter is checked in. | blocked |
+| harden-v0 replay/dedup/legitimate handling | Upstream located at `https://github.com/few-sh/harden-v0`; not linked in this repository | Not present | Upstream README exposes `--replay-enabled`, `.legitimate` handling, shared defense pool, and `dedup_hacks.py`; this repo still has no executable integration or pinned revision. | blocked |
 | Persistence/artifact store | Not present | Not present | No database, object store, manifest store, or artifact retention implementation is checked in. | blocked |
 | MongoDB task materialization | Not present | Not present | No `mongodb-sales-aggregation-engine` fixture, dataset, or fetch command is checked in. | blocked |
 | Legitimate solver/reference hints | Not present | Not present | No solver, reference hints, or golden controls are checked in. | blocked |
@@ -39,6 +39,6 @@ guessed SDK call or invented adapter.
 ## Required next inputs
 
 Gate 1 can become accepted only after the repository gains or links real,
-exercisable surfaces for the blocked rows above. Documentation or public SDK
-knowledge alone is not enough under `AGENTS.md`; each row needs a checked-in
-path plus command/output evidence.
+exercisable surfaces for the blocked rows above. Documentation, public SDK
+knowledge, or an upstream URL alone is not enough under `AGENTS.md`; each row
+needs a checked-in path plus command/output evidence.

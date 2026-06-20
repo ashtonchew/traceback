@@ -124,12 +124,14 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 
 - 2026-06-20T19:48:50Z — `python docs/plans/scripts/run_all.py` is not a safe baseline in this checkout because the global file-size validator scans the 1359-line source handoff HTML. Plan-scoped file-size validation passes for Plan 001.
 - 2026-06-20T19:48:50Z — No `.github` PR template, package manifest, lockfile, CI workflow, source tree, or test tree is checked in.
+- 2026-06-20T20:10:00Z — Confirmed the harden-v0 upstream URL as `https://github.com/few-sh/harden-v0`. This resolves the source-location ambiguity only; the repository integration remains blocked until a pinned fork/submodule/vendor/dependency or external checkout path is recorded with command evidence.
 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: require a no-source-change grounding wave because repository paths and APIs were unavailable.
 - 2026-06-20T19:48:50Z — Accepted the proposed `src/forkproof/**`, `tests/forkproof/**`, `fixtures/forkproof/**`, `artifacts/forkproof/**`, and `scripts/forkproof-demo*` paths as future repository-native boundaries because there is no existing implementation layout to remap into.
 - 2026-06-20T19:48:50Z — Kept `STATUS.json` as `blocked` instead of `accepted`; accepting Gate 1 would require fabricating missing source trace, HUD/Modal adapters, grader identity, harden-v0 integration, real MongoDB task, artifact store, and sandbox security evidence.
+- 2026-06-20T20:10:00Z — Decided not to treat the upstream harden-v0 URL as satisfying the `harden_v0` prerequisite. Gate 1 requires an executable repo-local integration contract, not only a known GitHub repository.
 
 ### Outcomes & Retrospective
 

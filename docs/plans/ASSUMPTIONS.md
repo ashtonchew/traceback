@@ -22,8 +22,8 @@ Each entry uses **claim → decision → why → what would change it**. Tags id
 
 - **Tags:** `verify-against-repo`, `integration`
 - **Claim:** The handoff says to fork harden-v0 directly, but does not expose whether it is vendored, a dependency, a subtree, or an external service.
-- **Decision:** Plan 005 requires a thin repository-native adapter around the existing fixer/replay/dedup behavior and forbids reimplementation.
-- **Why:** Reuse is required; the adapter shape depends on actual code.
+- **Decision:** Treat `https://github.com/few-sh/harden-v0` as the known upstream source. Plan 001 must still record how this repository pins or links it before source work: fork, submodule, vendored copy, package dependency, or external checkout. Plan 005 requires a thin repository-native adapter around the verified fixer/replay/dedup behavior and forbids reimplementation.
+- **Why:** Reuse is required, but the URL alone is not an executable repository integration. The adapter shape and clone location depend on the repo-bound ownership map, dependency policy, and exact grader path.
 - **What would change it:** Existing first-class integration points that eliminate the need for a new adapter.
 
 ## A-004 — HUD APIs and exports
