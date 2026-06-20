@@ -1,0 +1,35 @@
+{
+  "fork_point_id": "fp-ff7b7642f0c72d35d7fb82c7",
+  "handoff_keys": [
+    "boundary_token",
+    "branch_tag_inputs",
+    "environment_image_digest",
+    "environment_version",
+    "fork_point_id",
+    "grader_digest",
+    "grader_digest_source",
+    "history_hash",
+    "history_prefix_ref",
+    "isolated_writable_root",
+    "network_policy",
+    "parent_node_id",
+    "resource_policy",
+    "secret_policy",
+    "snapshot_digest",
+    "snapshot_id",
+    "snapshot_mode",
+    "snapshot_restore_ref",
+    "snapshot_retention",
+    "source_evidence_refs",
+    "task_id",
+    "task_visible_probe"
+  ],
+  "remaining_real_system_gaps": [
+    "HUD completed-action boundary export is not checked in",
+    "real Modal task filesystem snapshot capture/restore is not implemented",
+    "security controls/resource limits remain located-owned outside Plan 002",
+    "environment image digest remains TBD"
+  ],
+  "scope": "checked-in-trace-evidence plus local provider contract",
+  "status": "readiness-pass"
+}

@@ -3,9 +3,9 @@
   "plan_id": "002",
   "plan_name": "atomic-forkpoint-seam",
   "wave": 2,
-  "status": "blocked",
+  "status": "in-progress",
   "started_at": "2026-06-20T22:58:25Z",
-  "updated_at": "2026-06-20T22:58:25Z",
+  "updated_at": "2026-06-20T23:10:49Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-002-tests"
       ],
       "exit_code": 0,
-      "observed": "SKIP: plan-002-tests: Blocked until Gate 1 is accepted and Plan 002 source/test paths are created."
+      "observed": "RUN: plan-002-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'not integration']; 8 passed, 1 deselected in 0.02s"
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-forkpoint"
       ],
       "exit_code": 0,
-      "observed": "SKIP: integration-forkpoint: Blocked because no HUD trace, Modal snapshot adapter, grader digest, or ForkPoint implementation exists yet; SDK dependencies are installed but adapters are absent."
+      "observed": "RUN: integration-forkpoint: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'integration']; 1 passed, 8 deselected in 0.04s. This is an integration-readiness probe, not final real HUD/Modal capture proof."
     },
     {
       "argv": [
@@ -34,7 +34,7 @@
         "lint"
       ],
       "exit_code": 0,
-      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed! Required escalation because uv created .venv and used cache paths outside the workspace sandbox."
+      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed!"
     },
     {
       "argv": [
@@ -44,7 +44,7 @@
         "002"
       ],
       "exit_code": 0,
-      "observed": "PASS: 3 text file(s) are at most 500 lines"
+      "observed": "PASS: 11 text file(s) are at most 500 lines"
     },
     {
       "argv": [
@@ -55,19 +55,41 @@
         "--require-complete"
       ],
       "exit_code": 1,
-      "observed": "FAIL: manifest is intentionally blocked, not complete; validator reported status must be complete, completed_at is required, at least one executed command/check/artifact is required, and complete manifests cannot carry blockers."
+      "observed": "FAIL: 4 validation error(s): status must be complete, completed_at is required, complete manifest cannot have blockers, and commands[4] did not exit 0."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "check",
+        "src/forkproof/forkpoints",
+        "tests/forkproof/forkpoints"
+      ],
+      "exit_code": 0,
+      "observed": "All checks passed!"
     }
   ],
   "checks": [
     {
-      "name": "Plan 002 start precondition",
-      "status": "skipped",
-      "evidence": "docs/plans/002-atomic-forkpoint-seam.md requires plan-002-tests and integration-forkpoint to have verified mapped argv before source implementation. docs/plans/repo-map/COMMANDS.json still marks both commands not-applicable, and that file is owned by Plan 001 rather than Plan 002."
+      "name": "Plan 002 command routing",
+      "status": "pass",
+      "evidence": "docs/plans/repo-map/COMMANDS.json now maps plan-002-tests and integration-forkpoint to verified pytest argv with PYTHONPATH=src under a narrow documented ownership exception."
     },
     {
-      "name": "Atomic ForkPoint implementation",
+      "name": "Six behavior cases",
+      "status": "pass",
+      "evidence": "tests/forkproof/forkpoints/test_core.py covers valid capture, valid restore, boundary mismatch, history mismatch, grader mismatch, unsupported mode, partial cleanup, and finalized-record immutability against the repo-native contract with a deterministic local provider."
+    },
+    {
+      "name": "Integration readiness",
+      "status": "pass",
+      "evidence": "tests/forkproof/forkpoints/test_integration_readiness.py runs forkproof.forkpoints.integration_probe, which binds checked-in Plan 001 trace evidence to the ForkPoint contract and writes docs/plans/evidence/002/artifacts/integration-readiness.json."
+    },
+    {
+      "name": "Real HUD/Modal ForkPoint completion",
       "status": "skipped",
-      "evidence": "No source implementation was attempted because Plan 002 says to STOP rather than approximate missing runtime command mapping, capture/restore fidelity, or real-system access."
+      "evidence": "Not complete: checked-in evidence still lacks the HUD completed-action boundary export, real history prefix, real Modal task filesystem snapshot capture/restore, environment image digest, and security/resource proof."
     }
   ],
   "artifacts": [
@@ -78,27 +100,40 @@
     {
       "ref": "docs/plans/002-atomic-forkpoint-seam.md",
       "description": "Living-doc log updated with the Plan 002 STOP."
+    },
+    {
+      "ref": "src/forkproof/forkpoints/**",
+      "description": "Plan 002 ForkPoint capture/restore contract, immutable JSON store, deterministic local snapshot provider, and integration-readiness command."
+    },
+    {
+      "ref": "tests/forkproof/forkpoints/**",
+      "description": "Behavior tests and integration-readiness test for the Plan 002 ForkPoint feature."
+    },
+    {
+      "ref": "docs/plans/evidence/002/artifacts/integration-readiness.json",
+      "description": "Integration-readiness artifact naming the local-provider ForkPoint id, Plan 003 handoff keys, and remaining real-system gaps."
     }
   ],
   "screenshots": [],
   "skips": [
     {
-      "name": "plan-002-tests mapped command",
-      "reason": "COMMANDS.json status is not-applicable; Plan 002 does not own COMMANDS.json and cannot verify its own test argv without an ownership update or prior repo-map change."
+      "name": "Real HUD action-boundary proof",
+      "reason": "No checked-in trace step export, completed-action event, or exact history prefix is available yet."
     },
     {
-      "name": "integration-forkpoint mapped command",
-      "reason": "COMMANDS.json status is not-applicable; Plan 002 cannot honestly prove real HUD/Modal capture and restore through run_mapped.py."
+      "name": "Real Modal task snapshot proof",
+      "reason": "The integration command currently proves the repo-native contract and checked-in evidence binding, not real MongoDB task Filesystem Snapshot capture/restore."
     }
   ],
   "blockers": [
     {
-      "name": "Verified Plan 002 command mapping missing",
-      "evidence": "docs/plans/repo-map/COMMANDS.json marks plan-002-tests and integration-forkpoint as not-applicable, while docs/plans/002-atomic-forkpoint-seam.md requires those commands to have verified mapped argv before implementation starts.",
-      "required_next_step": "A plan that owns docs/plans/repo-map/COMMANDS.json must bind verified argv for plan-002-tests and integration-forkpoint, or ownership must be explicitly updated before Plan 002 implementation proceeds."
+      "name": "Real capture/restore evidence missing",
+      "evidence": "docs/plans/evidence/002/artifacts/integration-readiness.json records remaining gaps: no HUD completed-action boundary export, no real Modal task filesystem snapshot capture/restore, security/resource controls still located-owned, and environment image digest TBD.",
+      "required_next_step": "Replace the integration-readiness provider with a real HUD/Modal provider that captures the accepted source trace at a canonical completed-action boundary, proves filesystem snapshot restore fidelity for MongoDB task state, and records security/resource evidence."
     }
   ],
   "notes": [
-    "No ForkPoint, snapshot, or restore fidelity claim is made from this manifest."
+    "The previous COMMANDS.json start blocker is unblocked in this PR under a user-approved narrow ownership exception.",
+    "No final real ForkPoint, Modal snapshot, or restore fidelity completion claim is made from this in-progress manifest."
   ]
 }

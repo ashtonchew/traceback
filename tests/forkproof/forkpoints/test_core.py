@@ -1,0 +1,177 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from forkproof.forkpoints.core import (
+    ForkPointError,
+    ForkPointStore,
+    InMemorySnapshotProvider,
+    boundary_token,
+    capture_forkpoint,
+    load_source_trace,
+    restore_forkpoint,
+)
+
+
+def source(tmp_path: Path) -> dict:
+    status = {
+        "live_trace": {
+            "env_id": "env-1",
+            "env_name": "mongodb_sales_aggregation_engine_v1",
+            "job_id": "job-1",
+            "trace_id": "trace-1",
+            "reward": 1.0,
+            "kind": "legitimate-solve",
+            "grader_digest_sha256": "abc123",
+        }
+    }
+    path = tmp_path / "STATUS.json"
+    path.write_text(json.dumps(status), encoding="utf-8")
+    return load_source_trace(path)
+
+
+def history() -> list[dict[str, str]]:
+    return [{"role": "assistant", "content": "action completed"}]
+
+
+def state() -> dict[str, str]:
+    return {"task_state_root": "/state", "probe": "after-action"}
+
+
+def capture(tmp_path: Path):
+    provider = InMemorySnapshotProvider()
+    src = source(tmp_path)
+    record = capture_forkpoint(
+        source=src,
+        hud_step_id="step-1",
+        history_prefix=history(),
+        task_state=state(),
+        snapshot_mode="filesystem",
+        provider=provider,
+        store=ForkPointStore(tmp_path / "store"),
+    )
+    return src, provider, record
+
+
+def test_valid_capture_has_required_fields(tmp_path: Path):
+    _src, _provider, record = capture(tmp_path)
+    for field in (
+        "schema_version",
+        "fork_point_id",
+        "hud_trace_id",
+        "hud_step_id",
+        "task_id",
+        "environment_version",
+        "history_hash",
+        "history_prefix_ref",
+        "snapshot_id",
+        "snapshot_mode",
+        "snapshot_digest",
+        "grader_digest",
+        "fork_reason",
+        "created_at",
+        "source_evidence_refs",
+    ):
+        assert record[field]
+
+
+def test_valid_restore_returns_branch_handoff(tmp_path: Path):
+    src, provider, record = capture(tmp_path)
+    handoff = restore_forkpoint(
+        record=record,
+        provider=provider,
+        expected_boundary_token=boundary_token(src, "step-1"),
+        history_prefix=history(),
+        grader_digest=src["grader_digest"],
+    )
+    assert handoff["fork_point_id"] == record["fork_point_id"]
+    assert handoff["task_visible_probe"]["probe"] == "after-action"
+
+
+def test_boundary_mismatch_rejects_without_handoff(tmp_path: Path):
+    src, provider, record = capture(tmp_path)
+    with pytest.raises(ForkPointError) as err:
+        restore_forkpoint(
+            record=record,
+            provider=provider,
+            expected_boundary_token=boundary_token(src, "wrong-step"),
+            history_prefix=history(),
+            grader_digest=src["grader_digest"],
+        )
+    assert err.value.error_class == "boundary_mismatch"
+
+
+def test_history_mismatch_rejects_without_handoff(tmp_path: Path):
+    src, provider, record = capture(tmp_path)
+    with pytest.raises(ForkPointError) as err:
+        restore_forkpoint(
+            record=record,
+            provider=provider,
+            expected_boundary_token=boundary_token(src, "step-1"),
+            history_prefix=[{"role": "assistant", "content": "different"}],
+            grader_digest=src["grader_digest"],
+        )
+    assert err.value.error_class == "history_mismatch"
+
+
+def test_grader_mismatch_rejects_without_handoff(tmp_path: Path):
+    src, provider, record = capture(tmp_path)
+    with pytest.raises(ForkPointError) as err:
+        restore_forkpoint(
+            record=record,
+            provider=provider,
+            expected_boundary_token=boundary_token(src, "step-1"),
+            history_prefix=history(),
+            grader_digest="different",
+        )
+    assert err.value.error_class == "grader_mismatch"
+
+
+def test_unsupported_snapshot_mode_rejects_on_restore(tmp_path: Path):
+    _src, provider, record = capture(tmp_path)
+    record["snapshot_mode"] = "memory"
+    with pytest.raises(ForkPointError) as err:
+        restore_forkpoint(
+            record=record,
+            provider=provider,
+            expected_boundary_token=record["boundary_token"],
+            history_prefix=history(),
+            grader_digest=record["grader_digest"],
+        )
+    assert err.value.error_class == "state_restore_failed"
+
+
+def test_partial_capture_cleans_provider_snapshot(tmp_path: Path):
+    provider = InMemorySnapshotProvider()
+    src = source(tmp_path)
+    store = ForkPointStore(tmp_path / "store")
+    capture_forkpoint(
+        source=src,
+        hud_step_id="step-1",
+        history_prefix=history(),
+        task_state=state(),
+        snapshot_mode="filesystem",
+        provider=provider,
+        store=store,
+    )
+    with pytest.raises(ForkPointError):
+        capture_forkpoint(
+            source=src,
+            hud_step_id="step-1",
+            history_prefix=history(),
+            task_state=state(),
+            snapshot_mode="filesystem",
+            provider=provider,
+            store=store,
+        )
+    assert provider.cleaned
+
+
+def test_finalized_record_is_immutable(tmp_path: Path):
+    _src, _provider, record = capture(tmp_path)
+    store = ForkPointStore(tmp_path / "store")
+    with pytest.raises(ForkPointError):
+        store.put(record)

@@ -42,20 +42,40 @@
       "reason": "There is no package artifact yet; build is mapped to dependency-lock verification until source packaging exists."
     },
     "plan-002-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/forkpoints",
+        "-q",
+        "-m",
+        "not integration"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until Gate 1 is accepted and Plan 002 source/test paths are created."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Runs Plan 002 behavior tests for the forkpoints feature without the live HUD/Modal integration case."
     },
     "integration-forkpoint": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/forkpoints",
+        "-q",
+        "-m",
+        "integration"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because no HUD trace, Modal snapshot adapter, grader digest, or ForkPoint implementation exists yet; SDK dependencies are installed but adapters are absent."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 1800,
+      "reason": "Runs the Plan 002 ForkPoint integration-readiness scenario that binds checked-in live-trace evidence to the capture/restore contract and records remaining real-system gaps."
     },
     "plan-003-tests": {
       "status": "not-applicable",
