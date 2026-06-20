@@ -45,6 +45,23 @@ Do not accept a source-file diff as proof that deployed/runtime code changed.
 
 Use the existing fixer loop's configured bounds. Record each candidate patch and rejection reason. Do not keep broadening a patch indefinitely; a bounded failure is an honest result. A patch that cannot preserve controls does not ship.
 
+## Clean evaluator context
+
+The MongoDB task's known exploit is layered pytest evaluator subversion: `conftest.py` hooks, installed `pytest11` entry-point plugins that survive `--noconftest`, and `pytest_runtest_protocol`/`TestReport` fabrication fallbacks. A v2 fix is only valid if it addresses the full mechanism set — blocking only one layer while others remain attacker-writable is not a valid fix.
+
+For every v2 evaluation run, record and verify:
+
+- **Import path**: the sys.path / PYTHONPATH in effect; attacker-controlled directories must not appear before trusted pytest and test assets.
+- **Active plugin list**: output of `pytest --co -q` or equivalent showing which plugins loaded; `pytest11` entry-point plugins from attacker-writable site-packages must not appear.
+- **Test asset digest**: content hash of the test files used by the evaluator; must match sealed verifier source.
+- **Interpreter and pytest provenance**: `python --version`, `pytest --version`, and the binary path; must not resolve through a branch-writable shim.
+- **Effective cwd/rootdir**: the directory from which pytest is invoked; must not be a branch-writable location that enables conftest discovery.
+- **Environment variables**: values of `PYTEST_DISABLE_PLUGIN_AUTOLOAD`, `PYTHONPATH`, `PYTHONHOME`, and any other variables that affect pytest plugin loading or import resolution at evaluation time.
+
+Do not prescribe the exact patch mechanism — that is harden-v0's output. Do record whatever mechanism v2 uses and verify it is not defeatable by v1's fallback layers.
+
+STOP if the v2 evaluator context cannot be recorded or the recorded context shows an attacker-writable path in the import path, plugin list, or test asset location.
+
 ## ReleaseProof evidence
 
 At minimum link:
@@ -56,6 +73,7 @@ At minimum link:
 - normalized gate decision,
 - killed/preserved counts,
 - rejection history,
+- clean evaluator context record (import path, active plugin list, test asset digest, interpreter/pytest provenance, cwd/rootdir, relevant environment variables) for every v2 evaluation run,
 - release candidate artifact,
 - timestamps and content digest.
 

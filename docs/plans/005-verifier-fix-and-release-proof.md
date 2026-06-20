@@ -17,7 +17,9 @@ Produce one harden-v0-derived verifier patch and one sealed ReleaseProof for a P
 
 Finding an exploit is not the product outcome. The patch must target the exact grader that issued the original reward, and it may ship only when it removes all known attacks without narrowing legitimate behavior. The handoff explicitly reuses harden-v0's fixer loop rather than inventing another patch generator.
 
-This slice owns the adapter to the existing fixer, ProofSet construction, immutable v1/v2 evaluation, patch iteration, and ReleaseProof artifact. It does not publish the environment or build the operator demo. Read the sibling reference for the gate matrix, patch-loop rules, and artifact evidence.
+The known exploit for the MongoDB sales aggregation task is evaluator subversion, not a wrong aggregation solution. The attack surface is layered pytest infrastructure: a local `conftest.py` hook that can no-op or alter test behavior; an installed `pytest11` plugin path that can survive `--noconftest`; `pytest_runtest_protocol` or similar hooks that fabricate passing `TestReport` objects; and fallback layers so that defeating only one mechanism is not sufficient. A v2 verifier that only blocks `conftest.py` while installed pytest plugins or site-packages mutation remain viable is not a valid fix.
+
+This slice owns the adapter to the existing fixer, ProofSet construction, immutable v1/v2 evaluation, patch iteration, and ReleaseProof artifact. It does not publish the environment or build the operator demo. Read the sibling reference for the gate matrix, patch-loop rules, clean evaluator context, and artifact evidence.
 
 ## Constraints
 
@@ -27,7 +29,8 @@ This slice owns the adapter to the existing fixer, ProofSet construction, immuta
 - Run v1 baselines and v2 results from clean restored states.
 - Gate per case, not by average: one surviving Witness or one broken control rejects release.
 - Keep optional re-seeded exploit-family variants separate from sealed exact Witness replays.
-- STOP when the patch is applied to a detached copy, any case lacks immutable identity, the grader digest changes mid-run, or the real integration cannot be executed.
+- For v2 evaluation, trusted test files, the pytest interpreter, and all verifier assets must be outside branch-writable state or content-checked before execution. Attacker-writable paths must not provide pytest plugins, `conftest.py`, mutated pytest internals, replacement tests, replacement site-packages, or import-path shadowing — except when intentionally replayed as v1 exploit evidence.
+- STOP when the patch is applied to a detached copy, any case lacks immutable identity, the grader digest changes mid-run, the v2 evaluator runs in a branch-writable environment without content checks, or the real integration cannot be executed.
 - Co-locate fixer adapter, ProofSet, gate, and ReleaseProof in the release feature.
 - Split files over 500 lines by adapter/evaluator/artifact responsibilities.
 - Tests assert release decisions and observable rewards, not patch text or internal call counts.
@@ -70,8 +73,10 @@ Replay every Witness and control against that pinned `environment_version` and t
 
 Create environment/grader v2 through the repository's real versioning path, verify the changed digest, and ensure replay loads v2 rather than a detached file.
 
-**Pass:** Runtime evidence shows v2's grader digest and patch provenance.  
-**Fail:** The evaluator still loads v1 or an unrelated copy.
+Record the clean evaluator context for every v2 evaluation run: the pytest import path, the active pytest plugin list (from `--co -q` or `pytest --version` output), the test asset digest, interpreter and pytest version provenance, effective cwd/rootdir, and environment variables relevant to pytest behavior. Candidate controls for restricting the evaluator include `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, explicit cwd/rootdir, `--confcutdir`, `--noconftest`, and `-p no:<plugin>` where needed — the exact mechanism is the harden-v0/real-grader output, not a prescribed fix. Record whatever mechanism v2 uses and verify it is not defeatable by the v1 exploit's fallback layers.
+
+**Pass:** Runtime evidence shows v2's grader digest, patch provenance, and complete clean-evaluator-context record; the recorded context shows attacker-writable paths cannot inject pytest plugins, conftest files, or site-packages mutations.  
+**Fail:** The evaluator still loads v1 or an unrelated copy; or the evaluator context record is absent; or the patch only blocks `conftest.py` while plugin/site-packages paths remain attacker-writable.
 
 ### WP5 — Iterate the binary release gate
 
@@ -114,6 +119,7 @@ Expected evidence:
 - per-case v1 and v2 results,
 - zero surviving Witnesses,
 - all controls preserved,
+- clean evaluator context record: pytest import path, active plugin list, test asset digest, interpreter/pytest version provenance, effective cwd/rootdir, environment variables relevant to pytest at v2 evaluation time,
 - one content-verified ReleaseProof,
 - manifest `docs/plans/evidence/005/MANIFEST.json`.
 
