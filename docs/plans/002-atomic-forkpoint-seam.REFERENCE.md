@@ -18,6 +18,8 @@ Atomic capture conceptually performs:
 
 Any failure before finalization rolls back or marks temporary provider state for cleanup. Modal's Sandbox API exposes explicit `terminate`/`detach` lifecycle calls and `Sandbox.exec` command handles, so cleanup and quiescence checks should be observable through provider operations rather than assumed from local object disposal ([Modal Sandboxes](https://modal.com/docs/guide/sandboxes), [Modal running commands](https://modal.com/docs/guide/sandbox-spawn)).
 
+The selected boundary must be durably observed, not only syntactically present in a trace array. If an environment side effect, observation/tool result, file-tracking flush, or history append for action `t` is pending, the boundary is not ready. If any model call or action `t+1` has begun, the boundary has already passed and must be rejected for this ForkPoint.
+
 ## Fidelity probes
 
 Choose probes that distinguish the selected MongoDB-task state from its predecessor and successor. Examples must be grounded in the real trace and may include:
@@ -31,7 +33,7 @@ Choose probes that distinguish the selected MongoDB-task state from its predeces
 - grader-visible state,
 - history's final action and observation.
 
-Do not use a probe that simply reads the ForkPoint manifest back. Prefer probes that grade the world state the agent left behind, matching HUD's v6 guidance that reliable grading often checks task-visible system state rather than only the final answer ([HUD v6 Tasks & Tasksets](https://docs.hud.ai/v6/core/tasks)).
+File-evidence refs must be step-bound and content-integrity checked; a later filesystem scan cannot substitute for HUD step evidence. Do not use a probe that simply reads the ForkPoint manifest back. Prefer probes that grade the world state the agent left behind, matching HUD's v6 guidance that reliable grading often checks task-visible system state rather than only the final answer ([HUD v6 Tasks & Tasksets](https://docs.hud.ai/v6/core/tasks)).
 
 ## Six required scenarios
 
@@ -78,15 +80,15 @@ Directory Snapshot is valid only after a probe proves one of these:
 - State outside the directory is deterministic from pinned base inputs and is recreated before branch execution.
 - A repository-native layout conversion moved MongoDB `dbpath`, task-local caches, virtualenvs, and branch-writable runtime state under the task state root without changing task behavior.
 
-Use Filesystem Snapshot when any relevant state remains outside that root, including MongoDB data/log mutation, pytest plugin installation, mutated Python package files, hidden caches, or branch-writable verifier assets. STOP rather than approximating if live process state is required and cannot be converted into a durable Directory/Filesystem restore.
+Use Filesystem Snapshot when any relevant state remains outside that root, including MongoDB data/log mutation, pytest plugin installation, mutated Python package files, hidden caches, or branch-writable verifier assets. Directory Snapshot may rely on deterministic reconstruction only when the reconstruction recipe, pinned inputs, command argv, environment, and output hashes are recorded in ForkPoint evidence and re-executed before every restore probe. Reconstruction must not overwrite, ignore, or normalize branch-relevant mutations outside `task_state_root`; if any such mutation can affect reward, QA, replay, pytest/plugin loading, MongoDB state, or history-visible behavior, use Filesystem Snapshot or STOP. STOP rather than approximating if live process state is required and cannot be converted into a durable Directory/Filesystem restore.
 
 Required capability probes:
 
 - Directory probe: write marker files, package/plugin markers, and Mongo-visible state under the candidate `task_state_root`; snapshot, mount into a fresh Sandbox, and verify hashes plus task-visible outputs.
 - Filesystem probe: write markers inside and outside the working directory; snapshot and restore; verify both expected markers and absence of prohibited secrets.
-- MongoDB probe: verify `mongod` readiness, `dbpath`, seeded collections, restart behavior, and grader-visible database state after restore.
-- Pytest/plugin probe: enumerate `conftest.py`, `PYTEST_DISABLE_PLUGIN_AUTOLOAD`, pytest plugin entry points, site-packages mutability, cwd/rootdir, and import path ordering; record contamination risk for Plan 005 without patching it here.
-- Security probe: record network setting, secret mounts, sibling writable roots, resource limits, and trusted-evidence write isolation.
+- MongoDB probe: verify `mongod` readiness, `dbpath`, process id, lock/fsync or clean shutdown strategy, journal state, restart command, seeded collections, restart behavior, and grader-visible database state after restore.
+- Pytest/plugin probe: enumerate all Python startup and plugin injection surfaces visible to the verifier: `conftest.py` discovery roots, `PYTEST_DISABLE_PLUGIN_AUTOLOAD`, `PYTEST_PLUGINS`, pytest11 entry points, `.pth` files, `sitecustomize.py`, `usercustomize.py`, system site-packages, user site-packages, uv-created `.venv`, `UV_PROJECT_ENVIRONMENT`, `PYTHONPATH`, `PYTHONHOME`, cwd/rootdir, and import path ordering. Any mutable verifier import/plugin surface outside `task_state_root` forces Filesystem Snapshot or STOP; record contamination risk for Plan 005 without patching it here.
+- Security probe: record network setting, secret mounts, sibling writable roots, resource limits, and trusted-evidence write isolation. Filesystem Snapshot must be captured from a sandbox without production secrets, local `.env`, host credentials, cloud metadata credentials, provider admin tokens, host Docker socket, or branch-irrelevant home/config directories. Include a harmless negative probe for a disallowed network or metadata destination, mounted secret names or absence markers, and CPU/memory/process/disk/wall-clock limits.
 - Expiry probe: record snapshot TTL, provider object id retention, and expired/unavailable-snapshot error mapping.
 
 Plan 005 owns verifier hardening for this pytest/plugin attack surface, tracked in [GitHub issue #7](https://github.com/ashtonchew/hack2fix2hack/issues/7). Plan 007 owns VM and Memory research capability probes, tracked in [GitHub issue #8](https://github.com/ashtonchew/hack2fix2hack/issues/8). Do not add Plan 005 or Plan 007 implementation scope to Plan 002.
