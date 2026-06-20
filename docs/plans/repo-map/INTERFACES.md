@@ -15,9 +15,9 @@ guessed adapter.
 | HUD Reward Hacking QA | Not present | Not present | No QA retrieval path or stored QA result is checked in. | blocked |
 | HUD taskset/analytics | Not present | Not present | No taskset runner, analytics export, or HUD publication command is checked in. | blocked |
 | HUD environment version publish/compare | Not present | Not present | No environment versioning or publishing boundary is checked in. | blocked |
-| Modal sandbox create | SDK installed through `modal==1.5.0`; adapter not present | Not present | `uv run python -m modal --version` reports 1.5.0, but no sandbox wrapper exists. | blocked |
-| Modal core snapshot capture/restore | SDK installed; adapter not present | Not present | No Directory/Filesystem snapshot wrapper or capability probe is checked in. | blocked |
-| Modal Memory/VM capability probe | Not present | Not present | No Alpha capability probe is checked in; do not assume access. | blocked |
+| Modal sandbox create | `modal==1.5.0`; capability probe at `repo-map/probes/modal_snapshot_probe.py` | `modal.Sandbox.create` | Authenticated `modal app list` succeeds; probe creates/terminates sandboxes on the `rsi-hackathon` profile. Repo-native adapter is Plan 002. | verified (capability) |
+| Modal core snapshot capture/restore | `modal==1.5.0`; `repo-map/probes/modal_snapshot_probe.py` | `Sandbox.snapshot_filesystem`, `Sandbox.snapshot_directory` | Filesystem snapshot full round-trip PASS (state survives restore as base image); Directory Snapshot (Beta) creation PASS (`snapshot_directory`, default ttl 30d). Mount-based directory restore is Plan 002 scope. | verified (capability) |
+| Modal Memory/VM capability probe | Not present | `Sandbox._experimental_snapshot` exists in SDK | Alpha. Not probed; core path does not depend on it (A-018). | blocked |
 | Agent/model gateway | Not present | Not present | No branch runner, model gateway, seed, or sampling configuration code is checked in. | blocked |
 | Grader/verifier run and digest | Not present | Not present | No grader source, executable verifier, or digest mechanism is checked in. | blocked |
 | harden-v0 fixer | `.external/harden-v0` via `scripts/bootstrap_external_deps.sh` | `python -m harden` | Pinned revision `b9dd28c...`; `env PYTHONPATH=.external/harden-v0 uv run python -m harden --help` exits 0. No repository adapter exists yet. | partial |

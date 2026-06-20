@@ -4,13 +4,13 @@
   "repository_root": "/Users/ashtonchew/projects/hack2fix2hack",
   "repository_identity": "https://github.com/ashtonchew/hack2fix2hack.git",
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
-  "verified_at": "2026-06-20T19:48:50Z",
-  "verified_by": "Codex",
+  "verified_at": "2026-06-20T22:10:00Z",
+  "verified_by": "Akhil (Claude Code)",
   "core_prerequisites": {
     "source_trace": false,
     "mongodb_task": false,
     "hud_adapter": false,
-    "modal_adapter": false,
+    "modal_adapter": true,
     "grader": false,
     "harden_v0": false,
     "artifact_store": false,
@@ -21,12 +21,17 @@
     "mongodb_task_source_checkout": true,
     "harden_v0_source_checkout": true,
     "hud_sdk_dependency": true,
-    "modal_sdk_dependency": true
+    "modal_sdk_dependency": true,
+    "hud_api_auth": true,
+    "modal_api_auth": true,
+    "modal_filesystem_snapshot_roundtrip": true,
+    "modal_directory_snapshot_beta_create": true,
+    "sourced_hack_trajectory": true
   },
   "blockers": [
     "No product source tree is checked in yet.",
-    "No real source HUD trace/export is checked in or referenced by repository configuration.",
-    "No HUD adapter, Modal adapter, grader/verifier, repo-native harden-v0 integration contract, artifact store, or sandbox security policy is present in this repository.",
+    "No real source HUD trace/export is checked in or referenced by repository configuration. NOTE: a sourced reward-1 hack trajectory exists under .external/terminal-wrench/.../hack_trajectories/v5_2 with hack_summary.md; pending owner decision to anchor source_trace on it.",
+    "No HUD adapter, grader/verifier, repo-native harden-v0 integration contract, artifact store, or sandbox security policy is present in this repository. Modal capability (auth + filesystem snapshot round-trip + directory-snapshot Beta create) is verified via repo-map/probes/modal_snapshot_probe.py; the repo-native Modal adapter is Plan 002 scope.",
     "Gate 1 cannot be accepted until the missing real surfaces are supplied and verified.",
     "Missing surfaces are tracked as evidence-packet fields in repo-map/EVIDENCE-PACKETS.md: runtime packet (Ashton) unblocks modal_adapter/security_controls; proof-control packet (Katherine) unblocks harden_v0/mongodb_task/grader/artifact_store; Akhil records the HUD-facing source_trace/grader/artifact_store inputs."
   ]

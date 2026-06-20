@@ -5,7 +5,7 @@
   "wave": 1,
   "status": "blocked",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T21:30:00Z",
+  "updated_at": "2026-06-20T22:10:00Z",
   "completed_at": null,
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
@@ -285,6 +285,14 @@
     {
       "ref": "docs/plans/repo-map/EVIDENCE-PACKETS.md",
       "description": "Wave-1 evidence-packet contracts mapping each blocked prerequisite to an owner, packet field, interface row, command key, and prerequisite-flip procedure."
+    },
+    {
+      "ref": "docs/plans/repo-map/probes/modal_snapshot_probe.py",
+      "description": "Modal core-capability probe: filesystem-snapshot round-trip PASS and directory-snapshot (Beta) create PASS on profile rsi-hackathon. Backs modal_adapter=true."
+    },
+    {
+      "ref": ".agents/skills/modal/SKILL.md",
+      "description": "Modal agent skill installed via `modal skills install --no-docs`; .claude/skills/modal symlinks to it. Recorded in skills-lock.json."
     },
     {
       "ref": "pyproject.toml",

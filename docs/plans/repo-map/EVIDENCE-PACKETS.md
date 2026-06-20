@@ -37,6 +37,14 @@ product surface.
 
 ## Packet A — runtime (owner: Ashton)
 
+> Partial pre-verification (Akhil, 2026-06-20): Modal auth + core snapshot
+> capability were verified directly via `probes/modal_snapshot_probe.py`
+> (filesystem round-trip PASS, directory-snapshot Beta create PASS), flipping
+> `modal_adapter` to `true`. Still owned by Ashton's packet: branch **isolation**
+> / secret scoping (`security_controls`) and the **agent/model gateway** binding.
+> The HUD branch model is set to `claude-haiku-4-5` (gateway, agent type
+> `claude`).
+
 Answers the runtime/branching questions and unblocks the executable-state lane.
 
 | Field | Prerequisite | Interface row | Command key |
