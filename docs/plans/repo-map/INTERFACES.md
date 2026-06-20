@@ -27,6 +27,16 @@ guessed adapter.
 | Legitimate solver/reference hints | Not present | Not present | No solver, reference hints, or golden controls are checked in. | blocked |
 | Secrets/network/resource isolation | Not present | Not present | No sandbox policy, egress control, secret scoping, or resource-limit configuration is checked in. | blocked |
 
+## Terminal Wrench task path binding
+
+`TASK-PATH-CONTRACT.md` is the canonical task-path materialization contract for
+Plan 001 and later fixture work. It records that `/app` is task-derived for the
+MongoDB env from the source Dockerfile/prompt/tests, not a HUD default. Future
+Terminal Wrench conversions must parse the pinned source task for Dockerfile
+`WORKDIR`, test command cwd, instruction/test absolute paths, compose overrides,
+and mutable state outside the workspace before choosing the HUD
+`env.workspace(..., guest_path=...)` and grader `cwd`.
+
 ## Verified local operations
 
 | Operation | Repository path | Entry point | Exercise/evidence | Status |

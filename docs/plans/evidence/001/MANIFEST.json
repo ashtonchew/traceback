@@ -5,7 +5,7 @@
   "wave": 1,
   "status": "complete",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T23:55:00Z",
+  "updated_at": "2026-06-20T23:56:00Z",
   "completed_at": "2026-06-20T23:55:00Z",
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
@@ -209,6 +209,96 @@
       ],
       "exit_code": 0,
       "observed": "PASS: repo-bound ownership is collision-free for 7 plans (STATUS.json accepted; all owned non-doc globs bound)"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_graph.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_sections.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans have valid frontmatter, sections, packets, and goal blocks"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_ownership.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: proposed ownership is collision-free for 7 plans"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_traceability.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 45 requirements map to all 7 plans"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_ownership.py",
+        "--repo-bound"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: repo-bound ownership is collision-free for 7 plans (STATUS.json accepted; all owned non-doc globs bound)"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/run_mapped.py",
+        "baseline"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: baseline: cwd=. argv=['uv', 'run', 'python', 'docs/plans/scripts/validate_graph.py']; PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic. Required escalation because uv cache lives outside the workspace sandbox."
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "001"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 30 text file(s) are at most 500 lines"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "001",
+        "--require-complete"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 1 evidence manifest(s) are complete"
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "py_compile",
+        "envs/mongodb-sales-aggregation-engine/env.py"
+      ],
+      "exit_code": 0,
+      "observed": "env.py compiles with the explicit BashGrader cwd contract."
     }
   ],
   "checks": [
@@ -261,6 +351,11 @@
       "name": "Evidence-packet contracts",
       "status": "pass",
       "evidence": "EVIDENCE-PACKETS.md defines the runtime packet (Ashton) and proof/control packet (Katherine), maps every field to its STATUS.json prerequisite/INTERFACES row/COMMANDS key, lists Akhil-owned HUD-facing inputs, and states the prerequisite-flip procedure. Linked from INTERFACES.md and STATUS.json blockers."
+    },
+    {
+      "name": "Terminal Wrench task path contract",
+      "status": "pass",
+      "evidence": "TASK-PATH-CONTRACT.md records the canonical parse order for source-task workdirs, verifier cwd, absolute prompt/test paths, compose overrides, mutable state, STOP conditions, and proof gate. The Mongo env uses /app because the source task requires it and grades with BashGrader cwd=/app plus relative paths."
     }
   ],
   "artifacts": [
@@ -295,6 +390,10 @@
     {
       "ref": "docs/plans/repo-map/EVIDENCE-PACKETS.md",
       "description": "Wave-1 evidence-packet contracts mapping each blocked prerequisite to an owner, packet field, interface row, command key, and prerequisite-flip procedure."
+    },
+    {
+      "ref": "docs/plans/repo-map/TASK-PATH-CONTRACT.md",
+      "description": "Canonical Terminal Wrench task-path materialization contract: derive workspace/grader cwd from source task Dockerfile, tests, instructions, compose metadata, and mutable-state inventory instead of defaulting to /app."
     },
     {
       "ref": "docs/plans/repo-map/probes/modal_snapshot_probe.py",
