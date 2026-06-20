@@ -1,8 +1,8 @@
 ---
 name: demo-observability-and-publication
 description: >
-  Provides the operator command/report that walks the 13-step ForkProof demo, exposes branch and evidence links, reports measured metrics, labels the prior-run fallback honestly, and publishes or displays the passing hardened release through a thin trusted publisher wrapper. Use when Plan 005 has merged a passing ReleaseProof and Wave 1 has bound the publish primitive; it owns src/forkproof/demo/**, tests/forkproof/demo/**, scripts/forkproof-demo*, artifacts/forkproof/demo/**, this plan/reference, and evidence/006/**.
-owns: ["docs/plans/006-demo-observability-and-publication.md", "docs/plans/006-demo-observability-and-publication.REFERENCE.md", "src/forkproof/demo/**", "tests/forkproof/demo/**", "scripts/forkproof-demo*", "artifacts/forkproof/demo/**", "docs/plans/evidence/006/**"]
+  Provides the operator command/report that walks the 13-step ForkProof demo, exposes branch and evidence links, reports measured metrics, labels the prior-run fallback honestly, supports acceptance, presentation, and report-replay modes, and publishes or displays the passing hardened release through a thin trusted publisher wrapper. Use when Plan 005 has merged a passing ReleaseProof and Wave 1 has bound the publish primitive; it owns src/forkproof/demo/**, tests/forkproof/demo/**, scripts/forkproof-demo*, artifacts/forkproof/demo/**, this plan/reference, and evidence/006/**.
+owns: ["docs/plans/006-demo-observability-and-publication.md", "docs/plans/006-demo-observability-and-publication.REFERENCE.md", "src/forkproof/demo/**", "tests/forkproof/demo/**", "scripts/forkproof-demo*", "artifacts/forkproof/demo/**", "docs/plans/evidence/006/**", "docs/plans/repo-map/COMMANDS.json entries plan-006-tests, integration-publication, publication-idempotency, publication-permission-denied, publication-trust-boundary, publication-redaction, demo, demo-report-replay, demo-presentation-timeout only"]
 depends_on: ["verifier-fix-and-release-proof"]
 wave: 5
 ---
@@ -11,22 +11,27 @@ wave: 5
 
 ## Goal
 
-Provide one repository-native demo invocation that produces a 13-of-13 step evidence report, starts genuine stochastic branches, can restore a clearly labelled prior-run Witness fallback, shows the passing ReleaseProof, and returns either a published environment id or an explicit permission-blocked release-candidate id. Done is binary when all 13 report entries have non-screenshot evidence, the machine-readable report validates, all required mapped commands run without `SKIP`, and one honest release outcome is recorded.
+Provide one repository-native Acceptance Demo Run that produces a 13-of-13 step evidence report, starts genuine stochastic branches with the full accepted branch budget, can restore a clearly labelled prior-run Witness fallback, shows the passing ReleaseProof, and returns either a published environment id or an explicit permission-blocked release-candidate id. Also provide a Presentation Demo Run for judge timing and a Demo Report Replay for audit review. Done is binary when all 13 report entries have non-screenshot evidence, the machine-readable report validates, all required mapped commands run without `SKIP`, replay mode is labelled honestly, and one honest release outcome is recorded.
 
 ## Context / Why
 
 The judge must see a suspicious trace become a defended environment version. The demo should orchestrate existing HUD and Modal surfaces rather than hide them behind a speculative custom frontend. Every displayed claim must link to durable evidence, and live stochastic discovery must not be faked. Current agent-evaluation guidance treats traces and structured eval runs as the durable basis for debugging and repeatability, while HUD frames environments as controlled worlds that can reset and reproduce task state exactly ([OpenAI agent evals](https://developers.openai.com/api/docs/guides/agent-evals), [HUD introduction](https://docs.hud.ai/v6/start)).
 
-This slice owns operator orchestration, concise status/links, metrics aggregation, claim wording, fallback flow, the thin trusted publisher wrapper, and trusted publication/display report integration. It consumes immutable artifacts from earlier plans and does not modify their contents. Plan 005 owns ReleaseProof creation and release-candidate sealing; Wave 1 owns discovery and binding of the real HUD/environment publish primitive. Plan 006 owns the final verified invocation and honest presentation of that bound primitive. Read the sibling reference for the 13-step evidence matrix, fallback script, machine-readable report, and publication attempt schema.
+This slice owns operator orchestration, concise status/links, metrics aggregation, claim wording, fallback flow, demo mode selection, report replay, the thin trusted publisher wrapper, and trusted publication/display report integration. It consumes immutable artifacts from earlier plans and does not modify their contents. Plan 005 owns ReleaseProof creation and release-candidate sealing; Wave 1 owns discovery and binding of the real HUD/environment publish primitive. Plan 006 owns the final verified invocation and honest presentation of that bound primitive. Read the sibling reference for the 13-step evidence matrix, fallback script, demo modes, machine-readable report, report replay, and publication attempt schema.
 
 ## Constraints
 
 - Use the repository's existing CLI/UI/report conventions. Add no standalone frontend unless Wave 1 found a directly reusable surface.
-- Start a genuine stochastic search during the demo; do not guarantee it will discover a new exploit in presentation time.
-- When switching to a prior-run Witness, show original run identity and label it before replay.
+- Acceptance Demo Run starts a genuine stochastic search with the full accepted branch budget, defaulting to the Plan 003 core count of 12 BranchRuns unless the accepted repo map records a different budget. Do not require live discovery to find a fresh exploit.
+- Presentation Demo Run may use a shorter presentation budget, but it must still launch real branches through the same scheduler and must not present a prerecorded branch list as live discovery.
+- Presentation Demo Run must switch immediately to Prior-Run Witness Replay when its fixed budget expires. Do not wait for "one more branch" during judging.
+- When switching to Prior-Run Witness Replay, show original run identity and label it before replay. The replay must restore and execute the sealed Witness live; playing back a video or static transcript is not proof.
+- Demo Report Replay may re-render and revalidate a prior `report.json` for audit or judge review, but it is review-only unless the referenced report was produced by a validating Acceptance Demo Run.
+- Keep a sealed demo readiness pack for presentation resilience: source trace, ForkPoint, prior-run Witness, replay entrypoint, ProofSet, ReleaseProof, metrics report, PublicationAttempt or expected block, and local presentation backups. The pack is not proof unless its ids/digests validate against the underlying artifacts.
 - Display reward and QA classification separately.
 - Link trace ids, file diffs, ForkPoint, branch ids, Witness, ProofSet, patch, controls, ReleaseProof, and environment/release candidate.
 - Derive metrics from stored events; use `not-measured`, never estimates.
+- Do not report discovery probability, success rate, exploit coverage, reliability, avoided setup, or cost savings from one demo run. Statistical claims require repeated trials, denominator, independence statement, and variance or uncertainty.
 - Completion proof is noninteractive and machine-readable. The judge-visible demo may add UI and screenshots, but `report.json`, evidence refs, command results, and the manifest are the merge-gate source of truth.
 - Publication runs in a trusted context and only for a passing ReleaseProof.
 - The branch runner, fixer sandbox, and untrusted demo surfaces must not hold publication authority. Modal documents Sandboxes as secure containers for untrusted user or agent code, so publish credentials remain outside those execution contexts ([Modal Sandboxes](https://modal.com/docs/guide/sandboxes)).
@@ -93,8 +98,9 @@ Before running completion commands, STOP unless:
 
 - `repo-map/STATUS.json` is `accepted`;
 - Gate 4 has merged with complete Plan 005 evidence;
-- `plan-006-tests`, `demo`, and all publication-specific command keys in `COMMANDS.json` are `verified`, have non-empty `argv`, and do not print `SKIP`;
-- the bound publish primitive and authorized target are recorded, or the absence is recorded as `blocked-with-proof` with a sealed release candidate and passing ReleaseProof.
+- `plan-006-tests`, `demo`, `demo-report-replay`, and all publication-specific command keys in `COMMANDS.json` are `verified`, have non-empty `argv`, and do not print `SKIP`;
+- any Plan 006 update to `COMMANDS.json` is limited to the nine owned keys named in this plan's frontmatter and the index ownership row;
+- the bound publish primitive and authorized target are recorded, or missing publish binding/authority is recorded as `blocked-with-proof` with a sealed release candidate, passing ReleaseProof, and trusted-context preflight.
 
 Run from repository root:
 
@@ -107,7 +113,10 @@ Run from repository root:
     python docs/plans/scripts/run_mapped.py publication-idempotency
     python docs/plans/scripts/run_mapped.py publication-permission-denied
     python docs/plans/scripts/run_mapped.py publication-trust-boundary
+    python docs/plans/scripts/run_mapped.py publication-redaction
     python docs/plans/scripts/run_mapped.py demo
+    python docs/plans/scripts/run_mapped.py demo-report-replay
+    python docs/plans/scripts/run_mapped.py demo-presentation-timeout
     python docs/plans/scripts/run_mapped.py lint
     python docs/plans/scripts/run_mapped.py build
     python docs/plans/scripts/validate_file_sizes.py --plan 006
@@ -117,38 +126,50 @@ Expected evidence:
 
 - exact demo invocation and exit status,
 - `artifacts/forkproof/demo/<invocation_id>/report.json` with exactly 13 linked pass/display/fallback/blocked-with-proof entries,
-- proof that `plan-006-tests`, `demo`, and publication-specific mapped commands did not return `SKIP`,
+- proof that `plan-006-tests`, `demo`, `demo-report-replay`, and publication-specific mapped commands did not return `SKIP`,
 - real live branch ids,
-- live-discovery or explicitly prior-run fallback status,
+- Acceptance Demo Run mode with full accepted branch budget, or explicit evidence-backed STOP if resource policy blocks it,
+- Presentation Demo Run mode, when used, with bounded live branch attempt and honest fallback labels,
+- presentation-timeout evidence proving the demo switches to Prior-Run Witness Replay without waiting on extra branches,
+- `discovery_source` recorded as `live-new-witness`, `live-no-witness`, or `prior-run-replay`,
+- `live_attempt_id`, `live_attempt_result`, and `proof_source` fields separating live activity from proof,
+- Prior-Run Witness Replay evidence with original run id and new replay id when fallback is used,
+- Demo Report Replay evidence that revalidates a prior report without claiming a new branch, replay, or publication attempt,
+- demo readiness pack digest and preflight result for auth, network, quota, source trace, prior Witness, ReleaseProof, release candidate, and local artifact paths,
 - unlabeled fallback rejection check,
 - fake-live-branch rejection check,
+- single-run statistical overclaim rejection check,
 - Witness replay, v2 failure, and all-control preservation links,
 - ReleaseProof id/digest,
 - repository-bound publish primitive and command key,
 - trusted publisher invocation id, publisher capability label, target identity, idempotency key, and duplicate-run result,
 - permission-denied run with normalized authorization error,
 - trust-boundary negative check proving untrusted branch/fixer/demo contexts lack publish authority,
+- redaction check proving token-like values, secret env vars, Authorization headers, cookies, signed URLs, and full subprocess environments are removed from report and manifest output,
 - published environment ref or permission-blocked/blocked-with-proof release-candidate id,
-- proof that preflight stops do not mutate sealed ReleaseProof or claim publication,
+- proof that proof mismatch, unauthorized target, mixed identity, missing artifacts, and unavailable trusted context fail without mutating sealed ReleaseProof or claiming publication,
 - measured/not-measured metrics report,
 - screenshots only where they add operator-visible evidence,
 - manifest `docs/plans/evidence/006/MANIFEST.json`.
 
-No owned source file exceeds 500 lines without a real seam. Tests verify semantic step completion, truthful labels, report schema validity, publisher idempotency, proof/target mismatch rejection, and permission semantics, not cosmetic output.
+No owned source file exceeds 500 lines without a real seam. Tests verify semantic step completion, truthful labels, report schema validity, Acceptance versus Presentation Demo Run behavior, Demo Report Replay audit-only labeling, publisher idempotency, proof/target mismatch rejection, and permission semantics, not cosmetic output.
 
 ## Recovery
 
-The demo command is resumable by immutable artifact ids and never mutates sealed proof. On interruption, restart from the last report step and create a new invocation id. Live branch sandboxes are cleaned or left to recorded timeout cleanup. Publication is idempotent by ReleaseProof/content digest plus target and must detect an existing version or blocked candidate. Roll back demo code/report artifacts without deleting core evidence, release candidates, publication attempts, or published versions.
+The demo command is resumable by immutable artifact ids and never mutates sealed proof. On interruption, restart from the last report step and create a new invocation id. Live branch sandboxes are cleaned or left to recorded timeout cleanup. Demo Report Replay can re-render a previous invocation from immutable report/artifact ids for audit, but must preserve the original invocation id and mark the replay invocation separately. Publication is idempotent by ReleaseProof/content digest plus target and must detect an existing version or blocked candidate. Roll back demo code/report artifacts without deleting core evidence, release candidates, publication attempts, or published versions.
 
 ## Executor prompt
 
-    /goal Implement docs/plans/006-demo-observability-and-publication.md after Plan 005 merges and Wave 1 has bound the publish primitive. Provide one resumable repository-native demo that emits a validating 13-step report.json, starts real branches, labels and live-replays any prior-run fallback, reports only measured values, and uses the thin trusted publisher wrapper to publish the passing release or honestly display a permission-blocked/blocked-with-proof candidate. Run Done-when commands, treat SKIP as failure, stay inside owned paths, update evidence/006/MANIFEST.json, and append the Living-doc log.
+    /goal Implement docs/plans/006-demo-observability-and-publication.md after Plan 005 merges and Wave 1 has bound the publish primitive. Provide Acceptance Demo Run, Presentation Demo Run, and Demo Report Replay modes. Acceptance emits a validating 13-step report.json, starts the full accepted branch budget, labels and live-replays any prior-run fallback, reports only measured values, and uses the thin trusted publisher wrapper to publish the passing release or honestly display a permission-blocked/blocked-with-proof candidate. Presentation may use a bounded live branch attempt but must label fallback. Report replay is audit-only unless backed by the original Acceptance Demo Run. Run Done-when commands, treat SKIP as failure, stay inside owned paths, update evidence/006/MANIFEST.json, and append the Living-doc log.
 
 ## Living-doc log
 
 ### Progress
 
 - 2026-06-20 — Planning hardening pass added deterministic self-validation, machine-readable report, thin trusted publisher ownership, and publication-specific negative checks.
+- 2026-06-20 — Planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and Demo Report Replay semantics so replay is explicit and audit-safe.
+- 2026-06-21 — Grill-with-docs decision: Presentation Demo Run must launch a fresh live stochastic attempt, but completion must not depend on fresh Witness discovery. The demo switches to sealed Prior-Run Witness Replay on timeout.
+- 2026-06-21 — Parallel risk review added demo-day preflight, sealed readiness pack, presentation timeout behavior, statistical overclaim rejection, and publisher redaction guardrails.
 - [ ] Demo command/orchestration complete.
 - [ ] Live discovery surface complete.
 - [ ] Honest fallback complete.
@@ -166,6 +187,10 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-20 — Planning decision: Plan 006 owns the thin trusted publisher wrapper and report integration because this slice owns publication/display. Wave 1 binds the real publish primitive and Plan 005 owns ReleaseProof creation.
 - 2026-06-20 — Planning decision: Plan 006 completion requires a noninteractive `report.json` and manifest-backed evidence. Judge-visible UI/screenshots are supplementary, not merge-gate proof.
 - 2026-06-20 — Planning decision: `SKIP` from `plan-006-tests`, `demo`, or publication-specific mapped commands fails validation because skipped commands cannot prove Plan 006 behavior.
+- 2026-06-20 — Planning decision: distinguish Acceptance Demo Run from Presentation Demo Run. Acceptance uses the full accepted branch budget and deterministic proof artifacts; Presentation may be time-bounded but must label Prior-Run Witness Replay honestly.
+- 2026-06-20 — Planning decision: Demo Report Replay is audit-only. It can re-render and revalidate prior report artifacts, but cannot create new proof or substitute for the original validating Acceptance Demo Run.
+- 2026-06-21 — Planning decision: `blocked-with-proof` is limited to a valid passing ReleaseProof plus sealed candidate when publication binding or authority is missing. Proof mismatch, unauthorized target, mixed identities, missing artifacts, or unavailable trusted context are failures.
+- 2026-06-21 — Planning decision: demo reliability is implemented as graceful degradation. A fresh live attempt is always shown, while proof and completion rely on validated traces, replays, reports, and digests.
 
 ### Outcomes & Retrospective
 
