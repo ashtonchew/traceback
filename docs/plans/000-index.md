@@ -22,9 +22,10 @@ Wave 1 grounds the real repository. No source implementation begins while `docs/
       │            │      └── 006 demo-observability-and-publication
       │            └── 007 depth-two-and-research-extensions
       └── 004 legitimate-control-fixtures
+             ├── 003 stochastic-witness-loop
              └── 005 verifier-fix-and-release-proof
 
-The graph is acyclic. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo.
+The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 004 frozen legitimate controls. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo.
 
 ## Parallel waves
 

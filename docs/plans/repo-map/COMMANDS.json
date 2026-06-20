@@ -63,7 +63,7 @@
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Blocked until Plans 001 and 002 are accepted and Witness source/test paths exist."
+      "reason": "Blocked until Gate 2 is satisfied: Plans 002 and 004 are complete, Plan 003 Witness source/test paths exist, and the Witness command argv can be verified."
     },
     "integration-witness": {
       "status": "not-applicable",
@@ -71,7 +71,7 @@
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Blocked because there is no agent gateway, branch runner, replay system, or real source trace in the repository."
+      "reason": "Blocked because there is no branch runner, replay system, QA classification path, branch security policy, or durable Witness storage in the repository yet."
     },
     "security-branch": {
       "status": "not-applicable",

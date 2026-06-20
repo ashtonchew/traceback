@@ -38,10 +38,11 @@ The repository's actual reward type may differ from numeric 1/0. Bind “success
 
 Required evidence per attempt:
 
-- run, branch, parent node, and ForkPoint ids,
+- run id, branch id, `fork_point_id`, `task_id`, and `parent_node_id`,
 - seed, model, sampling settings, gateway request id,
-- restored snapshot id/mode, `snapshot_restore_ref`, isolated writable root identity, and history hash,
-- environment version/image, provider runtime ids when available, and grader digest,
+- restored `snapshot_restore_ref`, `snapshot_id`, `snapshot_mode`, `snapshot_digest` when supported, `history_prefix_ref`, `history_hash`, boundary token, isolated writable root identity, and branch-tag propagation inputs,
+- environment version, `environment_image_digest`, provider runtime ids when available, `grader_digest`, and `grader_digest_source`,
+- trusted source-evidence refs, network/secret/resource policy labels, snapshot expiry/retention, and durable fallback ref when applicable,
 - HUD branch trace id,
 - ordered action record,
 - file diff,
@@ -59,7 +60,7 @@ Action provenance convention: record one ordered native action envelope per comp
 
 ## Dedup behavior
 
-Use the verified harden-v0 or repository dedup implementation. harden-v0's primary dedup script instructs clustering by substantive target and mechanism rather than surface wording, so the semantic key is target plus mechanism informed by branch evidence ([harden-v0 dedup source](https://github.com/few-sh/harden-v0/blob/b9dd28c732e7e5435da4a2ac90ae92ac6ea65007/dedup_hacks.py#L31-L35)). Record:
+Use the verified harden-v0 or repository dedup implementation. A located-owned Plan 005 fixer integration is not enough for Plan 003 promotion; before promotion work starts, dedup must either have a verified binding available to Plan 003 or be explicitly remapped into Plan 003 ownership. harden-v0's primary dedup script instructs clustering by substantive target and mechanism rather than surface wording, so the semantic key is target plus mechanism informed by branch evidence ([harden-v0 dedup source](https://github.com/few-sh/harden-v0/blob/b9dd28c732e7e5435da4a2ac90ae92ac6ea65007/dedup_hacks.py#L31-L35)). Record:
 
 - compared prior clusters,
 - selected existing/new cluster,
