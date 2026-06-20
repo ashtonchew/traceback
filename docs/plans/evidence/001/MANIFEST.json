@@ -5,19 +5,123 @@
   "wave": 1,
   "status": "blocked",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T20:10:00Z",
+  "updated_at": "2026-06-20T20:23:06Z",
   "completed_at": null,
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
     {
       "argv": [
+        "uv",
+        "run",
         "python",
-        "-B",
         "docs/plans/scripts/run_mapped.py",
         "baseline"
       ],
       "exit_code": 0,
-      "observed": "RUN: baseline: cwd=. argv=['python', 'docs/plans/scripts/validate_graph.py']; PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic"
+      "observed": "RUN: baseline: cwd=. argv=['uv', 'run', 'python', 'docs/plans/scripts/validate_graph.py']; PASS: 7 plans, 7 dependencies, waves [1, 2, 3, 4, 5], acyclic"
+    },
+    {
+      "argv": [
+        "uv",
+        "lock"
+      ],
+      "exit_code": 0,
+      "observed": "Resolved 154 packages and wrote uv.lock."
+    },
+    {
+      "argv": [
+        "uv",
+        "sync",
+        "--all-extras",
+        "--all-groups"
+      ],
+      "exit_code": 0,
+      "observed": "Installed 147 packages including hud-python==0.6.4, modal==1.5.0, harbor==0.15.0, and litellm==1.89.2."
+    },
+    {
+      "argv": [
+        "scripts/bootstrap_external_deps.sh"
+      ],
+      "exit_code": 0,
+      "observed": "Checked out harden-v0 at b9dd28c732e7e5435da4a2ac90ae92ac6ea65007 and a sparse terminal-wrench checkout containing tasks/mongodb-sales-aggregation-engine at d8a29613235a0ef56a8b70b3142626a533da28c2 under .external/. Terminal Wrench updated 8 sparse-checkout files."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-c",
+        "import hud, modal, harbor, litellm; print('imports-ok')"
+      ],
+      "exit_code": 0,
+      "observed": "imports-ok"
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "hud",
+        "--help"
+      ],
+      "exit_code": 0,
+      "observed": "HUD CLI help printed commands including serve, deploy, eval, init, version, trace, task, and sync."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "modal",
+        "--version"
+      ],
+      "exit_code": 0,
+      "observed": "modal client version: 1.5.0"
+    },
+    {
+      "argv": [
+        "env",
+        "PYTHONPATH=.external/harden-v0",
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "harden",
+        "--help"
+      ],
+      "exit_code": 0,
+      "observed": "harden-v0 CLI help printed task, model, replay, Harbor, pool, and journal options."
+    },
+    {
+      "argv": [
+        "test",
+        "-d",
+        ".external/terminal-wrench/tasks/mongodb-sales-aggregation-engine"
+      ],
+      "exit_code": 0,
+      "observed": "Pinned Terminal Wrench checkout contains the mongodb-sales-aggregation-engine task."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "lint"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed!"
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "build"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 154 packages"
     },
     {
       "argv": [
@@ -86,7 +190,12 @@
     {
       "name": "Required surfaces",
       "status": "skipped",
-      "evidence": "INTERFACES.md records all required product/integration surfaces as blocked because they are not checked in. The harden-v0 upstream URL is known, but no pinned repo integration is present."
+      "evidence": "INTERFACES.md records dependency sources as verified/partial and product adapter surfaces as blocked. harden-v0 and the MongoDB task source are pinned under .external via bootstrap script."
+    },
+    {
+      "name": "Dependency bootstrap",
+      "status": "pass",
+      "evidence": "uv sync installs pinned HUD/Modal plus harden support deps; external bootstrap fetches pinned harden-v0 and a sparse Terminal Wrench task source checkout."
     },
     {
       "name": "Ownership bindings",
@@ -101,7 +210,7 @@
     {
       "name": "Gate 1 completion",
       "status": "skipped",
-      "evidence": "STATUS.json remains blocked until real source trace, MongoDB task, HUD/Modal adapters, grader, harden-v0, artifact store, and security controls are supplied."
+      "evidence": "STATUS.json remains blocked until real source trace, HUD/Modal adapters, grader/verifier, executable harden-v0 integration contract, artifact store, and security controls are supplied."
     }
   ],
   "artifacts": [
@@ -128,17 +237,41 @@
     {
       "ref": "docs/plans/repo-map/DEVELOPMENT.md",
       "description": "Minimal developer bootstrap instructions."
+    },
+    {
+      "ref": "docs/plans/repo-map/DEPENDENCIES.md",
+      "description": "Dependency versions, external source pins, setup commands, and remaining system prerequisites."
+    },
+    {
+      "ref": "pyproject.toml",
+      "description": "uv project dependency manifest."
+    },
+    {
+      "ref": "uv.lock",
+      "description": "Resolved Python dependency lockfile."
+    },
+    {
+      "ref": "scripts/bootstrap_external_deps.sh",
+      "description": "Pinned external source checkout script for harden-v0 and Terminal Wrench."
+    },
+    {
+      "ref": ".env.example",
+      "description": "Committed local environment variable contract with no secret values."
+    },
+    {
+      "ref": "docs/plans/specs/07-environment.md",
+      "description": "Canonical environment and secret configuration spec."
     }
   ],
   "screenshots": [],
   "skips": [
-    "Repo-bound ownership completion is skipped because STATUS.json must remain blocked until required real surfaces are present.",
+    "Repo-bound ownership completion is skipped because STATUS.json must remain blocked until required adapter/proof/security surfaces are present.",
     "Global run_all.py is not used as baseline because it scans the 1359-line source handoff HTML; plan-scoped file-size validation is used instead."
   ],
   "blockers": [
-    "No product source tree or package configuration is checked in.",
-    "No real HUD source trace/export or MongoDB task fixture is checked in.",
-    "No HUD adapter, Modal adapter, grader/verifier, pinned harden-v0 integration, artifact store, or sandbox security policy is checked in."
+    "No product source tree is checked in.",
+    "No real HUD source trace/export is checked in.",
+    "No HUD adapter, Modal adapter, grader/verifier, artifact store, or sandbox security policy is checked in."
   ],
   "notes": [
     "This is an evidence-backed STOP state, not Gate 1 completion."

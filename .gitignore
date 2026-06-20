@@ -1,1 +1,10 @@
 .DS_Store
+.env
+.env.*
+!.env.example
+.external/
+.venv/
+.ruff_cache/
+.codex-worktrees/
+__pycache__/
+*.py[cod]

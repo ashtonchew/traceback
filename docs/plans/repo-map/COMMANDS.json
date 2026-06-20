@@ -5,29 +5,41 @@
     "baseline": {
       "status": "verified",
       "argv": [
+        "uv",
+        "run",
         "python",
         "docs/plans/scripts/validate_graph.py"
       ],
       "cwd": ".",
       "env": {},
       "timeout_seconds": 30,
-      "reason": "The repository currently contains only the planning bundle; graph validation is the smallest checked-in health command that passes on a clean checkout with Python 3.12.13."
+      "reason": "The repository now has a uv-managed dependency environment; graph validation is the smallest checked-in health command."
     },
     "lint": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "check",
+        "docs/plans/scripts"
+      ],
       "cwd": ".",
       "env": {},
-      "timeout_seconds": null,
-      "reason": "No product source, package manager configuration, or lint tool is checked in yet; run baseline plus the plan validators until a real toolchain is added."
+      "timeout_seconds": 30,
+      "reason": "Ruff is installed through the dev dependency group and currently checks the Python validator scripts."
     },
     "build": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "lock",
+        "--check"
+      ],
       "cwd": ".",
       "env": {},
-      "timeout_seconds": null,
-      "reason": "No buildable product artifact is checked in yet; this becomes required when a source package or application is added."
+      "timeout_seconds": 30,
+      "reason": "There is no package artifact yet; build is mapped to dependency-lock verification until source packaging exists."
     },
     "plan-002-tests": {
       "status": "not-applicable",
@@ -43,7 +55,7 @@
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Blocked because no HUD trace, Modal snapshot adapter, grader digest, or ForkPoint implementation exists yet."
+      "reason": "Blocked because no HUD trace, Modal snapshot adapter, grader digest, or ForkPoint implementation exists yet; SDK dependencies are installed but adapters are absent."
     },
     "plan-003-tests": {
       "status": "not-applicable",
@@ -83,7 +95,7 @@
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Blocked because the real MongoDB task fixture and solver/reference hints are absent."
+      "reason": "Blocked because the Terminal Wrench task source is fetched, but no repository-native fixture materialization or control-freezing command exists yet."
     },
     "plan-005-tests": {
       "status": "not-applicable",
@@ -99,7 +111,7 @@
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Blocked because there is no v1/v2 grader, ProofSet runner, or publication target."
+      "reason": "Blocked because harden-v0 is fetched and executable, but there is no v1/v2 grader, ProofSet runner, adapter, or publication target."
     },
     "plan-006-tests": {
       "status": "not-applicable",

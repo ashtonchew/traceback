@@ -17,11 +17,16 @@
     "security_controls": false,
     "baseline_command": true
   },
+  "verified_inputs": {
+    "mongodb_task_source_checkout": true,
+    "harden_v0_source_checkout": true,
+    "hud_sdk_dependency": true,
+    "modal_sdk_dependency": true
+  },
   "blockers": [
-    "No product source tree or package configuration is checked in yet.",
+    "No product source tree is checked in yet.",
     "No real source HUD trace/export is checked in or referenced by repository configuration.",
-    "No MongoDB sales aggregation task fixture or materialization command is present.",
-    "No HUD adapter, Modal adapter, grader/verifier, harden-v0 integration, artifact store, or sandbox security policy is present in this repository.",
+    "No HUD adapter, Modal adapter, grader/verifier, repo-native harden-v0 integration contract, artifact store, or sandbox security policy is present in this repository.",
     "Gate 1 cannot be accepted until the missing real surfaces are supplied and verified."
   ]
 }
