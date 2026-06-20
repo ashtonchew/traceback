@@ -5,7 +5,7 @@
   "wave": 3,
   "status": "not-started",
   "started_at": null,
-  "updated_at": "2026-06-20T20:30:00+00:00",
+  "updated_at": "2026-06-20T21:22:34+00:00",
   "completed_at": null,
   "commit": null,
   "commands": [],
@@ -28,6 +28,7 @@
   ],
   "notes": [
     "Planning template only; no implementation evidence is claimed.",
-    "2026-06-20 corrected audit target from Plan 002 to Plan 003; inline citations and completeness gates were added to Plan 003 docs only."
+    "2026-06-20 corrected audit target from Plan 002 to Plan 003; inline citations and completeness gates were added to Plan 003 docs only.",
+    "2026-06-20 dependency audit made Plan 004 an explicit Plan 003 frontmatter dependency because Gate 2 requires frozen legitimate controls before Wave 3 may start."
   ]
 }

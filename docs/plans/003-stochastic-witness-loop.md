@@ -3,7 +3,7 @@ name: stochastic-witness-loop
 description: >
   Turns one accepted ForkPoint into genuine seeded BranchRuns, separates reward from QA classification, deduplicates exploit mechanisms, materializes durable Exploit Witnesses, and proves deterministic replay. Use when Gate 2 is satisfied: Plans 002 and 004 have complete manifests, the wave merge gate is open, and the real branch gateway, snapshot restore, grader, QA, storage, and security bindings are accepted; it owns src/forkproof/witnesses/**, tests/forkproof/witnesses/**, fixtures/forkproof/witnesses/**, this plan/reference, and evidence/003/**.
 owns: ["docs/plans/003-stochastic-witness-loop.md", "docs/plans/003-stochastic-witness-loop.REFERENCE.md", "src/forkproof/witnesses/**", "tests/forkproof/witnesses/**", "fixtures/forkproof/witnesses/**", "docs/plans/evidence/003/**"]
-depends_on: ["atomic-forkpoint-seam"]
+depends_on: ["atomic-forkpoint-seam", "legitimate-control-fixtures"]
 wave: 3
 ---
 
@@ -145,6 +145,7 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 - 2026-06-20 — Grilling decision: the branch budget is 12 executed BranchRuns. Scheduled-only and preflight-failed attempts are evidenced separately and replaced; failures after the execution boundary count because they represent real stochastic continuations.
 - 2026-06-20 — Grilling decision: sealed replay compares ordered native action envelopes and semantic verifier output, not reward alone; action-order divergence keeps the candidate unproven.
 - 2026-06-20 — Grilling decision: Plan 003 uses four trust zones (`trusted_orchestrator`, `untrusted_branch`, `trusted_grader`, `trusted_release`) and gives untrusted branches only branch-scoped capabilities through the Branch gateway boundary.
+- 2026-06-20 — Grilling decision: Plan 003 frontmatter depends on both `atomic-forkpoint-seam` and `legitimate-control-fixtures` because Gate 2 requires Plan 002 state fidelity and Plan 004 frozen controls before Wave 3 may start.
 
 ### Outcomes & Retrospective
 
