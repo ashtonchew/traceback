@@ -50,7 +50,8 @@ Also test partial capture cleanup and immutable record behavior where the reposi
 
 Record:
 
-- observed task state locations,
+- observed task state locations, including `/app`, MongoDB `dbpath` and logs, `/tmp`, `$HOME`, virtualenv/cache paths, Python site-packages, pytest plugin/conftest discovery paths, mounted volumes, and service sockets,
+- the verified `task_state_root` when Directory Snapshot is selected, or the reason no single subtree honestly contains branch-relevant mutable state,
 - chosen mode,
 - rejected modes and why,
 - capability probe output,
@@ -66,6 +67,29 @@ Record:
 Modal Directory Snapshots are Beta and capture a specific directory for later mounting; they are a sufficient core profile only when all branch-relevant mutable state is under that directory and the base image/runtime are pinned. Filesystem Snapshots capture the Sandbox filesystem as an Image; Memory Snapshots are Alpha; VM Sandboxes are Alpha and currently support Filesystem Snapshots but not Memory Snapshots. Treat Directory/Filesystem as the core choices and record any Memory/VM dependency as a STOP or Plan 007 research path ([Modal Sandbox Snapshots](https://modal.com/docs/guide/sandbox-snapshots), [Modal VM Sandboxes](https://modal.com/docs/guide/vm-sandboxes), [modal.Sandbox API](https://modal.com/docs/sdk/py/latest/modal.Sandbox)).
 
 Modal Sandboxes have no inbound access and no access to Modal resources by default, but they can make outbound public network connections unless `block_network` or outbound allowlists are configured. Snapshot evidence must therefore include the actual network setting, not only a generic "sandboxed" claim ([Modal Sandbox networking](https://modal.com/docs/guide/sandbox-networking)).
+
+## MongoDB task snapshot probes
+
+For the Terminal Wrench `mongodb-sales-aggregation-engine` task, do not treat `/app` as the snapshot boundary until proven. The task image seeds MongoDB under `/data/db`, starts `mongod` with `/var/log/mongodb.log`, and the verifier script installs/runs pytest and pymongo before executing the tests; the known attack family targets pytest/plugin surfaces rather than MongoDB business logic ([Terminal Wrench Dockerfile](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/environment/Dockerfile), [Terminal Wrench verifier script](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/tests/test.sh), [Terminal Wrench tests](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/original_task/tests/test_outputs.py), [Terminal Wrench hack summary](../../.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/claude-opus-4.6/hack_summary.md)).
+
+Directory Snapshot is valid only after a probe proves one of these:
+
+- All branch-relevant mutable state is under one `task_state_root`, and trusted verifier/test assets are outside branch-writable state.
+- State outside the directory is deterministic from pinned base inputs and is recreated before branch execution.
+- A repository-native layout conversion moved MongoDB `dbpath`, task-local caches, virtualenvs, and branch-writable runtime state under the task state root without changing task behavior.
+
+Use Filesystem Snapshot when any relevant state remains outside that root, including MongoDB data/log mutation, pytest plugin installation, mutated Python package files, hidden caches, or branch-writable verifier assets. STOP rather than approximating if live process state is required and cannot be converted into a durable Directory/Filesystem restore.
+
+Required capability probes:
+
+- Directory probe: write marker files, package/plugin markers, and Mongo-visible state under the candidate `task_state_root`; snapshot, mount into a fresh Sandbox, and verify hashes plus task-visible outputs.
+- Filesystem probe: write markers inside and outside the working directory; snapshot and restore; verify both expected markers and absence of prohibited secrets.
+- MongoDB probe: verify `mongod` readiness, `dbpath`, seeded collections, restart behavior, and grader-visible database state after restore.
+- Pytest/plugin probe: enumerate `conftest.py`, `PYTEST_DISABLE_PLUGIN_AUTOLOAD`, pytest plugin entry points, site-packages mutability, cwd/rootdir, and import path ordering; record contamination risk for Plan 005 without patching it here.
+- Security probe: record network setting, secret mounts, sibling writable roots, resource limits, and trusted-evidence write isolation.
+- Expiry probe: record snapshot TTL, provider object id retention, and expired/unavailable-snapshot error mapping.
+
+Plan 005 owns verifier hardening for this pytest/plugin attack surface, tracked in [GitHub issue #7](https://github.com/ashtonchew/hack2fix2hack/issues/7). Plan 007 owns VM and Memory research capability probes, tracked in [GitHub issue #8](https://github.com/ashtonchew/hack2fix2hack/issues/8). Do not add Plan 005 or Plan 007 implementation scope to Plan 002.
 
 ## ForkPoint minimum evidence
 
