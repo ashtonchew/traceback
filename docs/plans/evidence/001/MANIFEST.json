@@ -5,7 +5,7 @@
   "wave": 1,
   "status": "blocked",
   "started_at": "2026-06-20T19:48:50Z",
-  "updated_at": "2026-06-20T20:23:06Z",
+  "updated_at": "2026-06-20T20:28:14Z",
   "completed_at": null,
   "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
   "commands": [
@@ -44,6 +44,36 @@
       ],
       "exit_code": 0,
       "observed": "Checked out harden-v0 at b9dd28c732e7e5435da4a2ac90ae92ac6ea65007 and a sparse terminal-wrench checkout containing tasks/mongodb-sales-aggregation-engine at d8a29613235a0ef56a8b70b3142626a533da28c2 under .external/. Terminal Wrench updated 8 sparse-checkout files."
+    },
+    {
+      "argv": [
+        "npx",
+        "skills",
+        "add",
+        "https://docs.hud.ai",
+        "--yes"
+      ],
+      "exit_code": 0,
+      "observed": "Installed project skill hud-environment-builder under .agents/skills/hud-environment-builder and recorded docs.hud.ai in skills-lock.json."
+    },
+    {
+      "argv": [
+        "npx",
+        "skills",
+        "list",
+        "--json"
+      ],
+      "exit_code": 0,
+      "observed": "Listed hud-environment-builder with scope project for Codex and Cursor."
+    },
+    {
+      "argv": [
+        "test",
+        "-f",
+        ".claude/skills/hud-environment-builder/SKILL.md"
+      ],
+      "exit_code": 0,
+      "observed": ".claude/skills/hud-environment-builder resolves through a symlink to .agents/skills/hud-environment-builder/SKILL.md."
     },
     {
       "argv": [
@@ -198,6 +228,11 @@
       "evidence": "uv sync installs pinned HUD/Modal plus harden support deps; external bootstrap fetches pinned harden-v0 and a sparse Terminal Wrench task source checkout."
     },
     {
+      "name": "Project HUD docs skill",
+      "status": "pass",
+      "evidence": "npx skills add https://docs.hud.ai --yes installs hud-environment-builder as a project-scope skill; skills-lock.json records the docs.hud.ai source hash, and .claude/skills/hud-environment-builder symlinks to the canonical .agents skill folder."
+    },
+    {
       "name": "Ownership bindings",
       "status": "pass",
       "evidence": "OWNERSHIP-BINDINGS.json accepts proposed future feature paths as collision-free because no existing source layout exists."
@@ -261,6 +296,18 @@
     {
       "ref": "docs/plans/specs/07-environment.md",
       "description": "Canonical environment and secret configuration spec."
+    },
+    {
+      "ref": ".agents/skills/hud-environment-builder/SKILL.md",
+      "description": "Project-level HUD docs skill for agent guidance."
+    },
+    {
+      "ref": ".claude/skills/hud-environment-builder",
+      "description": "Claude Code project skill symlink to the canonical HUD docs skill."
+    },
+    {
+      "ref": "skills-lock.json",
+      "description": "Project skills lockfile recording hud-environment-builder from docs.hud.ai."
     }
   ],
   "screenshots": [],

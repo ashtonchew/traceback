@@ -2,7 +2,7 @@
 name: repo-grounding-and-command-freeze
 description: >
   Grounds ForkProof against the real repository by binding proposed ownership paths, existing integrations, capabilities, fixtures, dependency bootstrap, environment configuration, and exact validation commands without changing product source. Use when a repository-connected executor is starting the bundle; it writes only its declared setup, spec, repo-map, plan/reference, validator, and evidence paths, and must merge before any implementation wave.
-owns: [".gitignore", ".env.example", ".python-version", "pyproject.toml", "uv.lock", "requirements/harden-v0.txt", "scripts/bootstrap_external_deps.sh", "docs/plans/scripts/validate_evidence.py", "docs/plans/specs/07-environment.md", "docs/plans/001-repo-grounding-and-command-freeze.md", "docs/plans/001-repo-grounding-and-command-freeze.REFERENCE.md", "docs/plans/repo-map/**", "docs/plans/evidence/001/**"]
+owns: [".agents/skills/**", ".claude/skills/**", ".gitignore", ".env.example", ".python-version", "pyproject.toml", "skills-lock.json", "uv.lock", "requirements/harden-v0.txt", "scripts/bootstrap_external_deps.sh", "docs/plans/scripts/validate_evidence.py", "docs/plans/specs/07-environment.md", "docs/plans/001-repo-grounding-and-command-freeze.md", "docs/plans/001-repo-grounding-and-command-freeze.REFERENCE.md", "docs/plans/repo-map/**", "docs/plans/evidence/001/**"]
 depends_on: []
 wave: 1
 ---
@@ -122,6 +122,8 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 - 2026-06-20T20:11:27Z — Added the Plan 001 dependency bootstrap: uv project metadata, lockfile, Python version pin, harden-v0 requirement mirror, and a pinned external checkout script for harden-v0 plus Terminal Wrench.
 - 2026-06-20T20:11:27Z — Added root `.env` handling with committed `.env.example` and canonical environment-variable documentation in `docs/plans/specs/07-environment.md`.
 - 2026-06-20T20:23:06Z — Addressed audit feedback by narrowing `.env` loading in the bootstrap script to `H2F2H_EXTERNAL_DIR`, removing command-line secret examples from docs, and separating verified source checkouts from completed core prerequisites in `STATUS.json`.
+- 2026-06-20T20:26:54Z — Added the project-level `hud-environment-builder` skill from `https://docs.hud.ai` with `npx skills add https://docs.hud.ai --yes`; recorded the install in `skills-lock.json`.
+- 2026-06-20T20:28:14Z — Added `.claude/skills/hud-environment-builder` as a symlink to the canonical `.agents/skills/hud-environment-builder` project skill so Claude Code and Codex share one skill body.
 
 ### Surprises & Discoveries
 
@@ -131,6 +133,8 @@ All edits are additive documentation. Resume by reading the manifest's last succ
 - 2026-06-20T20:11:27Z — harden-v0 has no `pyproject.toml` at pinned revision `b9dd28c732e7e5435da4a2ac90ae92ac6ea65007`, so it is treated as a source checkout plus requirements file, not a direct Python package dependency.
 - 2026-06-20T20:11:27Z — Terminal Wrench is large at the pinned revision, so the bootstrap uses sparse checkout for `tasks/mongodb-sales-aggregation-engine`. The MongoDB task source exists under `.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine`.
 - 2026-06-20T20:23:06Z — A fresh sparse Terminal Wrench bootstrap updated only 8 checkout files for the MongoDB task path.
+- 2026-06-20T20:26:54Z — The HUD docs skill installs as `.agents/skills/hud-environment-builder/SKILL.md` and is intended as project-local agent guidance, not a Python runtime dependency.
+- 2026-06-20T20:28:14Z — OpenAI Codex docs confirm repository skills are discovered under `.agents/skills` and symlinked skill folders are supported; the Claude Code symlink is project-local compatibility glue.
 
 ### Decision Log
 
