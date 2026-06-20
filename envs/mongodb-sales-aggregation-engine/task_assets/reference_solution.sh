@@ -78,7 +78,7 @@ class SalesAnalyzer:
         ]
 
         results = list(self.db.orders.aggregate(pipeline))
-        
+
         final_result = {}
         for doc in results:
             category = doc["_id"]
@@ -87,7 +87,7 @@ class SalesAnalyzer:
                 p["total_revenue"] = round(p["total_revenue"], 2)
                 products.append(p)
             final_result[category] = products
-            
+
         return final_result
 EOF
 

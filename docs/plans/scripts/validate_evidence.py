@@ -35,6 +35,72 @@ REQUIRED_KEYS = {
     "notes",
 }
 
+GATE1_PREREQUISITES = {
+    "source_trace",
+    "mongodb_task",
+    "hud_adapter",
+    "modal_adapter",
+    "grader",
+    "harden_v0",
+    "artifact_store",
+    "security_controls",
+    "baseline_command",
+}
+
+GATE1_STATES = {"verified-present", "located-owned"}
+
+
+def validate_gate1_acceptance() -> list[str]:
+    path = PLAN_DIR / "repo-map" / "STATUS.json"
+    errors: list[str] = []
+    try:
+        status = load_json(path)
+    except ValidationError as exc:
+        return [str(exc)]
+
+    if not isinstance(status, dict):
+        return [f"{path}: root must be an object"]
+    if status.get("status") != "accepted":
+        errors.append(f"{path}: status must be accepted for complete Plan 001 evidence")
+
+    prerequisites = status.get("core_prerequisites")
+    if not isinstance(prerequisites, dict):
+        errors.append(f"{path}: core_prerequisites must be an object")
+        prerequisites = {}
+
+    acceptance = status.get("gate1_acceptance")
+    if not isinstance(acceptance, dict):
+        return errors + [f"{path}: gate1_acceptance must be an object"]
+
+    missing = GATE1_PREREQUISITES - set(acceptance)
+    extra = set(acceptance) - GATE1_PREREQUISITES - {"_doc"}
+    if missing:
+        errors.append(f"{path}: gate1_acceptance missing {sorted(missing)}")
+    if extra:
+        errors.append(f"{path}: gate1_acceptance has unknown keys {sorted(extra)}")
+
+    for key in sorted(GATE1_PREREQUISITES & set(acceptance)):
+        entry = acceptance[key]
+        if not isinstance(entry, dict):
+            errors.append(f"{path}: gate1_acceptance.{key} must be an object")
+            continue
+        state = entry.get("state")
+        if state not in GATE1_STATES:
+            errors.append(f"{path}: gate1_acceptance.{key}.state is invalid")
+            continue
+        refs = entry.get("evidence_refs")
+        if not isinstance(refs, list) or not refs or not all(isinstance(ref, str) for ref in refs):
+            errors.append(f"{path}: gate1_acceptance.{key} needs evidence_refs")
+        if state == "verified-present" and prerequisites.get(key) is not True:
+            errors.append(f"{path}: {key} is verified-present but prerequisite is not true")
+        if state == "located-owned":
+            owners = entry.get("owner_plans")
+            if not isinstance(owners, list) or not owners or not all(isinstance(owner, str) for owner in owners):
+                errors.append(f"{path}: gate1_acceptance.{key} needs owner_plans")
+            if prerequisites.get(key) is not False:
+                errors.append(f"{path}: {key} is located-owned but prerequisite is not false")
+    return errors
+
 
 def validate_manifest(plan: Any, require_complete: bool) -> list[str]:
     path = PLAN_DIR / "evidence" / plan.number / "MANIFEST.json"
@@ -103,6 +169,8 @@ def validate_manifest(plan: Any, require_complete: bool) -> list[str]:
     expected = f"docs/plans/evidence/{plan.number}/MANIFEST.json"
     if expected not in plan_text:
         errors.append(f"{plan.path}: does not reference its evidence manifest")
+    if require_complete and plan.number == "001":
+        errors.extend(validate_gate1_acceptance())
     return errors
 
 

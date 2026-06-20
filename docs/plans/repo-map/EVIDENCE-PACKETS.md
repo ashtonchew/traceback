@@ -13,9 +13,12 @@ accepted with a **checked-in path plus command and observed output** — an SDK
 install or an upstream URL is necessary but never sufficient (see
 `INTERFACES.md` "Required next inputs" and assumptions A-003, A-005, A-011).
 
-Akhil flips a prerequisite to `true` only when the packet field is accepted with
-evidence. Akhil owns the HUD-facing prerequisites directly; Ashton owns the
-runtime packet; Katherine owns the proof/control packet.
+Akhil flips a prerequisite boolean to `true` only when the packet field is
+accepted with command evidence. If the field is intentionally later-wave work,
+Akhil records it in `STATUS.json.gate1_acceptance` as `located-owned` with the
+owning plan and evidence reference instead of fabricating a `true` value. Akhil
+owns the HUD-facing prerequisites directly; Ashton owns the runtime packet;
+Katherine owns the proof/control packet.
 
 ## Field acceptance rule
 
@@ -99,15 +102,20 @@ real HUD access. Until then they stay blocked.
 2. Copy the field record into the relevant `INTERFACES.md` row with status and
    evidence; add any mapped command to `COMMANDS.json`.
 3. Flip the corresponding `core_prerequisites` key in `STATUS.json` to `true`
-   only when its backing field(s) are `accepted`.
+   only when its backing field(s) are `accepted`; otherwise keep the boolean
+   `false` and record the Gate-1 state as `located-owned` with owner plans and
+   evidence refs.
 4. Add a dated entry to Plan 001's Living-doc log naming the packet, field, and
    resulting prerequisite change.
-5. When all nine prerequisites are `true`, set `STATUS.json` status to
-   `accepted`, run the Done-when validators, and complete `evidence/001/`.
+5. When every prerequisite is either `verified-present` or `located-owned` in
+   `STATUS.json.gate1_acceptance`, set `STATUS.json` status to `accepted`, run
+   the Done-when validators, and complete `evidence/001/`.
 
 ## Acceptance gate
 
-`STATUS.json` becomes `accepted` only when every `core_prerequisites` key is
-`true` with backing evidence in this file, `INTERFACES.md`, and `COMMANDS.json`,
-and `validate_ownership.py --repo-bound` exits 0. No prerequisite is flipped on a
-packet that is `partial` or `blocked`.
+`STATUS.json` becomes `accepted` only when every Gate-1 prerequisite has an
+explicit `STATUS.json.gate1_acceptance` entry. `verified-present` entries need
+backing evidence in this file, `INTERFACES.md`, `COMMANDS.json`, the evidence
+manifest, or a named artifact. `located-owned` entries need at least one owner
+plan and evidence reference. No prerequisite boolean is flipped on a packet that
+is only `partial` or `blocked`.

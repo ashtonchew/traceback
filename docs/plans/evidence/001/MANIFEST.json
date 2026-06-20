@@ -7,7 +7,7 @@
   "started_at": "2026-06-20T19:48:50Z",
   "updated_at": "2026-06-20T23:56:00Z",
   "completed_at": "2026-06-20T23:55:00Z",
-  "commit": "99c53d2b3a27a682d67bc61a026cdc2bae16eb4e",
+  "commit": "e6ea5e3b49286de93a817b1182c5bd3ca74b7a6e",
   "commands": [
     {
       "argv": [
@@ -310,7 +310,7 @@
     {
       "name": "Required surfaces",
       "status": "skipped",
-      "evidence": "INTERFACES.md records dependency sources as verified/partial and product adapter surfaces as blocked. harden-v0 and the MongoDB task source are pinned under .external via bootstrap script."
+      "evidence": "INTERFACES.md records verified Gate-1 surfaces (live HUD env/source trace, grader, Modal capability) and later-wave surfaces as located-owned or partial. harden-v0 and the MongoDB task source are pinned under .external via bootstrap script."
     },
     {
       "name": "Dependency bootstrap",
@@ -361,7 +361,7 @@
   "artifacts": [
     {
       "ref": "docs/plans/repo-map/STATUS.json",
-      "description": "Blocked repository-grounding status with verified baseline and missing core prerequisites."
+      "description": "Accepted repository-grounding status with typed Gate-1 acceptance, live trace identity, verified inputs, and located-owned later-wave prerequisites."
     },
     {
       "ref": "docs/plans/repo-map/REPOSITORY.md",
@@ -369,7 +369,7 @@
     },
     {
       "ref": "docs/plans/repo-map/INTERFACES.md",
-      "description": "Required interface inventory with missing surfaces recorded as blocked."
+      "description": "Required interface inventory with verified Plan 001 surfaces and later-wave surfaces recorded as located-owned or partial."
     },
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
@@ -389,7 +389,7 @@
     },
     {
       "ref": "docs/plans/repo-map/EVIDENCE-PACKETS.md",
-      "description": "Wave-1 evidence-packet contracts mapping each blocked prerequisite to an owner, packet field, interface row, command key, and prerequisite-flip procedure."
+      "description": "Wave-1 evidence-packet contracts mapping later-owned prerequisites to owner plans, packet fields, interface rows, command keys, and prerequisite-flip procedure."
     },
     {
       "ref": "docs/plans/repo-map/TASK-PATH-CONTRACT.md",
@@ -397,7 +397,7 @@
     },
     {
       "ref": "docs/plans/repo-map/probes/modal_snapshot_probe.py",
-      "description": "Modal core-capability probe: filesystem-snapshot round-trip PASS and directory-snapshot (Beta) create PASS on profile rsi-hackathon. Backs modal_adapter=true."
+      "description": "Modal core-capability probe: filesystem-snapshot round-trip PASS and directory-snapshot (Beta) create PASS on profile rsi-hackathon. Backs Gate-1 modal_adapter capability acceptance; repo-native ForkPoint adapter remains Plan 002 scope."
     },
     {
       "ref": ".agents/skills/modal/SKILL.md",
