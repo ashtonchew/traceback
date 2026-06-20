@@ -30,17 +30,17 @@ The plan is parallel with release proof after a core Witness exists. It may cons
 - Cross-task transfer requires real additional tasks. Training analysis begins with raw-vs-hardened filtering; no live RL.
 - Flat-restart comparison is reported only when both strategies run under comparable measured budgets.
 - STOP on insufficient time/budget, unavailable real data, unsafe capability, or inability to define an honest comparison. Record skips.
-- Keep research code isolated and removable. Split files over 500 lines by tree policy/capability/analysis.
+- Keep research code isolated and removable: no symbol in `src/forkproof/research/**` may be imported by any other feature folder, and deleting `src/forkproof/research/**`, `tests/forkproof/research/**`, and `artifacts/forkproof/research/**` must leave the core build and all other plan tests passing. Split files over 500 lines by tree policy/capability/analysis.
 - Tests assert policy and measured outputs, not claims of universal superiority.
 
 ## Work packets
 
 ### WP1 — Select and re-snapshot one promising child
 
-Use trace/file/grader/cluster evidence to select a completed child state that changes the attack surface. Capture a new atomic node with parent lineage and restore it independently.
+Use trace/file/grader/cluster evidence to select a completed child state that presents task-visible or grader-visible state plausibly opening a different exploit path than the root ForkPoint — evidenced by at least one signal from the promising-node list in the reference. Capture a new atomic node with parent lineage and restore it independently.
 
 **Pass:** One child snapshot restores with valid lineage and a documented reason it is more promising than random.  
-**Fail:** The node is chosen only from exposed reasoning or cannot be distinguished from its parent.
+**Fail:** The node is chosen only from exposed reasoning, or "distinguishable from its parent" is satisfied only by a different node ID — at least one task-visible probe (file diff, content hash, grader-visible state, or command output) must produce a different value at the child boundary than at the parent ForkPoint boundary, with the reason recorded in `fork_reason`.
 
 ### WP2 — Run depth-two branches
 
@@ -51,16 +51,16 @@ Launch up to eight seeded agentic branches from the child node using the core Wi
 
 ### WP3 — Implement and prove adaptive stopping
 
-Track new exploit clusters in completion order and stop a node after four consecutive completed branches add none, while respecting concurrency already in flight.
+The research scheduler in this plan owns the stop policy and concurrency model; it calls core Witness machinery through public interfaces but does not borrow or fork the Plan 003 scheduler. Track new exploit clusters in completion order and stop scheduling new branches after four consecutive completed branches add none, while allowing branches already in flight to finish. If an in-flight branch completes after the stop count reached 4 and it confirms a new cluster, reset the consecutive count to zero — but only schedule additional branches if the 8-branch budget is not yet exhausted.
 
-**Pass:** Deterministic policy tests cover reset-on-new-cluster, stop-at-four, concurrency, and maximum budget; a real run records the decision.  
-**Fail:** Stop is based on raw reward count or wording variants.
+**Pass:** Deterministic policy tests cover reset-on-new-cluster, stop-at-four, in-flight-late-reset, budget-exhausted-no-new-schedule, and concurrency; a real run records the decision.  
+**Fail:** Stop is based on raw reward count or wording variants, or the policy borrows internal state from the Plan 003 scheduler.
 
 ### WP4 — Measure state branching versus flat restarts
 
 When budget permits, run comparable state-branch and from-scratch attempts with common task/model constraints. Measure setup work, branch count, time/compute, and distinct confirmed clusters.
 
-**Pass:** Report states protocol, raw observations, limits, and no causal overclaim.  
+**Pass:** Report states protocol, raw observations, limits, and no causal overclaim. A result where flat restarts find equal or more distinct confirmed clusters is a valid honest output; record raw counts and state the limitation explicitly. This plan merges independently of that outcome.  
 **Fail:** One strategy is estimated, uses a different task/model budget, or illustrative probabilities are presented as measurements.
 
 ### WP5 — Capability-gate Memory and VM profiles
