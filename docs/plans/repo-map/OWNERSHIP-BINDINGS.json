@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "status": "unverified",
+  "bindings": {
+    "artifacts/forkproof/demo/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "artifacts/forkproof/releases/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "artifacts/forkproof/research/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "fixtures/forkproof/mongodb-sales-aggregation-engine/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "fixtures/forkproof/witnesses/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "scripts/forkproof-demo*": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/controls/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/demo/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/forkpoints/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/releases/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/research/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "src/forkproof/witnesses/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/controls/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/demo/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/forkpoints/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/releases/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/research/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    },
+    "tests/forkproof/witnesses/**": {
+      "status": "unverified",
+      "actual": null,
+      "evidence": "Wave 1 must accept this proposed feature boundary or bind it to a real repository-native path."
+    }
+  }
+}

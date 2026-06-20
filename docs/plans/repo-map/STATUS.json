@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "status": "unverified",
+  "repository_root": null,
+  "repository_identity": null,
+  "commit": null,
+  "verified_at": null,
+  "verified_by": null,
+  "core_prerequisites": {
+    "source_trace": false,
+    "mongodb_task": false,
+    "hud_adapter": false,
+    "modal_adapter": false,
+    "grader": false,
+    "harden_v0": false,
+    "artifact_store": false,
+    "security_controls": false,
+    "baseline_command": false
+  },
+  "blockers": [
+    "Repository was not available during planning."
+  ]
+}

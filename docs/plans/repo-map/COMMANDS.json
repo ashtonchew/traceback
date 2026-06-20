@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "status": "unverified",
+  "commands": {
+    "baseline": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "lint": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "build": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-002-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "integration-forkpoint": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-003-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "integration-witness": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "security-branch": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-004-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "integration-controls": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-005-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "integration-release": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-006-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "demo": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "plan-007-tests": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    },
+    "integration-research": {
+      "status": "unverified",
+      "argv": null,
+      "cwd": ".",
+      "env": {},
+      "timeout_seconds": null,
+      "reason": "Wave 1 must bind this to the real repository command."
+    }
+  }
+}

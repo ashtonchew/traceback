@@ -1,0 +1,132 @@
+---
+name: depth-two-and-research-extensions
+description: >
+  Extends the proven Witness loop with one depth-two re-snapshot, bounded adaptive stopping, and measured research analyses while capability-gating Memory Snapshot, VM Sandbox, cross-task transfer, and training experiments. Use when Plan 003 has merged and core work is not at risk; it owns src/forkproof/research/**, tests/forkproof/research/**, artifacts/forkproof/research/**, this plan/reference, and evidence/007/**.
+owns: ["docs/plans/007-depth-two-and-research-extensions.md", "docs/plans/007-depth-two-and-research-extensions.REFERENCE.md", "src/forkproof/research/**", "tests/forkproof/research/**", "artifacts/forkproof/research/**", "docs/plans/evidence/007/**"]
+depends_on: ["stochastic-witness-loop"]
+wave: 4
+---
+
+# Depth-two and research extensions
+
+## Goal
+
+Produce one real depth-two lineage by re-snapshotting a promising child, demonstrate adaptive stopping after four consecutive no-new-cluster branches, and emit one measured research report. Done is binary when those three core research artifacts exist and every conditional Alpha, transfer, or training packet has either a real result or an evidence-backed skip with no unused scaffold.
+
+## Context / Why
+
+The core product proves one depth-1 loop. The research thesis is that reaching a rare state once and branching from it exposes multi-step attacks that flat restarts miss. This plan tests that thesis without delaying release or overstating a full MCTS system.
+
+The plan is parallel with release proof after a core Witness exists. It may consume core artifacts but cannot modify them or become a dependency of Plan 006. Read the sibling reference for node selection, adaptive policy, capability gates, measurement design, and skip criteria.
+
+## Constraints
+
+- Core release work has priority; stop research when it threatens Gate 4 or 5.
+- Describe the search as MCTS-shaped, not MCTS.
+- Reuse the proven BranchRun/Witness operations through public interfaces; do not fork core logic.
+- Maximum research depth is 2 for this bundle; child branch budget is up to 8.
+- Adaptive stop triggers after four consecutive completed branches yield no new exploit cluster.
+- Memory/VM paths require both verified capability and a real state/task need. No capability means no adapter scaffold.
+- Cross-task transfer requires real additional tasks. Training analysis begins with raw-vs-hardened filtering; no live RL.
+- Flat-restart comparison is reported only when both strategies run under comparable measured budgets.
+- STOP on insufficient time/budget, unavailable real data, unsafe capability, or inability to define an honest comparison. Record skips.
+- Keep research code isolated and removable. Split files over 500 lines by tree policy/capability/analysis.
+- Tests assert policy and measured outputs, not claims of universal superiority.
+
+## Work packets
+
+### WP1 — Select and re-snapshot one promising child
+
+Use trace/file/grader/cluster evidence to select a completed child state that changes the attack surface. Capture a new atomic node with parent lineage and restore it independently.
+
+**Pass:** One child snapshot restores with valid lineage and a documented reason it is more promising than random.  
+**Fail:** The node is chosen only from exposed reasoning or cannot be distinguished from its parent.
+
+### WP2 — Run depth-two branches
+
+Launch up to eight seeded agentic branches from the child node using the core Witness machinery. Preserve depth, parent, and complete provenance; promote any qualifying exploit through the same deterministic replay gate.
+
+**Pass:** At least one real depth-two BranchRun completes and the report distinguishes discoveries from non-discoveries.  
+**Fail:** The run restarts from root or bypasses Witness gates.
+
+### WP3 — Implement and prove adaptive stopping
+
+Track new exploit clusters in completion order and stop a node after four consecutive completed branches add none, while respecting concurrency already in flight.
+
+**Pass:** Deterministic policy tests cover reset-on-new-cluster, stop-at-four, concurrency, and maximum budget; a real run records the decision.  
+**Fail:** Stop is based on raw reward count or wording variants.
+
+### WP4 — Measure state branching versus flat restarts
+
+When budget permits, run comparable state-branch and from-scratch attempts with common task/model constraints. Measure setup work, branch count, time/compute, and distinct confirmed clusters.
+
+**Pass:** Report states protocol, raw observations, limits, and no causal overclaim.  
+**Fail:** One strategy is estimated, uses a different task/model budget, or illustrative probabilities are presented as measurements.
+
+### WP5 — Capability-gate Memory and VM profiles
+
+Probe installed SDK/account capability and inspect whether process state or Docker-in-sandbox is genuinely required. Implement only a real consumed path and convert every successful memory discovery to durable replay state.
+
+**Pass:** Each profile has either a real integration result or a concise skip backed by probe/task evidence, with no unused production scaffold.  
+**Fail:** Alpha APIs are mocked into existence or become core dependencies.
+
+### WP6 — Evaluate transfer and training consequences conditionally
+
+If real additional tasks and time exist, run the existing shared-defense transfer path. Independently, use real trajectories to compare raw-versus-hardened filtering and characterize admitted hacked data. Consider optional model training only after that report and never live.
+
+**Pass:** Real measured outputs or evidence-backed skips are recorded; hypotheses stay labelled.  
+**Fail:** Synthetic tasks/data or schematic bars become reported results.
+
+## Done-when (self-validation gate)
+
+Run from repository root:
+
+    python docs/plans/scripts/run_mapped.py plan-007-tests
+    python docs/plans/scripts/run_mapped.py integration-research
+    python docs/plans/scripts/run_mapped.py lint
+    python docs/plans/scripts/validate_file_sizes.py --plan 007
+    python docs/plans/scripts/validate_evidence.py --plan 007 --require-complete
+
+Expected evidence:
+
+- parent and child node/ForkPoint ids with depth-two lineage,
+- at least one completed depth-two BranchRun,
+- adaptive-stop policy test and real decision event,
+- research report with measured values or explicit not-measured fields,
+- comparable flat-restart result or justified skip,
+- Memory/VM capability results or justified skips,
+- transfer/training results or justified skips,
+- manifest `docs/plans/evidence/007/MANIFEST.json`.
+
+No owned source file exceeds 500 lines without a real seam. Conditional skips count only when backed by concrete capability/data/budget evidence; they do not justify empty scaffolding.
+
+## Recovery
+
+Research runs are append-only and isolated from core artifacts. Resume from the last node/branch id and respect recorded budgets. Cancel in-flight branches safely when the core release needs resources. Remove experimental code that had no real consumer before completion. Rollback deletes only research paths/artifacts; sealed core Witnesses and release work remain untouched.
+
+## Executor prompt
+
+    /goal Execute docs/plans/007-depth-two-and-research-extensions.md only after Plan 003 merges and without delaying core release. Re-snapshot one promising child, run a real depth-two branch, prove the four-no-new-cluster stop policy, and write a measured report. Exercise Memory, VM, transfer, or training paths only with verified capability and real data; otherwise record evidence-backed skips and create no unused scaffold. Run Done-when commands, update evidence/007/MANIFEST.json, and append the log.
+
+## Living-doc log
+
+### Progress
+
+- [ ] Promising child selected and re-snapshotted.
+- [ ] Depth-two branch run.
+- [ ] Adaptive stop proved.
+- [ ] Flat comparison measured or skipped with evidence.
+- [ ] Memory/VM profiles run or skipped with evidence.
+- [ ] Transfer/training analysis run or skipped with evidence.
+
+### Surprises & Discoveries
+
+- None yet.
+
+### Decision Log
+
+- 2026-06-20 — Planning decision: put all non-core research behind one removable feature boundary and forbid it from gating the demo.
+
+### Outcomes & Retrospective
+
+- Pending execution.

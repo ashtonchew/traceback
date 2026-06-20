@@ -1,0 +1,103 @@
+---
+name: index
+description: >
+  Routes ForkProof implementation work through an acyclic, collision-free dependency graph and evidence-based merge gates. Use when assigning plans, opening parallel worktrees, checking ownership, or deciding whether a later wave may begin.
+owns: ["docs/plans/000-index.md"]
+depends_on: []
+wave: 0
+---
+
+# ForkProof plan index
+
+## Execution rule
+
+Wave 1 grounds the real repository. No source implementation begins while `docs/plans/repo-map/STATUS.json` is `unverified`. Each later plan may update only its own plan/reference/evidence files and its declared feature paths. Proposed source globs become effective only after the repo map accepts or remaps them.
+
+## Dependency graph
+
+    001 repo-grounding-and-command-freeze
+      ├── 002 atomic-forkpoint-seam
+      │     └── 003 stochastic-witness-loop
+      │            ├── 005 verifier-fix-and-release-proof
+      │            │      └── 006 demo-observability-and-publication
+      │            └── 007 depth-two-and-research-extensions
+      └── 004 legitimate-control-fixtures
+             └── 005 verifier-fix-and-release-proof
+
+The graph is acyclic. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo.
+
+## Parallel waves
+
+| Wave | Plans | Parallelism |
+|---|---|---|
+| 1 | 001 | Single repository-grounding gate. |
+| 2 | 002, 004 | ForkPoint/state fidelity and legitimate controls use separate feature paths. |
+| 3 | 003 | Produces real BranchRuns and durable replayable Witnesses. |
+| 4 | 005, 007 | Core release proof and optional research extension write disjoint paths. |
+| 5 | 006 | Integrates only merged core artifacts into the demo and publication surface. |
+
+## Merge gates
+
+### Gate 1 — repository grounded
+
+Required before Wave 2:
+
+- `repo-map/STATUS.json` is `accepted`.
+- Every proposed non-document ownership glob has a real accepted binding.
+- `validate_ownership.py --repo-bound` passes.
+- Baseline build/test commands are recorded and run through `run_mapped.py`.
+- Real source trace, MongoDB task, grader, HUD adapter, Modal adapter, harden-v0 integration, and security controls are located or explicitly marked blocked.
+- Plan 001 evidence manifest is complete.
+
+### Gate 2 — source state and controls credible
+
+Required before Wave 3:
+
+- Plan 002 demonstrates atomic history/state capture, restore fidelity, immutable grader identity, and core snapshot selection on a real trace.
+- Plan 004 freezes at least three path-diverse legitimate controls on the real task.
+- Both manifests are complete; no owned path collision exists.
+
+### Gate 3 — Witness exists
+
+Required before Wave 4:
+
+- Twelve genuine seeded branches ran from one ForkPoint.
+- At least one candidate passed reward, QA classification, deduplication, provenance, durable-state, and three-consecutive-replay gates.
+- Branch isolation and missing-provenance failure checks passed.
+- Plan 003 manifest is complete.
+
+### Gate 4 — release proof credible
+
+Required before Wave 5:
+
+- Every v1 Witness is rewarded and every v1 control is rewarded.
+- Under the exact v2 grader, every Witness scores 0 and every control remains 1.
+- ProofSet and ReleaseProof artifacts are immutable and linked.
+- Plan 005 manifest is complete.
+- Plan 007 may merge independently but cannot weaken or delay this gate.
+
+### Gate 5 — demo/release complete
+
+Planning is implemented when:
+
+- The 13-step demo report links evidence for every step.
+- Live search or the honest prior-run fallback is clearly labelled.
+- A hardened environment version is published, or a permission-blocked release candidate is displayed without claiming publication.
+- Core metrics contain observed values or explicit not-measured status.
+- Plan 006 manifest and all core manifests are complete.
+
+## Ownership map
+
+| Plan | Exclusive proposed writes |
+|---|---|
+| 001 | `docs/plans/repo-map/**`, its plan/reference, `evidence/001/**` |
+| 002 | `src/forkproof/forkpoints/**`, `tests/forkproof/forkpoints/**`, its plan/reference, `evidence/002/**` |
+| 003 | `src/forkproof/witnesses/**`, `tests/forkproof/witnesses/**`, `fixtures/forkproof/witnesses/**`, its plan/reference, `evidence/003/**` |
+| 004 | `src/forkproof/controls/**`, `tests/forkproof/controls/**`, `fixtures/forkproof/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/004/**` |
+| 005 | `src/forkproof/releases/**`, `tests/forkproof/releases/**`, `artifacts/forkproof/releases/**`, its plan/reference, `evidence/005/**` |
+| 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**` |
+| 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, its plan/reference, `evidence/007/**` |
+
+## Assignment checklist
+
+Assign one plan per isolated worktree. Verify dependencies merged, repo map accepted, and target paths match frontmatter. Run the planning validators before assignment and the complete evidence validator before merge.

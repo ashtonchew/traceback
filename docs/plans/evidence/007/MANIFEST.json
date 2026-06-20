@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "plan_id": "007",
+  "plan_name": "depth-two-and-research-extensions",
+  "wave": 4,
+  "status": "not-started",
+  "started_at": null,
+  "updated_at": "2026-06-20T17:37:36.163973+00:00",
+  "completed_at": null,
+  "commit": null,
+  "commands": [],
+  "checks": [],
+  "artifacts": [],
+  "screenshots": [],
+  "skips": [],
+  "blockers": [],
+  "notes": [
+    "Planning template only; no implementation evidence is claimed."
+  ]
+}
