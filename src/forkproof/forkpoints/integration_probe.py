@@ -23,6 +23,7 @@ from .core import (
     restore_forkpoint,
 )
 from .modal_probe import run_modal_filesystem_probe
+from .replay_probe import run_trace_replay_probe
 from .trace_probe import fetch_trace_summary
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -45,6 +46,7 @@ def main() -> int:
     source = load_source_trace(ROOT / "docs" / "plans" / "repo-map" / "STATUS.json")
     trace_summary = fetch_trace_summary()
     modal_summary = run_modal_filesystem_probe()
+    replay_summary = run_trace_replay_probe()
     provider = InMemorySnapshotProvider()
     try:
         with tempfile.TemporaryDirectory(prefix="forkpoint-readiness-") as tmp:
@@ -87,9 +89,13 @@ def main() -> int:
         "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
         "modal_snapshot_id": modal_summary["snapshot_id"],
         "modal_snapshot_mode": modal_summary["snapshot_mode"],
+        "trace_replay_snapshot_ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
+        "trace_replay_snapshot_id": replay_summary["snapshot_id"],
+        "trace_replay_tool_count": replay_summary["replayed_tool_count"],
         "handoff_keys": sorted(handoff),
         "remaining_real_system_gaps": [
             "HUD trace boundary is exported and redacted, but no live executable sandbox remains attached to that historical boundary",
+            "Trace actions are replayed into a fresh Modal sandbox and snapshot/restore passes, but this is replay evidence rather than the original sandbox handle",
             "Modal Filesystem Snapshot round-trip covers task-relevant paths, but not the historical source trace sandbox state",
             "full branch security controls remain located-owned outside Plan 002",
             "environment image digest remains TBD",
