@@ -4,7 +4,7 @@
 
 The core evidence run uses:
 
-- 12 initial branches,
+- 12 executed BranchRuns, not 12 scheduled attempts and not 12 successful-only branches,
 - one accepted ForkPoint,
 - the Plan 002 restore handoff fields needed for BranchRun lineage,
 - independent branch ids and seeds,
@@ -17,6 +17,8 @@ The core evidence run uses:
 - complete success or failure provenance.
 
 Adaptive stopping and depth-two expansion belong to Plan 007.
+
+Execution boundary: a branch becomes a counted BranchRun only after all setup/preflight checks pass, restored isolated state is bound to an immutable branch id, runtime/provenance identity is allocated, and the Branch gateway adapter invokes the live agent/gateway or first environment action. From that point forward, success, verifier failure, QA failure, timeout, agent error, or cleanup failure is a finalized counted BranchRun. A failure before that boundary is a setup/preflight failure; record it separately in `docs/plans/evidence/003/MANIFEST.json` and schedule a replacement with a new branch id/seed. This preserves stochastic sample accounting while keeping infrastructure readiness failures visible.
 
 ## Promotion truth table
 
@@ -53,6 +55,8 @@ A completed BranchRun must be reconstructable without reading mutable process me
 
 Reward, QA, action record, file diff, environment version, and grader digest must join to the same BranchRun. If the authoritative reward output and QA result cannot be tied to the same branch trace and action-record digest, the branch is diagnostic only and cannot enter dedup or Witness promotion.
 
+Action provenance convention: record one ordered native action envelope per completed branch action, with a parented span id, action index, action kind, start/end timestamps, sanitized input/output refs, before/after state hashes when available, tool/provider request ids, and content digests for external artifacts. Keep dynamic or sensitive data out of span attributes; store large inputs/outputs as content-addressed artifacts. OpenTelemetry treats spans as parented operations with start/end metadata and warns against sensitive dynamic attributes in semantic conventions ([OpenTelemetry trace conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md), [OpenTelemetry database span guidance](https://opentelemetry.io/docs/specs/semconv/db/database-spans/)).
+
 ## Dedup behavior
 
 Use the verified harden-v0 or repository dedup implementation. harden-v0's primary dedup script instructs clustering by substantive target and mechanism rather than surface wording, so the semantic key is target plus mechanism informed by branch evidence ([harden-v0 dedup source](https://github.com/few-sh/harden-v0/blob/b9dd28c732e7e5435da4a2ac90ae92ac6ea65007/dedup_hacks.py#L31-L35)). Record:
@@ -79,11 +83,13 @@ If conversion cannot reproduce the attack, the branch remains a discovery result
 
 Witness manifests must record retention strong enough for release regression use or a durable fallback that survives provider snapshot expiry. Memory Snapshot ids, live process handles, and platform dashboard URLs may appear as diagnostic references, but none can be the durable system of record.
 
-`pre_attack_snapshot_ref` is either the source ForkPoint restore or a recorded child snapshot taken before the first exploit action. `recorded_actions_ref` names the exact inclusive action span replayed from that state. A sealed Witness must satisfy every required Exploit Witness field in `docs/plans/specs/03-interfaces.md#exploit-witness-record`; missing fields are `provenance_incomplete`.
+`pre_attack_snapshot_ref` is either the source ForkPoint restore or a recorded child snapshot taken before the first exploit action. `recorded_actions_ref` names the exact inclusive action-index span replayed from that state, for example `sha256:.../actions.jsonl#action_index=7..11`. Prefer the full source-ForkPoint-to-terminal branch span unless a recorded child snapshot was captured before the first replayed action and has its own durable provenance. A sealed Witness must satisfy every required Exploit Witness field in `docs/plans/specs/03-interfaces.md#exploit-witness-record`; missing fields are `provenance_incomplete`.
+
+Use supply-chain style provenance for sealed Witness artifacts: record invocation id, trusted builder/orchestrator identity, materials/inputs, products/outputs, dependencies, timestamps, and byproduct/log refs. SLSA provenance separates build definition from run details, and in-toto records materials and products for verifiable chain evidence; Plan 003 applies that shape to Witness packaging rather than to a software release build ([SLSA provenance v1.0](https://slsa.dev/spec/v1.0/provenance), [in-toto getting started](https://in-toto.io/docs/getting-started/)).
 
 ## Replay protocol
 
-Replay must not call the attacker model. It:
+Replay must not call the attacker model or Branch gateway. It:
 
 1. verifies manifest/content hashes,
 2. restores pre-attack durable state,
@@ -91,15 +97,22 @@ Replay must not call the attacker model. It:
 4. pins environment image and grader,
 5. replays native action/tool envelopes in order,
 6. captures file diff and verifier output,
-7. compares semantic result with the original,
+7. compares ordered action envelopes, file diff/verifier output, and semantic result with the original,
 8. cleans the sandbox,
 9. repeats from a fresh restore three times.
 
 A timestamp, random nonce, external network response, package registry, or floating dependency that changes the outcome must be pinned, recorded, or treated as divergence.
 
-Replay evidence must include proof that model/gateway credentials were not invoked, the sandbox was freshly restored for each attempt, and the verifier/grader digest matched the original candidate. A candidate with one successful replay and one divergent replay remains unproven.
+Replay evidence must include proof that model/gateway credentials were absent or inaccessible, no model/gateway request ids were produced, the sandbox was freshly restored for each attempt, and the verifier/grader digest matched the original candidate. A candidate with one successful replay and one divergent replay remains unproven. A reward match with action-order divergence is `replay_diverged`; replay is an event-history check, not just a final-score check. Temporal's deterministic replay model compares commands emitted during replay to stored event history and treats mismatches as nondeterminism; Plan 003 uses the same convention for recorded branch actions ([Temporal workflow determinism](https://docs.temporal.io/workflow-definition), [Temporal event history replay](https://docs.temporal.io/encyclopedia/event-history/event-history-java)).
 
 ## Security evidence
+
+Plan 003 uses four trust zones:
+
+- `trusted_orchestrator`: schedules branches, owns canonical evidence writes, brokers the Branch gateway adapter, and stores content-addressed artifacts.
+- `untrusted_branch`: executes attacker-controlled code/actions with only task-required branch-scoped capabilities.
+- `trusted_grader`: runs authoritative reward/verifier logic outside attacker-controlled cwd, import paths, plugin paths, and test discovery side effects.
+- `trusted_release`: owns publication, release, and repository-wide credentials outside Plan 003 branch execution.
 
 At minimum record:
 
@@ -114,7 +127,7 @@ At minimum record:
 - authoritative grader execution separated from attacker-controlled cwd, import paths, plugin paths, and test discovery side effects,
 - redaction/sanitization result for history, action logs, file diffs, QA/verifier outputs, and manifest fields.
 
-Do not put secret values in evidence. Branches may emit diagnostic data, but trusted orchestration writes the canonical evidence manifest and content-addressed artifacts outside branch-writable state.
+Do not put secret values in evidence. Evidence records capability labels, policy ids, and negative checks, never credential values. Untrusted branches must not receive raw provider/model, grader, release, infrastructure administration, repository-wide, or publication credentials. If a branch needs model access, route it through the repository-owned Branch gateway adapter or an explicitly branch-scoped platform capability with lineage tags. Branches may emit diagnostic data, but trusted orchestration writes the canonical evidence manifest and content-addressed artifacts outside branch-writable state. Treat durable image/env provenance as hostile to secrets: OWASP recommends secret inventory, access control, and rotation, and Docker warns that build args/env vars persist in final images and are inappropriate for secrets ([OWASP Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html), [Docker build secrets](https://docs.docker.com/build/building/secrets/)).
 
 ## Metrics
 

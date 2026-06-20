@@ -11,7 +11,7 @@ wave: 3
 
 ## Goal
 
-Run exactly 12 genuine seeded stochastic continuations from one real ForkPoint and promote at least one branch to an Exploit Witness only after complete provenance, independent reward/QA gates, target-mechanism deduplication, durable storage, and three consecutive deterministic v1 replays all pass. Done is binary when both the 12-branch count and at least one sealed three-replay Witness are evidenced.
+Run exactly 12 executed genuine seeded stochastic continuations from one real ForkPoint and promote at least one branch to an Exploit Witness only after complete provenance, independent reward/QA gates, target-mechanism deduplication, durable storage, and three consecutive deterministic v1 replays all pass. Done is binary when both the 12 executed BranchRun count and at least one sealed three-replay Witness are evidenced.
 
 ## Context / Why
 
@@ -23,6 +23,7 @@ This slice owns the full locality of behavior from branch scheduling through Wit
 
 - Start only when Gate 2 is satisfied: Plans 002 and 004 have complete manifests, Plan 002 has merged with a branch-ready restore handoff, Plan 004 controls are frozen, `docs/plans/repo-map/STATUS.json` is `accepted`, `plan-003-tests`, `integration-witness`, and `security-branch` have verified mapped argv, and this plan's ownership bindings are accepted. Never recreate the state from scratch for core branch runs.
 - Run agentic continuations with live model/gateway calls, real gateway request ids, provider response provenance, unique branch ids/seeds, and recorded sampling configuration. HUD agents are model+harness callables over a live `Run`, and HUD's CLI supports grouped rollouts to observe reward spread; Plan 003 still binds the exact gateway behavior through the repo map rather than assuming the CLI shape is the implementation path ([HUD v6 Agents](https://docs.hud.ai/v6/core/agents)). Evidence must show provider-supported seed semantics or non-deterministic sampling diversity and prove the branch action record came from live gateway execution rather than replay fixtures. Do not feed a fixed exploit taxonomy.
+- Count exactly 12 executed BranchRuns, not 12 scheduled attempts or 12 successful branches. A branch counts only after preflight succeeds and the execution boundary is crossed: restored isolated state is bound to an immutable branch id, runtime/provenance identity is allocated, and the Branch gateway adapter invokes the live agent/gateway or first environment action. After that boundary, success, verifier failure, QA failure, timeout, agent error, or cleanup failure finalizes a counted BranchRun with status and cleanup evidence. Setup/preflight failures before that boundary are recorded separately in the evidence manifest and replaced by a new immutable branch id/seed. This follows repetition/error handling conventions where repetitions are executed samples while setup errors remain distinct from scored results ([LangSmith repetitions](https://docs.langchain.com/langsmith/repetition), [Inspect handling errors](https://inspect.aisi.org.uk/handling-errors.html)).
 - Use one repository-owned Branch gateway adapter as the only Plan 003 live execution boundary for model/HUD/provider calls. Direct HUD CLI, provider SDK, or gateway calls are allowed only inside that adapter or as earlier repo-map probe commands, never scattered through Witness scheduling, promotion, replay, or tests.
 - Keep reward and QA classification separate and authoritative at their own sources. HUD QA agents can emit structured reward-hacking verdicts such as `is_reward_hacking`, `hacking_strategy`, and `severity`, but those verdicts do not replace the verifier reward ([HUD QA Agents](https://docs.hud.ai/platform/agents/qa)).
 - Tag every gateway, snapshot, trace, grader, QA, and artifact operation with run/branch/node lineage.
@@ -47,9 +48,9 @@ Implementation guidance: keep the Branch gateway adapter inside the `witnesses` 
 
 ### WP2 — Execute 12 genuine stochastic branches
 
-Run 12 unique branches from the same ForkPoint with sampling diversity. Preserve HUD trace links, action records, file diffs, reward, model configuration, provider/gateway request ids, model response provenance, timing, and lineage. HUD file tracking is an explicit platform feature and may be disabled; Plan 003 must record whether branch file evidence comes from the accepted repo adapter, HUD file tracking, or another verified immutable export ([HUD File Tracking](https://docs.hud.ai/platform/file-tracking)). Do not stop early in the core run even when a Witness appears; the must-ship evidence is about 12 real branches.
+Run 12 executed unique branches from the same ForkPoint with sampling diversity. Preserve HUD trace links, action records, file diffs, reward, model configuration, provider/gateway request ids, model response provenance, timing, and lineage. HUD file tracking is an explicit platform feature and may be disabled; Plan 003 must record whether branch file evidence comes from the accepted repo adapter, HUD file tracking, or another verified immutable export ([HUD File Tracking](https://docs.hud.ai/platform/file-tracking)). Do not stop early in the core run even when a Witness appears; the must-ship evidence is about 12 real executed branches.
 
-**Pass:** Evidence lists 12 unique branch ids and seeds with real model/gateway and trace results.  
+**Pass:** Evidence lists 12 executed unique branch ids and seeds with real model/gateway and trace results, plus separate records for any replaced preflight failures.  
 **Fail:** Branches are scripted replays, duplicated identities, or fresh-from-start rollouts.
 
 ### WP3 — Grade, classify, and deduplicate independently
@@ -99,7 +100,7 @@ Expected evidence:
 
 - one source ForkPoint id,
 - Plan 002 restore handoff fields re-verified after process restart: boundary token/hash, `snapshot_restore_ref`, parent node id, isolated writable root identity, history hash, Directory/Filesystem snapshot mode/id, grader digest, `grader_digest_source`, trusted evidence refs, non-branch-writable artifact store, and branch-tag propagation inputs,
-- 12 unique BranchRun records, seeds, gateway request ids, model response provenance, sampling configs or provider-supported seed semantics, trace links, live-generated action records, status, and cleanup result,
+- 12 executed unique BranchRun records, seeds, gateway request ids, model response provenance, sampling configs or provider-supported seed semantics, trace links, live-generated action records, status, and cleanup result, plus separate non-counted setup/preflight failure records and replacement branch ids when applicable,
 - separate reward and QA outputs with source ids, same-branch join proof, and unavailable-classification failure coverage,
 - dedup cluster report with compared prior clusters, target/mechanism rationale, and real dedup path output,
 - at least one sealed Witness with durable filesystem-class state, exact `pre_attack_snapshot_ref`, inclusive `recorded_actions_ref` replay span, complete Exploit Witness fields, retention decision, content digest, redaction result, and replay entrypoint,
@@ -117,7 +118,7 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 
 ## Executor prompt
 
-    /goal Execute docs/plans/003-stochastic-witness-loop.md only after Gate 2 is satisfied: Plans 002 and 004 manifests are complete and the Wave 3 merge gate is open. Run 12 real seeded isolated branches from the accepted ForkPoint, keep reward and HUD QA separate, deduplicate by target/mechanism, seal at least one durable Witness only after three deterministic v1 replays, pass the security and integration commands plus merge validators, stay inside owned paths, update evidence/003/MANIFEST.json, and append the Living-doc log. Never substitute scripted or fresh-start runs for stochastic state branches.
+    /goal Execute docs/plans/003-stochastic-witness-loop.md only after Gate 2 is satisfied: Plans 002 and 004 manifests are complete and the Wave 3 merge gate is open. Run 12 executed real seeded isolated branches from the accepted ForkPoint, keep reward and HUD QA separate, deduplicate by target/mechanism, seal at least one durable Witness only after three deterministic v1 replays, pass the security and integration commands plus merge validators, stay inside owned paths, update evidence/003/MANIFEST.json, and append the Living-doc log. Never substitute scripted, scheduled-only, preflight-only, or fresh-start runs for stochastic state branches.
 
 ## Living-doc log
 
@@ -141,6 +142,9 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 - 2026-06-20 — Planning decision: co-locate stochastic discovery and deterministic Witness replay because Witness promotion is one vertical behavior boundary.
 - 2026-06-20 — Grilling decision: every core BranchRun must be produced by a live model/gateway call with provider response provenance; synthetic action envelopes, scripted traces, cached model responses, or replay fixtures cannot satisfy the 12-branch evidence requirement.
 - 2026-06-20 — Grilling decision: Plan 003 requires one repository-owned Branch gateway adapter as the mandatory live execution boundary. Direct HUD CLI/provider SDK calls are allowed only behind that adapter or as repo-map probe commands, preserving locality of behavior and modularity by the `witnesses` feature.
+- 2026-06-20 — Grilling decision: the branch budget is 12 executed BranchRuns. Scheduled-only and preflight-failed attempts are evidenced separately and replaced; failures after the execution boundary count because they represent real stochastic continuations.
+- 2026-06-20 — Grilling decision: sealed replay compares ordered native action envelopes and semantic verifier output, not reward alone; action-order divergence keeps the candidate unproven.
+- 2026-06-20 — Grilling decision: Plan 003 uses four trust zones (`trusted_orchestrator`, `untrusted_branch`, `trusted_grader`, `trusted_release`) and gives untrusted branches only branch-scoped capabilities through the Branch gateway boundary.
 
 ### Outcomes & Retrospective
 
