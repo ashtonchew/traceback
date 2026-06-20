@@ -20,7 +20,7 @@ from pathlib import Path
 from hud.environment import Environment
 from hud.graders import BashGrader, combine
 
-env = Environment(name="mongodb_sales_aggregation_engine")
+env = Environment(name="mongodb_sales_aggregation_engine_v1")
 
 APP = Path("/app")
 ASSETS = Path(__file__).resolve().parent / "task_assets"

@@ -23,6 +23,18 @@ TEXT_SUFFIXES = {
 }
 
 
+# Generated/vendored directories are never project source; skip them so an
+# owned path that contains a local virtualenv or cache is not flagged.
+IGNORED_DIRS = {
+    ".venv", "venv", ".git", "__pycache__", "node_modules", ".ruff_cache",
+    ".pytest_cache", ".mypy_cache", ".external", ".hud",
+}
+
+
+def _ignored(path: Path) -> bool:
+    return any(part in IGNORED_DIRS for part in path.parts)
+
+
 def expand_pattern(pattern: str) -> list[Path]:
     absolute = ROOT / pattern
     matches = [Path(item) for item in glob.glob(str(absolute), recursive=True)]
@@ -30,10 +42,13 @@ def expand_pattern(pattern: str) -> list[Path]:
         matches = [absolute]
     files: list[Path] = []
     for match in matches:
-        if match.is_file():
+        if match.is_file() and not _ignored(match):
             files.append(match)
         elif match.is_dir():
-            files.extend(path for path in match.rglob("*") if path.is_file())
+            files.extend(
+                path for path in match.rglob("*")
+                if path.is_file() and not _ignored(path)
+            )
     return files
 
 
