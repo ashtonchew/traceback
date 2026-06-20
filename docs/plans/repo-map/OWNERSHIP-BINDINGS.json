@@ -2,6 +2,13 @@
   "schema_version": 1,
   "status": "accepted",
   "bindings": {
+    "envs/mongodb-sales-aggregation-engine/**": {
+      "status": "accepted",
+      "actual": [
+        "envs/mongodb-sales-aggregation-engine/**"
+      ],
+      "evidence": "No later plan owns building the HUD task environment, yet a live env is required to produce a real reward-1 trace and grader identity. Scoped to Plan 001 as the single product-source exception; collision-free against all src/tests/fixtures/artifacts feature globs."
+    },
     "artifacts/forkproof/demo/**": {
       "status": "accepted",
       "actual": [

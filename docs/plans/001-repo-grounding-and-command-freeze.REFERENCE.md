@@ -45,7 +45,9 @@ Required shape:
       "blockers": []
     }
 
-Set `accepted` only when every core prerequisite is true. Alpha capabilities are not core prerequisites.
+Set `accepted` per the Gate-1 wording in `000-index.md`: every core prerequisite is either **verified-present** (`true`) or **explicitly located and owned by its later plan** with the owner recorded in `EVIDENCE-PACKETS.md` and a `blocked`-state entry; the baseline command runs; repo-bound ownership validates; and the live owned HUD env has produced a real reward-1 suspicious trace plus a captured grader digest. A prerequisite that a later wave builds (for example `harden_v0`, `mongodb_task` fixture, `security_controls`, `artifact_store`) does not need to be implemented inside Plan 001 to accept Gate 1 — it must be located, owned, and tracked. Do not fabricate a `true` value for a surface that does not exist. Alpha capabilities are not core prerequisites.
+
+For machine-checkable acceptance, `STATUS.json` carries a `gate1_acceptance` block recording, per prerequisite, whether it is `verified-present` or `located-owned:<plan>`, so acceptance is explicit rather than implied by the boolean alone.
 
 ## `COMMANDS.json`
 
