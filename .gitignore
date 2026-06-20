@@ -8,3 +8,4 @@
 .codex-worktrees/
 __pycache__/
 *.py[cod]
+.hud_eval.toml

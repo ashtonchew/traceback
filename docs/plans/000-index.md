@@ -90,7 +90,7 @@ Planning is implemented when:
 
 | Plan | Exclusive proposed writes |
 |---|---|
-| 001 | `.agents/skills/**`, `.claude/skills/**`, `.gitignore`, `.env.example`, `.python-version`, `pyproject.toml`, `skills-lock.json`, `uv.lock`, `requirements/harden-v0.txt`, `scripts/bootstrap_external_deps.sh`, `docs/plans/scripts/validate_evidence.py`, `docs/plans/specs/07-environment.md`, `docs/plans/repo-map/**`, its plan/reference, `evidence/001/**` |
+| 001 | `.agents/skills/**`, `.claude/skills/**`, `.gitignore`, `.env.example`, `.python-version`, `pyproject.toml`, `skills-lock.json`, `uv.lock`, `requirements/harden-v0.txt`, `scripts/bootstrap_external_deps.sh`, `docs/plans/scripts/validate_evidence.py`, `docs/plans/specs/07-environment.md`, `docs/plans/repo-map/**`, `envs/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/001/**` |
 | 002 | `src/forkproof/forkpoints/**`, `tests/forkproof/forkpoints/**`, its plan/reference, `evidence/002/**` |
 | 003 | `src/forkproof/witnesses/**`, `tests/forkproof/witnesses/**`, `fixtures/forkproof/witnesses/**`, its plan/reference, `evidence/003/**` |
 | 004 | `src/forkproof/controls/**`, `tests/forkproof/controls/**`, `fixtures/forkproof/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/004/**` |

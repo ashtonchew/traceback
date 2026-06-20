@@ -2,6 +2,63 @@
   "schema_version": 1,
   "status": "accepted",
   "bindings": {
+    ".agents/skills/**": {
+      "status": "accepted",
+      "actual": [".agents/skills/**"],
+      "evidence": "Plan 001 setup path: project agent skills (HUD + Modal); collision-free, owned by the grounding plan."
+    },
+    ".claude/skills/**": {
+      "status": "accepted",
+      "actual": [".claude/skills/**"],
+      "evidence": "Plan 001 setup path: Claude Code skill symlinks to .agents/skills; collision-free."
+    },
+    ".gitignore": {
+      "status": "accepted",
+      "actual": [".gitignore"],
+      "evidence": "Plan 001 setup path: repo ignore rules for venvs/caches/env files."
+    },
+    ".env.example": {
+      "status": "accepted",
+      "actual": [".env.example"],
+      "evidence": "Plan 001 setup path: committed env-var contract (no secrets)."
+    },
+    ".python-version": {
+      "status": "accepted",
+      "actual": [".python-version"],
+      "evidence": "Plan 001 setup path: pinned Python for uv."
+    },
+    "pyproject.toml": {
+      "status": "accepted",
+      "actual": ["pyproject.toml"],
+      "evidence": "Plan 001 setup path: uv project manifest for the planning/dev bootstrap."
+    },
+    "skills-lock.json": {
+      "status": "accepted",
+      "actual": ["skills-lock.json"],
+      "evidence": "Plan 001 setup path: skills lockfile."
+    },
+    "uv.lock": {
+      "status": "accepted",
+      "actual": ["uv.lock"],
+      "evidence": "Plan 001 setup path: resolved dependency lockfile."
+    },
+    "requirements/harden-v0.txt": {
+      "status": "accepted",
+      "actual": ["requirements/harden-v0.txt"],
+      "evidence": "Plan 001 setup path: harden-v0 support requirements mirror."
+    },
+    "scripts/bootstrap_external_deps.sh": {
+      "status": "accepted",
+      "actual": ["scripts/bootstrap_external_deps.sh"],
+      "evidence": "Plan 001 setup path: pinned external source checkout (harden-v0 + Terminal Wrench)."
+    },
+    "envs/mongodb-sales-aggregation-engine/**": {
+      "status": "accepted",
+      "actual": [
+        "envs/mongodb-sales-aggregation-engine/**"
+      ],
+      "evidence": "No later plan owns building the HUD task environment, yet a live env is required to produce a real reward-1 trace and grader identity. Scoped to Plan 001 as the single product-source exception; collision-free against all src/tests/fixtures/artifacts feature globs."
+    },
     "artifacts/forkproof/demo/**": {
       "status": "accepted",
       "actual": [
