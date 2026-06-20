@@ -65,10 +65,18 @@ When budget permits, run comparable state-branch and from-scratch attempts with 
 
 ### WP5 — Capability-gate Memory and VM profiles
 
-Probe installed SDK/account capability and inspect whether process state or Docker-in-sandbox is genuinely required. Implement only a real consumed path and convert every successful memory discovery to durable replay state.
+For each profile, the executor must arrive at exactly one of three honest outcomes, evidenced in the manifest:
+
+1. **Capability unavailable** — probe returns error or unauthorized; record probe output, mark `skipped`, create no scaffold.
+2. **Capability available but unnecessary** — probe succeeds but the task does not require the profile's unique behavior (Docker/Harbor/kernel for VM; process-resident state irreproducible from filesystem for Memory); record probe output and task evidence, mark `skipped`, create no scaffold.
+3. **Capability available and necessary** — probe succeeds AND task evidence confirms the need; implement only the real consumed path and complete the full evidence matrix in the reference.
+
+VM Sandbox is a conditional research path for tasks that genuinely require a full Linux kernel, Docker-in-Sandbox, systemd, eBPF, cgroups, or loopback mounts. It is not a replacement for Plan 002's Directory or Filesystem Snapshot mode selection.
+
+Memory Snapshot is a search accelerator only. Any successful Memory discovery must be immediately converted to a durable replay artifact: a Directory or Filesystem Snapshot plus recorded actions, history prefix, environment image digest, grader digest, and restore command. A Memory Snapshot alone cannot satisfy Witness durability and must not be the `pre_attack_snapshot_ref`.
 
 **Pass:** Each profile has either a real integration result or a concise skip backed by probe/task evidence, with no unused production scaffold.  
-**Fail:** Alpha APIs are mocked into existence or become core dependencies.
+**Fail:** Alpha APIs are mocked into existence, become core dependencies, or VM is used as a substitute for Directory/Filesystem mode rather than because real-kernel behavior is required.
 
 ### WP6 — Evaluate transfer and training consequences conditionally
 
