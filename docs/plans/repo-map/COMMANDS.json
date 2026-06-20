@@ -1,134 +1,137 @@
 {
   "schema_version": 1,
-  "status": "unverified",
+  "status": "accepted",
   "commands": {
     "baseline": {
-      "status": "unverified",
-      "argv": null,
+      "status": "verified",
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_graph.py"
+      ],
       "cwd": ".",
       "env": {},
-      "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "timeout_seconds": 30,
+      "reason": "The repository currently contains only the planning bundle; graph validation is the smallest checked-in health command that passes on a clean checkout with Python 3.12.13."
     },
     "lint": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "No product source, package manager configuration, or lint tool is checked in yet; run baseline plus the plan validators until a real toolchain is added."
     },
     "build": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "No buildable product artifact is checked in yet; this becomes required when a source package or application is added."
     },
     "plan-002-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until Gate 1 is accepted and Plan 002 source/test paths are created."
     },
     "integration-forkpoint": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked because no HUD trace, Modal snapshot adapter, grader digest, or ForkPoint implementation exists yet."
     },
     "plan-003-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until Plans 001 and 002 are accepted and Witness source/test paths exist."
     },
     "integration-witness": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked because there is no agent gateway, branch runner, replay system, or real source trace in the repository."
     },
     "security-branch": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked because no sandbox isolation policy or branch execution surface is checked in."
     },
     "plan-004-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until Gate 1 is accepted and legitimate-control fixture code exists."
     },
     "integration-controls": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked because the real MongoDB task fixture and solver/reference hints are absent."
     },
     "plan-005-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until release source/test paths exist after prior waves."
     },
     "integration-release": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked because there is no v1/v2 grader, ProofSet runner, or publication target."
     },
     "plan-006-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until demo source/test paths exist after release proof artifacts."
     },
     "demo": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until the 13-step demo report and underlying live/prior-run artifacts exist."
     },
     "plan-007-tests": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until research source/test paths exist after core Witness creation."
     },
     "integration-research": {
-      "status": "unverified",
-      "argv": null,
+      "status": "not-applicable",
+      "argv": [],
       "cwd": ".",
       "env": {},
       "timeout_seconds": null,
-      "reason": "Wave 1 must bind this to the real repository command."
+      "reason": "Blocked until optional Memory/VM/depth-two capabilities are probed against real infrastructure."
     }
   }
 }
