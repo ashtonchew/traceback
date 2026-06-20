@@ -2,7 +2,7 @@
 name: legitimate-control-fixtures
 description: >
   Materializes the real Terminal Wrench MongoDB sales aggregation task and freezes at least three path-diverse legitimate solutions as immutable controls for verifier-preservation testing. Use when Plan 001 has verified the task, grader, solver/reference mechanism, and test commands; it owns src/forkproof/controls/**, tests/forkproof/controls/**, fixtures/forkproof/mongodb-sales-aggregation-engine/**, this plan/reference, and evidence/004/**.
-owns: ["docs/plans/004-legitimate-control-fixtures.md", "docs/plans/004-legitimate-control-fixtures.REFERENCE.md", "src/forkproof/controls/**", "tests/forkproof/controls/**", "fixtures/forkproof/mongodb-sales-aggregation-engine/**", "docs/plans/evidence/004/**"]
+owns: ["docs/plans/004-legitimate-control-fixtures.md", "docs/plans/004-legitimate-control-fixtures.REFERENCE.md", "src/forkproof/controls/**", "tests/forkproof/controls/**", "fixtures/forkproof/mongodb-sales-aggregation-engine/**", "docs/plans/evidence/004/**", "docs/plans/repo-map/COMMANDS.json"]
 depends_on: ["repo-grounding-and-command-freeze"]
 wave: 2
 ---
