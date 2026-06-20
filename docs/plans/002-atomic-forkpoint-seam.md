@@ -135,6 +135,7 @@ Capture and restore operations must be idempotent by immutable ForkPoint id. On 
 - [ ] Fidelity restore implemented.
 - [ ] ForkPoint sealed.
 - [ ] Six behavior cases and integration pass.
+- 2026-06-20T22:58:25Z — STOP: implementation did not start because this plan's start precondition is unmet. `docs/plans/repo-map/COMMANDS.json` still marks `plan-002-tests` and `integration-forkpoint` as `not-applicable`, while this plan requires both to have verified mapped argv before source work. The blocker is mirrored in `docs/plans/evidence/002/MANIFEST.json`.
 
 ### Surprises & Discoveries
 
@@ -144,12 +145,14 @@ Capture and restore operations must be idempotent by immutable ForkPoint id. On 
 - 2026-06-20 — Grill-with-docs review found residual proof gaps around evaluator-surface digests, completed-action durability, Directory reconstruction, MongoDB quiescence, Python startup/plugin surfaces, Filesystem Snapshot safety, and mismatch fallback prevention.
 - 2026-06-20 — PR #4 review found Plan 001 may provide the live HUD env and Modal capability probes before all consumed runtime fields are executable. Plan 002 therefore gates on accepted source trace, HUD evidence, grader digest, task-specific capture/restore, Directory mount-restore, and security-control evidence rather than on `located-and-owned` labels alone.
 - 2026-06-20 — Latest PR #4 review found Gate 1 accepted with a live reward-1 legitimate-solve trace, fixed `/app` workspace/grader identity, and left reward-hack QA classification to Plan 003. The earlier blocked repo-map note is superseded once that PR merges, but Plan 002 remains non-executable until `plan-002-tests` and `integration-forkpoint` have real argv and this plan proves task-specific capture/restore, Directory mount-restore if selected, and security controls.
+- 2026-06-20T22:58:25Z — In latest `origin/main`, `STATUS.json` is accepted and records a live reward-1 trace, but `COMMANDS.json` still has no verified Plan 002 test or integration argv. Running the mapped commands returned `SKIP` for both required Plan 002 gates, so the repo is not yet in an evidence-based executable state for this plan.
 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: keep source-trace ingestion, capture, restore, and the ForkPoint contract in one locality-of-behavior feature slice.
 - 2026-06-20 — Planning decision: Directory Snapshot is acceptable only for a purpose-built task-owned state root or a hashed deterministic reconstruction that cannot mask branch-relevant mutations; otherwise Plan 002 must use Filesystem Snapshot or STOP.
+- 2026-06-20T22:58:25Z — Execution decision: do not edit `COMMANDS.json` from Plan 002 because it is outside Plan 002 ownership, and do not implement unverified local commands because that would bypass the plan's start gate and create false completion evidence.
 
 ### Outcomes & Retrospective
 
-- Pending execution.
+- Blocked before implementation. No ForkPoint record, snapshot, restore handoff, or six-behavior proof was created. The required next step is to bind verified `plan-002-tests` and `integration-forkpoint` argv through the repo-map owner or update ownership explicitly, then resume Plan 002 from this STOP.
