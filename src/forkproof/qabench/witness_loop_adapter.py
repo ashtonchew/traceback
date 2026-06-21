@@ -124,6 +124,7 @@ def to_discovered_branch(
         hud_trace_id=branch.get("hud_trace_id"),
         workspace_ref=branch.get("snapshot_restore_ref"),
         file_diff_ref=branch.get("file_diff_ref"),
+        action_record_ref=branch.get("action_record_ref"),
         lineage=_lineage(branch),
     )
 

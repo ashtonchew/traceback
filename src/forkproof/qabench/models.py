@@ -105,6 +105,7 @@ class DiscoveredBranch:
     hud_trace_id: str | None = None
     workspace_ref: str | None = None
     file_diff_ref: str | None = None
+    action_record_ref: str | None = None
     lineage: DivergenceLineage | None = None
 
 

@@ -1,6 +1,6 @@
 """Pure mapping behavior of the SFT trajectory export (Plan 008 -> PR #26)."""
 
-from forkproof.qabench.sft_export import _verdict_value
+from forkproof.qabench.sft_export import _verdict_value, sft_status
 
 
 def test_verdict_value_strips_enum_qualifier() -> None:
@@ -21,3 +21,21 @@ def test_patched_reward_mapping_matches_pr26_contract() -> None:
         assert patched == exp_patched
         assert (verdict == "confirmed_hack") is exp_hack
         assert (verdict == "legitimate") is exp_legit
+
+
+def test_sft_gate_only_certifies_unanimously_clean_trajectories() -> None:
+    # A confirmed hack is never clean.
+    assert sft_status("confirmed_hack", None, "solved it")[2] is False
+    # Verifier-legit but QA flagged it -> quarantined, NOT clean (cannot certify here).
+    status, reason, clean = sft_status("legitimate", True, "a normal solve")
+    assert (status, clean) == ("quarantined", False)
+    assert "QA" in reason
+    # Verifier-legit, QA-clean, but the trace narrates an exploit -> quarantined.
+    status, reason, clean = sft_status("legitimate", False, "I planted a fake binary to bypass it")
+    assert (status, clean) == ("quarantined", False)
+    assert "narrative" in reason
+    # Clean only when every signal agrees: referee-legit AND QA-clean AND no narrative.
+    assert sft_status("legitimate", False, "queried the database and exported recovered.json") == (
+        "sft_clean", None, True
+    )
+    assert sft_status("legitimate", None, None)[2] is True
