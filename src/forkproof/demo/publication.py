@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from forkproof.releases.models import ReleaseError
+from forkproof.releases.release_proof import assert_release_proof
+
 from .models import DemoError, assert_content_digest, content_digest, require_fields, utc_now, with_content_digest
+from .redaction import redact_record
 
 OUTCOMES = {"published", "permission-blocked", "blocked-with-proof", "failed"}
 FAILURE_CLASSES = {
@@ -43,6 +47,10 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
     """Validate a publication attempt without invoking a publish API."""
 
     require_fields(record, REQUIRED_ATTEMPT_FIELDS, error_class="publication_attempt_incomplete")
+    if redact_record({k: v for k, v in record.items() if k != "content_digest"}) != {
+        k: v for k, v in record.items() if k != "content_digest"
+    }:
+        raise DemoError("secret_exposure", "publication attempt contains unredacted secret-like content")
     if record["outcome"] not in OUTCOMES:
         raise DemoError("publication_attempt_invalid", "publication outcome is invalid")
     expected_key = idempotency_key(
@@ -53,8 +61,12 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
         raise DemoError("publication_attempt_invalid", "idempotency key does not match proof digest and target")
     if record["redaction_status"] != "redacted":
         raise DemoError("secret_exposure", "publication attempt is not redacted")
-    if not record["evidence_refs"]:
+    if not isinstance(record["evidence_refs"], list) or not record["evidence_refs"]:
         raise DemoError("publication_attempt_incomplete", "publication attempt lacks evidence refs")
+    if not all(isinstance(ref, str) and ref for ref in record["evidence_refs"]):
+        raise DemoError("publication_attempt_invalid", "publication evidence refs must be non-empty strings")
+    if record.get("branch_writable_evidence"):
+        raise DemoError("branch_writable_evidence", "publication attempt references branch-writable evidence")
     _validate_outcome(record)
     assert_content_digest(record)
 
@@ -109,6 +121,7 @@ def publication_preflight(
                 "outcome": "permission-blocked",
                 "normalized_error_class": "publish_unauthorized",
                 "release_candidate_ref": release_candidate_ref,
+                "release_proof_gate_status": release_proof.get("gate_status"),
             }
         )
         return with_content_digest(base)
@@ -138,7 +151,13 @@ def _preflight_failure(
     trusted_context_ref: str | None,
     release_candidate_ref: str | None,
 ) -> str | None:
-    if not release_proof or release_proof.get("gate_status") != "pass":
+    if not release_proof:
+        return "proof_mismatch"
+    try:
+        assert_release_proof(release_proof)
+    except ReleaseError:
+        return "proof_mismatch"
+    if release_proof.get("gate_status") != "pass":
         return "proof_mismatch"
     if not target_id:
         return "unauthorized_target"
@@ -148,22 +167,50 @@ def _preflight_failure(
         return "trusted_context_unavailable"
     if release_proof.get("branch_writable_evidence"):
         return "branch_writable_evidence"
-    if release_proof.get("environment_v2") == release_proof.get("environment_v1"):
+    if (
+        release_proof.get("environment_v2") == release_proof.get("environment_v1")
+        or release_proof.get("grader_v2_digest") == release_proof.get("grader_v1_digest")
+    ):
         return "mixed_identity"
     return None
 
 
 def _validate_outcome(record: dict[str, Any]) -> None:
     outcome = record["outcome"]
-    if outcome == "published" and not record.get("published_environment_ref"):
-        raise DemoError("publication_attempt_invalid", "published outcome needs stable environment ref")
+    if outcome == "published":
+        _require_trusted_publication_context(record, require_publish_binding=True)
+        if not record.get("published_environment_ref"):
+            raise DemoError("publication_attempt_invalid", "published outcome needs stable environment ref")
+        if record.get("release_proof_gate_status") != "pass":
+            raise DemoError("publication_attempt_invalid", "published outcome requires passing ReleaseProof")
+        if not record.get("release_candidate_ref"):
+            raise DemoError("publication_attempt_invalid", "published outcome needs release_candidate_ref")
+        if record.get("normalized_error_class"):
+            raise DemoError("publication_attempt_invalid", "published outcome cannot carry an error class")
     if outcome in {"permission-blocked", "blocked-with-proof"}:
+        _require_trusted_publication_context(record, require_publish_binding=outcome == "permission-blocked")
         if not record.get("release_candidate_ref"):
             raise DemoError("publication_attempt_invalid", f"{outcome} needs release_candidate_ref")
-        if outcome == "blocked-with-proof" and record.get("release_proof_gate_status") != "pass":
-            raise DemoError("publication_attempt_invalid", "blocked-with-proof requires passing ReleaseProof")
+        if record.get("release_proof_gate_status") != "pass":
+            raise DemoError("publication_attempt_invalid", f"{outcome} requires passing ReleaseProof")
+        expected_error = {
+            "permission-blocked": "publish_unauthorized",
+            "blocked-with-proof": "publish_binding_missing",
+        }[outcome]
+        if record.get("normalized_error_class") != expected_error:
+            raise DemoError("publication_attempt_invalid", f"{outcome} needs {expected_error}")
     if outcome == "failed" and record.get("normalized_error_class") not in FAILURE_CLASSES | {
         "proof_mismatch",
         "publish_api_not_invoked_by_contract_layer",
     }:
         raise DemoError("publication_attempt_invalid", "failed outcome needs normalized failure class")
+
+
+def _require_trusted_publication_context(record: dict[str, Any], *, require_publish_binding: bool) -> None:
+    for field in ("target_id", "trusted_context_ref"):
+        if str(record.get(field, "")).startswith("missing-"):
+            raise DemoError("publication_attempt_invalid", f"{field} is not available")
+    if require_publish_binding:
+        for field in ("command_argv_ref", "publisher_capability_label"):
+            if str(record.get(field, "")).startswith("missing-"):
+                raise DemoError("publication_attempt_invalid", f"{field} is not available")

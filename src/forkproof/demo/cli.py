@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
 from .publication import validate_publication_attempt
+from .redaction import redact_record
 from .report import validate_demo_report
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -19,7 +20,19 @@ def _write_json(path: Path, record: dict) -> None:
 
 
 def _load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise DemoError("input_unavailable", f"input file not found: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise DemoError("input_invalid", f"input is not valid JSON: {exc.msg}") from exc
+    if not isinstance(value, dict):
+        raise DemoError("input_invalid", "input JSON must be an object")
+    return value
+
+
+def _safe_observed_behavior(exc: DemoError) -> str:
+    return str(redact_record(str(exc)))
 
 
 def demo_preflight() -> int:
@@ -53,8 +66,8 @@ def demo_preflight() -> int:
 def validate_report(*, report: Path, output: Path | None) -> int:
     """Validate an existing report.json and optionally persist the result."""
 
-    record = _load_json(report)
     try:
+        record = _load_json(report)
         validate_demo_report(record)
     except DemoError as exc:
         result = {
@@ -62,7 +75,7 @@ def validate_report(*, report: Path, output: Path | None) -> int:
             "status": "failed",
             "source_report_ref": report.as_posix(),
             "error_class": exc.error_class,
-            "observed_behavior": str(exc),
+            "observed_behavior": _safe_observed_behavior(exc),
             "validated_at": utc_now(),
         }
         if output:
@@ -89,8 +102,8 @@ def validate_report(*, report: Path, output: Path | None) -> int:
 def report_replay(*, source_report: Path, output: Path) -> int:
     """Audit-only report replay validation."""
 
-    record = _load_json(source_report)
     try:
+        record = _load_json(source_report)
         validate_demo_report(record)
     except DemoError as exc:
         result = {
@@ -99,7 +112,7 @@ def report_replay(*, source_report: Path, output: Path) -> int:
             "replay_type": "demo-report-replay",
             "source_report_ref": source_report.as_posix(),
             "error_class": exc.error_class,
-            "observed_behavior": str(exc),
+            "observed_behavior": _safe_observed_behavior(exc),
             "validated_at": utc_now(),
         }
         _write_json(output, result)
@@ -129,8 +142,8 @@ def report_replay(*, source_report: Path, output: Path) -> int:
 def validate_publication(*, attempt: Path, output: Path | None) -> int:
     """Validate a PublicationAttempt artifact without invoking publish."""
 
-    record = _load_json(attempt)
     try:
+        record = _load_json(attempt)
         validate_publication_attempt(record)
     except DemoError as exc:
         result = {
@@ -138,7 +151,7 @@ def validate_publication(*, attempt: Path, output: Path | None) -> int:
             "status": "failed",
             "source_publication_attempt_ref": attempt.as_posix(),
             "error_class": exc.error_class,
-            "observed_behavior": str(exc),
+            "observed_behavior": _safe_observed_behavior(exc),
             "validated_at": utc_now(),
         }
         if output:

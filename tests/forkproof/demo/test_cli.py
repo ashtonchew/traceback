@@ -61,6 +61,7 @@ def publication_attempt(**overrides):
         "trusted_context_ref": "trusted-ci",
         "idempotency_key": key,
         "outcome": "permission-blocked",
+        "release_proof_gate_status": "pass",
         "release_candidate_ref": "candidate.json",
         "normalized_error_class": "publish_unauthorized",
         "evidence_refs": ["release-proof.json", "candidate.json"],
@@ -103,6 +104,30 @@ def test_validate_report_cli_writes_failure_artifact(tmp_path):
     result = read_json(output)
     assert result["status"] == "failed"
     assert result["error_class"] == "metric_invalid"
+
+
+def test_validate_report_cli_writes_failure_artifact_for_malformed_json(tmp_path):
+    source = tmp_path / "report.json"
+    output = tmp_path / "validation.json"
+    source.write_text("{not-json", encoding="utf-8")
+
+    assert validate_report(report=source, output=output) == 2
+
+    result = read_json(output)
+    assert result["status"] == "failed"
+    assert result["error_class"] == "input_invalid"
+
+
+def test_validate_report_cli_writes_failure_artifact_for_non_object_json(tmp_path):
+    source = tmp_path / "report.json"
+    output = tmp_path / "validation.json"
+    write_json(source, ["not", "an", "object"])
+
+    assert validate_report(report=source, output=output) == 2
+
+    result = read_json(output)
+    assert result["status"] == "failed"
+    assert result["error_class"] == "input_invalid"
 
 
 def test_report_replay_cli_is_audit_only(tmp_path):

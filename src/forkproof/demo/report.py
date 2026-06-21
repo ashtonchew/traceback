@@ -77,8 +77,12 @@ def validate_demo_report(record: dict[str, Any]) -> None:
 
 
 def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    if not isinstance(steps, list):
+        raise DemoError("report_invalid", "steps must be a list")
     if len(steps) != 13:
         raise DemoError("report_invalid", "report must contain exactly 13 steps")
+    if not all(isinstance(step, dict) for step in steps):
+        raise DemoError("step_invalid", "each step must be an object")
     numbers = [step.get("step_number") for step in steps]
     if sorted(numbers) != list(range(1, 14)):
         raise DemoError("report_invalid", "step numbers must be exactly 1..13")
@@ -117,7 +121,11 @@ def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
 
 
 def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
+    if not isinstance(metrics, list):
+        raise DemoError("metric_invalid", "metrics must be a list")
     for metric in metrics:
+        if not isinstance(metric, dict):
+            raise DemoError("metric_invalid", "each metric must be an object")
         require_fields(metric, {"name"}, error_class="metric_incomplete")
         present = "value" in metric
         absent = [key for key in METRIC_ABSENT_KEYS if key in metric]

@@ -294,6 +294,38 @@
       ],
       "exit_code": 0,
       "observed": "PASS: 1 evidence manifest(s) are present/structured."
+    },
+    {
+      "key": "plan-006-tests",
+      "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped Plan 006 tests passed after adversarial hardening and placeholder rejection: 29 passed.",
+      "recorded_at": "2026-06-21T10:06:31Z"
+    },
+    {
+      "key": "integration-publication",
+      "command": "python docs/plans/scripts/run_mapped.py integration-publication",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped publication contract integration tests passed after hardening and placeholder rejection: 13 passed.",
+      "recorded_at": "2026-06-21T10:06:31Z"
+    },
+    {
+      "key": "publication-redaction",
+      "command": "python docs/plans/scripts/run_mapped.py publication-redaction",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped redaction tests passed after adding self-attested redaction rejection: 2 passed.",
+      "recorded_at": "2026-06-21T10:04:12Z"
+    },
+    {
+      "key": "ruff-plan-006-demo",
+      "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests.",
+      "recorded_at": "2026-06-21T10:04:12Z"
     }
   ],
   "rechecks": [
@@ -383,6 +415,11 @@
       "name": "Demo preflight",
       "status": "blocked",
       "evidence": "run_mapped.py demo exits 2 by design before Gate 4 and publish binding, writing artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json instead of claiming an Acceptance Demo Run."
+    },
+    {
+      "name": "Adversarial publication trust-boundary hardening",
+      "status": "pass",
+      "evidence": "Read-only adversarial subagents found forged published outcome, self-attested redaction, incomplete ReleaseProof/preflight identity validation, missing normalized blocker class, and malformed-input artifact gaps. Plan 006 contracts now fail closed using repo-native ReleaseProof validation, require passing gate status for published/blocked outcomes, require normalized blocker classes, reject unredacted secret-like PublicationAttempt content, reject branch-writable publication evidence markers, reject missing trusted-context/publish-binding placeholders for proof-backed outcomes, and write CLI failure artifacts for malformed/non-object JSON."
     }
   ],
   "artifacts": [
@@ -482,6 +519,8 @@
     "2026-06-20 planning hardening pass added deterministic self-validation, machine-readable report requirements, thin trusted publisher ownership, and publication-specific negative checks.",
     "2026-06-20 planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and audit-only Demo Report Replay semantics.",
     "2026-06-21 grill-with-docs decision limited blocked-with-proof to valid proof plus missing publish binding/authority; proof mismatch, unauthorized target, mixed identity, missing artifacts, and unavailable trusted context are failures.",
-    "2026-06-21 parallel risk review added demo-day preflight, sealed readiness pack, presentation timeout behavior, statistical overclaim rejection, and publisher redaction guardrails."
+    "2026-06-21 parallel risk review added demo-day preflight, sealed readiness pack, presentation timeout behavior, statistical overclaim rejection, and publisher redaction guardrails.",
+    "2026-06-21T10:04:12Z — Adversarial subagent hardening pass completed. Publication validation now rejects forged published outcomes, self-attested redaction, missing normalized blocker classes, mixed v1/v2 environment or grader identity, branch-writable evidence markers, and malformed validation input without an artifact. Mapped plan-006-tests passed with 28 tests; integration-publication passed with 12 tests; publication-redaction passed with 2 tests.",
+    "2026-06-21T10:06:31Z — Tightened proof-backed PublicationAttempt validation again so published and permission-blocked outcomes reject missing trusted-context or publish-binding placeholders. Mapped plan-006-tests passed with 29 tests; integration-publication passed with 13 tests."
   ]
 }

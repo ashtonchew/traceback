@@ -178,6 +178,7 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T09:50:27Z — Tightened the pre-Gate-4 contracts after review. Preflight-generated `blocked-with-proof` attempts now include explicit passing ReleaseProof gate status, and Demo Report Replay rejects any new replay claim. `plan-006-tests` now passes with 19 behavior tests and `integration-publication` passes with 10 tests.
 - 2026-06-21T09:52:52Z — Added CLI support for validating an existing `report.json` and writing an audit-only Demo Report Replay validation artifact. The replay CLI records that it creates no new branch, replay, ReleaseProof, publication attempt, or publish evidence. `plan-006-tests` now passes with 22 behavior tests.
 - 2026-06-21T09:55:24Z — Added CLI support for validating a `PublicationAttempt` artifact and writing pass/fail validation evidence without invoking a publish API. `plan-006-tests` now passes with 24 behavior tests.
+- 2026-06-21T10:04:12Z — Ran read-only adversarial subagents over the Plan 006 stack diff and hardened the material findings. Publication validation now rejects forged `published` attempts without passing ReleaseProof/candidate/trusted context, self-attested redaction with secret-like content, missing normalized blocker classes, mixed v1/v2 environment or grader identity, branch-writable evidence markers, missing trusted-context/publish-binding placeholders for proof-backed outcomes, and malformed CLI validation input without failure artifacts. `plan-006-tests` now passes with 29 behavior tests and `integration-publication` passes with 13 tests.
 - [ ] Demo command/orchestration complete.
 - [ ] Live discovery surface complete.
 - [x] Report/demo mode contract validation complete.
@@ -203,6 +204,7 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21 — Planning decision: demo reliability is implemented as graceful degradation. A fresh live attempt is always shown, while proof and completion rely on validated traces, replays, reports, and digests.
 - 2026-06-21T09:34:39Z — Stack decision: keep `codex/plan-006-demo-stack` based on `codex/plan-005-release-proof` and target any draft PR to `codex/plan-005-release-proof`, not `main`. After PR #27 merges, rebase Plan 006 onto `main`, rerun the full Plan 006 Done-when including slow demo/publication gates, and retarget to `main` only if all evidence passes.
 - 2026-06-21T09:47:08Z — Implementation decision: pre-Gate-4 Plan 006 command rows may run local semantic contract checks, but `demo` remains a blocker-producing preflight until a passing ReleaseProof, release candidate, live evidence, and publish binding exist. This avoids both `SKIP` and false completion.
+- 2026-06-21T10:04:12Z — Hardening decision: Plan 006 publication validation must use the existing Plan 005 `assert_release_proof` validator before any proof-based outcome. Hand-authored `PublicationAttempt` records may validate only as evidence, never as authority to publish, and the contract layer still does not invoke a publish primitive.
 
 ### Outcomes & Retrospective
 
@@ -213,3 +215,4 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T09:50:27Z — Contract hardening pass complete. Remaining missing pieces are unchanged: real ReleaseProof/release candidate, live Acceptance Demo evidence, and trusted publish binding/target.
 - 2026-06-21T09:52:52Z — Report replay CLI pass complete. Remaining missing pieces are unchanged: Plan 005/Gate 4 proof artifacts, real demo execution, and trusted publication binding.
 - 2026-06-21T09:55:24Z — PublicationAttempt validation CLI pass complete. Remaining missing pieces are unchanged: Plan 005/Gate 4 proof artifacts, real demo execution, and trusted publication binding.
+- 2026-06-21T10:04:12Z — Adversarial hardening pass complete. Remaining missing pieces are unchanged: Plan 005/Gate 4 proof artifacts, real Acceptance Demo execution, and trusted publication binding/authorized target.

@@ -4,17 +4,35 @@ import pytest
 
 from forkproof.demo.models import DemoError, with_content_digest
 from forkproof.demo.publication import idempotency_key, publication_preflight, validate_publication_attempt
+from forkproof.releases.models import digest_json
 
 
 def release_proof(**overrides):
     record = {
+        "schema_version": 1,
         "release_proof_id": "rp-001",
-        "content_digest": "rp-digest",
-        "gate_status": "pass",
+        "proof_set_id": "proof-set-001",
         "environment_v1": "env-v1",
+        "grader_v1_digest": "grader-v1",
         "environment_v2": "env-v2",
+        "grader_v2_digest": "grader-v2",
+        "patch_ref": "artifacts/forkproof/releases/patch.json",
+        "fixer_run_ref": "artifacts/forkproof/releases/harden-result.json",
+        "v1_results": [{"case_id": "witness-001", "kind": "witness", "reward": 1.0}],
+        "v2_results": [{"case_id": "witness-001", "kind": "witness", "reward": 0.0}],
+        "subversion_results": [],
+        "evaluator_context_refs": ["artifacts/forkproof/releases/context.json"],
+        "rejection_history": [],
+        "family_variant_results": [],
+        "witnesses_killed": ["witness-001"],
+        "controls_preserved": ["control-001"],
+        "gate_status": "pass",
+        "trace_links": ["trace://source"],
+        "release_candidate_ref": "artifacts/forkproof/releases/candidate.json",
+        "created_at": "2026-06-21T00:00:00Z",
     }
     record.update(overrides)
+    record["content_digest"] = digest_json(record)
     return record
 
 
@@ -51,6 +69,9 @@ def test_blocked_with_proof_requires_passing_proof_and_candidate():
 
     with pytest.raises(DemoError, match="release_candidate_ref"):
         validate_publication_attempt(attempt(release_candidate_ref=None))
+
+    with pytest.raises(DemoError, match="publish_binding_missing"):
+        validate_publication_attempt(attempt(normalized_error_class=None))
 
 
 def test_preflight_fails_missing_or_bad_proof_instead_of_claiming_blocked_with_proof():
@@ -108,6 +129,7 @@ def test_preflight_records_permission_blocked_with_stable_idempotency():
     )
 
     assert first["outcome"] == "permission-blocked"
+    assert first["release_proof_gate_status"] == "pass"
     assert first["idempotency_key"] == second["idempotency_key"]
     assert first["publication_attempt_id"] == second["publication_attempt_id"]
     validate_publication_attempt(first)
@@ -121,6 +143,7 @@ def test_preflight_records_permission_blocked_with_stable_idempotency():
         ({"release_candidate_ref": None}, "missing_artifacts"),
         ({"release_proof": release_proof(branch_writable_evidence=True)}, "branch_writable_evidence"),
         ({"release_proof": release_proof(environment_v2="env-v1")}, "mixed_identity"),
+        ({"release_proof": release_proof(grader_v2_digest="grader-v1")}, "mixed_identity"),
     ],
 )
 def test_preflight_failure_semantics(kwargs, error_class):
@@ -146,11 +169,46 @@ def test_published_outcome_requires_stable_environment_ref():
     with pytest.raises(DemoError, match="stable environment"):
         validate_publication_attempt(attempt(outcome="published", release_candidate_ref=None))
 
+    with pytest.raises(DemoError, match="passing ReleaseProof"):
+        validate_publication_attempt(
+            attempt(outcome="published", release_proof_gate_status=None, published_environment_ref="hud-env-version://env-v2")
+        )
+
+    with pytest.raises(DemoError, match="cannot carry an error class"):
+        validate_publication_attempt(
+            attempt(
+                outcome="published",
+                published_environment_ref="hud-env-version://env-v2",
+                normalized_error_class="publish_binding_missing",
+            )
+        )
+
     validate_publication_attempt(
         attempt(
             outcome="published",
-            release_candidate_ref=None,
             published_environment_ref="hud-env-version://env-v2",
             normalized_error_class=None,
         )
     )
+
+
+def test_publication_attempt_validation_rejects_self_attested_redaction_and_branch_writable_evidence():
+    with pytest.raises(DemoError, match="unredacted"):
+        validate_publication_attempt(attempt(stderr="Authorization: Bearer secret-token"))
+
+    with pytest.raises(DemoError, match="branch-writable"):
+        validate_publication_attempt(attempt(branch_writable_evidence=True))
+
+
+def test_proof_backed_outcomes_reject_missing_context_placeholders():
+    with pytest.raises(DemoError, match="trusted_context_ref"):
+        validate_publication_attempt(attempt(trusted_context_ref="missing-trusted-context"))
+
+    with pytest.raises(DemoError, match="command_argv_ref"):
+        validate_publication_attempt(
+            attempt(
+                outcome="permission-blocked",
+                normalized_error_class="publish_unauthorized",
+                command_argv_ref="missing-publish-binding",
+            )
+        )
