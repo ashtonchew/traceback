@@ -134,6 +134,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: put all non-core research behind one removable feature boundary and forbid it from gating the demo.
+- 2026-06-21 — Start-precondition relaxation for **007-CORE** (owner-approved, **REVERSIBLE**): the 007 core deliverables — one depth-two lineage, adaptive stopping, and the measured report — may START against a **stable** Plan 003 discovery/restore machinery **without** waiting for a sealed Exploit Witness (index Gate 3). Rationale: 007-core's binary done is "a depth-two BranchRun **completes**" (WP2 Pass) + adaptive policy + report; it uses the working discovery/snapshot/restore path, **not** the replay-seal gate. The **optional** depth-two Witness promotion ("promote any qualifying exploit through the same deterministic replay gate", WP2) **remains gated** on the replay-seal working (the same Modal replay-image fix Plan 003 needs). This is a scoped exception to Gate 3 for 007's non-seal core work only. **Revert:** once 003 seals a Witness, Gate 3 holds anyway (the relaxation becomes a no-op); revert the relaxation commit to restore canonical wording. **Honesty caveat:** a depth-two report produced before any seal must state the deterministic-seal step was not exercised — capability + policy demonstrated, not a sealed proof.
 
 ### Outcomes & Retrospective
 

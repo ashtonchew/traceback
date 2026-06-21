@@ -398,6 +398,18 @@ append-only and may be marked superseded, not rewritten.
   dual-verdict hook, a sealed report, and binding the `plan-008-tests`,
   `integration-qabench`, and `bench-qa-vs-forkproof` keys in `COMMANDS.json` (absent today).
   **Explicitly NOT required:** Plan 005's ProofSet, v2 grader, or ReleaseProof.
+- 2026-06-21 — Start-precondition relaxation (owner-approved, **REVERSIBLE**): 008 may
+  START against a **stable** Plan 003 discovery/QA/dedup machinery (e.g. PR #27's
+  QA-confirmed reward-hacking candidate) **without** waiting for a sealed Exploit Witness.
+  Rationale: 008 grounds "is this a hack" on its **own sterile referee**, never on a
+  sealed Witness, and never uses Plan 003's replay-seal gate — so the Modal replay-image
+  blocker that currently stalls 003's seal does **not** block 008. This is an explicit
+  scoped exception to index Gate 3 ("Witness exists") for 008's non-seal work only; it
+  does **not** change Gate 3 for Plan 005 (which genuinely needs a sealed Witness in its
+  ProofSet). **Revert:** once 003 seals a Witness the original Gate-3 condition holds
+  anyway (the relaxation becomes a no-op); revert the relaxation commit to restore
+  canonical wording. **Honesty caveat:** any 008 result produced before a seal must state
+  that the deterministic-seal step was not exercised (its ground truth is the referee).
 
 ### Outcomes & Retrospective
 
