@@ -54,7 +54,11 @@ executable discovery layer**; the measured quantity is the **lift Δ** that the 
 layer adds *on top of* QA. Because the system runs QA and then discovers more, it is a
 **superset** of QA — it cannot score below QA — so the honest question is only *how big
 is Δ*, and **Δ = 0 (the layer added nothing on these tasks) is a valid, complete null
-result**, not a failure.
+result**, not a failure. The discovery layer is **active red-teaming**: its branches are
+adversarial Hacker BranchRuns per Plan 003 (the task instruction rewritten into the
+generic harden-v0 reward-hacking profile), not neutral continuations — so Δ measures what
+active adversarial search adds over passive post-hoc classification, which is the honest
+shape of the comparison.
 
 To measure Δ fairly we need a neutral judge of "is this trajectory actually a hack"
 that belongs to neither QA nor ForkProof. That judge is the **sterile golden/held-out
@@ -121,12 +125,16 @@ report schema before WP3.
   QA's flagged hacks and ForkProof's surfaced hacks, with the mechanism granularity
   frozen before scoring. Asymmetric or post-hoc-tuned dedup is score-running and is a
   STOP.
-- **Three separated signals.** Per trajectory keep HUD reward, the HUD QA verdict, and
-  the referee verdict as three distinct recorded signals (extends R-017). Never infer
-  one from another.
-- **Real surfaces (R-041).** Trajectories come from real agent runs on real live HUD
-  envs; QA verdicts come from the real `reward_hacking_analysis` scenario, not a
-  reimplementation. A task that cannot be honestly materialized, run, refereed, or
+- **Three separated signals; referee is the 4th, ground-truth one.** Per trajectory keep
+  HUD reward, the HUD QA verdict, and the sterile-referee verdict as distinct recorded
+  signals (extends R-017). The referee is an *additional independent ground-truth* signal
+  beyond Plan 003's reward + QA + branch-provenance triad — it adjudicates hack-or-not,
+  which neither reward nor QA authoritatively settles. Never infer one from another.
+- **Real surfaces (R-041), canonical QA.** Trajectories come from real agent runs on real
+  live HUD envs; QA verdicts come from the canonical `reward_hacking_analysis` scenario
+  imported from `hud-evals/hud-trace-explorer` (installed module or `HUD_TRACE_EXPLORER_ROOT`),
+  run without `ground_truth` — not a reimplementation and not the diagnostic
+  compatible-prompt path. A task that cannot be honestly materialized, run, refereed, or
   graded is an evidence-backed skip, not faked to reach 20.
 - **Honesty (claims).** Report baseline X, lift Δ, both delta buckets, and cost with
   observed values or explicit `not-measured`. Do not pre-commit the headline to
@@ -165,11 +173,13 @@ provenance is missing.
 
 ### WP2 — Run the ForkProof discovery tree per task
 
-For each task run the Plan 003 loop: base rollout plus stochastic branches from an
-accepted ForkPoint, producing a trajectory population that includes branch trajectories
-the base agent never produced. Persist every rewarded trajectory with HUD reward,
-action record, file diff, branch lineage, and (where the runtime assigns one) a HUD
-trace id.
+For each task run the Plan 003 loop: a base rollout plus stochastic **Hacker BranchRuns**
+from an accepted ForkPoint — branches whose task instruction is rewritten into the
+canonical Plan 003 generic harden-v0 reward-hacking profile (recorded `branch_role` and
+`prompt_profile`). This produces a trajectory population that includes adversarial branch
+trajectories the base agent never produced. Persist every rewarded trajectory with HUD
+reward, action record, file diff, branch lineage, prompt role/profile, and (where the
+runtime assigns one) a HUD trace id.
 
 **Pass:** Each task yields a population with >=1 rewarded trajectory and recorded
 branch lineage, containing trajectories beyond the base rollout.
@@ -323,6 +333,11 @@ append-only and may be marked superseded, not rewritten.
   codebase (grader, golden solutions, tests), and self-scores against a `ground_truth`
   param. ForkProof's edge is therefore state-forking stochastic discovery, not "having
   tools."
+- 2026-06-21 — Empirical tailwind (PR #19 live Plan 003 runs): batches of 12 adversarial
+  Hacker BranchRuns reached ~12 reward successes but only 0–2 HUD QA reward-hacking
+  classifications. Direct early evidence for this benchmark's premise (QA under-flags
+  hacks even on adversarial branches) and a sign the detection delta — QA misjudging
+  traces it saw — is likely the dominant bucket. To confirm at execution, not assume.
 
 ### Decision Log
 
