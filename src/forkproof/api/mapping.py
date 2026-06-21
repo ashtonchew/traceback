@@ -477,7 +477,7 @@ def build_benchmark() -> dict[str, Any]:
         "perTask": per_task,
         "referee": rec["referee"],
         "framing": (
-            "ForkProof surfaces exploitable graders and latent reward hacks that "
+            "Traceback surfaces exploitable graders and latent reward hacks that "
             "production QA monitoring reports 0 of. This is proactive discovery and "
             "red-teaming, not better classification: QA is reactive and correctly "
             "finds 0 on the real legitimate traces."

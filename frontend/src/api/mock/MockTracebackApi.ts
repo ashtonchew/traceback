@@ -1,4 +1,4 @@
-import { DatasetForkProofApi, type RunDataset } from '../dataset'
+import { DatasetTracebackApi, type RunDataset } from '../dataset'
 import {
   branches,
   brokenControlByIteration,
@@ -26,10 +26,10 @@ const mockDataset: RunDataset = {
 /**
  * In-memory Traceback backend. Holds mutable run state (proofset, fix
  * iteration, releaseproof) for the session. The real backend
- * (`HttpForkProofApi`) reuses the same {@link DatasetForkProofApi} engine over a
+ * (`HttpTracebackApi`) reuses the same {@link DatasetTracebackApi} engine over a
  * dataset fetched from static JSON, so both modes behave identically.
  */
-export class MockForkProofApi extends DatasetForkProofApi {
+export class MockTracebackApi extends DatasetTracebackApi {
   constructor() {
     super(() => Promise.resolve(mockDataset))
   }

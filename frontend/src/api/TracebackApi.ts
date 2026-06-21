@@ -16,8 +16,8 @@ import type {
  *
  * Methods mirror the "Logical operations" in
  * `docs/plans/specs/03-interfaces.md`. The current implementation
- * (`MockForkProofApi`) is in-memory; a real backend implements this same
- * interface (e.g. an `HttpForkProofApi` calling the Plan 003/005/006 services)
+ * (`MockTracebackApi`) is in-memory; a real backend implements this same
+ * interface (e.g. an `HttpTracebackApi` calling the Plan 003/005/006 services)
  * and the store + views are unchanged.
  *
  * Streaming operations (discovery, release evaluation) take an `onItem`
@@ -25,7 +25,7 @@ import type {
  * stochastic discovery and deterministic replay phases produce results over
  * time.
  */
-export interface ForkProofApi {
+export interface TracebackApi {
   /** Select source trace + capture ForkPoint. Returns the immutable ForkPoint. */
   getForkPoint(): Promise<ForkPoint>
 
