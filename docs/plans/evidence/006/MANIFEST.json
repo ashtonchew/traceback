@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T09:38:07Z",
+  "updated_at": "2026-06-21T09:40:02Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -144,6 +144,19 @@
       ],
       "exit_code": 0,
       "observed": "Refreshed main, PR #27, Plan 005 base, and Plan 006 stack refs. origin/pr-27 and origin/codex/plan-005-release-proof still resolve to 2def782; current Plan 006 head is f6c2127."
+    },
+    {
+      "argv": [
+        "git",
+        "fetch",
+        "origin",
+        "main",
+        "pull/27/head:refs/remotes/origin/pr-27",
+        "codex/plan-005-release-proof",
+        "codex/plan-006-demo-stack"
+      ],
+      "exit_code": 0,
+      "observed": "Third blocker-audit fetch refreshed current refs. HEAD and origin/codex/plan-006-demo-stack are e2013fd; origin/pr-27 and origin/codex/plan-005-release-proof remain 2def782; origin/main is eb9fd19."
     }
   ],
   "rechecks": [
@@ -155,6 +168,16 @@
         "docs/plans/repo-map/REPOSITORY.md still reports Status: blocked and says Gate 1 remains blocked.",
         "docs/plans/evidence/005/MANIFEST.json still reports status blocked with no ReleaseProof, no v2 patch, and no real per-case v1/v2 release-results artifact.",
         "COMMANDS.json still has plan-006-tests and demo as not-applicable; publication-specific Plan 006 command keys are absent."
+      ]
+    },
+    {
+      "recorded_at": "2026-06-21T09:40:02Z",
+      "status": "blocked",
+      "observed": [
+        "Third consecutive goal-turn audit found the same source-of-truth blocker: STATUS.json is accepted while REPOSITORY.md says Status: blocked.",
+        "Plan 005 evidence remains status blocked; Gate 4 has no sealed ReleaseProof, no v2 patch, and no real per-case v1/v2 release-results artifact.",
+        "Plan 006 mapped command rows remain unable to prove completion: plan-006-tests and demo are not-applicable with empty argv; publication-specific keys are absent.",
+        "No Plan 006 source implementation was performed because AGENTS.md requires stopping before implementation when repo-map files disagree."
       ]
     }
   ],
@@ -198,6 +221,11 @@
       "name": "Repeated blocker recheck",
       "status": "blocked",
       "evidence": "After refetching main, PR #27, Plan 005 base, and the Plan 006 branch, the same source-of-truth and Gate 4 blockers remain. No Plan 006 source implementation was performed."
+    },
+    {
+      "name": "Third blocker audit",
+      "status": "blocked",
+      "evidence": "Third consecutive goal-turn audit found unchanged blockers. The active goal is now at an impasse pending external repo-map reconciliation and Plan 005/Gate 4 completion."
     }
   ],
   "artifacts": [
@@ -262,11 +290,24 @@
         "docs/plans/repo-map/COMMANDS.json"
       ],
       "next_owner": "Repo-map custodian must reconcile Gate 1 documentation; Plan 005 owner must complete Gate 4; Plan 006 can then implement owned contracts and command rows without bypassing proof."
+    },
+    {
+      "type": "REPEATED_START_GATE_BLOCK",
+      "recorded_at": "2026-06-21T09:40:02Z",
+      "reason": "Third consecutive Plan 006 goal-turn audit found the same hard blockers after fetching current refs: repo-map STATUS.json and REPOSITORY.md still disagree, Plan 005/Gate 4 remains blocked without ReleaseProof or v1/v2 release results, and Plan 006 mapped commands are still SKIP/missing. This is an impasse for legal Plan 006 implementation under AGENTS.md.",
+      "evidence_refs": [
+        "docs/plans/repo-map/STATUS.json",
+        "docs/plans/repo-map/REPOSITORY.md",
+        "docs/plans/evidence/005/MANIFEST.json",
+        "docs/plans/repo-map/COMMANDS.json"
+      ],
+      "next_owner": "Resolve repo-map source-of-truth conflict, complete Plan 005/Gate 4 with sealed ReleaseProof, and bind Plan 006 commands/publish primitive before resuming implementation."
     }
   ],
   "notes": [
     "2026-06-21T09:34:39Z — Stacked worktree codex/plan-006-demo-stack created over origin/codex/plan-005-release-proof. Source implementation stopped before edits because repo-map files disagree and Plan 005/Gate 4 remains incomplete.",
     "2026-06-21T09:38:07Z — Refetched stack refs and rechecked blockers. PR #27 / Plan 005 is unchanged at 2def782 and remains blocked; repo-map conflict remains; Plan 006 command rows remain not executable for completion.",
+    "2026-06-21T09:40:02Z — Third consecutive blocker audit found unchanged repo-map, Gate 4, and Plan 006 command blockers. No legal source implementation remains possible without external state changes.",
     "Planning template plus blocked stack preflight only; no implementation evidence is claimed.",
     "2026-06-20 planning hardening pass added deterministic self-validation, machine-readable report requirements, thin trusted publisher ownership, and publication-specific negative checks.",
     "2026-06-20 planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and audit-only Demo Report Replay semantics.",
