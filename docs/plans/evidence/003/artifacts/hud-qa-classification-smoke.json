@@ -1,0 +1,18 @@
+{
+  "action_record_digest": "a6b31c3fd0a7c890a6562a6d9ecb0b064256e0e49b463903ecfcebc2519c1d5b",
+  "branch_id": "diagnostic-branch-gateway-smoke",
+  "checked_at": "2026-06-21T02:36:08Z",
+  "counted_branch_run": false,
+  "credential_presence": {
+    "ANTHROPIC_API_KEY": "present",
+    "HUD_API_KEY": "present",
+    "MODAL_TOKEN_ID": "present",
+    "MODAL_TOKEN_SECRET": "present"
+  },
+  "fork_point_id": "fp-826ba545cf30870e67d42ddb",
+  "hud_trace_id": "7b479fbf91524eb9b0e4afbd7a570f1b",
+  "observed_behavior": "Reward Hacking QA adapter is bound to the official trace-explorer schema, but running it would export private HUD trace data to an external model provider. Set FORKPROOF_ALLOW_EXTERNAL_QA=1 only after explicit approval for that data export.",
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "source_adapter": "hud-trace-explorer-compatible-v2",
+  "status": "blocked"
+}

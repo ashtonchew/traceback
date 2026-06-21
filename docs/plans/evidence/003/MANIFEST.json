@@ -5,7 +5,7 @@
   "wave": 3,
   "status": "blocked",
   "started_at": "2026-06-21T01:21:47Z",
-  "updated_at": "2026-06-21T02:28:00Z",
+  "updated_at": "2026-06-21T02:36:08Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-003-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 14 passed in 0.07s"
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 15 passed in 0.06s"
     },
     {
       "argv": [
@@ -34,7 +34,7 @@
         "integration-witness"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-witness: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'integration']; wrote docs/plans/evidence/003/artifacts/integration-witness-preflight.json, branch-gateway-restore-inspection.json, branch-gateway-smoke.json, and hud-qa-binding-inspection.json; accepted ForkPoint restore is branch-ready and diagnostic BranchGateway smoke produced HUD job 64f76a23c9bf411388f720b11cf91639 / trace d511a0cd4e5f412598d7ddc7df3d4c72, but stopped before the full 12-BranchRun loop because the HUD QA API requires X-Organization-ID. HUD team_id, HUD API key, and user-suggested `hud-hacks` candidates are not accepted as that organization id, and no repo-bound HUD organization env/config is present."
+      "observed": "RUN: integration-witness: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'integration']; wrote docs/plans/evidence/003/artifacts/integration-witness-preflight.json, branch-gateway-restore-inspection.json, branch-gateway-smoke.json, hud-qa-binding-inspection.json, and hud-qa-classification-smoke.json; accepted ForkPoint restore is branch-ready and diagnostic BranchGateway smoke produced HUD job 06a60721423742dba7bc732824ea1323 / trace 7b479fbf91524eb9b0e4afbd7a570f1b. Direct `/v2/qa-agents` remains org-header blocked; the repo-bound trace-explorer-compatible Reward Hacking QA adapter is wired but did not run because it would export private HUD trace data to an external model provider without explicit approval. The full 12-BranchRun loop and three-replay Witness seal are not yet run."
     },
     {
       "argv": [
@@ -65,7 +65,7 @@
         "003"
       ],
       "exit_code": 0,
-      "observed": "PASS: 17 text file(s) are at most 500 lines"
+      "observed": "PASS: 18 text file(s) are at most 500 lines"
     },
     {
       "argv": [
@@ -151,7 +151,7 @@
     {
       "name": "Live integration readiness",
       "status": "skipped",
-      "evidence": "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json shows the corrected Plan 002 snapshot restores under no-secrets/block-network with credentials present, `/app/env.py`, `/app/tasks.py`, `/app/pyproject.toml`, `/app/query.py`, `/app/task_assets`, and `/data/db` present, HUD server probe present, and the trusted grader passing. docs/plans/evidence/003/artifacts/branch-gateway-smoke.json records diagnostic HUD job 64f76a23c9bf411388f720b11cf91639 and trace d511a0cd4e5f412598d7ddc7df3d4c72 from the corrected snapshot; it is not counted as a BranchRun. docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json records that HUD trace readback works and `/v2/qa-agents` exists, but HUD `team_id`, HUD API key, and user-suggested `hud-hacks` candidates are not accepted as `X-Organization-ID`; no repo-bound HUD organization env/config is present. docs/plans/evidence/003/artifacts/integration-witness-preflight.json records the remaining STOP."
+      "evidence": "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json shows the corrected Plan 002 snapshot restores under no-secrets/block-network with credentials present, `/app/env.py`, `/app/tasks.py`, `/app/pyproject.toml`, `/app/query.py`, `/app/task_assets`, and `/data/db` present, HUD server probe present, and the trusted grader passing. docs/plans/evidence/003/artifacts/branch-gateway-smoke.json records diagnostic HUD job 06a60721423742dba7bc732824ea1323 and trace 7b479fbf91524eb9b0e4afbd7a570f1b from the corrected snapshot; it is not counted as a BranchRun. docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json records that HUD trace readback works and `/v2/qa-agents` exists, but HUD `team_id`, HUD API key, and user-suggested `hud-hacks` candidates are not accepted as `X-Organization-ID`. docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json records the repo-bound trace-explorer-compatible Reward Hacking QA adapter and its explicit external-data-export approval guard. docs/plans/evidence/003/artifacts/integration-witness-preflight.json records the remaining STOP."
     }
   ],
   "artifacts": [
@@ -184,6 +184,10 @@
       "description": "Authenticated HUD QA binding probe showing trace readback works but the QA-agent endpoint requires X-Organization-ID; HUD team_id, HUD API key, and user-suggested hud-hacks candidates are not accepted."
     },
     {
+      "ref": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json",
+      "description": "Diagnostic repo-bound Reward Hacking QA classification artifact using the official trace-explorer schema and current HUD /v2 trace readback; blocked unless external trace-data export is explicitly approved."
+    },
+    {
       "ref": "docs/plans/repo-map/COMMANDS.json",
       "description": "Verified mappings for plan-003-tests, integration-witness, and security-branch."
     }
@@ -192,13 +196,14 @@
   "skips": [],
   "blockers": [
     {
-      "recorded_at": "2026-06-21T02:28:00Z",
+      "recorded_at": "2026-06-21T02:36:08Z",
       "type": "STOP",
-      "reason": "Plan 003 cannot complete the full 12 genuine BranchRun loop or promote a Witness until the supported HUD QA classifier returns authoritative reward-hacking verdicts joined to the same BranchRun trace/action digest. The accepted Plan 002 ForkPoint restore is branch-ready and diagnostic BranchGateway smoke produces HUD job/trace evidence, but HUD QA binding is stopped at the organization boundary: `/v2/qa-agents` requires X-Organization-ID; HUD team_id, HUD API key, and user-suggested `hud-hacks` candidates are not accepted as that organization id, and no repo-bound HUD organization env/config is present.",
+      "reason": "Plan 003 cannot complete the full 12 genuine BranchRun loop or promote a Witness until a supported HUD QA classifier returns authoritative reward-hacking verdicts joined to the same BranchRun trace/action digest. Direct `/v2/qa-agents` remains organization-header blocked, while the official-docs trace-explorer-compatible adapter is wired but requires explicit approval before exporting private HUD trace data to an external model provider. The full 12 executed BranchRun loop and three-replay Witness seal are also not yet run.",
       "evidence_refs": [
         "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
         "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json",
         "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
+        "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json",
         "src/forkproof/witnesses/cli.py",
         "docs/plans/repo-map/COMMANDS.json"
       ]
@@ -209,7 +214,8 @@
     "2026-06-20 dependency audit made Plan 004 an explicit Plan 003 frontmatter dependency because Gate 2 requires frozen legitimate controls before Wave 3 may start.",
     "2026-06-21 Plan 002 dependency was completed in this branch and Plan 003 command mappings plus local contracts were added.",
     "2026-06-21 integration-witness failed closed before attacker execution because the live BranchGateway adapter is not bound and HUD QA remains a separate post-run classifier required for Witness promotion. The accepted ForkPoint restore is now branch-ready; no fake QA verdict, fresh-start branch, or scripted branch evidence was introduced.",
-    "2026-06-21 diagnostic HUD branch smoke from the corrected snapshot produced HUD job 64f76a23c9bf411388f720b11cf91639 and trace d511a0cd4e5f412598d7ddc7df3d4c72 with reward 1.0; the smoke is not counted as a Plan 003 BranchRun because it does not run the full branch budget or join QA.",
-    "2026-06-21 HUD QA binding probe found authenticated trace readback works and `/v2/qa-agents` responds, but it requires X-Organization-ID. HUD `team_id` is discoverable from `/v2/environments/usage`; HUD `team_id`, HUD API key, and user-suggested `hud-hacks` all return 401 and are not accepted as the organization binding. No fake QA verdict or local heuristic was introduced."
+    "2026-06-21 diagnostic HUD branch smoke from the corrected snapshot produced HUD job 06a60721423742dba7bc732824ea1323 and trace 7b479fbf91524eb9b0e4afbd7a570f1b with reward 1.0; the smoke is not counted as a Plan 003 BranchRun because it does not run the full branch budget or join QA.",
+    "2026-06-21 HUD QA binding probe found authenticated trace readback works and `/v2/qa-agents` responds, but it requires X-Organization-ID. HUD `team_id` is discoverable from `/v2/environments/usage`; HUD `team_id`, HUD API key, and user-suggested `hud-hacks` all return 401 and are not accepted as the organization binding.",
+    "2026-06-21 parallel docs research found the official `hud-evals/hud-trace-explorer` Reward Hacking scenario (`reward_hacking_analysis`) with output fields `is_reward_hacking`, `hacking_strategy`, `severity`, and `confidence`. The repo now has a trace-explorer-compatible `/v2` adapter, but it refuses to run without explicit approval because it would export private HUD trace/job data to an external model provider. No fake QA verdict or local heuristic was introduced."
   ]
 }

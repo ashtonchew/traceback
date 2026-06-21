@@ -9,7 +9,7 @@ from forkproof.witnesses.promotion import (
     dedup_by_target_mechanism,
     promotion_result,
 )
-from forkproof.witnesses.qa_binding import inspect_hud_qa_binding
+from forkproof.witnesses.qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
 from forkproof.witnesses.replay import require_three_replays
 from forkproof.witnesses.security import assert_branch_security, contains_secret_material
 from forkproof.witnesses.store import JsonArtifactStore
@@ -154,6 +154,21 @@ def test_hud_qa_binding_probe_rejects_team_id_as_org_binding(monkeypatch, tmp_pa
     assert result["qa_agents_with_hud_hacks_probe"]["status_code"] == 401
     assert result["qa_agents_with_api_key_probe"]["status_code"] == 401
     assert "team_id is discoverable but not accepted" in result["blocker"]
+
+
+def test_reward_hacking_analysis_requires_explicit_external_export_approval(monkeypatch, tmp_path):
+    monkeypatch.setenv("HUD_API_KEY", "present-not-real")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "present-not-real")
+    monkeypatch.delenv("FORKPROOF_ALLOW_EXTERNAL_QA", raising=False)
+    result = run_reward_hacking_analysis(
+        tmp_path,
+        "trace-001",
+        branch_id="branch-001",
+        action_record_digest="actions-sha",
+    )
+    assert result["status"] == "blocked"
+    assert result["source_adapter"] == "hud-trace-explorer-compatible-v2"
+    assert "export private HUD trace data" in result["observed_behavior"]
 
 
 def test_equivalent_exploit_mechanism_dedups_to_one_cluster():

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from .models import WitnessError, digest_json, utc_now
-from .qa_binding import inspect_hud_qa_binding
+from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
 from .security import assert_branch_security
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -291,8 +291,46 @@ def integration_witness() -> int:
             **qa_binding,
         },
     )
-    if qa_binding.get("status") != "pass":
+    qa_classifier_ready = qa_binding.get("status") == "pass"
+    qa_classification_path: Path | None = None
+    if "smoke" in locals() and smoke.get("trace_id"):
+        action_record_digest = digest_json(
+            {
+                "trace_id": smoke.get("trace_id"),
+                "job_id": smoke.get("job_id"),
+                "counted_branch_run": smoke.get("counted_branch_run"),
+            }
+        )
+        try:
+            qa_classification = run_reward_hacking_analysis(
+                ROOT,
+                str(smoke["trace_id"]),
+                branch_id="diagnostic-branch-gateway-smoke",
+                action_record_digest=action_record_digest,
+            )
+        except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
+            qa_classification = {
+                "status": "blocked",
+                "error_class": type(exc).__name__,
+                "observed_behavior": str(exc),
+            }
+        qa_classification_path = _write_artifact(
+            "hud-qa-classification-smoke.json",
+            {
+                "checked_at": utc_now(),
+                "fork_point_id": forkpoint.get("fork_point_id"),
+                "snapshot_id": forkpoint.get("snapshot_id"),
+                "counted_branch_run": False,
+                **qa_classification,
+            },
+        )
+        if qa_classification.get("status") != "pass":
+            promotion_blockers.append("repo-bound HUD Reward Hacking QA classification did not return a verdict")
+        else:
+            qa_classifier_ready = True
+    if not qa_classifier_ready:
         promotion_blockers.append(str(qa_binding.get("blocker") or "authoritative HUD QA reward-hacking classification API is not bound"))
+    promotion_blockers.append("full 12 executed BranchRun loop and three-replay Witness seal are not yet run")
 
     artifact = {
         "checked_at": utc_now(),
@@ -304,6 +342,9 @@ def integration_witness() -> int:
             str(smoke_path.relative_to(ROOT)) if "smoke_path" in locals() else None
         ),
         "hud_qa_binding_ref": str(qa_binding_path.relative_to(ROOT)),
+        "hud_qa_classification_ref": (
+            str(qa_classification_path.relative_to(ROOT)) if qa_classification_path else None
+        ),
         "branch_execution": {
             "status": "blocked" if branch_execution_blockers else "ready",
             "blockers": branch_execution_blockers,
