@@ -5,7 +5,7 @@
   "wave": 3,
   "status": "not-started",
   "started_at": null,
-  "updated_at": "2026-06-20T17:37:36.163973+00:00",
+  "updated_at": "2026-06-20T22:57:09+00:00",
   "completed_at": null,
   "commit": null,
   "commands": [],
@@ -13,8 +13,23 @@
   "artifacts": [],
   "screenshots": [],
   "skips": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "recorded_at": "2026-06-20T20:30:00+00:00",
+      "type": "STOP",
+      "reason": "Rebase audit found Plan 003 remains blocked until Gate 2 is satisfied: Plans 002 and 004 manifests are complete, the full Plan 002 branch-ready handoff re-verifies after process restart, branch gateway/snapshot restore/grader/QA/dedup/storage/security bindings are accepted, and plan-003 command mappings are verified.",
+      "evidence_refs": [
+        "docs/plans/repo-map/STATUS.json",
+        "docs/plans/repo-map/INTERFACES.md",
+        "docs/plans/repo-map/COMMANDS.json",
+        "docs/plans/000-index.md"
+      ]
+    }
+  ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed."
+    "Planning template only; no implementation evidence is claimed.",
+    "2026-06-20 corrected audit target from Plan 002 to Plan 003; inline citations and completeness gates were added to Plan 003 docs only.",
+    "2026-06-20 dependency audit made Plan 004 an explicit Plan 003 frontmatter dependency because Gate 2 requires frozen legitimate controls before Wave 3 may start.",
+    "2026-06-20 rebase audit aligned Plan 003 with merged Plan 002 branch-ready handoff fields, refreshed command-map blockers, and kept execution status not-started."
   ]
 }
