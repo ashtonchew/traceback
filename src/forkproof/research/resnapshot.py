@@ -216,18 +216,19 @@ def capture_child_snapshot(
     import modal
 
     app = modal.App.lookup(APP_NAME, create_if_missing=True)
-    sandbox = modal.Sandbox.create(
-        image=modal.Image.from_id(base_image_id),
-        app=app,
-        block_network=True,
-        secrets=[],
-        cpu=0.5,
-        memory=1024,
-        timeout=900,
-        workdir="/app",
-        tags={"forkproof_plan": "007", "purpose": "depth_two_child_resnapshot"},
-    )
+    sandbox = None
     try:
+        sandbox = modal.Sandbox.create(
+            image=modal.Image.from_id(base_image_id),
+            app=app,
+            block_network=True,
+            secrets=[],
+            cpu=0.5,
+            memory=1024,
+            timeout=900,
+            workdir="/app",
+            tags={"forkproof_plan": "007", "purpose": "depth_two_child_resnapshot"},
+        )
         for path in included:
             encoded = base64.b64encode(added[path].encode("utf-8")).decode("ascii")
             proc = sandbox.exec("python3", "-c", _apply_delta_script(path, encoded), workdir="/app", timeout=120)
@@ -260,7 +261,8 @@ def capture_child_snapshot(
             "captured_at": recorded_at,
         }
     finally:
-        sandbox.terminate()
+        if sandbox is not None:
+            sandbox.terminate()
 
     if not child_snapshot_id:
         raise ResnapshotError("state_restore_failed", "Modal snapshot_filesystem returned no object_id")

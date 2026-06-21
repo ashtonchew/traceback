@@ -12,6 +12,7 @@ approval are absent; it never fabricates a run.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -128,11 +129,43 @@ def _blocked_record(
 ) -> DepthTwoRunRecord:
     return DepthTwoRunRecord(
         run_id=f"research-depth-two-blocked-{recorded_at}",
-        child_node_id=child_node_id,
+        child_node_id=child_node_id or "unknown",
         status="blocked",
         branch_budget=branch_budget,
         blocker="; ".join(blockers),
         recorded_at=recorded_at,
+    )
+
+
+def _blocked_headline(
+    *,
+    child_node_id: str,
+    branch_budget: int,
+    concurrency: int,
+    blockers: list[str],
+    child_snapshot_artifact: dict[str, Any],
+    child_snapshot_artifact_ref: str,
+    presence: dict[str, str],
+    recorded_at: str,
+) -> dict[str, Any]:
+    node = child_node_id or "unknown"
+    record = _blocked_record(
+        child_node_id=node, branch_budget=branch_budget, blockers=blockers, recorded_at=recorded_at
+    )
+    return _headline(
+        status="blocked",
+        run_id=record.run_id,
+        child_node_id=node,
+        child_snapshot_artifact=child_snapshot_artifact,
+        child_snapshot_artifact_ref=child_snapshot_artifact_ref,
+        record=record.to_record(),
+        decisions=[],
+        stop_event=None,
+        branch_results=[],
+        branch_artifact_root=None,
+        presence=presence,
+        recorded_at=recorded_at,
+        scheduler_config={"child_budget": branch_budget, "concurrency": concurrency},
     )
 
 
@@ -164,33 +197,37 @@ async def run_depth_two(
         blockers.append("child snapshot is not filesystem-class durable state")
 
     if blockers:
-        record = _blocked_record(
-            child_node_id=child_node_id or "unknown",
+        return _blocked_headline(
+            child_node_id=child_node_id,
             branch_budget=branch_budget,
+            concurrency=concurrency,
             blockers=blockers,
-            recorded_at=recorded_at,
-        )
-        return _headline(
-            status="blocked",
-            run_id=record.run_id,
-            child_node_id=child_node_id or "unknown",
             child_snapshot_artifact=child_snapshot_artifact,
             child_snapshot_artifact_ref=child_snapshot_artifact_ref,
-            record=record.to_record(),
-            decisions=[],
-            stop_event=None,
-            branch_results=[],
-            branch_artifact_root=None,
             presence=presence,
             recorded_at=recorded_at,
-            scheduler_config={"child_budget": branch_budget, "concurrency": concurrency},
         )
 
-    parent_forkpoint = _load_json(root / PARENT_FORKPOINT_REF)
-    child_forkpoint = build_child_forkpoint(
-        parent_forkpoint=parent_forkpoint, child_snapshot=child_snapshot, child_node_id=child_node_id
-    )
-    task, prompt_packet = load_hud_task(root, child_forkpoint)
+    # Loading the accepted ForkPoint and the HUD task can fail (bad env module,
+    # missing task factory, import error). Fail closed with a blocked record
+    # rather than crashing, so the CLI records a STOP instead of a traceback.
+    try:
+        parent_forkpoint = _load_json(root / PARENT_FORKPOINT_REF)
+        child_forkpoint = build_child_forkpoint(
+            parent_forkpoint=parent_forkpoint, child_snapshot=child_snapshot, child_node_id=child_node_id
+        )
+        task, prompt_packet = load_hud_task(root, child_forkpoint)
+    except Exception as exc:  # noqa: BLE001 - setup failure is a fail-closed STOP, not a crash.
+        return _blocked_headline(
+            child_node_id=child_node_id,
+            branch_budget=branch_budget,
+            concurrency=concurrency,
+            blockers=[f"depth-two setup failed: {type(exc).__name__}: {exc}"],
+            child_snapshot_artifact=child_snapshot_artifact,
+            child_snapshot_artifact_ref=child_snapshot_artifact_ref,
+            presence=presence,
+            recorded_at=recorded_at,
+        )
 
     stamp = utc_now().replace("-", "").replace(":", "").removesuffix("Z")
     run_id = f"research-depth-two-{stamp}"
@@ -205,64 +242,73 @@ async def run_depth_two(
     branch_results: list[dict[str, Any]] = []
     index = 0
 
+    async def _run_indexed(branch_index: int) -> dict[str, Any]:
+        return await _run_one_branch(
+            root=root,
+            forkpoint=child_forkpoint,
+            task=task,
+            prompt_packet=prompt_packet,
+            run_id=run_id,
+            branch_index=branch_index,
+            artifact_root=artifact_root,
+        )
+
+    # Schedule waves of up to `concurrency` in-flight branches, run them
+    # concurrently, then drain. The scheduler enforces the budget and the
+    # adaptive-stop policy; at concurrency=1 this reduces to one branch at a
+    # time. In-flight branches in a wave always finish before the next wave is
+    # scheduled, matching the "allow in-flight branches to finish" policy.
     while scheduler.can_schedule():
-        decision = scheduler.schedule_next()
-        if decision is None:
+        wave: list[tuple[str, int]] = []
+        while scheduler.can_schedule():
+            decision = scheduler.schedule_next()
+            if decision is None:
+                break
+            wave.append((str(decision.branch_id), index))
+            index += 1
+        if not wave:
             break
-        scheduler_branch_id = str(decision.branch_id)
-        try:
-            result = await _run_one_branch(
-                root=root,
-                forkpoint=child_forkpoint,
-                task=task,
-                prompt_packet=prompt_packet,
-                run_id=run_id,
-                branch_index=index,
-                artifact_root=artifact_root,
-            )
-        except Exception as exc:  # noqa: BLE001 - record provider failure, keep scheduler honest.
-            scheduler.complete_branch(scheduler_branch_id, confirmed_cluster_id=None)
+        results = await asyncio.gather(
+            *(_run_indexed(branch_index) for _scheduler_branch_id, branch_index in wave),
+            return_exceptions=True,
+        )
+        for (scheduler_branch_id, _branch_index), result in zip(wave, results):
+            if isinstance(result, BaseException):
+                scheduler.complete_branch(scheduler_branch_id, confirmed_cluster_id=None)
+                branch_results.append(
+                    {
+                        "scheduler_branch_id": scheduler_branch_id,
+                        "status": "executor-error",
+                        "error_class": type(result).__name__,
+                        "error_message": str(result)[:400],
+                        "confirmed_cluster_id": None,
+                    }
+                )
+                continue
+            branch = result["branch"]
+            qa = result["qa"]
+            branch_ref = result["branch_ref"]
+            scheduled_refs.append(branch_ref)
+            confirmed, cluster_decision = _confirmed_cluster(root, branch_ref, branch, qa, clusters)
+            scheduler.complete_branch(scheduler_branch_id, confirmed_cluster_id=confirmed)
+            if branch.get("execution_boundary_crossed") is True:
+                completed_refs.append(branch_ref)
             branch_results.append(
                 {
                     "scheduler_branch_id": scheduler_branch_id,
-                    "status": "executor-error",
-                    "error_class": type(exc).__name__,
-                    "error_message": str(exc)[:400],
-                    "confirmed_cluster_id": None,
+                    "branch_id": branch.get("branch_id"),
+                    "branch_ref": branch_ref,
+                    "reward": branch.get("reward"),
+                    "status": branch.get("status"),
+                    "execution_boundary_crossed": branch.get("execution_boundary_crossed"),
+                    "hud_trace_id": branch.get("hud_trace_id"),
+                    "promotion_signal_status": branch.get("promotion_signal_status"),
+                    "qa_status": qa.get("status") if qa else None,
+                    "qa_is_reward_hacking": qa.get("is_reward_hacking") if qa else None,
+                    "confirmed_cluster_id": confirmed,
+                    "cluster_decision": cluster_decision,
                 }
             )
-            index += 1
-            if scheduler.stop_event() is not None:
-                break
-            continue
-
-        index += 1
-        branch = result["branch"]
-        qa = result["qa"]
-        branch_ref = result["branch_ref"]
-        scheduled_refs.append(branch_ref)
-        confirmed, cluster_decision = _confirmed_cluster(root, branch_ref, branch, qa, clusters)
-        scheduler.complete_branch(scheduler_branch_id, confirmed_cluster_id=confirmed)
-        if branch.get("execution_boundary_crossed") is True:
-            completed_refs.append(branch_ref)
-        branch_results.append(
-            {
-                "scheduler_branch_id": scheduler_branch_id,
-                "branch_id": branch.get("branch_id"),
-                "branch_ref": branch_ref,
-                "reward": branch.get("reward"),
-                "status": branch.get("status"),
-                "execution_boundary_crossed": branch.get("execution_boundary_crossed"),
-                "hud_trace_id": branch.get("hud_trace_id"),
-                "promotion_signal_status": branch.get("promotion_signal_status"),
-                "qa_status": qa.get("status") if qa else None,
-                "qa_is_reward_hacking": qa.get("is_reward_hacking") if qa else None,
-                "confirmed_cluster_id": confirmed,
-                "cluster_decision": cluster_decision,
-            }
-        )
-        if scheduler.stop_event() is not None:
-            break
 
     stop = scheduler.stop_event()
     measured_values = {

@@ -203,6 +203,117 @@ def test_run_depth_two_fails_closed_without_external_qa_approval(monkeypatch):
     assert result["completion_claim"] == "not-complete"
 
 
+def _captured_child_artifact() -> dict:
+    return {
+        "status": "captured",
+        "lineage": {"child_depth": 1},
+        "child_snapshot": {
+            "child_node_id": "node-run-20260621T075711-branch-08",
+            "snapshot_id": "im-CHILD",
+            "snapshot_ref": "modal-image://im-CHILD",
+            "snapshot_mode": "filesystem",
+        },
+    }
+
+
+def _fake_run_one_branch(*, root, forkpoint, task, prompt_packet, run_id, branch_index, artifact_root):
+    bid = f"{run_id}-branch-{branch_index:02d}"
+    return {
+        "branch": {
+            "branch_id": bid,
+            "reward": 1.0,
+            "status": "success",
+            "execution_boundary_crossed": True,
+            "hud_trace_id": f"trace-{branch_index}",
+            "promotion_signal_status": "rewarded-non-hack",
+        },
+        "qa": {"status": "pass", "is_reward_hacking": False},
+        "branch_ref": f"docs/plans/evidence/007/artifacts/depth-two-runs/{run_id}/branches/{bid}.json",
+    }
+
+
+def _patch_live_branch_execution(monkeypatch):
+    monkeypatch.setattr(
+        "forkproof.research.depth_two.credential_presence",
+        lambda names: {name: "present" for name in names},
+    )
+    monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
+    monkeypatch.setattr("forkproof.research.depth_two.load_hud_task", lambda root, fp: (object(), {"instruction": "x"}))
+
+    async def fake(**kwargs):
+        return _fake_run_one_branch(**kwargs)
+
+    monkeypatch.setattr("forkproof.research.depth_two._run_one_branch", fake)
+
+
+def test_run_depth_two_fails_closed_when_task_load_raises(monkeypatch):
+    monkeypatch.setattr(
+        "forkproof.research.depth_two.credential_presence",
+        lambda names: {name: "present" for name in names},
+    )
+    monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
+
+    def boom(root, fp):
+        raise ImportError("cannot load HUD env module")
+
+    monkeypatch.setattr("forkproof.research.depth_two.load_hud_task", boom)
+
+    result = asyncio.run(
+        run_depth_two(
+            root=ROOT,
+            child_snapshot_artifact=_captured_child_artifact(),
+            child_snapshot_artifact_ref="x",
+            branch_budget=8,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert "setup failed" in (result["depth_two_run"]["blocker"] or "")
+    assert result["branch_results"] == []
+    assert result["completion_claim"] == "not-complete"
+
+
+def test_run_depth_two_honors_concurrency_and_stops_adaptively(monkeypatch):
+    _patch_live_branch_execution(monkeypatch)
+
+    result = asyncio.run(
+        run_depth_two(
+            root=ROOT,
+            child_snapshot_artifact=_captured_child_artifact(),
+            child_snapshot_artifact_ref="x",
+            branch_budget=8,
+            concurrency=2,
+        )
+    )
+
+    # Two branches are genuinely in flight at once (not a silent sequential no-op).
+    assert max(d["in_flight_count"] for d in result["scheduler_decisions"]) == 2
+    measured = result["measured_values"]
+    assert measured["adaptive_stop_reason"] == "adaptive-stop-four-no-new-cluster"
+    assert measured["completed_depth_two_branch_count"] == 4
+    run = result["depth_two_run"]
+    assert set(run["completed_branch_refs"]).issubset(set(run["scheduled_branch_refs"]))
+    assert result["status"] == "completed"
+
+
+def test_run_depth_two_sequential_keeps_single_in_flight(monkeypatch):
+    _patch_live_branch_execution(monkeypatch)
+
+    result = asyncio.run(
+        run_depth_two(
+            root=ROOT,
+            child_snapshot_artifact=_captured_child_artifact(),
+            child_snapshot_artifact_ref="x",
+            branch_budget=8,
+            concurrency=1,
+        )
+    )
+
+    assert max(d["in_flight_count"] for d in result["scheduler_decisions"]) == 1
+    assert result["measured_values"]["completed_depth_two_branch_count"] == 4
+    assert result["status"] == "completed"
+
+
 # --- Real committed-artifact contracts (skip until the live run has produced them) ---
 
 
