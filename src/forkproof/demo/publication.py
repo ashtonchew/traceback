@@ -38,6 +38,8 @@ REQUIRED_ATTEMPT_FIELDS = {
     "created_at",
     "content_digest",
 }
+COMMAND_REF_SUFFIX = "COMMANDS.json:integration-publication"
+UNTRUSTED_REF_PREFIXES = ("/tmp/", "/private/tmp/", "tmp/", "artifacts/forkproof/demo/")
 
 
 def idempotency_key(*, release_proof_digest: str, target_id: str) -> str:
@@ -48,6 +50,7 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
     """Validate a publication attempt without invoking a publish API."""
 
     require_fields(record, REQUIRED_ATTEMPT_FIELDS, error_class="publication_attempt_incomplete")
+    _validate_required_field_shapes(record)
     if redact_record({k: v for k, v in record.items() if k != "content_digest"}) != {
         k: v for k, v in record.items() if k != "content_digest"
     }:
@@ -74,6 +77,14 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
         raise DemoError("branch_writable_evidence", "publication attempt references branch-writable evidence")
     _validate_outcome(record)
     assert_content_digest(record)
+
+
+def _validate_required_field_shapes(record: dict[str, Any]) -> None:
+    if record["schema_version"] != 1:
+        raise DemoError("publication_attempt_invalid", "publication attempt schema_version is invalid")
+    for field in REQUIRED_ATTEMPT_FIELDS - {"schema_version", "content_digest", "evidence_refs"}:
+        if not isinstance(record[field], str) or not record[field].strip():
+            raise DemoError("publication_attempt_invalid", f"{field} must be a non-empty string")
 
 
 def publication_preflight(
@@ -188,6 +199,10 @@ def _validate_outcome(record: dict[str, Any]) -> None:
         _require_trusted_publication_context(record, require_publish_binding=True)
         if not record.get("published_environment_ref"):
             raise DemoError("publication_attempt_invalid", "published outcome needs stable environment ref")
+        if not _trusted_evidence_ref(record.get("trusted_publication_evidence_ref")):
+            raise DemoError("publication_attempt_invalid", "published outcome needs trusted publication evidence ref")
+        if record["trusted_publication_evidence_ref"] not in record["evidence_refs"]:
+            raise DemoError("publication_attempt_invalid", "trusted publication evidence ref must be in evidence_refs")
         if record.get("release_proof_gate_status") != "pass":
             raise DemoError("publication_attempt_invalid", "published outcome requires passing ReleaseProof")
         if not record.get("release_candidate_ref"):
@@ -220,7 +235,31 @@ def _require_trusted_publication_context(record: dict[str, Any], *, require_publ
     for field in ("target_id", "trusted_context_ref"):
         if str(record.get(field, "")).startswith("missing-"):
             raise DemoError("publication_attempt_invalid", f"{field} is not available")
+        if _is_untrusted_ref(record.get(field)):
+            raise DemoError("publication_attempt_invalid", f"{field} is not trusted")
     if require_publish_binding:
-        for field in ("command_argv_ref", "publisher_capability_label"):
+        for field in ("publisher_capability_label",):
             if str(record.get(field, "")).startswith("missing-"):
                 raise DemoError("publication_attempt_invalid", f"{field} is not available")
+            if _is_untrusted_ref(record.get(field)):
+                raise DemoError("publication_attempt_invalid", f"{field} is not trusted")
+        command_ref = record.get("command_argv_ref")
+        if str(command_ref).startswith("missing-"):
+            raise DemoError("publication_attempt_invalid", "command_argv_ref is not available")
+        if not _trusted_command_ref(command_ref):
+            raise DemoError("publication_attempt_invalid", "command_argv_ref must reference integration-publication")
+
+
+def _trusted_command_ref(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().endswith(COMMAND_REF_SUFFIX) and not _is_untrusted_ref(value)
+
+
+def _trusted_evidence_ref(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and not _is_untrusted_ref(value) and not value.startswith("missing-")
+
+
+def _is_untrusted_ref(value: Any) -> bool:
+    if not isinstance(value, str):
+        return True
+    normalized = value.strip()
+    return not normalized or normalized.startswith(UNTRUSTED_REF_PREFIXES) or "/../" in normalized or normalized.startswith("../")

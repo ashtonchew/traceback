@@ -16,11 +16,11 @@ from forkproof.demo.report import REQUIRED_METRICS, STEP_LABELS
 from forkproof.releases.models import digest_json
 
 
-def step(number: int, *, refs: list[str] | None = None):
+def step(number: int, *, status: str = "passed", refs: list[str] | None = None):
     return {
         "step_number": number,
         "label": STEP_LABELS[number],
-        "status": "passed",
+        "status": status,
         "evidence_refs": refs or [f"artifact-{number}.json"],
         "observed_behavior": f"step {number}",
         "started_at": "2026-06-21T00:00:00Z",
@@ -38,6 +38,9 @@ def report(**overrides):
         }
         for name in sorted(REQUIRED_METRICS - {"branch_count"})
     )
+    steps = [step(i) for i in range(1, 14)]
+    steps[11] = step(12, status="failed")
+    steps[12] = step(13, status="failed")
     record = {
         "schema_version": 1,
         "invocation_id": "demo-cli-source",
@@ -52,7 +55,7 @@ def report(**overrides):
         "live_attempt_result": "branches-launched",
         "live_branch_refs": ["branch-run-001.json"],
         "proof_source": "release-proof-pending",
-        "steps": [step(i) for i in range(1, 14)],
+        "steps": steps,
         "metrics": metrics,
         "release_proof_ref": "blocked:plan-005",
         "publication_attempt_ref": "blocked:publish-binding",

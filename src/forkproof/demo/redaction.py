@@ -7,10 +7,22 @@ from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 SECRET_KEY_RE = re.compile(r"(token|secret|password|api[_-]?key|authorization|cookie|credential|session)", re.I)
-AUTH_HEADER_RE = re.compile(r"(?i)(authorization:\s*)(bearer|basic)\s+[A-Za-z0-9._~+/=-]+")
+AUTH_HEADER_RE = re.compile(r"(?im)(authorization:\s*)[^\n\r]+")
 COOKIE_RE = re.compile(r"(?i)(cookie:\s*)[^\n\r]+")
 TOKEN_VALUE_RE = re.compile(r"(?i)\b([A-Za-z0-9_]*(token|secret|api[_-]?key)[A-Za-z0-9_]*=)[^\s&]+")
-SIGNED_QUERY_KEYS = {"x-amz-signature", "x-amz-credential", "x-amz-security-token", "signature", "sig", "token"}
+TOKEN_COLON_RE = re.compile(
+    r"(?i)([\"']?[A-Za-z0-9_ -]*(?:token|secret|api[_-]?key|password)[A-Za-z0-9_ -]*[\"']?\s*:\s*[\"']?)[^\"'\s,}]+"
+)
+SIGNED_QUERY_KEYS = {
+    "x-amz-signature",
+    "x-amz-credential",
+    "x-amz-security-token",
+    "signature",
+    "sig",
+    "token",
+    "access_token",
+    "api_key",
+}
 URL_RE = re.compile(r"https?://[^\s]+")
 
 
@@ -20,6 +32,7 @@ def redact_text(value: str) -> str:
     value = AUTH_HEADER_RE.sub(r"\1<redacted>", value)
     value = COOKIE_RE.sub(r"\1<redacted>", value)
     value = TOKEN_VALUE_RE.sub(r"\1<redacted>", value)
+    value = TOKEN_COLON_RE.sub(r"\1<redacted>", value)
     return _redact_signed_url(value)
 
 

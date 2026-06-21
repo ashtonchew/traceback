@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T13:45:00Z",
+  "updated_at": "2026-06-21T14:15:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -71,16 +71,16 @@
       "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after presentation timeout hardening: 49 passed.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "observed_behavior": "Mapped Plan 006 tests passed after adversarial hardening of report, publication, readiness, and redaction contracts: 54 passed.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "integration-publication",
       "command": "python docs/plans/scripts/run_mapped.py integration-publication",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped publication contract integration tests passed after adding publication-preflight CLI: 13 passed.",
-      "recorded_at": "2026-06-21T10:17:43Z"
+      "observed_behavior": "Mapped publication contract integration tests passed after adversarial publication hardening: 16 passed. This remains an interim local contract check, not final trusted publish evidence.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "publication-idempotency",
@@ -104,7 +104,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped publication trust-boundary check passed: 6 passed.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "publication-redaction",
@@ -112,7 +112,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped publication redaction check passed: 2 passed.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "demo-report-replay",
@@ -127,16 +127,16 @@
       "command": "python docs/plans/scripts/run_mapped.py demo",
       "exit_code": 2,
       "status": "blocked",
-      "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and refused to claim an Acceptance Demo Run before ReleaseProof/publish binding exist.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and emitted DEPENDENCY_GATE plus PUBLISH_BINDING STOPs instead of claiming an Acceptance Demo Run before ReleaseProof/publish binding exist.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "ruff-plan-006-demo",
       "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after presentation timeout hardening.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after adversarial hardening.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "lint",
@@ -144,7 +144,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped lint passed: ruff check docs/plans/scripts.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "build",
@@ -152,23 +152,23 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped build passed: uv lock --check resolved 155 packages.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "file-size-006",
       "command": "python docs/plans/scripts/validate_file_sizes.py --plan 006",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: 16 text files are within file-size limits.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "observed_behavior": "PASS: 16 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "evidence-006",
       "command": "python docs/plans/scripts/validate_evidence.py --plan 006",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured after presentation timeout hardening.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured after adversarial hardening.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     },
     {
       "key": "rebase-plan-006-over-plan-005",
@@ -184,7 +184,23 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: proposed ownership is collision-free for 8 plans.",
-      "recorded_at": "2026-06-21T13:45:00Z"
+      "recorded_at": "2026-06-21T14:15:00Z"
+    },
+    {
+      "key": "demo-presentation-timeout",
+      "command": "python docs/plans/scripts/run_mapped.py demo-presentation-timeout",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped presentation-timeout contract check passed: 1 passed.",
+      "recorded_at": "2026-06-21T14:15:00Z"
+    },
+    {
+      "key": "stack-base-current",
+      "command": "git rev-parse HEAD origin/codex/plan-005-release-proof origin/codex/plan-006-demo-stack && git merge-base --is-ancestor origin/codex/plan-005-release-proof HEAD",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "HEAD and origin/codex/plan-006-demo-stack are ea0e913732e71e9a189ce0ba430d023d336db99e; origin/codex/plan-005-release-proof is 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head is an ancestor of Plan 006 HEAD.",
+      "recorded_at": "2026-06-21T14:15:00Z"
     }
   ],
   "rechecks": [
@@ -213,12 +229,12 @@
     {
       "name": "Plan 006 ownership",
       "status": "pass",
-      "evidence": "Plan 006 owns src/forkproof/demo/**, tests/forkproof/demo/**, scripts/forkproof-demo*, artifacts/forkproof/demo/**, docs/plans/006-demo-observability-and-publication.*, docs/plans/evidence/006/**, and only the declared Plan 006 COMMANDS.json keys. No source implementation edits were made because a governance STOP was found before implementation."
+      "evidence": "Plan 006 owns src/forkproof/demo/**, tests/forkproof/demo/**, scripts/forkproof-demo*, artifacts/forkproof/demo/**, docs/plans/006-demo-observability-and-publication.*, docs/plans/evidence/006/**, and only the declared Plan 006 COMMANDS.json keys. Implementation edits are limited to those owned paths/keys; validate_ownership.py passes."
     },
     {
       "name": "Stack base",
       "status": "pass",
-      "evidence": "Worktree branch codex/plan-006-demo-stack was rebased over origin/codex/plan-005-release-proof at a1eca2795ff5358fcfa8cd89099f7300e6cdc933 and remains targeted at codex/plan-005-release-proof, not main."
+      "evidence": "Worktree branch codex/plan-006-demo-stack remains targeted at codex/plan-005-release-proof, not main. Current stack check: Plan 006 HEAD/origin branch ea0e913732e71e9a189ce0ba430d023d336db99e; origin/codex/plan-005-release-proof 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head is an ancestor of Plan 006 HEAD."
     },
     {
       "name": "Gate 4 / Plan 005 dependency",
@@ -243,17 +259,17 @@
     {
       "name": "Plan 006 mapped tests",
       "status": "pass",
-      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 49 tests after presentation timeout hardening."
+      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 54 tests after adversarial hardening."
     },
     {
       "name": "Repeated blocker recheck",
       "status": "blocked",
-      "evidence": "After refetching main, PR #27, Plan 005 base, and the Plan 006 branch, the same source-of-truth and Gate 4 blockers remain. No Plan 006 source implementation was performed."
+      "evidence": "Historical blocker recheck preserved from stack setup. User subsequently authorized best-effort Plan 006-owned implementation before Plan 005 merges; completion remains blocked by Gate 4 and publish binding."
     },
     {
       "name": "Third blocker audit",
       "status": "blocked",
-      "evidence": "Third consecutive goal-turn audit found unchanged blockers. The active goal is now at an impasse pending external repo-map reconciliation and Plan 005/Gate 4 completion."
+      "evidence": "Historical blocker audit preserved from stack setup. The current branch is no longer source-empty; it contains Plan 006-owned contract implementation, while final completion still waits on Plan 005/Gate 4 and publish binding."
     },
     {
       "name": "Pre-Gate-4 contract implementation",
@@ -308,7 +324,7 @@
     {
       "name": "Publication attempt hardening",
       "status": "pass",
-      "evidence": "PublicationAttempt validation now requires the integration-publication command key, unique evidence refs, and rejects failed outcomes that carry a published environment ref. These checks are covered by behavior tests and do not invoke a publish API."
+      "evidence": "PublicationAttempt validation now requires the integration-publication command key, unique evidence refs, non-empty trust fields, trusted command/evidence refs for proof-backed publication outcomes, and rejects failed outcomes that carry a published environment ref. These checks are covered by behavior tests and do not invoke a publish API."
     },
     {
       "name": "Metrics/readiness hardening",
@@ -333,12 +349,17 @@
     {
       "name": "Claim-shape overclaim hardening",
       "status": "pass",
-      "evidence": "Report claims must be a list of non-empty strings and are normalized before single-run overclaim rejection, so hyphenated/case variants such as cost-savings cannot bypass the Plan 006 reference contract."
+      "evidence": "Report claims must be a list of non-empty strings and are normalized plus phrase-scanned before single-run overclaim rejection, so hyphenated/case variants and natural-language phrases such as cost-savings, success rate, reliability, or coverage cannot bypass the Plan 006 reference contract."
     },
     {
       "name": "Presentation timeout hardening",
       "status": "pass",
-      "evidence": "Presentation reports now require a positive integer presentation budget, and a timeout result must switch to Prior-Run Witness Replay rather than validating as live-no-witness."
+      "evidence": "Presentation reports now require a positive integer presentation budget, and a timeout result must switch to Prior-Run Witness Replay rather than validating as live-no-witness. Mapped demo-presentation-timeout passed with 1 test."
+    },
+    {
+      "name": "Adversarial overclaim hardening",
+      "status": "pass",
+      "evidence": "Read-only adversarial subagents reviewed report/demo semantics, publication trust/idempotency/redaction, and evidence/command wiring. Plan 006 validators now reject pass reports with failed steps, blocked proof/publication refs shown as completed steps, acceptance pass without launched live branches, unrelated fallback labels, forged published attempts without trusted publication evidence, branch-writable/temp publication refs, broader secret formats, and pass readiness packs that still point at blocked/missing artifacts."
     }
   ],
   "artifacts": [
@@ -448,6 +469,7 @@
     "2026-06-21T10:47:12Z — Added demo readiness pack validation and CLI support. This validates a digest-checked readiness pack with evidence-backed auth/network/quota/artifact statuses without probing live systems or reading secrets. Mapped plan-006-tests passed with 38 tests.",
     "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist.",
     "2026-06-21T11:02:44Z — Restacked Plan 006 over updated PR #27 head 3105a44. The rebase completed cleanly and mapped Plan 006 tests still pass with 38 tests. Plan 005 remains blocked on harden_fixer_artifact_layout_drift/fix_failed, with no sealed ReleaseProof or release candidate.",
-    "2026-06-21T11:12:36Z — Added core metrics validation. Reports must include branch_count, clusters, time_to_witness, reward_before, reward_after, control_retention, replay_rate, restore_latency, and setup_avoided, while allowing not-measured/not-applicable values with reasons before full Acceptance Demo evidence exists. Mapped plan-006-tests passed with 39 tests."
+    "2026-06-21T11:12:36Z — Added core metrics validation. Reports must include branch_count, clusters, time_to_witness, reward_before, reward_after, control_retention, replay_rate, restore_latency, and setup_avoided, while allowing not-measured/not-applicable values with reasons before full Acceptance Demo evidence exists. Mapped plan-006-tests passed with 39 tests.",
+    "2026-06-21T14:15:00Z — Adversarial subagent hardening pass completed. Report validators now reject pass reports with failed steps, blocked proof/publication refs shown as completed steps, acceptance pass without launched live branches, unrelated fallback labels, malformed metric shape, and natural-language single-run overclaims. Publication/readiness/redaction validators now reject forged published attempts without trusted publication evidence, temp/branch-writable publication refs, untrusted command refs, broader secret formats, and pass readiness packs that still point at blocked/missing artifacts. Mapped plan-006-tests passed with 54 tests; demo-presentation-timeout passed with 1 test; stack-base evidence now cites Plan 005 head 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5."
   ]
 }

@@ -28,6 +28,12 @@ def report(**overrides):
         }
         for name in sorted(REQUIRED_METRICS - {"branch_count"})
     )
+    steps = [step(i) for i in range(1, 14)]
+    if overrides.get("status") == "pass":
+        steps = [step(i) for i in range(1, 14)]
+    else:
+        steps[11] = step(12, status="failed")
+        steps[12] = step(13, status="failed")
     record = {
         "schema_version": 1,
         "invocation_id": "demo-001",
@@ -42,7 +48,7 @@ def report(**overrides):
         "live_attempt_result": "branches-launched",
         "live_branch_refs": ["branch-run-001.json"],
         "proof_source": "release-proof-pending",
-        "steps": [step(i) for i in range(1, 14)],
+        "steps": steps,
         "metrics": metrics,
         "release_proof_ref": "blocked:plan-005",
         "publication_attempt_ref": "blocked:publish-binding",
@@ -73,6 +79,16 @@ def test_acceptance_report_requires_full_budget_or_nonpassing_resource_stop():
                 release_proof_ref="release-proof.json",
                 publication_attempt_ref="publication-attempt.json",
                 resource_stop_ref="quota-stop.json",
+            )
+        )
+
+    with pytest.raises(DemoError, match="launched live branches"):
+        validate_demo_report(
+            report(
+                status="pass",
+                live_attempt_result="blocked",
+                release_proof_ref="release-proof.json",
+                publication_attempt_ref="publication-attempt.json",
             )
         )
 
@@ -111,6 +127,10 @@ def test_report_rejects_malformed_step_and_branch_refs():
     with pytest.raises(DemoError, match="live_branch_refs"):
         validate_demo_report(report(live_branch_refs=["branch-run-001.json", ""]))
 
+    steps[0] = {**step(1), "step_number": "1"}
+    with pytest.raises(DemoError, match="step numbers must be integers"):
+        validate_demo_report(report(steps=steps))
+
 
 def test_acceptance_report_rejects_fake_live_branch_claims():
     with pytest.raises(DemoError, match="live discovery claims"):
@@ -144,12 +164,41 @@ def test_passing_report_rejects_blocked_release_or_publication_refs():
         validate_demo_report(report(status="pass"))
 
 
+def test_passing_report_rejects_failed_steps():
+    steps = [step(i) for i in range(1, 14)]
+    steps[11] = step(12, status="failed")
+
+    with pytest.raises(DemoError, match="failed steps"):
+        validate_demo_report(
+            report(
+                status="pass",
+                release_proof_ref="release-proof.json",
+                publication_attempt_ref="publication-attempt.json",
+                steps=steps,
+            )
+        )
+
+
+def test_blocked_report_rejects_completed_proof_or_publication_steps():
+    steps = [step(i) for i in range(1, 14)]
+    steps[12] = step(13, status="failed")
+    with pytest.raises(DemoError, match="step 12"):
+        validate_demo_report(report(steps=steps))
+
+    steps = [step(i) for i in range(1, 14)]
+    steps[11] = step(12, status="failed")
+    with pytest.raises(DemoError, match="step 13"):
+        validate_demo_report(report(steps=steps))
+
+
 def test_prior_run_fallback_requires_visible_label_and_replay_refs():
     with pytest.raises(DemoError, match="prior-run replay requires"):
         validate_demo_report(report(discovery_source="prior-run-replay"))
 
     steps = [step(i) for i in range(1, 14)]
     steps[5] = step(6, status="fallback")
+    steps[11] = step(12, status="failed")
+    steps[12] = step(13, status="failed")
     validate_demo_report(
         report(
             discovery_source="prior-run-replay",
@@ -159,8 +208,25 @@ def test_prior_run_fallback_requires_visible_label_and_replay_refs():
             prior_run_witness_ref="wit-001.json",
             prior_run_witness_digest="sha256:wit-001",
             new_replay_ref="replay-001.json",
+            resource_stop_ref="timeout-stop.json",
         )
     )
+
+    steps = [step(i) for i in range(1, 14)]
+    steps[11] = step(12, status="fallback")
+    with pytest.raises(DemoError, match="replay-relevant"):
+        validate_demo_report(
+            report(
+                discovery_source="prior-run-replay",
+                live_attempt_result="timeout",
+                steps=steps,
+                prior_run_id="run-001",
+                prior_run_witness_ref="wit-001.json",
+                prior_run_witness_digest="sha256:wit-001",
+                new_replay_ref="replay-001.json",
+                resource_stop_ref="timeout-stop.json",
+            )
+        )
 
 
 def test_report_replay_is_audit_only():
@@ -229,6 +295,8 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
 
     steps = [step(i) for i in range(1, 14)]
     steps[5] = step(6, status="fallback")
+    steps[11] = step(12, status="failed")
+    steps[12] = step(13, status="failed")
     validate_demo_report(
         report(
             demo_mode="presentation",
@@ -257,6 +325,12 @@ def test_metrics_reject_tbd_and_single_run_statistical_overclaims():
     with pytest.raises(DemoError, match="single-run"):
         validate_demo_report(report(claims=["cost-savings"]))
 
+    with pytest.raises(DemoError, match="single-run"):
+        validate_demo_report(report(claims=["100% success rate"]))
+
+    with pytest.raises(DemoError, match="single-run"):
+        validate_demo_report(report(claims=["reliable demo coverage improved"]))
+
     with pytest.raises(DemoError, match="claims must be"):
         validate_demo_report(report(claims="success_rate"))
 
@@ -271,4 +345,21 @@ def test_metrics_reject_duplicate_names():
     metrics.append({"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"})
 
     with pytest.raises(DemoError, match="duplicated"):
+        validate_demo_report(report(metrics=metrics))
+
+
+def test_metrics_reject_malformed_names_evidence_and_absent_marker():
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics[0] = {"name": 7, "not-measured": True, "reason": "not measured"}
+    with pytest.raises(DemoError, match="metric name"):
+        validate_demo_report(report(metrics=metrics))
+
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics[0] = {"name": metrics[0]["name"], "value": 1, "evidence_ref": ["not-a-ref"]}
+    with pytest.raises(DemoError, match="evidence_ref"):
+        validate_demo_report(report(metrics=metrics))
+
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics[0] = {"name": metrics[0]["name"], "not-measured": False, "reason": "not measured"}
+    with pytest.raises(DemoError, match="absent status"):
         validate_demo_report(report(metrics=metrics))

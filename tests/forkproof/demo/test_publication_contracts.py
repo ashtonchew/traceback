@@ -171,7 +171,13 @@ def test_published_outcome_requires_stable_environment_ref():
 
     with pytest.raises(DemoError, match="passing ReleaseProof"):
         validate_publication_attempt(
-            attempt(outcome="published", release_proof_gate_status=None, published_environment_ref="hud-env-version://env-v2")
+            attempt(
+                outcome="published",
+                release_proof_gate_status=None,
+                published_environment_ref="hud-env-version://env-v2",
+                trusted_publication_evidence_ref="trusted-publication.json",
+                evidence_refs=["release-proof.json", "candidate.json", "trusted-publication.json"],
+            )
         )
 
     with pytest.raises(DemoError, match="cannot carry an error class"):
@@ -179,6 +185,8 @@ def test_published_outcome_requires_stable_environment_ref():
             attempt(
                 outcome="published",
                 published_environment_ref="hud-env-version://env-v2",
+                trusted_publication_evidence_ref="trusted-publication.json",
+                evidence_refs=["release-proof.json", "candidate.json", "trusted-publication.json"],
                 normalized_error_class="publish_binding_missing",
             )
         )
@@ -187,9 +195,20 @@ def test_published_outcome_requires_stable_environment_ref():
         attempt(
             outcome="published",
             published_environment_ref="hud-env-version://env-v2",
+            trusted_publication_evidence_ref="trusted-publication.json",
+            evidence_refs=["release-proof.json", "candidate.json", "trusted-publication.json"],
             normalized_error_class=None,
         )
     )
+
+    with pytest.raises(DemoError, match="trusted publication evidence"):
+        validate_publication_attempt(
+            attempt(
+                outcome="published",
+                published_environment_ref="hud-env-version://env-v2",
+                normalized_error_class=None,
+            )
+        )
 
 
 def test_publication_attempt_validation_rejects_self_attested_redaction_and_branch_writable_evidence():
@@ -206,6 +225,43 @@ def test_publication_attempt_rejects_wrong_command_and_duplicate_evidence_refs()
 
     with pytest.raises(DemoError, match="unique"):
         validate_publication_attempt(attempt(evidence_refs=["release-proof.json", "release-proof.json"]))
+
+    with pytest.raises(DemoError, match="command_argv_ref must reference integration-publication"):
+        validate_publication_attempt(
+            attempt(
+                outcome="permission-blocked",
+                normalized_error_class="publish_unauthorized",
+                command_argv_ref="tmp/untrusted_publish.py",
+            )
+        )
+
+    with pytest.raises(DemoError, match="trusted_context_ref is not trusted"):
+        validate_publication_attempt(attempt(trusted_context_ref="artifacts/forkproof/demo/branch-owned.json"))
+
+
+def test_publication_attempt_rejects_empty_required_trust_fields():
+    for field in (
+        "publication_attempt_id",
+        "release_proof_id",
+        "release_proof_digest",
+        "target_id",
+        "publisher_capability_label",
+        "command_argv_ref",
+        "trusted_context_ref",
+        "idempotency_key",
+    ):
+        record = attempt(**{field: " "})
+        if field in {"release_proof_digest", "target_id"}:
+            record["idempotency_key"] = idempotency_key(
+                release_proof_digest=record["release_proof_digest"],
+                target_id=record["target_id"],
+            )
+            record = with_content_digest({k: v for k, v in record.items() if k != "content_digest"})
+        with pytest.raises(DemoError, match=f"{field} must be a non-empty string"):
+            validate_publication_attempt(record)
+
+    with pytest.raises(DemoError, match="schema_version"):
+        validate_publication_attempt(attempt(schema_version="1"))
 
 
 def test_failed_publication_attempt_cannot_carry_success_refs():

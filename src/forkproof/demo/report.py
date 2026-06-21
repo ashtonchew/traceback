@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .models import DemoError, assert_content_digest, require_fields
@@ -33,6 +34,15 @@ FORBIDDEN_SINGLE_RUN_CLAIMS = {
     "setup_avoidance",
     "cost_savings",
 }
+FORBIDDEN_CLAIM_PATTERNS = (
+    re.compile(r"\bdiscovery\s+probabilit(?:y|ies)\b", re.I),
+    re.compile(r"\bsuccess\s+rates?\b", re.I),
+    re.compile(r"\breliab(?:le|ility)\b", re.I),
+    re.compile(r"\bexploit\s+coverage\b", re.I),
+    re.compile(r"\bcoverage\b", re.I),
+    re.compile(r"\bsetup\s+(?:avoid(?:ed|ance)|savings?)\b", re.I),
+    re.compile(r"\bcost\s+savings?\b", re.I),
+)
 
 REQUIRED_REPORT_FIELDS = {
     "schema_version",
@@ -106,6 +116,8 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
     if not all(isinstance(step, dict) for step in steps):
         raise DemoError("step_invalid", "each step must be an object")
     numbers = [step.get("step_number") for step in steps]
+    if not all(isinstance(number, int) for number in numbers):
+        raise DemoError("report_invalid", "step numbers must be integers")
     if sorted(numbers) != list(range(1, 14)):
         raise DemoError("report_invalid", "step numbers must be exactly 1..13")
     for step in steps:
@@ -134,6 +146,8 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
         missing = sorted(ref for ref in required_fallback_refs if not report.get(ref))
         if not fallback_steps or missing:
             raise DemoError("fallback_unlabeled", "prior-run replay requires fallback step and replay refs")
+        if not any(step["step_number"] in {6, 7, 10} for step in fallback_steps):
+            raise DemoError("fallback_unlabeled", "fallback status must be on replay-relevant demo steps")
     if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not report.get("live_branch_refs"):
         raise DemoError("fake_live_branch", "live discovery claims require persisted branch refs")
     if report.get("live_branch_refs") is not None and not _is_string_list(report["live_branch_refs"]):
@@ -145,6 +159,7 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             or report.get("live_witness_gate_status") != "pass"
         ):
             raise DemoError("fake_live_branch", "fresh exploit claims require a gate-passing live Witness")
+    _validate_step_status_consistency(steps, report)
 
 
 def _validate_top_level_shapes(record: dict[str, Any]) -> None:
@@ -158,7 +173,7 @@ def _validate_top_level_shapes(record: dict[str, Any]) -> None:
         "release_proof_ref",
         "publication_attempt_ref",
     ):
-        if not isinstance(record[field], str) or not record[field]:
+        if not isinstance(record[field], str) or not record[field].strip():
             raise DemoError("report_invalid", f"{field} must be a non-empty string")
     if not _is_nonempty_string_list(record["command_argv"]):
         raise DemoError("report_invalid", "command_argv must be a non-empty string list")
@@ -189,6 +204,25 @@ def _validate_status_consistency(record: dict[str, Any]) -> None:
         raise DemoError("report_overclaim", f"passing report cannot use blocked refs: {blocked_refs}")
 
 
+def _validate_step_status_consistency(steps: list[dict[str, Any]], report: dict[str, Any]) -> None:
+    by_number = {step["step_number"]: step for step in steps}
+    failed_steps = [step["step_number"] for step in steps if step["status"] == "failed"]
+    if report["status"] == "pass" and failed_steps:
+        raise DemoError("report_overclaim", f"passing report cannot contain failed steps: {failed_steps}")
+    if str(report.get("release_proof_ref", "")).startswith("blocked:") and by_number[12]["status"] in {
+        "passed",
+        "displayed",
+        "fallback",
+    }:
+        raise DemoError("report_overclaim", "blocked ReleaseProof ref cannot mark step 12 complete")
+    if str(report.get("publication_attempt_ref", "")).startswith("blocked:") and by_number[13]["status"] in {
+        "passed",
+        "displayed",
+        "fallback",
+    }:
+        raise DemoError("report_overclaim", "blocked publication ref cannot mark step 13 complete")
+
+
 def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
     refs = step.get("evidence_refs")
     if not isinstance(refs, list) or not refs:
@@ -210,6 +244,8 @@ def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
         if not isinstance(metric, dict):
             raise DemoError("metric_invalid", "each metric must be an object")
         require_fields(metric, {"name"}, error_class="metric_incomplete")
+        if not isinstance(metric["name"], str) or not metric["name"].strip():
+            raise DemoError("metric_invalid", "metric name must be a non-empty string")
         if metric["name"] in seen:
             raise DemoError("metric_invalid", f"metric {metric['name']} is duplicated")
         seen.add(metric["name"])
@@ -221,8 +257,10 @@ def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
             raise DemoError("metric_invalid", f"metric {metric['name']} needs value or one absent status")
         if metric.get("value") == "TBD":
             raise DemoError("metric_invalid", f"metric {metric['name']} uses TBD as a result")
-        if present and not metric.get("evidence_ref"):
+        if present and (not isinstance(metric.get("evidence_ref"), str) or not metric["evidence_ref"]):
             raise DemoError("metric_invalid", f"metric {metric['name']} lacks evidence_ref")
+        if absent and metric[absent[0]] is not True:
+            raise DemoError("metric_invalid", f"metric {metric['name']} absent status must be true")
         if absent and not metric.get("reason"):
             raise DemoError("metric_invalid", f"metric {metric['name']} lacks reason for absent value")
     missing = sorted(REQUIRED_METRICS - seen)
@@ -260,6 +298,10 @@ def _validate_acceptance(record: dict[str, Any]) -> None:
     budget = record.get("accepted_branch_budget")
     launched = record.get("launched_branch_count")
     if isinstance(budget, int) and budget > 0 and launched == budget:
+        if record["status"] == "pass" and record["live_attempt_result"] not in {"branches-launched", "new-witness"}:
+            raise DemoError("acceptance_budget_incomplete", "passing acceptance requires launched live branches")
+        if record["live_attempt_result"] in {"blocked", "failed", "timeout"} and not record.get("resource_stop_ref"):
+            raise DemoError("acceptance_budget_incomplete", "blocked acceptance attempt needs STOP evidence")
         return
     if record.get("resource_stop_ref"):
         if record["status"] == "pass":
@@ -276,6 +318,9 @@ def _reject_single_run_overclaims(record: dict[str, Any]) -> None:
     forbidden = sorted(claims & FORBIDDEN_SINGLE_RUN_CLAIMS)
     if forbidden:
         raise DemoError("statistical_overclaim", f"single-run report cannot claim {forbidden}")
+    phrase_forbidden = [claim for claim in raw_claims if any(pattern.search(claim) for pattern in FORBIDDEN_CLAIM_PATTERNS)]
+    if phrase_forbidden:
+        raise DemoError("statistical_overclaim", f"single-run report cannot claim {phrase_forbidden}")
 
 
 def _is_nonempty_string_list(value: Any) -> bool:

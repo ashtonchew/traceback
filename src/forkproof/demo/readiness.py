@@ -65,7 +65,7 @@ def validate_readiness_pack(record: dict[str, Any]) -> None:
     }:
         raise DemoError("secret_exposure", "readiness pack contains unredacted secret-like content")
     _validate_checks(record["checks"], record["status"])
-    _validate_artifact_refs(record["artifact_refs"])
+    _validate_artifact_refs(record["artifact_refs"], record["status"])
     assert_content_digest(record)
 
 
@@ -99,7 +99,7 @@ def _validate_checks(checks: list[dict[str, Any]], pack_status: str) -> None:
         raise DemoError("readiness_invalid", "blocked readiness pack needs blocked or expected-block check")
 
 
-def _validate_artifact_refs(refs: dict[str, Any]) -> None:
+def _validate_artifact_refs(refs: dict[str, Any], pack_status: str) -> None:
     if not isinstance(refs, dict):
         raise DemoError("readiness_invalid", "artifact_refs must be an object")
     missing = sorted(key for key in REQUIRED_ARTIFACT_REFS if not refs.get(key))
@@ -108,5 +108,7 @@ def _validate_artifact_refs(refs: dict[str, Any]) -> None:
     for key, value in refs.items():
         if not isinstance(value, str):
             raise DemoError("readiness_invalid", f"artifact ref {key} must be a string")
+        if pack_status == "pass" and value.startswith(("blocked:", "missing:")):
+            raise DemoError("readiness_invalid", f"passing readiness pack cannot use placeholder artifact ref {key}")
         if value.startswith(("http://", "https://")) and "token=" in value.lower():
             raise DemoError("secret_exposure", f"artifact ref {key} contains a token-bearing URL")

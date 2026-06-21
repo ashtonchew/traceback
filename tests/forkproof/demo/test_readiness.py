@@ -65,6 +65,15 @@ def test_readiness_pack_rejects_passing_pack_with_not_applicable_checks():
         validate_readiness_pack(readiness_pack(status="pass", checks=checks))
 
 
+def test_readiness_pack_rejects_passing_pack_with_placeholder_artifacts():
+    checks = [check(name) for name in sorted(REQUIRED_CHECKS)]
+    refs = dict(readiness_pack()["artifact_refs"])
+    refs["release_proof_ref"] = "blocked:plan-005"
+
+    with pytest.raises(DemoError, match="placeholder artifact ref"):
+        validate_readiness_pack(readiness_pack(status="pass", checks=checks, artifact_refs=refs))
+
+
 def test_readiness_pack_rejects_missing_checks_and_artifact_refs():
     missing_check = readiness_pack(checks=[check("hud_auth")])
     with pytest.raises(DemoError, match="missing checks"):

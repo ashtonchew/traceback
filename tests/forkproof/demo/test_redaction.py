@@ -6,17 +6,22 @@ from forkproof.demo.redaction import redact_record, redact_text
 def test_redacts_headers_cookies_tokens_and_signed_urls():
     text = (
         "Authorization: Bearer abc.def.ghi\n"
+        "Authorization: ApiKey raw-secret\n"
         "Cookie: session=abc123\n"
         "api_key=secret-value "
-        "https://example.com/file?X-Amz-Signature=abc&safe=1"
+        '{"api_key":"json-secret"} '
+        "https://example.com/file?X-Amz-Signature=abc&access_token=url-secret&safe=1"
     )
 
     redacted = redact_text(text)
 
     assert "abc.def.ghi" not in redacted
+    assert "raw-secret" not in redacted
     assert "session=abc123" not in redacted
     assert "secret-value" not in redacted
+    assert "json-secret" not in redacted
     assert "X-Amz-Signature=%3Credacted%3E" in redacted
+    assert "access_token=%3Credacted%3E" in redacted
     assert "safe=1" in redacted
 
 
