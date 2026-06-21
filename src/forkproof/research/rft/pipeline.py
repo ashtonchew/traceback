@@ -18,7 +18,7 @@ from forkproof.research.canonical.inputs import (
 )
 from forkproof.research.canonical.qabench import (
     QABenchTrajectory,
-    iter_qabench_training_candidates,
+    iter_qabench_training_candidate_results,
 )
 from forkproof.research.canonical.releaseproof import (
     ReleaseGateIndex,
@@ -82,7 +82,10 @@ def _to_prompt_record(
     if trajectory.referee_verdict == "confirmed_hack" and not trajectory.lineage:
         return _quarantine(trajectory, "confirmed_hack_missing_divergence_lineage")
 
-    case = release.case(trajectory.proofset_case_id)
+    try:
+        case = release.case(trajectory.proofset_case_id)
+    except CanonicalInputError:
+        return _quarantine(trajectory, "unjoined_releaseproof_case")
     assert_qabench_reward_matches_release(
         trajectory_id=trajectory.trajectory_id,
         qabench_reward=trajectory.hud_reward,
@@ -280,8 +283,11 @@ def run_canonical_rft_pipeline(
 
     prompts: list[RFTPromptRecord] = []
     quarantined: list[dict[str, Any]] = []
-    for trajectory in iter_qabench_training_candidates(qabench.data):
-        normalized = _to_prompt_record(trajectory, release)
+    for candidate in iter_qabench_training_candidate_results(qabench.data):
+        if isinstance(candidate, dict):
+            quarantined.append(candidate)
+            continue
+        normalized = _to_prompt_record(candidate, release)
         if isinstance(normalized, RFTPromptRecord):
             prompts.append(normalized)
         else:

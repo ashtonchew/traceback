@@ -26,6 +26,19 @@ class QABenchTrajectory:
     lineage: dict[str, Any] | None
 
 
+def _quarantine_row(raw: Any, *, row_index: int, reason: str) -> dict[str, Any]:
+    row = raw if isinstance(raw, dict) else {}
+    return {
+        "row_index": row_index,
+        "trajectory_id": _string(row, "trajectory_id", "id", "trace_id"),
+        "task_id": _string(row, "task_id"),
+        "origin": _string(row, "origin", "trajectory_origin"),
+        "proofset_case_id": _string(row, "proofset_case_id", "case_id"),
+        "referee_verdict": row.get("referee_verdict") if isinstance(row, dict) else None,
+        "reason": reason,
+    }
+
+
 def _string(row: dict[str, Any], *fields: str) -> str | None:
     for field in fields:
         value = row.get(field)
@@ -89,6 +102,48 @@ def _lineage(row: dict[str, Any]) -> dict[str, Any] | None:
     return raw if isinstance(raw, dict) else None
 
 
+def parse_qabench_training_candidate(row: dict[str, Any]) -> QABenchTrajectory:
+    """Parse one qabench trajectory row into the canonical training shape."""
+    origin = _origin(row)
+    verdict = _verdict(row)
+    lineage = _lineage(row)
+    return QABenchTrajectory(
+        trajectory_id=_required_string(row, "trajectory_id", "id", "trace_id"),
+        task_id=_required_string(row, "task_id"),
+        task_prompt=_string(row, "task_prompt", "prompt", "instruction"),
+        assistant_output=_string(row, "assistant_output", "final_response", "response"),
+        origin=origin,
+        proofset_case_id=_string(row, "proofset_case_id", "case_id"),
+        hud_reward=_reward(row),
+        referee_verdict=verdict,
+        qa_verdict=_qa_verdict(row),
+        cluster_id=_string(row, "cluster_id", "exploit_cluster"),
+        lineage=lineage,
+    )
+
+
+def iter_qabench_training_candidate_results(
+    report: dict[str, Any],
+) -> Iterator[QABenchTrajectory | dict[str, Any]]:
+    """Yield parsed qabench rows or row-level quarantine records."""
+    trajectories = report.get("trajectories")
+    if not isinstance(trajectories, list):
+        raise CanonicalInputError("qabench report must include trajectories[]")
+
+    for row_index, raw in enumerate(trajectories):
+        if not isinstance(raw, dict):
+            yield _quarantine_row(raw, row_index=row_index, reason="qabench_row_not_object")
+            continue
+        try:
+            yield parse_qabench_training_candidate(raw)
+        except CanonicalInputError as exc:
+            yield _quarantine_row(
+                raw,
+                row_index=row_index,
+                reason=f"qabench_row_invalid: {exc}",
+            )
+
+
 def iter_qabench_training_candidates(report: dict[str, Any]) -> Iterator[QABenchTrajectory]:
     """Yield structurally valid qabench trajectories."""
     trajectories = report.get("trajectories")
@@ -98,19 +153,4 @@ def iter_qabench_training_candidates(report: dict[str, Any]) -> Iterator[QABench
     for raw in trajectories:
         if not isinstance(raw, dict):
             raise CanonicalInputError("each qabench trajectory must be an object")
-        origin = _origin(raw)
-        verdict = _verdict(raw)
-        lineage = _lineage(raw)
-        yield QABenchTrajectory(
-            trajectory_id=_required_string(raw, "trajectory_id", "id", "trace_id"),
-            task_id=_required_string(raw, "task_id"),
-            task_prompt=_string(raw, "task_prompt", "prompt", "instruction"),
-            assistant_output=_string(raw, "assistant_output", "final_response", "response"),
-            origin=origin,
-            proofset_case_id=_string(raw, "proofset_case_id", "case_id"),
-            hud_reward=_reward(raw),
-            referee_verdict=verdict,
-            qa_verdict=_qa_verdict(raw),
-            cluster_id=_string(raw, "cluster_id", "exploit_cluster"),
-            lineage=lineage,
-        )
+        yield parse_qabench_training_candidate(raw)

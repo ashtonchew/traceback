@@ -84,7 +84,7 @@ def _reward(row: dict[str, Any]) -> float:
     raise CanonicalInputError(f"ReleaseProof result lacks binary reward: {row!r}")
 
 
-def _case_kind(row: dict[str, Any], witness_ids: set[str], control_ids: set[str]) -> str:
+def _declared_case_kind(row: dict[str, Any]) -> str | None:
     value = row.get("case_kind") or row.get("kind") or row.get("type")
     if isinstance(value, str) and value.strip():
         lowered = value.strip().lower()
@@ -92,12 +92,23 @@ def _case_kind(row: dict[str, Any], witness_ids: set[str], control_ids: set[str]
             return "control"
         if "witness" in lowered or "exploit" in lowered:
             return "witness"
-    cid = _case_id(row)
-    if cid in witness_ids:
+    return None
+
+
+def _sealed_case_kind(case_id: str, witness_ids: set[str], control_ids: set[str]) -> str:
+    if case_id in witness_ids:
         return "witness"
-    if cid in control_ids:
+    if case_id in control_ids:
         return "control"
-    raise CanonicalInputError(f"ReleaseProof case {cid!r} is not a sealed Witness or control")
+    raise CanonicalInputError(f"ReleaseProof case {case_id!r} is not a sealed Witness or control")
+
+
+def _assert_declared_kind_matches(row: dict[str, Any], *, case_id: str, sealed_kind: str) -> None:
+    declared = _declared_case_kind(row)
+    if declared is not None and declared != sealed_kind:
+        raise CanonicalInputError(
+            f"ReleaseProof case {case_id!r} declares {declared!r} but sealed membership is {sealed_kind!r}"
+        )
 
 
 def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
@@ -117,11 +128,22 @@ def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
     v2_by_id = {_case_id(row): row for row in proof["v2_results"]}
     if set(v1_by_id) != set(v2_by_id):
         raise CanonicalInputError("ReleaseProof v1/v2 case membership differs")
+    expected_case_ids = witness_ids | control_ids
+    observed_case_ids = set(v1_by_id)
+    if observed_case_ids != expected_case_ids:
+        missing = ", ".join(sorted(expected_case_ids - observed_case_ids)) or "none"
+        extra = ", ".join(sorted(observed_case_ids - expected_case_ids)) or "none"
+        raise CanonicalInputError(
+            "ReleaseProof results must exactly cover sealed Witness/control ids "
+            f"(missing: {missing}; extra: {extra})"
+        )
 
     cases: dict[str, ReleaseCaseResult] = {}
     for case_id, v1_row in v1_by_id.items():
         v2_row = v2_by_id[case_id]
-        kind = _case_kind(v1_row, witness_ids, control_ids)
+        kind = _sealed_case_kind(case_id, witness_ids, control_ids)
+        _assert_declared_kind_matches(v1_row, case_id=case_id, sealed_kind=kind)
+        _assert_declared_kind_matches(v2_row, case_id=case_id, sealed_kind=kind)
         result = ReleaseCaseResult(
             case_id=case_id,
             case_kind=kind,

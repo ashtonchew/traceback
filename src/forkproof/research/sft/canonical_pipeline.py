@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from forkproof.research.canonical.errors import CanonicalInputError
 from forkproof.research.canonical.inputs import (
     LoadedArtifact,
     assert_manifest_lists_artifact,
@@ -28,7 +29,7 @@ from forkproof.research.sft.metrics import MetricsSummary
 from forkproof.research.sft.models import TraceRecord
 from forkproof.research.canonical.qabench import (
     QABenchTrajectory,
-    iter_qabench_training_candidates,
+    iter_qabench_training_candidate_results,
 )
 from forkproof.research.canonical.releaseproof import (
     ReleaseGateIndex,
@@ -79,7 +80,10 @@ def _to_trace_record(
     if not trajectory.task_prompt or not trajectory.assistant_output:
         return _record_quarantine(trajectory, "missing_faithful_demonstration")
 
-    case = release.case(trajectory.proofset_case_id)
+    try:
+        case = release.case(trajectory.proofset_case_id)
+    except CanonicalInputError:
+        return _record_quarantine(trajectory, "unjoined_releaseproof_case")
     assert_qabench_reward_matches_release(
         trajectory_id=trajectory.trajectory_id,
         qabench_reward=trajectory.hud_reward,
@@ -270,8 +274,11 @@ def run_canonical_sft_pipeline(
 
     traces: list[TraceRecord] = []
     quarantined: list[dict[str, Any]] = []
-    for trajectory in iter_qabench_training_candidates(qabench.data):
-        normalized = _to_trace_record(trajectory, release, qabench, release_proof)
+    for candidate in iter_qabench_training_candidate_results(qabench.data):
+        if isinstance(candidate, dict):
+            quarantined.append(candidate)
+            continue
+        normalized = _to_trace_record(candidate, release, qabench, release_proof)
         if isinstance(normalized, TraceRecord):
             traces.append(normalized)
         else:

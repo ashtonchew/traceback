@@ -157,10 +157,15 @@ def load_release_proof(path: str | Path) -> LoadedArtifact:
         "fixer_run_ref",
         "v1_results",
         "v2_results",
+        "subversion_results",
+        "evaluator_context_refs",
+        "rejection_history",
+        "family_variant_results",
         "witnesses_killed",
         "controls_preserved",
         "gate_status",
         "trace_links",
+        "release_candidate_ref",
         "created_at",
         "content_digest",
     )
@@ -173,15 +178,15 @@ def load_release_proof(path: str | Path) -> LoadedArtifact:
         raise CanonicalInputError("ReleaseProof v1_results must be a list")
     if not isinstance(artifact.data["v2_results"], list):
         raise CanonicalInputError("ReleaseProof v2_results must be a list")
-    if not isinstance(artifact.data["trace_links"], list):
-        raise CanonicalInputError("ReleaseProof trace_links must be a list")
-    if not (
-        isinstance(artifact.data.get("published_environment_ref"), str)
-        or isinstance(artifact.data.get("release_candidate_ref"), str)
+    for field in (
+        "trace_links",
+        "subversion_results",
+        "evaluator_context_refs",
+        "rejection_history",
+        "family_variant_results",
     ):
-        raise CanonicalInputError(
-            "ReleaseProof must include published_environment_ref or release_candidate_ref"
-        )
+        if not isinstance(artifact.data[field], list):
+            raise CanonicalInputError(f"ReleaseProof {field} must be a list")
     expected = str(artifact.data["content_digest"]).removeprefix("sha256:")
     actual = _digest_json_without_content_digest(artifact.data)
     if expected != actual:

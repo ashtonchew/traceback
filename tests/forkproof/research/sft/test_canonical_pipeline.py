@@ -88,6 +88,10 @@ def _release_proof() -> dict[str, object]:
         "witnesses_killed": 1,
         "controls_preserved": 1,
         "trace_links": ["traces/wit-1", "traces/ctrl-1"],
+        "subversion_results": [],
+        "evaluator_context_refs": ["clean-evaluator-context"],
+        "rejection_history": [],
+        "family_variant_results": [],
         "release_candidate_ref": "releases/candidates/env-v2",
         "created_at": "2026-06-21T00:00:00Z",
         "content_digest": "TBD",
@@ -296,6 +300,67 @@ class CanonicalPipelineTests(unittest.TestCase):
 
             self.assertEqual(result.rejected_hack_records, 0)
             self.assertEqual(len(result.quarantined), 2)
+
+    def test_unjoined_releaseproof_case_quarantines_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixture_paths(tmp)
+            report = _qabench_report()
+            trajectories = report["trajectories"]
+            assert isinstance(trajectories, list)
+            trajectories[1]["case_id"] = "missing-case"
+            _write_json(paths["qabench"], report)
+            _write_json(
+                paths["plan_008"],
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(paths["qabench"]), "digest": _digest(paths["qabench"])}],
+                },
+            )
+
+            result = run_canonical_sft_pipeline(
+                qabench_report_path=paths["qabench"],
+                release_proof_path=paths["release"],
+                plan_008_manifest_path=paths["plan_008"],
+                plan_005_manifest_path=paths["plan_005"],
+                output_dir=paths["out"],
+            )
+
+            self.assertEqual(result.raw_sft_examples, 1)
+            self.assertEqual(result.hardened_sft_examples, 0)
+            reasons = {row["reason"] for row in result.quarantined}
+            self.assertIn("unjoined_releaseproof_case", reasons)
+
+    def test_malformed_qabench_row_quarantines_without_aborting_export(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixture_paths(tmp)
+            report = _qabench_report()
+            trajectories = report["trajectories"]
+            assert isinstance(trajectories, list)
+            trajectories.insert(0, {"trajectory_id": "bad-1", "task_id": "task", "reward": "yes"})
+            trajectories.append("not-an-object")
+            _write_json(paths["qabench"], report)
+            _write_json(
+                paths["plan_008"],
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(paths["qabench"]), "digest": _digest(paths["qabench"])}],
+                },
+            )
+
+            result = run_canonical_sft_pipeline(
+                qabench_report_path=paths["qabench"],
+                release_proof_path=paths["release"],
+                plan_008_manifest_path=paths["plan_008"],
+                plan_005_manifest_path=paths["plan_005"],
+                output_dir=paths["out"],
+            )
+
+            self.assertEqual(result.raw_sft_examples, 2)
+            reasons = [row["reason"] for row in result.quarantined]
+            self.assertIn("qabench_row_not_object", reasons)
+            self.assertTrue(
+                any(str(reason).startswith("qabench_row_invalid:") for reason in reasons)
+            )
 
 
 if __name__ == "__main__":
