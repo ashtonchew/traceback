@@ -14,6 +14,7 @@ This folder is intentionally decoupled from the rest of the repo (no numbered pl
 | [`tailwind.config.example.js`](./tailwind.config.example.js) | How to wire the preset into a project. |
 | [`tokens.json`](./tokens.json) | Machine-readable token export. |
 | [`granola-extraction.md`](./granola-extraction.md) | Provenance: exact captured values. |
+| [`FONTS.md`](./FONTS.md) | Font licensing (brand fonts can't be redistributed) + free OFL alternatives + self-host steps. |
 | [`examples/`](./examples/) | Rendered component gallery built from the preset. |
 | [`AUDIT.md`](./AUDIT.md) | Compliance report (examples vs. extraction). |
 

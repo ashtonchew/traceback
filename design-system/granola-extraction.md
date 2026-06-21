@@ -14,7 +14,7 @@ This file is the source of truth the compliance audit checks `design-system/` ag
 | Body / UI | **KMR Melange Grotesk** | `--font-sans`, `--default-font-family` | Neo-grotesque sans. Body at 14–16px, weights 400–600, slight positive tracking. |
 | Mono | **JetBrains Mono** | `--font-mono` | Monospace (code). |
 
-Both Quadrant Notepad and Melange Grotesk are proprietary/licensed — we replicate the **exact family names** in the stack (so a licensed install "just works") and pair them with free fallbacks (see `DESIGN.md`).
+Both Quadrant Notepad and Melange Grotesk are proprietary/licensed — we replicate the **exact family names** in the stack (so a licensed install "just works") and pair them with free fallbacks (see `DESIGN.md`). Granola's [brand post](https://www.granola.ai/blog/a-new-look-for-granola) names the pair publicly as **Quadrant** (a *slightly mechanical slab serif*, by Matter of Sorts — bespoke) and **Melange** (KMR Melange Grotesk, by Kimera — paid retail); "Quadrant Notepad" is the internal cut name read from their CSS. Full licensing + free alternatives: see [`FONTS.md`](./FONTS.md).
 
 Weights shipped: light 300, normal 400, **book 430**, medium 500, semibold 600, bold 700.
 
