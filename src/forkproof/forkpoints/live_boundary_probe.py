@@ -16,6 +16,7 @@ from .core import (
     load_source_trace,
     restore_forkpoint,
 )
+from .image_identity_probe import run_image_identity_probe
 from .replay_probe import _exec, _image, _replay, _setup_command, _trace_events
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -233,6 +234,8 @@ def run_live_boundary_probe() -> dict[str, Any]:
     import modal
 
     source = load_source_trace(ROOT / "docs" / "plans" / "repo-map" / "STATUS.json")
+    image_identity = run_image_identity_probe()
+    source = {**source, "environment_image_digest": image_identity["environment_image_digest"]}
     events = _trace_events()
     app = modal.App.lookup("forkproof-plan-002", create_if_missing=True)
     sb = modal.Sandbox.create(
@@ -303,6 +306,8 @@ def run_live_boundary_probe() -> dict[str, Any]:
             "restored_query_py_sha256": handoff["task_visible_probe"]["query_py_sha256"],
             "restored_grade_output_sha256": handoff["task_visible_probe"]["restored_grade_output_sha256"],
             "environment_image_digest": handoff["environment_image_digest"],
+            "image_identity_ref": "docs/plans/evidence/002/artifacts/image-identity.json",
+            "base_image_digest": image_identity["base_image"]["manifest_digest"],
             "replayed_tool_count": len(replay["replayed"]),
             "skipped_tool_count": len(replay["skipped"]),
             "replayed_tools_sha256": digest_json(replay),
@@ -318,7 +323,7 @@ def run_live_boundary_probe() -> dict[str, Any]:
                 "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
                 "It is not the already-finished historical sandbox instance from the original HUD run.",
                 "Raw tool commands and outputs are not committed; history and replay evidence are hash-only.",
-                "Environment image identity is a deterministic source-tree digest, not a registry manifest digest.",
+                "Environment image identity combines Docker Hub base manifest, source tree, and Modal recipe; it is not a Modal-internal built image manifest.",
             ],
         }
         EVIDENCE.mkdir(parents=True, exist_ok=True)

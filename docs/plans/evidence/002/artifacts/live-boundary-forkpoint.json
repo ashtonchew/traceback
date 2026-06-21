@@ -1,7 +1,8 @@
 {
+  "base_image_digest": "sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348",
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
-  "environment_image_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
-  "fork_point_id": "fp-f1b3d319693c089ff4a63c4b",
+  "environment_image_digest": "forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee",
+  "fork_point_id": "fp-76c8e24dec5b35e4dda8e756",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -30,11 +31,12 @@
   "history_prefix_ref": "inline-sha256:431934b50d29acd8fe19e0c8b053bd099b6651524b957301814bf1744151b762",
   "hud_step_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
   "hud_trace_id": "92b654c6-cdde-43cf-9096-3681df6df2e1",
+  "image_identity_ref": "docs/plans/evidence/002/artifacts/image-identity.json",
   "limitations": [
     "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
     "It is not the already-finished historical sandbox instance from the original HUD run.",
     "Raw tool commands and outputs are not committed; history and replay evidence are hash-only.",
-    "Environment image identity is a deterministic source-tree digest, not a registry manifest digest."
+    "Environment image identity combines Docker Hub base manifest, source tree, and Modal recipe; it is not a Modal-internal built image manifest."
   ],
   "negative_restore_checks": {
     "checks": [
@@ -75,7 +77,7 @@
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "7214805abc55fe66b80223e209c5fce7aa0b756fcf15079562e678a7bf175711",
+  "restored_grade_output_sha256": "672ee168b45b8580d72075de4c2bf2a7dbd621d62dc1cdcb05110b880b1a5bc9",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
   "security_probe": {
@@ -84,10 +86,10 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "040ac6cdb65cde874e53d94c9ec9ccf8698773a87f395472c9a56931fb2cedd9",
-  "snapshot_id": "im-01KVKQN7WAMWCJGCGF3D1X9RXZ",
+  "snapshot_digest": "63174d634e157b18f76317d92336ee8d0a1e01c181b028b12b0239b091a3d34a",
+  "snapshot_id": "im-01KVKR1EMTJPCZGGZ3X1H6FHM6",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKQN7WAMWCJGCGF3D1X9RXZ",
+  "snapshot_restore_ref": "modal-image://im-01KVKR1EMTJPCZGGZ3X1H6FHM6",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",
