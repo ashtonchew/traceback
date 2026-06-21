@@ -365,20 +365,43 @@
       "reason": "Checks Presentation Demo timeout fallback semantics with a bounded live attempt and labeled Prior-Run Witness Replay."
     },
     "plan-007-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/research",
+        "-q"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until research source/test paths exist after core Witness creation."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Plan 007 narrow rescue exception: run the complete research behavior suite, including canonical SFT/RFT intake, quarantine, architecture, and sealed-v2 evaluator binding tests."
     },
     "integration-research": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.research.rft.cli",
+        "bind-evaluator",
+        "--release-proof",
+        "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json",
+        "--plan-005-manifest",
+        "docs/plans/evidence/005/MANIFEST.json",
+        "--output",
+        "artifacts/forkproof/research/rft/evaluator-bindings/releaseproof-30e03914472631dd.json"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until optional Memory/VM/depth-two capabilities are probed against real infrastructure."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Plan 007 narrow rescue exception: bind launch preparation to the real sealed Plan 005 v2 environment/grader, audit trusted tests against agent-writable roots, and verify recorded Witness/control/subversion regressions without provider registration or training. This command is one research integration gate; it does not by itself complete depth-two, capability, transfer, Plan 008, or training work."
     }
   }
 }

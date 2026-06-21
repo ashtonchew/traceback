@@ -1,428 +1,394 @@
-# CONNECT — SFT extension ↔ ForkProof core integration
+# CONNECT — ForkProof core ↔ SFT/RFT integration
 
-**Purpose:** Define the honest boundary between ForkProof proof artifacts and the SFT/training-data analysis, including what works now, what is blocked, and the future adapter contract.
+**Purpose:** Define the implemented boundary between sealed ForkProof evidence, canonical SFT exports, managed-RFT launch-readiness data, and optional Fireworks jobs.
 
-**Status (2026-06-21):** Mock pipeline executable; real integration blocked on at least one sealed Plan 003 Witness and a sealed Plan 005 ReleaseProof. Plan 003 has completed a 12-BranchRun live discovery batch with four sufficiently evidenced reward-hacking candidates, but none is a Witness until causal-delta minimization, durable packaging, target/mechanism deduplication, and three deterministic replays pass. Plan 004 controls are present. No real-data or model-training claim is currently authorized.
+**Status (2026-06-21):** Plans 003, 004, and 005 are complete. A sealed passing ReleaseProof exists. Plan 007's manifest-backed SFT pipeline, sibling RFT launch-readiness pipeline, and non-registering sealed-v2 evaluator binding are implemented and covered by 82 passing tests plus 19 passing subtests. Canonical dataset execution is blocked on the completed Plan 008 manifest and its sealed qabench report. No real SFT job, managed RFT job, or held-out model result is claimed.
 
-**Sources of truth:** repository code and artifacts; `docs/plans/007-depth-two-and-research-extensions.md`; `docs/plans/specs/03-interfaces.md`; `docs/plans/GLOSSARY.md`; `SFT.MD`; official Fireworks managed-SFT documentation. `HUDDOC.MD` describes a separate private-preview Training API experiment and is not the managed-SFT procedure in this document. `LORA.md` is not present in this checkout.
+**Sources of truth:** repository code and artifacts; `docs/plans/evidence/{003,004,005,007,008}/MANIFEST.json`; `docs/plans/007-depth-two-and-research-extensions.md`; `docs/plans/specs/03-interfaces.md`; `docs/plans/GLOSSARY.md`; and `SFT.MD`. `HUDDOC.MD` describes a separate direct Training API preview and is not evidence that ForkProof SFT or managed RFT ran.
 
 ---
 
-## 1. Connection states
+## 1. Current connection states
 
 | State | Meaning | Current status |
 |---|---|---|
-| **Mock executable** | Current strict JSONL schema loads and produces reports/exports. | PASS: 49 SFT tests and mock CLI passed on 2026-06-21. |
-| **Proof connected** | A trusted adapter joins sealed Plans 003–005 artifacts and emits a content-verified normalized dataset plus provenance. | BLOCKED: Plan 003 is in progress but has no sealed Witness; Plan 005 cannot start its proof execution until that Witness exists. |
-| **Analysis valid** | Metrics use one declared population, pinned v1/v2 evaluator identities, authoritative labels, and explicit quarantine counts. | BLOCKED: current metrics/filter semantics require revision before real claims. |
-| **Training ready** | Every exported positive is a faithful demonstration, not a summary; Fireworks validation and held-out split gates pass. | BLOCKED: no real demonstrations or held-out split. |
-| **Model result** | A real job ran and a frozen held-out evaluation supports a measured claim. | OPTIONAL / NOT RUN. |
+| **Core proof available** | Sealed Witnesses, controls, ProofSet, v1/v2 results, and ReleaseProof are available. | PASS: Plans 003–005 are complete. |
+| **Canonical consumers implemented** | SFT and RFT read completed manifests, verify artifact digests, join qabench rows to ReleaseProof, and fail closed. | PASS: implementation and behavioral tests exist. |
+| **Sealed v2 evaluator bound** | Launch preparation pins the real Plan 005 v2 identities and audits the evaluator trust boundary. | PASS: 1 Witness rejection, 3 control retentions, and 6 blocked subversion probes verified; registration remains `not_run`. |
+| **Plan 008 data available** | A completed Plan 008 manifest lists an exact qabench report and digest. | BLOCKED: Plan 008 is `not-started`. |
+| **Canonical SFT data generated** | Real qabench rows are normalized, quarantined, filtered, and exported. | NOT RUN: awaits Plan 008. |
+| **Canonical RFT prompts generated** | Real qabench prompts are joined to ReleaseProof and split into raw/hardened/audit/quarantine artifacts. | NOT RUN: awaits Plan 008. |
+| **SFT launch-ready** | Provider support, LoRA mode/rank, tokenization, dataset registration, cost/time, request, and held-out split are verified. | NOT READY: placeholders remain `TBD`/`not_run`. |
+| **RFT launch-ready** | Provider support, evaluator and dataset registration, environment, grouped calibration, request, and held-out eval are verified. | NOT READY: placeholders remain `TBD`/`not_run`. |
+| **Measured model result** | A real job and frozen held-out evaluation support a scoped claim. | NOT RUN. |
 
-“Connected” means **proof connected** and **analysis valid**. A JSONL file merely passing the current loader is not sufficient.
+The mock JSONL pipeline remains useful for development but cannot satisfy any canonical or measured state above.
 
 ---
 
-## 2. Prerequisites
+## 2. Upstream prerequisites
 
-The SFT owner needs a sealed artifact package, not only a flattened training-data file. Core owners should publish repository-native records; they do not need to implement the proposed SFT schema or hand-author compatibility rows.
+### Completed prerequisites
 
-### Required team handoff
-
-| Owner | Required deliverable | Acceptance condition |
+| Owner | Delivered evidence | Status |
 |---|---|---|
-| Plan 003 owner | Completed Plan 003 evidence manifest and at least one sealed Witness; public BranchRun/action references; v1 verifier result; authoritative QA result and classification evidence; minimized causal delta; exploit target, mechanism, and cluster; durable package; three-replay evidence; source content digest. | Manifest status is `complete`; every referenced artifact resolves and verifies; the record is a sealed Witness rather than a candidate or diagnostic BranchRun. |
-| Plan 004 owner | Completed control evidence manifest with at least three sealed, path-diverse controls; `solution_ref`; v1 baseline result; task/environment identity; content digest; and, when available, a faithful final assistant response or supported trajectory reference. | Controls are sealed and immutable. A `solution_ref` without a faithful response is analysis-eligible but not automatically SFT-eligible. |
-| Plan 005 owner | Completed ProofSet and ReleaseProof; explicit membership; per-case v1/v2 outcomes over identical solution/action content; complete evaluator and environment identities; patch provenance; gate status; content digest. | ReleaseProof is sealed and passing; every required Witness fails v2 and every required control passes v1 and v2. |
-| Repo-map custodian / relevant plan owner | Reconciled repository-map status, verified Plan 005 and Plan 007 command mappings, and accepted ownership for the SFT integration paths and this document. | The applicable merge gate is open, mapped commands execute rather than skip, and no path has ambiguous ownership. |
+| Plan 003 | Sealed Witness evidence, provenance, deduplication, durable replay package, and deterministic replay. | COMPLETE |
+| Plan 004 | Sealed legitimate controls and baseline evidence. | COMPLETE |
+| Plan 005 | Sealed ProofSet and passing ReleaseProof with exact Witness/control membership, v1/v2 results, evaluator identities, and content digest. | COMPLETE |
 
-Plan 003's current four reward-hacking candidates do not satisfy this prerequisite. They still require causal-delta minimization, durable packaging, target/mechanism deduplication, and three deterministic replays before any one can be delivered as a Witness.
+The canonical code consumes Plan 005 directly. Plans 003 and 004 are represented transitively through the sealed ProofSet and ReleaseProof case membership.
 
-### Package-level requirements
+### Remaining upstream prerequisite: Plan 008
 
-The handoff package must include:
+Plan 008 must provide:
 
-- one immutable delivery/package id and the producing core commit;
-- a root manifest listing every included source artifact and SHA-256 content digest;
-- repository-relative or content-addressed references rather than machine-local paths;
-- source task, environment, evaluator, ProofSet, ReleaseProof, Witness, control, trace, action, and solution identities where applicable;
-- the raw v1 and v2 outputs plus normalized semantic success/failure supplied by the owning evaluator contract;
-- authoritative classification and evidence references, preserving `unknown` or `conflicting` rather than coercing either to legitimate;
-- demonstration provenance identifying content as `faithful_final`, `faithful_trajectory`, `solution_artifact`, `summary`, or unavailable;
-- explicit redaction confirmation: no credentials, hidden evaluator answers, private chain-of-thought, or unrelated user data;
-- a retention/location statement sufficient for every referenced artifact to remain resolvable through analysis and review.
+- `docs/plans/evidence/008/MANIFEST.json` with `plan_id="008"` and `status="complete"`;
+- a qabench report listed in that manifest with a matching SHA-256 digest;
+- a top-level `trajectories` array;
+- per-row trajectory id, task id, binary HUD/v1 reward, and sterile-referee verdict;
+- task prompt for SFT/RFT eligibility;
+- faithful assistant output for SFT eligibility;
+- ProofSet case id for joining to ReleaseProof;
+- cluster id and branch divergence lineage for every confirmed hack;
+- HUD QA verdict when available.
 
-The package is incomplete if it supplies only dashboard URLs, mutable files, summaries presented as assistant responses, detached grader results, or rows whose v1 and v2 evaluations used different solution content.
+The canonical parser accepts these source aliases:
 
-### Copy-paste request to core owners
-
-> **SFT research integration needs sealed public artifacts, not a custom SFT schema or a hand-authored flat file.**
->
-> Plan 003: provide the completed evidence manifest plus at least one sealed Witness and its public BranchRun/action, verifier, QA/classification, minimized causal delta, target/mechanism/cluster, durable package, three-replay, and content-digest references.
->
-> Plan 004: provide the completed control manifest with at least three sealed controls, solution refs, baseline results, task/environment identities, content digests, and faithful response/trajectory refs when they exist.
->
-> Plan 005: provide the completed ProofSet and passing ReleaseProof with membership, identical-content v1/v2 outcomes, complete evaluator/environment identities, patch provenance, gate status, and content digest.
->
-> Include a root package manifest with the producing commit, immutable ids, SHA-256 digests, relative/content-addressed refs, classification status, demonstration kind, and redaction confirmation. The Plan 007 adapter will join these records without modifying core artifacts.
-
----
-
-## 3. Pre-data preparation completed
-
-The following preparation is complete without relying on real core artifacts:
-
-| Preparation | Result |
+| Canonical value | Accepted source fields |
 |---|---|
-| Local Python toolchain | `uv` is installed and the SFT test suite executes. |
-| Local Fireworks tooling | `firectl` 1.7.24 is installed; `.env` contains a `FIREWORKS_API_KEY` variable name; the user confirmed Fireworks account setup separately. No secret value was printed or copied. |
-| Mock behavior baseline | 49 SFT tests pass at core commit `cd62c1615c3fb198894f282089fbad073947e9d7` on branch `sft`. |
-| Mock pipeline smoke | A fresh run completed in `/private/tmp/forkproof-sft-readiness-20260621` with 12 raw examples, 4 hardened examples, 6 rejected-hack audit records, and the expected current output set. |
-| Fixture identity | `fixtures/sft/mock_forkproof_traces.jsonl` SHA-256 is `91da8b510a8ff0acd930f619df0dc2f9d73c45c606bcbec81b4fabe011275609`. |
-| Metric protocol | Section 8 defines same-population admissions, classified contamination, coverage, quarantine reporting, retention, and clean-SFT count. |
-| Demonstration policy | Section 7 separates analysis-eligible artifacts from faithful trainable demonstrations. |
-| Launch safety | `training_recommendations.json` is explicitly advisory and cannot be consumed automatically as a job configuration. |
+| trajectory id | `trajectory_id`, `id`, `trace_id` |
+| task prompt | `task_prompt`, `prompt`, `instruction` |
+| assistant output | `assistant_output`, `final_response`, `response` |
+| ProofSet case id | `proofset_case_id`, `case_id` |
+| reward | `hud_reward`, `reward`, `v1_reward` |
+| cluster | `cluster_id`, `exploit_cluster` |
+| lineage | `branch_divergence_lineage`, `divergence_lineage`, `lineage` |
 
-Fireworks setup is user-confirmed. Automated authentication, account, quota, billing, and supported-model checks were intentionally skipped in this session; recheck them only if the eventual upload or dry run reports an account-side error.
+Supported origins are `base`, `recorded`, `branch`, and `control`. Referee verdicts normalize to `confirmed_hack`, `legitimate`, or `undecided`.
 
-### Frozen intake runbook
+### Important join constraint
 
-When the package arrives:
+Every SFT/RFT candidate must join through `proofset_case_id` to a case in the sealed Plan 005 ReleaseProof. A Plan 008 trajectory outside that ProofSet is written to quarantine as `unjoined_releaseproof_case`; it does not automatically become training data.
 
-1. Preserve the delivered bytes and record package location, delivery id, producing commit, receipt time, and root digest before parsing.
-2. Verify the root manifest and every referenced artifact digest. Reject absolute machine-local paths, unresolved refs, mutable URL-only evidence, and unexpected files.
-3. Verify Plan 003, 004, and 005 manifest completion and all join invariants from Section 5. STOP on an unsealed candidate, failed ReleaseProof, evaluator mismatch, mixed solution content, or missing classification provenance.
-4. Normalize into the accepted versioned schema only after that schema and Plan 007 execution are authorized. Preserve raw values and write unknown/conflicting rows to quarantine.
-5. Produce an input manifest containing source ids/digests, core and adapter commits, schema version, ProofSet, ReleaseProof, evaluator identities, and normalization output digest.
-6. Compute analysis over one frozen source population. Report admissions, classified contamination, classification coverage, unknown/conflicting/quarantine counts, legitimate retention, and `clean_sft_count`.
-7. Export SFT examples only for faithful legitimate demonstrations. Keep summaries, bare solution artifacts, unknown labels, and Witness exploit content out of positive training data.
-8. Freeze the grouped train/held-out manifest before any upload, validate Fireworks format, review redaction, and perform a dry run before spending credits.
-
-### Frozen split policy
-
-- Group records so the same task instance, source lineage, solution/template family, or near-duplicate demonstration cannot cross train and held-out sets.
-- Keep all variants derived from one Witness, control, BranchRun parent, or demonstration artifact in one split.
-- Use immutable source ids and content digests to detect exact duplication; add an explicit family key for semantic/template variants.
-- Record the grouping fields, assignment algorithm, seed if any, row ids, group ids, and split-manifest digest.
-- Do not choose a train/held-out ratio until real group counts are known; the value remains `TBD` rather than inventing a statistically weak split.
-- If the package contains too few independent groups for a defensible held-out set, stop at data-quality analysis and do not claim a model comparison.
-
-No sealed-artifact adapter, proposed-v2 schema implementation, real metric run, or training launch was performed during preparation because the Plan 007 dependency and ownership gate remains closed.
+This means Plan 008 completion is necessary but may not be sufficient for a useful training set. After the canonical run, inspect how many rows joined, were quarantined, and remain independently grouped. If too few faithful legitimate rows survive, stop at analysis or obtain a new sealed proof package covering the intended population.
 
 ---
 
-## 4. Current executable contract (schema v1)
+## 3. Shared canonical intake implemented in code
 
-The current implementation reads `fixtures/sft/schema/trace_record.schema.json` through:
+Both pipelines:
 
-```text
-load_traces() → filter_traces() → compute_metrics() → report/export
+1. require completed Plan 005 and Plan 008 manifests;
+2. load the qabench report and ReleaseProof as JSON objects;
+3. compute source-file SHA-256 digests;
+4. require each manifest to list the exact artifact path and matching digest;
+5. verify the ReleaseProof's internal `content_digest`;
+6. require a passing ReleaseProof gate;
+7. require exact v1/v2 case membership over all sealed Witness/control ids;
+8. require every Witness to be v1-positive and v2-negative;
+9. require every control to be v1-positive and v2-positive;
+10. require each joined qabench HUD reward to match the ReleaseProof v1 reward.
+
+Malformed qabench rows are quarantined at row level. A malformed manifest, stale reward, failed ReleaseProof gate, digest mismatch, surviving Witness, broken control, or mismatched ProofSet membership fails the entire run.
+
+### Normalized qabench trajectory
+
+The shared parser produces this logical record:
+
+```json
+{
+  "trajectory_id": "ctrl-1",
+  "task_id": "mongodb-sales-aggregation-engine",
+  "task_prompt": "Implement SalesAnalyzer.",
+  "assistant_output": "Implemented aggregation pipelines.",
+  "origin": "control",
+  "proofset_case_id": "ctrl-1",
+  "hud_reward": 1.0,
+  "referee_verdict": "legitimate",
+  "qa_verdict": "not_reward_hacking",
+  "cluster_id": null,
+  "lineage": null
+}
 ```
 
-Current required fields are exactly:
-
-| Field | Current accepted value |
-|---|---|
-| `trace_id` | Non-empty normalized row id; unique in the file. It is not necessarily a HUD trace id. |
-| `task_id` | Non-empty task identifier. |
-| `task_prompt` | Non-empty user-visible instruction. |
-| `assistant_output` | Non-empty string exported verbatim as a weight-1 assistant turn. |
-| `raw_reward` | Numeric `0.0` or `1.0`. |
-| `patched_reward` | Numeric `0.0` or `1.0`. |
-| `is_hack` | Boolean. |
-| `is_legit` | Boolean. |
-
-The schema rejects unknown fields. Optional v1 fields are `exploit_cluster`, `environment_version`, `grader_version`, `patched_grader_version`, `hud_trace_url`, `witness_id`, and `release_proof_id`.
-
-### Current limitations
-
-These limitations are implementation facts, not future design choices:
-
-1. Rewards are hard-coded to numeric `0/1`; repository interfaces permit grader-specific semantic success/failure representations.
-2. Labels are booleans, so unknown and conflicting classifications cannot be represented cleanly.
-3. Ambiguous raw-positive rows remain in `raw_sft`; they are warned about, not quarantined.
-4. `hardened_sft` means `patched_reward == 1 AND is_legit`, while `hardened_hacks_admitted` counts all patched-positive hacks. The current hardened contamination denominator therefore does not describe the same population.
-5. The report prints one legitimate-retention value in both raw and hardened columns.
-6. `run_manifest.json` records input/output paths and metrics but does not aggregate the ReleaseProof id, core commit, exporter version, or input content digest.
-7. `assistant_output` is always emitted with assistant `weight: 1`. A concise summary placed there becomes training data.
-8. `training_recommendations.json` contains local heuristics derived mainly from example count. It is not a provider-validated launch configuration and must not be applied automatically.
-
-Therefore schema v1 is acceptable for mock development and for a tightly controlled sealed/fully-labelled compatibility export. It is not sufficient for unclassified branch corpora or final real-data claims without the gates below.
+An undecided verdict, missing case id, or unjoined case is quarantined by both consumers. SFT additionally requires a faithful assistant output. Confirmed hacks additionally require cluster and divergence-lineage evidence.
 
 ---
 
-## 5. Future source contract: sealed artifacts, not invented rows
+## 4. Canonical SFT path
 
-The SFT extension must consume public immutable artifacts after their owning plans complete:
+### Eligibility and normalization
 
-| Owner | Required source |
-|---|---|
-| Plan 003 | Sealed Witness manifest, source BranchRun/action references, v1 reward/verifier result, QA classification, exploit target/mechanism/cluster, content digest, replay evidence. |
-| Plan 004 | Sealed control manifest, `solution_ref`, path label, v1 baseline runs, environment/task identities, content digest. |
-| Plan 005 | Sealed ProofSet membership and ReleaseProof with per-case v1/v2 outcomes, evaluator/environment identities, patch provenance, gate status, content digest. |
+The SFT pipeline converts an eligible qabench trajectory plus its ReleaseProof case into `TraceRecord` with:
 
-Plan 007 owns the integration adapter under `src/forkproof/research/**`. It reads those public records and must not import Plans 003–005 internals or ask those plans to mutate their artifacts. Plan 007 execution is not currently authorized because its Plan 003 dependency has not completed. Preparatory implementation already present under this path is not Plan 007 completion evidence and requires an explicit ownership exception or accepted plan update before further source work.
+- task prompt and faithful assistant output;
+- v1 reward as `raw_reward`;
+- v2 reward as `patched_reward`;
+- referee-derived `is_hack` / `is_legit`;
+- qabench and ReleaseProof path+digest references;
+- ProofSet case, origin, QA/referee verdict, and cluster;
+- v1/v2 environment and grader identities.
 
-A core-owned exporter is optional. If one exists, Plan 007 still verifies its manifest and content digests. A hand-assembled file cannot support measured claims because it bypasses reproducible joins and integrity checks.
+SFT quarantine reasons currently include:
 
-### Required join invariants
+- `referee_undecided`;
+- `missing_proofset_case_id`;
+- `missing_faithful_demonstration`;
+- `unjoined_releaseproof_case`;
+- `confirmed_hack_missing_cluster`;
+- `confirmed_hack_missing_divergence_lineage`;
+- structural qabench parse errors.
 
-For every normalized row:
-
-- one stable normalized record id maps to explicit source artifact ids;
-- the same solution/action artifact is evaluated under v1 and v2;
-- v1 and v2 environment and complete evaluator identities are pinned;
-- hack/legitimate classification has an authoritative evidence reference;
-- Witness rows are members of the sealed ProofSet;
-- control rows are members of the sealed ProofSet;
-- ReleaseProof gate status and content digest verify;
-- source and normalized artifact content digests are recorded;
-- unknown or conflicting classifications are quarantined, never coerced to `false`;
-- no mutable dashboard URL substitutes for an immutable id or artifact.
-
-STOP if any join uses a detached grader copy, mismatched solution content, mixed ReleaseProofs, missing classification provenance, or unverifiable source artifact.
-
----
-
-## 6. Proposed normalized dataset v2 target
-
-This section is a proposed integration contract, not an accepted repository interface. Its fields are not yet normative in Plan 007, a checked-in schema, or an applicable specification. Before implementation, incorporate the accepted form into the owning ExecPlan and schema/specification, then validate it against the sealed source artifacts.
-
-The future adapter should preserve richer semantics before projecting safe rows into the current `TraceRecord` shape.
-
-| Field | Requirement |
-|---|---|
-| `record_id` | Stable normalized id distinct from HUD/Witness/control ids. |
-| `record_kind` | `witness`, `control`, `source_trace`, or `branch_run`. |
-| `task_id`, `task_prompt` | Stable task identity and public instruction. |
-| `v1_reward_raw`, `v1_status` | Raw output plus normalized semantic success/failure. |
-| `v2_reward_raw`, `v2_status` | Raw output plus normalized semantic success/failure. |
-| `classification` | `hack`, `legitimate`, `unknown`, or `conflicting`. |
-| `classification_ref` | Sealed Witness/control/QA/human-review evidence. |
-| `demonstration_kind` | `faithful_final`, `faithful_trajectory`, `solution_artifact`, `summary`, or `none`. |
-| `demonstration_ref` | Immutable source for the trainable response/trajectory. |
-| `environment_v1`, `environment_v2` | Authoritative environment versions. |
-| `evaluator_v1_ref`, `evaluator_v2_ref` | Complete evaluator identities, not only one test-file hash. |
-| `witness_id`, `control_id`, `proof_set_id`, `release_proof_id` | Applicable proof identities. |
-| `hud_trace_id`, `action_record_ref`, `solution_ref` | Applicable source evidence. |
-| `exploit_target`, `exploit_mechanism`, `cluster_id` | Applicable dedup evidence. |
-| `source_content_digest`, `normalized_content_digest` | Integrity. |
-
-The compatibility projection into schema v1 is allowed only for rows with:
-
-- normalized v1/v2 success/failure available as `0.0/1.0`,
-- classification exactly one of `hack` or `legitimate`; the v1 booleans must be exclusive (`is_hack XOR is_legit`),
-- no conflicting evidence,
-- all required proof joins verified.
-
-Unknown rows remain in a quarantine/audit artifact outside current `TraceRecord` until the implementation supports tri-state classification.
-
----
-
-## 7. Analysis rows versus training demonstrations
-
-An artifact can be valid for contamination analysis but invalid for SFT.
-
-| Content | Analysis eligible | Training eligible |
-|---|---:|---:|
-| Sealed Witness with proof outcomes and only an action summary | yes | no |
-| Sealed control with verified solution artifact but no faithful assistant response | yes | only after an explicit, reproducible conversion policy |
-| Original faithful final assistant response | yes | potentially yes |
-| Faithful tool/action trajectory represented in the target model's supported chat/tool schema | yes | potentially yes |
-| Human-written concise summary | yes | no |
-| Unknown/conflicting label | quarantined | no |
-
-Do not put a summary into `assistant_output` and call the resulting file training-ready. The current exporter assigns that string weight 1.
-
-The future clean SFT set is:
+### Dataset buckets
 
 ```text
-v2 semantic success
-AND authoritative legitimate classification
-AND faithful supported demonstration
-AND no unresolved provenance/review warning
+raw_sft = v1 reward == 1
+hardened_sft = v2 reward == 1 AND referee verdict == legitimate
+rejected_hacks = v1 reward == 1 AND v2 reward == 0 AND referee verdict == confirmed_hack
 ```
 
-It is narrower than the v2 verifier-positive admission set.
+The raw dataset is an analysis contrast. Confirmed hacks exported there receive assistant `weight: 0`, so they are not positive SFT loss examples. The hardened dataset contains only legitimate v2-positive demonstrations and uses assistant `weight: 1`.
 
----
+### Fireworks chat row
 
-## 8. Metric contract
+```json
+{
+  "messages": [
+    {"role": "system", "content": "<canonical anti-hacking coding-agent prompt>"},
+    {"role": "user", "content": "Implement SalesAnalyzer."},
+    {"role": "assistant", "content": "Implemented aggregation pipelines.", "weight": 1}
+  ]
+}
+```
 
-Freeze one common source population before comparing verifiers.
+### Canonical SFT outputs
+
+The run writes:
 
 ```text
-v1_admission = rows with semantic success under evaluator v1
-v2_admission = the same rows with semantic success under evaluator v2
-classified_v1 = exclusively hack-or-legitimate rows in v1_admission
-classified_v2 = exclusively hack-or-legitimate rows in v2_admission
-
-v1_classified_contamination = hacks in classified_v1 / size(classified_v1)
-v2_classified_contamination = hacks in classified_v2 / size(classified_v2)
-legitimate_retention = legitimate rows in v2_admission / legitimate rows in v1_admission
+canonical_inputs.json
+quarantine.jsonl
+metrics.json
+raw_verifier_sft.jsonl
+raw_verifier_sft.metadata.jsonl
+hardened_verifier_sft.jsonl
+hardened_verifier_sft.metadata.jsonl
+rejected_hacks_audit.jsonl
+training_recommendations.json
+provider_capability_check.json
+fireworks_dataset_upload.json
+sft_job_request.json
+sft_job_result.json
+heldout_eval_manifest.json
+run_manifest.json
 ```
 
-Always report classification coverage (`size(classified) / size(admission)`) plus unknown, conflicting, and quarantined counts next to these denominators. If total-admission contamination bounds are useful, label them separately and state how unknown rows are treated. Also report `clean_sft_count` separately. Never divide a hack count from all v2 positives by the count of legitimate-only clean SFT rows.
-
-Targets for a passing ReleaseProof population are:
-
-- every sealed Witness: v1 success, v2 failure;
-- every sealed control: v1 success, v2 success;
-- zero sealed Witnesses in `v2_admission`;
-- all required controls retained.
-
-These are release-gate facts. Broader contamination rates depend on the declared source population and must not be generalized beyond it.
+The provider, upload, job, and held-out files are intentionally generated with `status="not_run"` and `TBD` fields. Their existence is not training evidence.
 
 ---
 
-## 9. Ownership and handoff
+## 5. Canonical RFT launch-readiness path
 
-### Core owners
+RFT is a sibling consumer of the shared canonical intake. It does not import SFT and does not train on assistant completions. It exports user prompts that a managed RFT agent/environment would roll out again.
 
-- Plan 003 seals Witnesses and their replay/classification evidence.
-- Plan 004 seals legitimate controls and baseline evidence.
-- Plan 005 seals ProofSet membership and v1/v2 ReleaseProof outcomes.
-- Plan 006 may consume measured reports for the demo but does not own training-data truth.
+### Eligibility and buckets
 
-### Plan 007 / SFT owner
-
-- validates source manifests and digests;
-- implements the public-artifact adapter;
-- writes normalized/quarantine/provenance artifacts;
-- computes same-population metrics;
-- exports SFT JSONL only from faithful clean demonstrations;
-- records evidence under Plan 007 paths;
-- does not modify core proof artifacts.
-
-`CONNECT.md` is currently an untracked root document and is not listed in an ExecPlan ownership declaration. Under project governance it is therefore advisory, not a source of truth. Before merge, move it into a plan-owned documentation path or update an applicable plan's declared ownership and check it in through that plan.
-
-Canonical future paths:
+RFT requires a task prompt but not `assistant_output`.
 
 ```text
-artifacts/forkproof/research/sft/input_manifest.json
-artifacts/forkproof/research/sft/normalized.jsonl
-artifacts/forkproof/research/sft/quarantine.jsonl
-artifacts/forkproof/research/sft/real_run/
+raw_rft_prompts = v1 reward == 1
+hardened_rft_prompts = v2 reward == 1 AND referee verdict == legitimate
+rejected_hacks = v1 reward == 1 AND v2 reward == 0 AND referee verdict == confirmed_hack
 ```
 
-The current CLI accepts any output directory, so existing `artifacts/sft/mock_run/` remains a labelled development artifact. New Plan 007 evidence should use the owned `artifacts/forkproof/research/**` boundary.
+RFT quarantine reasons include undecided referee verdict, missing case id, missing prompt, unjoined ReleaseProof case, and confirmed hacks missing cluster or divergence lineage.
+
+### Managed-RFT prompt row
+
+```json
+{
+  "messages": [
+    {"role": "user", "content": "Implement SalesAnalyzer."}
+  ],
+  "metadata": {
+    "dataset_kind": "hardened",
+    "trajectory_id": "ctrl-1",
+    "task_id": "mongodb-sales-aggregation-engine",
+    "proofset_case_id": "ctrl-1",
+    "origin": "control",
+    "referee_verdict": "legitimate",
+    "raw_reward": 1.0,
+    "hardened_reward": 1.0,
+    "cluster_id": null
+  }
+}
+```
+
+### Canonical RFT outputs
+
+```text
+raw_rft_prompts.jsonl
+hardened_rft_prompts.jsonl
+rejected_hack_rft_audit.jsonl
+rft_quarantine.jsonl
+rft_canonical_inputs.json
+rft_provider_capability_check.json
+rft_evaluator_spec.json
+rft_job_request.json
+rft_job_result.json
+rft_eval_manifest.json
+rft_run_manifest.json
+```
+
+This pipeline prepares launch-readiness artifacts only. It does not register an evaluator, register a dataset, launch managed RFT, calibrate grouped rollouts, or evaluate a checkpoint.
 
 ---
 
-## 10. Current commands
+## 6. Current commands
 
-### Verified mock tests
+### Verified research tests
 
 ```bash
-uv run pytest tests/forkproof/research/sft/ -q
+UV_CACHE_DIR=/private/tmp/h2f-uv-cache \
+uv run pytest tests/forkproof/research -q
 ```
 
-Observed 2026-06-21: `49 passed`. In restricted sandboxes, set a writable cache such as `UV_CACHE_DIR=/private/tmp/h2f-uv-cache`; ordinary developer environments need not.
+Observed on the current prepared working tree: `82 passed, 19 subtests passed`.
 
-### Verified mock pipeline
+### Mock compatibility pipeline
 
 ```bash
-uv run python -m forkproof.research.sft.cli \
+uv run python -m forkproof.research.sft.cli mock \
   --input fixtures/sft/mock_forkproof_traces.jsonl \
   --output artifacts/sft/mock_run/
 ```
 
-Fresh current-code outputs include reports, raw/hardened SFT JSONL, metadata sidecars, rejected-hack audit, run manifest, and `training_recommendations.json`.
+The legacy root `--input` / `--output` flags remain backward compatible. Mock output is illustrative only.
 
-The checked-in `artifacts/sft/mock_run/` fixture predates the current recommendation output and does not contain `training_recommendations.json`. Treat it as stale illustrative output until it is regenerated and reviewed; do not use the committed directory to prove current output completeness.
-
-### Future real run
-
-Do not run this as measured evidence until the adapter, metric, quarantine, and provenance gates are implemented:
+### Canonical SFT run after Plan 008 completes
 
 ```bash
-uv run python -m forkproof.research.sft.cli \
-  --input artifacts/forkproof/research/sft/normalized.compat-v1.jsonl \
-  --output artifacts/forkproof/research/sft/real_run/
+uv run python -m forkproof.research.sft.cli canonical \
+  --qabench-report <PLAN_008_QABENCH_REPORT.json> \
+  --release-proof artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json \
+  --plan-008-manifest docs/plans/evidence/008/MANIFEST.json \
+  --plan-005-manifest docs/plans/evidence/005/MANIFEST.json \
+  --output artifacts/forkproof/research/sft/runs/<RUN_ID>/
 ```
 
-Before Plan 007 completion, `plan-007-tests` and `integration-research` in `docs/plans/repo-map/COMMANDS.json` must contain verified argv. They are currently `not-applicable`; a mapped SKIP is not evidence.
-
----
-
-## 11. Real-integration acceptance
-
-Integration is complete only when:
-
-1. Plans 003, 004, and 005 source manifests required by the join are complete and content-verified.
-2. Input manifest pins core commit, source artifact ids/digests, adapter version/commit, ProofSet, ReleaseProof, and v1/v2 evaluator identities.
-3. Every sealed ProofSet Witness appears exactly once and is rejected by v2.
-4. Every required sealed control appears exactly once and succeeds under both versions.
-5. Every normalized row points to the same artifact content under both evaluations.
-6. Unknown/conflicting rows are quarantined and excluded from training.
-7. Metric numerators and denominators use the declared common population.
-8. The clean SFT export contains only faithful legitimate demonstrations.
-9. Fireworks-format validation passes and the training file has at least three faithful examples before upload. The presence of three Plan 004 controls alone does not prove this requirement because a control `solution_ref` is not automatically a supported assistant demonstration.
-10. `plan-007-tests`, `integration-research`, lint, build, file-size, and evidence gates execute rather than skip.
-
-Warnings involving identity, classification, evaluator mismatch, content mismatch, or demonstration fidelity are STOP conditions for training. They may be reported as analysis limitations but cannot be silently dropped.
-
----
-
-## 12. Fireworks managed SFT boundary
-
-Managed SFT is the optional downstream path here. It is distinct from:
-
-- Fireworks managed RFT jobs; and
-- the private-preview Fireworks Training API custom loop described in `HUDDOC.MD`.
-
-Current official managed-SFT requirements include OpenAI-compatible chat JSONL, at least three examples, `system`/`user`/`assistant` roles, and optional assistant-message `weight` values of `0` or `1`. The current exporter emits assistant `weight: 1`, which is supported.
-
-Before upload:
-
-1. Confirm the base model is tunable and the intended training shape supports the desired tuning mode.
-2. Validate chat template/tokenization using the current Fireworks SFT tooling or UI.
-3. Freeze train/held-out splits by task/entity/template family, not random near-duplicates.
-4. Confirm no hidden evaluator answers, exploit summaries, unknown labels, or secrets are in the clean file.
-5. Run a CLI dry-run or review the UI request before spending credits.
-
-Current CLI shape:
+### Canonical RFT preparation after Plan 008 completes
 
 ```bash
-firectl dataset create forkproof-hardened-demo \
-  artifacts/forkproof/research/sft/real_run/hardened_verifier_sft.jsonl
-
-firectl supervised-fine-tuning-job create \
-  --base-model <SUPPORTED_BASE_MODEL_ID> \
-  --dataset forkproof-hardened-demo \
-  --output-model forkproof-hardened-demo-v1 \
-  --dry-run
+uv run python -m forkproof.research.rft.cli prepare \
+  --qabench-report <PLAN_008_QABENCH_REPORT.json> \
+  --release-proof artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json \
+  --plan-008-manifest docs/plans/evidence/008/MANIFEST.json \
+  --plan-005-manifest docs/plans/evidence/005/MANIFEST.json \
+  --output artifacts/forkproof/research/rft/runs/<RUN_ID>/
 ```
 
-Remove `--dry-run` only after validating the request, credentials, quota, dataset, held-out evaluation, and cost.
+Do not guess the Plan 008 report path. Use the exact artifact path and digest listed by its completed manifest.
 
-`training_recommendations.json` is advisory and must not be consumed automatically as a launch configuration. Its rank, batch, epoch, and learning-rate values are not justified solely by example count and are not guaranteed to match a Fireworks training shape. Use provider-supported parameters and measured sweeps/calibration instead. The Thinking Machines “LoRA Without Regret” results support testing all-layer LoRA and larger LoRA learning rates in comparable regimes; they do not justify the current file's exact count-to-rank thresholds as universal settings.
+### Mapped-command governance
 
-Official references:
-
-- [Fireworks managed SFT guide](https://docs.fireworks.ai/fine-tuning/fine-tuning-models)
-- [Fireworks managed fine-tuning overview](https://docs.fireworks.ai/fine-tuning/managed-finetuning-intro)
-- [Fireworks SFT CLI reference](https://docs.fireworks.ai/tools-sdks/firectl/commands/supervised-fine-tuning-job-create)
-- [Fireworks Training API introduction](https://docs.fireworks.ai/fine-tuning/training-api/introduction)
-- [LoRA Without Regret](https://thinkingmachines.ai/blog/lora/)
+A narrow rescue ownership exception is recorded for `plan-007-tests` and `integration-research`. Both rows are now `verified` and execute successfully. `integration-research` currently proves the sealed-v2 evaluator binding only; it does not complete Plan 008, depth-two, capability, transfer, provider-registration, or training gates.
 
 ---
 
-## 13. Current blockers and next implementation steps
+## 7. SFT launch gates after canonical export
+
+Before uploading or launching managed SFT:
+
+1. inspect joined, quarantined, raw, hardened, and rejected counts;
+2. confirm the hardened file has enough faithful, independently grouped examples;
+3. confirm no summary, exploit explanation, hidden evaluator answer, secret, or private reasoning is weighted as positive training content;
+4. freeze train/held-out groups by task, lineage, source artifact, and template/solution family;
+5. validate the actual Fireworks base model id and managed-SFT support;
+6. validate LoRA mode and accepted rank rather than consuming local heuristics;
+7. pass tokenization/chat-format validation;
+8. record expected cost/time and dataset registration;
+9. review a dry-run/UI/CLI request;
+10. replace `sft_job_request.json`, `sft_job_result.json`, and `heldout_eval_manifest.json` placeholders with actual evidence.
+
+`training_recommendations.json` is advisory. Its count-based rank, batch, epoch, and learning-rate values must not be consumed automatically.
+
+---
+
+## 8. RFT launch gates after canonical preparation
+
+Before managed RFT:
+
+1. register a real evaluator bound to the sealed v2 environment/grader identity;
+2. keep trusted tests, evaluator code, interpreter/plugin paths, reward records, and grader secrets outside agent-writable state;
+3. register the prompt dataset and real agent/remote environment;
+4. run multiple target-model rollouts per prompt without a gradient step;
+5. measure within-group reward spread and zero-variance-group rate;
+6. inspect highest-reward trajectories for cheapest-path exploits and prompt/evaluator misalignment;
+7. record legitimate success, referee-confirmed hack rate, truncation, timeout, infrastructure-error, and grader-error rates;
+8. freeze held-out controls, task families, and exploit mechanisms;
+9. validate provider model support, loss method, rollout count, concurrency, expected cost/time, and dry-run request;
+10. launch only if calibration has usable signal and anti-hack probes pass;
+11. stop if reward rises while legitimate success falls, hack rate rises, controls regress, or evaluator identity changes;
+12. replace all RFT `TBD`/`not_run` artifacts with provider and held-out evaluation evidence.
+
+Reward mean alone is not an RFT readiness signal. Group-relative training needs within-group variation; homogeneous all-pass or all-fail groups provide no relative learning signal.
+
+`HUDDOC.MD`'s arithmetic Training API loop is a separate custom-loop preview. It may validate Fireworks mechanics, but it does not use the canonical ForkProof qabench/ReleaseProof inputs and cannot support ForkProof SFT/RFT claims.
+
+---
+
+## 9. Metrics and claim boundaries
+
+For any real report, name the exact joined source population and ReleaseProof. Report:
+
+```text
+v1_admission = joined rows with v1 reward == 1
+v2_admission = the same joined rows with v2 reward == 1
+classified_v1 = referee-decided rows in v1_admission
+classified_v2 = referee-decided rows in v2_admission
+
+v1_classified_contamination = confirmed hacks in classified_v1 / size(classified_v1)
+v2_classified_contamination = confirmed hacks in classified_v2 / size(classified_v2)
+classification_coverage = referee-decided rows / admitted rows
+legitimate_retention = legitimate rows in v2_admission / legitimate rows in v1_admission
+```
+
+Always report quarantine count and reasons, unjoined row count, clean SFT count, hardened RFT prompt count, and independent split-group counts. Do not generalize ProofSet results to all Plan 008 trajectories when unjoined trajectories were quarantined.
+
+Allowed claims:
+
+| Claim | Required evidence |
+|---|---|
+| “The canonical pipeline ran.” | Completed Plan 005/008 manifests, matching digests, and run manifest. |
+| “Hardened filtering removed N confirmed hacks.” | Named joined population, referee verdicts, ReleaseProof join, and audit artifact. |
+| “The dataset is SFT-ready.” | Faithful examples, provider/tokenization validation, frozen split, and no positive-weight hacks. |
+| “The RFT task is trainable.” | Registered evaluator/environment plus target-model grouped reward-spread calibration. |
+| “Training improved behavior.” | Actual job result and frozen held-out legitimate-success/hack-rate evaluation. |
+
+---
+
+## 10. Current blockers and next actions
 
 | Priority | Blocker | Required action |
 |---|---|---|
-| P0 | Plan 003 has candidates but no sealed Witness | Minimize causal deltas, package durable candidates, run target/mechanism deduplication, and pass three deterministic replays before sealing public artifacts. |
-| P0 | Plan 005 ReleaseProof absent | After Plan 003 seals a Witness, complete v1/v2 proof and evaluator identities. |
-| P0 | Plan 005 command/repository maps are inconsistent | Verify `plan-005-tests` and `integration-release` mappings and reconcile repo-map status before Plan 005 execution. |
-| P0 | Current metric populations mismatch | Separate v2 admission from clean SFT and compute denominators from the same population. |
-| P0 | No tri-state quarantine | Add normalized classification and quarantine before accepting broader real exports. |
-| P0 | Plan 007 dependency and ownership gate closed | Do not execute Plan 007 source work until Plan 003 completes and all target paths, including this document, have accepted ownership. |
-| P0 | No sealed-artifact adapter | After the gate opens, implement the Plan 007 adapter over public manifests. |
-| P0 | Demonstration fidelity unspecified | Add faithful-vs-summary classification and block summaries from SFT. |
-| P1 | Provenance not aggregated | Emit input/normalization manifests with content digests and core/adapter commits. |
-| P1 | Plan 007 mapped commands skip | Bind real test/integration argv before execution. |
-| P1 | Checked-in mock artifact stale | Regenerate and review it, or explicitly retain it as a version-labelled historical fixture. |
-| P1 | Training recommendations over-specific | Convert to clearly labelled hypotheses or provider-validated configuration; never feed the current file directly into job launch. |
-| P2 | Optional Fireworks job | Run only after all analysis/training gates and held-out split exist. |
+| P0 | Plan 008 manifest/report absent | Complete Plan 008 and publish the exact qabench artifact with digest. |
+| P0 | Canonical SFT/RFT runs not executed | Run both consumers with completed Plan 008 and inspect joins/quarantine/counts. |
+| P0 | Unknown useful dataset size | Confirm enough faithful SFT demonstrations and hardened RFT prompts survive the ReleaseProof join. |
+| P1 | SFT provider evidence absent | Verify model, managed LoRA support/rank, tokenization, dataset, dry run, cost/time, and held-out split. |
+| P1 | RFT provider registration/environment evidence absent | The local sealed-v2 binding is prepared; next register the evaluator, dataset, and isolated environment, then run grouped calibration and anti-hack review. |
+| P1 | Plan 007 broader research incomplete | Depth-two, adaptive stopping, capability gates, and required evidence remain outside the SFT/RFT preparation work. |
+| P2 | Actual Fireworks jobs absent | Launch only after the corresponding gates pass; preserve request/result/eval evidence. |
 
-If the real proof artifacts do not arrive before the demo, retain mock outputs as **illustrative** and record the integration as blocked. Never relabel mock metrics, manual rows, or unverified summaries as measured ForkProof results.
+The immediate dependency is Plan 008. Once it completes, canonical preparation can run immediately. Training should still stop if the join produces too few faithful or independently grouped rows, if provider validation fails, or if RFT calibration has no useful reward spread.
+
+---
+
+## 11. Official downstream references
+
+- [Fireworks managed fine-tuning overview](https://docs.fireworks.ai/fine-tuning/managed-finetuning-intro)
+- [Fireworks supervised fine-tuning](https://docs.fireworks.ai/fine-tuning/fine-tuning-models)
+- [Fireworks RFT overview](https://docs.fireworks.ai/fine-tuning/reinforcement-fine-tuning-models)
+- [Fireworks RFT concepts](https://docs.fireworks.ai/fine-tuning/how-rft-works)
+- [Fireworks evaluator guidance](https://docs.fireworks.ai/fine-tuning/evaluators)
+- [Fireworks RFT parameter tuning](https://docs.fireworks.ai/fine-tuning/parameter-tuning)
+- [Fireworks Training API introduction](https://docs.fireworks.ai/fine-tuning/training-api/introduction)

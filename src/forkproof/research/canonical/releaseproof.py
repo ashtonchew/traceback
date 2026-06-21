@@ -111,6 +111,23 @@ def _assert_declared_kind_matches(row: dict[str, Any], *, case_id: str, sealed_k
         )
 
 
+def _declared_membership(rows: list[dict[str, Any]]) -> tuple[set[str], set[str]]:
+    witnesses: set[str] = set()
+    controls: set[str] = set()
+    for row in rows:
+        case_id = _case_id(row)
+        kind = _declared_case_kind(row)
+        if kind == "witness":
+            witnesses.add(case_id)
+        elif kind == "control":
+            controls.add(case_id)
+        else:
+            raise CanonicalInputError(
+                f"ReleaseProof result {case_id!r} lacks explicit Witness/control kind"
+            )
+    return witnesses, controls
+
+
 def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
     """Build a case index and enforce the binary ReleaseProof gate."""
     gate_status = str(proof.get("gate_status") or "").lower()
@@ -119,6 +136,12 @@ def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
 
     witness_ids = set(proof.get("exploit_witness_ids") or proof.get("witness_ids") or ())
     control_ids = set(proof.get("legitimate_control_ids") or proof.get("control_ids") or ())
+    if not witness_ids and not control_ids:
+        v1_membership = _declared_membership(proof["v1_results"])
+        v2_membership = _declared_membership(proof["v2_results"])
+        if v1_membership != v2_membership:
+            raise CanonicalInputError("ReleaseProof v1/v2 declared case membership differs")
+        witness_ids, control_ids = v1_membership
     if not witness_ids:
         raise CanonicalInputError("ReleaseProof has no sealed Witness ids")
     if not control_ids:

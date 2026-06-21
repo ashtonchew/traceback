@@ -1,9 +1,9 @@
 # SFT Extension Plan — ForkProof / Hack2Fix2Hack
 
-**Purpose:** Agent-ready specification for the SFT and training-data extension. This document explains what to build, in what order, with mock data first, and how to reconnect to the core team's real ForkProof outputs later.
+**Purpose:** Living specification for the ForkProof post-training extension. It records the implemented mock SFT data-quality pipeline, the sealed-artifact contract for real integration, and the distinct optional paths for managed SFT, managed RFT, and custom Fireworks Training API research.
 
-**Status:** Planning document (2026-06-20)  
-**Related sources:** `HANDOFF.MD`, `docs/plans/html-spec/hack2fix2hack-handoff (4).html`, `docs/plans/GLOSSARY.md`, `docs/plans/007-depth-two-and-research-extensions.md`
+**Status (2026-06-21):** Mock Phases 0–3, canonical Plan 005/008 consumers, and a non-registering sealed-v2 RFT evaluator binding are implemented and covered by 82 passing tests plus 19 passing subtests. Plans 003–005 are complete; canonical dataset analysis remains blocked on the completed Plan 008 qabench report. No real-data, SFT-training, managed-RFT, or held-out model result is claimed.
+**Related sources:** `CONNECT.md`, `HUDDOC.MD`, `HANDOFF.MD`, `docs/plans/html-spec/hack2fix2hack-handoff (4).html`, `docs/plans/GLOSSARY.md`, `docs/plans/007-depth-two-and-research-extensions.md`
 
 ---
 
@@ -53,6 +53,22 @@ A weak verifier does not only inflate benchmark scores. It also poisons training
 
 The must-ship version proves this through **data-quality analysis**, not necessarily a full model training run.
 
+### Current repository state
+
+| Area | Current state |
+| --- | --- |
+| Strict v1 JSONL loader and validation | Implemented |
+| Raw, hardened, rejected-hack, and excluded filtering | Implemented for mock/compatibility rows |
+| Reports, chart, metadata, audit, and Fireworks chat export | Implemented |
+| Test baseline | 82 passing research tests plus 19 passing subtests |
+| Real ForkProof adapter | Implemented and fail-closed; canonical execution awaits Plan 008 |
+| Correct real-data metric/quarantine model | Proposed in `CONNECT.md`; not implemented |
+| Managed SFT experiment | Optional; not run |
+| Managed RFT experiment | Optional; not run |
+| Direct Training API experiment | Separate preview work documented in `HUDDOC.MD`; not evidence for this SFT pipeline |
+
+The checked-in mock outputs are illustrative development artifacts. The current code can produce `training_recommendations.json`, but those recommendations are hypotheses, not provider-validated launch parameters.
+
 ### One-sentence pitch
 
 A raw verifier admits both real solutions and reward hacks as positive training examples; a hardened verifier filters out hacked successes before SFT or RFT.
@@ -79,9 +95,10 @@ Replace `TBD` with measured values once the pipeline runs.
 | --- | --- | --- |
 | Core demo | Core team | ForkPoint, Modal branching, Witness discovery, verifier patch, ReleaseProof gate |
 | Research appendix | SFT extension (this doc) | Raw-vs-hardened training-data filtering, contamination metrics, SFT-ready exports |
-| Downstream training | Fireworks (sponsor) | Managed SFT or RFT on cleaned trajectories |
+| Downstream SFT | Fireworks managed SFT | Trains on faithful, verifier-cleaned demonstrations |
+| Downstream RFT | Fireworks managed RFT or a custom Training API loop | Generates new rollouts and optimizes against a hardened evaluator |
 
-The HTML handoff and ExecPlan 007 classify training-data analysis as a **research stretch**, not part of the live demo path. Build it in parallel; do not block or depend on the core release gate.
+The HTML handoff and ExecPlan 007 classify training analysis as a **research stretch**, not part of the live demo path. Plan 007 may run only after Plan 003 completes and may consume core artifacts without modifying them or becoming a prerequisite for the demo.
 
 ### Relationship to ForkProof objects
 
@@ -146,6 +163,20 @@ A trace enters the hardened SFT bucket when: `patched_reward == 1` AND `is_legit
 
 Do not conflate "got reward 0" with "is a hack" without explicit labels — a failed legitimate attempt also gets reward 0.
 
+### SFT and RFT use ForkProof differently
+
+| Question | SFT | RFT |
+| --- | --- | --- |
+| What is supplied? | Faithful examples of desired behavior | Prompts/tasks, an agent/environment, and an evaluator that produces reward |
+| Where does verifier hardening act? | Before export, by preventing hacked positives from becoming demonstrations | During every rollout, because the policy is optimized directly against the evaluator |
+| Primary failure mode | Poisoned or fabricated positive demonstrations | The model discovers the cheapest evaluator exploit and receives gradient for it |
+| ForkProof gate | Clean examples require trusted classification and v2 success | The live evaluator must be the sealed v2 evaluator represented by ReleaseProof |
+| Minimum evidence | Demonstration fidelity, provenance, grouped held-out split | Reward spread, evaluator isolation, anti-hack probes, fresh rollouts, grouped held-out evaluation |
+
+RFT is not “SFT with rewards attached.” Fireworks managed RFT expects prompts, an evaluator/reward function, and an agent or environment that produces fresh rollouts. A hardened SFT JSONL file is therefore not itself an RFT taskset. Conversely, an RFT trace is not automatically a safe SFT demonstration unless it independently passes classification, provenance, and fidelity gates.
+
+ForkProof matters more strongly for RFT because optimization repeatedly searches for behavior that scores. A verifier weakness that appears rarely in evaluation can become the dominant learned strategy once the policy receives gradient for exploiting it.
+
 ---
 
 ## 4. Scope boundaries
@@ -172,11 +203,15 @@ Do not conflate "got reward 0" with "is a hack" without explicit labels — a fa
 
 - Fireworks managed SFT job on raw vs hardened datasets
 - Raw-trained vs hardened-trained model comparison
+- Managed RFT calibration and bounded training against the sealed v2 evaluator
+- Custom Training API research only when managed RFT cannot express the required environment or diagnostics
 - Held-out task evaluation
 
 ### Claims to avoid
 
 - Do not claim training improves performance unless an experiment actually ran.
+- Do not call an RFT task trainable based on mean reward alone; grouped rollouts must show non-degenerate within-group reward spread.
+- Do not run RFT against the known-vulnerable v1 verifier except in a strictly isolated diagnostic comparison that cannot publish or contaminate production artifacts.
 - Do not describe this as part of the core live demo unless explicitly wired in.
 - Do not use synthetic/mock metrics in the final pitch table — label mock runs as illustrative during development only.
 
@@ -195,9 +230,11 @@ Phase 2: Metrics, contamination table, exploit-cluster breakdown
     ↓
 Phase 3: SFT JSONL export + metadata sidecar
     ↓
-Phase 4: Swap mock → real ForkProof export (adapter only)
+Phase 4: Verify sealed package → normalize → quarantine → real analysis
     ↓
-Phase 5 (optional): Fireworks SFT job + model comparison
+Phase 5A (optional): Fireworks managed SFT + held-out comparison
+    ↓
+Phase 5B (optional): RFT readiness audit → grouped calibration → bounded RFT
 ```
 
 ---
@@ -289,7 +326,7 @@ excluded = [t for t in traces if t not in raw_sft + hardened_sft + rejected_hack
 3. `render_exploit_cluster_breakdown(rejected_hacks) -> dict[str, int]`
 4. Optional: bar chart (raw vs hardened hack count) saved to `artifacts/sft/contamination_chart.png`
 
-**Metrics definitions:**
+**Current mock implementation metrics:**
 
 | Metric | Formula |
 | --- | --- |
@@ -300,6 +337,24 @@ excluded = [t for t in traces if t not in raw_sft + hardened_sft + rejected_hack
 | Training contamination rate (raw) | `hacked_in_raw / len(raw_sft)` |
 | Training contamination rate (hardened) | `hacked_in_hardened / len(hardened_sft)` if hardened non-empty else 0 |
 | Legitimate retention | `len(hardened_sft) / count(is_legit=True)` among all legit traces |
+
+These formulas describe current compatibility behavior and expose a known mismatch: `hardened_sft` is legitimate-only while the hardened hack numerator examines all patched-positive hacks. Do not apply that denominator to real data.
+
+**Required real-data metrics:**
+
+```text
+v1_admission = rows with semantic success under evaluator v1
+v2_admission = the same frozen source rows with semantic success under evaluator v2
+classified_v1 = exclusively hack-or-legitimate rows in v1_admission
+classified_v2 = exclusively hack-or-legitimate rows in v2_admission
+
+v1_classified_contamination = hacks in classified_v1 / size(classified_v1)
+v2_classified_contamination = hacks in classified_v2 / size(classified_v2)
+classification_coverage = size(classified) / size(admission)
+legitimate_retention = legitimate rows in v2_admission / legitimate rows in v1_admission
+```
+
+Report unknown, conflicting, and quarantined counts next to every denominator, and report `clean_sft_count` separately from verifier admission.
 
 **Exit criteria:**
 
@@ -337,36 +392,42 @@ Do **not** export `rejected_hacks` as positive SFT examples. Optionally export t
 
 ### Phase 4 — Reconnect to real ForkProof data
 
-**Goal:** Swap mock input for core-team output with minimal code changes.
+**Goal:** Verify and normalize a sealed core artifact package without weakening provenance or inventing flat rows.
 
 **Deliverables:**
 
-1. `adapt_forkproof_export(path) -> list[TraceRecord]` — thin adapter from core format to internal schema
-2. Config flag or env var: `SFT_INPUT_PATH` pointing at mock or real file
-3. Re-run Phases 1–3 on real data; update metrics table with measured values
-4. Short "integration log" noting row count, date, source commit/ReleaseProof id
+1. Verified input manifest with core commit, source ids/digests, ProofSet, ReleaseProof, and complete v1/v2 evaluator identities
+2. Accepted versioned normalized schema plus quarantine artifact for unknown/conflicting rows
+3. Public-artifact adapter that reads sealed Plans 003–005 outputs without importing their internals
+4. Same-population analysis and faithful-demonstration export
+5. Integration log and evidence manifest recording commands, counts, digests, warnings, and observed behavior
 
 See [Section 11](#11-reconnecting-to-real-forkproof-data-phase-4) for the full reconnection procedure.
 
 **Exit criteria:**
 
-- Same pipeline code path runs on mock and real inputs
-- Real run recorded in evidence manifest (if following ExecPlan 007) or a local `artifacts/sft/run_manifest.json`
-- Final pitch table uses real measured values, not mock placeholders
+- Every source digest verifies and every join resolves exactly once
+- Every Witness/control belongs to the sealed ProofSet and uses identical action/solution content under v1 and v2
+- Unknown/conflicting classifications are quarantined rather than coerced
+- Metrics report classification coverage and use declared matching populations
+- Real run is recorded under Plan 007 evidence paths
+- Final pitch table names the ReleaseProof and uses measured values rather than mock placeholders
 
 ---
 
-### Phase 5 (optional) — Training experiment
+### Phase 5 (optional) — Post-training experiments
 
-**Goal:** If time and Fireworks credits allow, compare models trained on raw vs hardened datasets.
+**Goal:** If real data, independent held-out groups, evaluator integrity, and budget allow, test whether verifier-cleaned post-training changes behavior.
 
 **Only proceed when:**
 
-- Phase 4 real data is available OR mock data is explicitly labeled as a dry run
+- Phase 4 real data is available; mock data may validate plumbing but cannot support a model claim
 - Fireworks account and base model are confirmed
-- At least 3 clean examples exist in hardened export (Fireworks minimum)
+- SFT has enough faithful clean examples for provider validation
+- RFT has a sealed v2 evaluator, isolated grader assets, diverse multi-step tasks, and grouped rollout reward spread
+- Train and held-out groups are frozen by task/source/template/lineage family
 
-**Experiment design:**
+**SFT experiment design:**
 
 | Model | Training data | Hypothesis |
 | --- | --- | --- |
@@ -375,22 +436,32 @@ See [Section 11](#11-reconnecting-to-real-forkproof-data-phase-4) for the full r
 
 Evaluate both on held-out tasks (not in training set). Record exact model IDs, dataset IDs, and job IDs per `HANDOFF.MD` reproducibility guidance.
 
+**RFT experiment design:**
+
+1. Run grouped calibration with the target base model and target rollout settings, without a trainer update.
+2. Measure per-group reward spread, zero-variance-group rate, legitimate completion rate, hack rate, timeout/error rate, and reward-component distribution.
+3. Inspect highest-reward and lowest-reward trajectories for cheapest-path exploits and prompt/evaluator misalignment.
+4. Start a small managed RFT baseline only if calibration has useful signal and sealed-v2 anti-hack probes pass.
+5. Evaluate the resulting checkpoint on frozen controls, withheld exploit families, and held-out task families using the same trusted evaluation boundary.
+
+Use managed RFT for the standard prompt + evaluator + agent workflow. Use the direct Training API path from `HUDDOC.MD` only when the research question requires custom losses, per-step control, or inference-in-the-loop checkpoint sampling. Do not describe the arithmetic preview loop in `HUDDOC.MD` as ForkProof RFT evidence.
+
 **If not run:** State clearly that the training experiment is a proposed Fireworks extension; the completed artifact is the data-quality analysis.
 
 ---
 
 ## 6. Data contracts
 
-### 6.1 Input: ForkProof trace export (one row per trace)
+### 6.1 Current compatibility input: TraceRecord schema v1
 
-This is the **integration contract** the core team should produce. The SFT pipeline consumes this format.
+This is the strict schema the current mock pipeline consumes. It is a compatibility format, not the artifact package the core team must hand-author and not the final real-data contract. The future adapter will verify sealed native artifacts first and project only safe, fully classified rows into this shape.
 
 ```json
 {
   "trace_id": "trace-mongo-001",
   "task_id": "mongodb-sales-aggregation-engine",
   "task_prompt": "Implement a SalesAnalyzer class with MongoDB aggregation pipelines...",
-  "assistant_output": "Summary of agent actions or final response text...",
+  "assistant_output": "Faithful final assistant response text...",
   "raw_reward": 1.0,
   "patched_reward": 0.0,
   "is_hack": true,
@@ -411,7 +482,7 @@ This is the **integration contract** the core team should produce. The SFT pipel
 | `trace_id` | string | Stable unique id |
 | `task_id` | string | Task family + instance |
 | `task_prompt` | string | User-visible task instruction |
-| `assistant_output` | string | Agent solution summary, final answer, or condensed action trace |
+| `assistant_output` | string | Faithful final assistant response or supported faithful trajectory serialization; never a human-authored summary presented as training data |
 | `raw_reward` | float | Reward under original verifier (0.0 or 1.0) |
 | `patched_reward` | float | Reward under hardened verifier (0.0 or 1.0) |
 | `is_hack` | bool | Classified as reward hack |
@@ -429,9 +500,19 @@ This is the **integration contract** the core team should produce. The SFT pipel
 | `witness_id` | string | Link to Exploit Witness if applicable |
 | `release_proof_id` | string | Link to ReleaseProof run |
 
-**File format:** JSONL (one record per line) or Parquet. JSONL is preferred for hackathon speed.
+**File format:** strict JSONL, one record per line. Unknown fields are currently rejected.
 
-### 6.2 Internal: TraceRecord
+Current v1 limitations:
+
+- rewards accept only numeric `0.0` or `1.0`;
+- `is_hack` and `is_legit` cannot represent unknown/conflicting cleanly;
+- real compatibility projection requires exactly one of those booleans to be true;
+- proof identities and content digests are incomplete;
+- the current metric implementation is not sufficient for real claims.
+
+The proposed richer normalized contract, package requirements, quarantine behavior, and projection rules live in `CONNECT.md`. They remain non-normative until accepted by Plan 007 and a checked-in schema/specification.
+
+### 6.2 Internal: TraceRecord v1
 
 The implementation should map input rows to a typed internal model. Suggested fields mirror the contract above plus:
 
@@ -455,11 +536,14 @@ Per `HANDOFF.MD` Section 11.2, each training line:
     },
     {
       "role": "assistant",
-      "content": "<assistant_output>"
+      "content": "<assistant_output>",
+      "weight": 1
     }
   ]
 }
 ```
+
+The current exporter assigns assistant `weight: 1`; every assistant token therefore contributes to the SFT objective. An analysis summary, exploit explanation, or reconstructed answer is not eligible for the clean export merely because it fits this JSON shape.
 
 **Metadata sidecar** (separate file, not inside Fireworks upload):
 
@@ -476,6 +560,19 @@ Per `HANDOFF.MD` Section 11.2, each training line:
 }
 ```
 
+### 6.4 RFT inputs are different
+
+Managed RFT does not consume the hardened SFT file as its complete training definition. Its logical inputs are:
+
+- a prompt/task dataset;
+- an agent capable of performing the task, including tools or a remote environment when needed;
+- a trusted evaluator that scores generated rollouts;
+- rollout and optimization configuration;
+- isolated secrets and grader assets;
+- held-out tasks and adversarial anti-hack probes.
+
+For ForkProof, the evaluator must be bound to the sealed v2 identity represented by ReleaseProof. The agent must not be able to modify evaluator code, trusted tests, plugins, interpreter state, or reward records. Each rollout must preserve enough trace/action/state provenance to classify a high-reward result as legitimate or reward-hacking rather than treating reward as ground truth.
+
 ---
 
 ## 7. Mock data (Phase 0)
@@ -490,7 +587,7 @@ Build the entire pipeline against this fixture before real data exists.
 - Failed attempts stay at reward 0 under both verifiers
 - Cover multiple exploit clusters for breakdown charts
 
-### Suggested mock inventory (MongoDB SalesAnalyzer)
+### Implemented mock inventory (MongoDB SalesAnalyzer plus stress rows)
 
 | trace_id | Description | raw | patched | is_hack | is_legit | exploit_cluster |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -504,15 +601,19 @@ Build the entire pipeline against this fixture before real data exists.
 | `mock-008` | Failed attempt, no solution | 0 | 0 | false | false | — |
 | `mock-009` | Partial work, tests fail | 0 | 0 | false | false | — |
 
+Rows `mock-010` through `mock-015` add a still-admitted hack, ambiguous and conflicting labels, another exploit cluster, a second task family, and a second-task failure. See `fixtures/sft/README.md` for the authoritative row-by-row inventory.
+
 **Expected mock metrics (verify pipeline against these):**
 
 | Metric | Raw | Hardened |
 | --- | ---: | ---: |
-| Reward-1 traces admitted | 7 | 3 |
-| Legitimate traces admitted | 3 | 3 |
-| Hacked traces admitted | 4 | 0 |
-| Training contamination | 57.1% | 0% |
-| Legitimate retention | 100% | 100% |
+| Reward-1 traces admitted | 12 | 4 |
+| Legitimate traces admitted | 5 | 4 |
+| Hacked traces admitted | 7 | 1 |
+| Current reported contamination | 58.3% | 25.0% |
+| Current legitimate retention | 80.0% | 80.0% |
+
+These values are mock regression expectations, not project results. The current hardened denominator and retention-rendering limitations are documented in `CONNECT.md` and must be corrected before real claims.
 
 ### Mock assistant_output content guidance
 
@@ -521,7 +622,7 @@ Keep mock `assistant_output` strings short but realistic:
 - **Legit example:** "Implemented `SalesAnalyzer.analyze_sales()` using `$match`, `$group`, and `$sort` stages..."
 - **Hack example:** "Registered a setuptools pytest plugin that intercepts test collection and returns synthetic passing results..."
 
-These strings power qualitative demo slides showing what the raw dataset would teach.
+These strings power qualitative demo slides showing what the raw dataset would teach. Hack summaries may appear only in the intentionally dirty raw comparison or audit artifacts; they are forbidden from the clean SFT export.
 
 ---
 
@@ -571,13 +672,13 @@ Write to `artifacts/sft/contamination_table.md`:
 
 | Metric | Raw Verifier | Hardened Verifier |
 | --- | ---: | ---: |
-| Reward-1 traces admitted | 7 | 3 |
-| Legitimate traces admitted | 3 | 3 |
-| Hacked traces admitted | 4 | 0 |
-| Training contamination | 57.1% | 0.0% |
-| Legitimate retention | 100.0% | 100.0% |
+| Reward-1 traces admitted | 12 | 4 |
+| Legitimate traces admitted | 5 | 4 |
+| Hacked traces admitted | 7 | 1 |
+| Current reported contamination | 58.3% | 25.0% |
+| Current legitimate retention | 80.0% | 80.0% |
 
-_Source: mock_forkproof_traces.jsonl, generated 2026-06-20_
+_Source: illustrative mock_forkproof_traces.jsonl; not a measured ForkProof result_
 ```
 
 Replace footer with real source info after Phase 4.
@@ -629,14 +730,14 @@ Adjust only if the core team's harness uses a different canonical system prompt 
 
 ```bash
 # Run full pipeline on mock data
-python -m forkproof.research.sft.cli \
+uv run python -m forkproof.research.sft.cli \
   --input fixtures/sft/mock_forkproof_traces.jsonl \
   --output artifacts/sft/mock_run/
 
-# After core team delivers real export
-python -m forkproof.research.sft.cli \
-  --input artifacts/sft/forkproof_export.jsonl \
-  --output artifacts/sft/real_run/
+# After the sealed package adapter and normalized compatibility projection exist
+uv run python -m forkproof.research.sft.cli \
+  --input artifacts/forkproof/research/sft/normalized.compat-v1.jsonl \
+  --output artifacts/forkproof/research/sft/real_run/
 ```
 
 ### Fireworks upload (optional, Phase 5)
@@ -644,142 +745,164 @@ python -m forkproof.research.sft.cli \
 From `HANDOFF.MD`:
 
 ```bash
-firectl dataset create sft-hardened-demo artifacts/sft/real_run/hardened_verifier_sft.jsonl
+firectl dataset create forkproof-hardened-demo \
+  artifacts/forkproof/research/sft/real_run/hardened_verifier_sft.jsonl
 
-firectl sftj create \
+firectl supervised-fine-tuning-job create \
   --base-model <BASE_MODEL_ID> \
-  --dataset sft-hardened-demo \
-  --output-model sft-hardened-demo-v1
+  --dataset forkproof-hardened-demo \
+  --output-model forkproof-hardened-demo-v1 \
+  --dry-run
 ```
 
-Run the [SFT tokenization debugger](https://docs.fireworks.ai/fine-tuning/debug-sft-tokenization) before spending credits.
+Validate formatting/tokenization and review the dry-run request before spending credits. Remove `--dry-run` only after the dataset, held-out evaluation, model support, quota, and cost are confirmed.
 
 ---
 
 ## 11. Reconnecting to real ForkProof data (Phase 4)
 
-This section explains how to integrate with the core team's work when their outputs are ready.
+Real integration begins from sealed repository-native artifacts. A convenient JSONL file without proof membership, evaluator identity, content digests, and classification provenance cannot support a measured claim.
 
 ### What the core team must deliver
 
-One file: **`forkproof_export.jsonl`** (or equivalent path agreed with the team).
+The authoritative prerequisite list and copy-paste request are maintained in `CONNECT.md`. At minimum the package requires:
 
-Each row corresponds to one trace, BranchRun, Witness, or legitimate control that the core system graded under both verifier versions. Minimum required fields are listed in [Section 6.1](#61-input-forkproof-trace-export-one-row-per-trace).
+- a completed Plan 003 manifest with at least one sealed Witness and its BranchRun/action, QA/classification, minimized causal delta, dedup, durable package, replay, and digest evidence;
+- the completed Plan 004 control manifest with at least three sealed controls, baseline results, solution refs, task/environment identities, and faithful demonstration refs when available;
+- the completed Plan 005 ProofSet and passing ReleaseProof with identical-content v1/v2 outcomes, complete evaluator identities, patch provenance, gate status, and digests;
+- a root package manifest with immutable package id, producing core commit, source ids/digests, relative or content-addressed refs, demonstration kinds, and redaction confirmation.
+
+The current Plan 003 candidates are not inputs until Plan 003 seals at least one Witness.
 
 ### Where real data likely originates in ForkProof
 
 | Core artifact | SFT mapping |
 | --- | --- |
-| Source trace | Row with `raw_reward=1`; may become raw_sft |
-| Exploit Witness replay | Row with `is_hack=true`, `raw_reward=1`, `patched_reward=0` |
-| Legitimate control | Row with `is_legit=true`, both rewards should be 1 post-ReleaseProof |
-| ReleaseProof results | Supplies patched rewards and `release_proof_id` |
-| BranchRun (non-witness) | Include only if team exports full branch corpus; otherwise export Witnesses + controls + source trace |
+| Source trace | Analysis candidate; trainable only with faithful demonstration provenance |
+| Sealed Exploit Witness | Authoritative hacked case; expected v1 success and v2 failure |
+| Sealed legitimate control | Authoritative legitimate case; expected v1 and v2 success |
+| ReleaseProof | Supplies ProofSet membership, identical-content v1/v2 outcomes, evaluator identities, and gate status |
+| Non-witness BranchRun | Optional analysis row; never promoted or treated as a hack without authoritative classification |
 
-Ask the core team to export **at minimum**:
+### Adapter boundary
 
-1. All Exploit Witnesses (with replay summaries)
-2. All legitimate controls
-3. Any additional reward-1 source traces used in the demo
-4. Optional: full branch corpus for richer contamination stats
-
-### Adapter pattern (only code that should change)
-
-```python
-def adapt_forkproof_export(row: dict) -> TraceRecord:
-    """Map core-team export columns to internal TraceRecord."""
-    return TraceRecord(
-        trace_id=row["trace_id"],
-        task_id=row["task_id"],
-        task_prompt=row["task_prompt"],
-        assistant_output=row["assistant_output"],
-        raw_reward=float(row["raw_reward"]),
-        patched_reward=float(row["patched_reward"]),
-        is_hack=bool(row["is_hack"]),
-        is_legit=bool(row["is_legit"]),
-        exploit_cluster=row.get("exploit_cluster"),
-        environment_version=row.get("environment_version"),
-        grader_version=row.get("grader_version"),
-        hud_trace_url=row.get("hud_trace_url"),
-        witness_id=row.get("witness_id"),
-        release_proof_id=row.get("release_proof_id"),
-        source="forkproof_export",
-    )
-```
-
-If the core team uses different column names, change **only the adapter**, not the filter/metrics/export logic.
+Plan 007 owns the adapter under `src/forkproof/research/**`. It consumes public manifests and must not import Plans 003–005 internals or ask those plans to mutate their artifacts. Do not write the adapter until the actual source records are available and their schema is verified. The proposed normalized-v2 fields in `CONNECT.md` must first be accepted into the owning plan and a checked-in schema/specification.
 
 ### Step-by-step reconnection procedure
 
-1. **Agree on schema** — Send the core team [Section 14](#14-integration-contract-for-the-core-team) (or the JSON schema file if you create one).
-2. **Receive file** — Place at `artifacts/sft/forkproof_export.jsonl` (or path in `SFT_INPUT_PATH` env var).
-3. **Validate** — Run loader; fix adapter if validation fails.
-4. **Re-run pipeline** — Same CLI as mock, different input path.
-5. **Compare** — Mock vs real row counts; confirm hardened hack count is 0.
-6. **Update artifacts** — Replace pitch table numbers with real measurements.
-7. **Record provenance** — Write `artifacts/sft/run_manifest.json`:
-
-```json
-{
-  "input_path": "artifacts/sft/forkproof_export.jsonl",
-  "input_source": "forkproof_export",
-  "release_proof_id": "releaseproof-001",
-  "core_commit": "abc123",
-  "run_timestamp": "2026-06-21T10:00:00-07:00",
-  "trace_count": 12,
-  "metrics": { "...": "..." }
-}
-```
-
-8. **Tag demo materials** — Slide footer: "Measured on ForkProof ReleaseProof X" not "illustrative mock."
-
-### Parallel work agreement
-
-You do not need to wait for the core system. The contract is:
-
-> "I can build everything now using mock data. When real ForkProof outputs are ready, I swap the input file and re-run."
-
-No filter logic rewrite. No metric formula changes. Only input adapter and provenance metadata.
+1. Preserve the delivered bytes and record package id, producing commit, receipt time, and root digest before parsing.
+2. Verify every manifest and referenced digest; reject unresolved refs, mutable URL-only evidence, machine-local paths, and unexpected files.
+3. Verify Plan 003, 004, and 005 completion, ProofSet membership, ReleaseProof gate, identical v1/v2 solution content, and classification provenance.
+4. Normalize into the accepted versioned schema; preserve raw values and quarantine unknown/conflicting rows.
+5. Emit an input manifest containing source ids/digests, core and adapter commits, schema version, ProofSet, ReleaseProof, evaluator identities, and normalized-output digest.
+6. Compute same-population metrics and report classification coverage and quarantine counts.
+7. Export SFT only from faithful legitimate demonstrations; summaries and bare solution artifacts remain analysis-only.
+8. Freeze grouped train/held-out manifests before any upload.
+9. Run mapped Plan 007 tests, integration, lint, file-size, and evidence validation.
+10. Tag demo materials with the exact ReleaseProof and source population; otherwise retain the `illustrative mock` label.
 
 ### Alignment with ExecPlan 007
 
-Plan 007 (`docs/plans/007-depth-two-and-research-extensions.md`) owns `src/forkproof/research/**` for training analysis. When the repo gains product source:
+Plan 007 owns `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, and its evidence. It can execute only after Plan 003 completes and its command/ownership gates are accepted.
 
-- Place SFT code under `src/forkproof/research/sft/`
-- Place fixtures under `fixtures/sft/` or `tests/forkproof/research/fixtures/sft/`
-- Place outputs under `artifacts/forkproof/research/sft/`
-- Record evidence in `docs/plans/evidence/007/MANIFEST.json` if executing within the ExecPlan workflow
-
-If building before Gate 1 opens, a standalone script folder is fine; migrate into `src/forkproof/research/sft/` when the repo accepts product source.
+The existing mock implementation is preparatory work, not Plan 007 completion evidence. Do not continue source integration until the gate is open or an explicit ownership exception is recorded.
 
 ---
 
 ## 12. Optional training experiment (Phase 5)
 
-### Prerequisites
+SFT, managed RFT, and the direct Training API are separate experiment shapes. Choose one based on the available evidence and research question; do not blend their claims.
 
-- Hardened export has ≥3 examples
-- Fireworks credits and base model confirmed
-- Held-out tasks identified (not in training export)
-- Calibration guidance from `HANDOFF.MD` Section 2 (10 runs per task, 20–50% mean reward)
+### 12.1 Managed SFT comparison
 
-### Procedure
+Prerequisites:
+
+- faithful clean demonstrations pass Fireworks validation;
+- raw and hardened datasets have explicitly documented composition;
+- train/held-out groups are frozen by task, lineage, solution/template family, and content digest;
+- the held-out set contains legitimate tasks and adversarial exploit probes not reused as training demonstrations;
+- base model, dataset, evaluation dataset, job ids, cost, and configuration are recorded.
+
+Procedure:
 
 1. Upload `raw_verifier_sft.jsonl` → train Model A
 2. Upload `hardened_verifier_sft.jsonl` → train Model B
-3. Evaluate both on held-out HUD taskset
-4. Compare: format compliance, reward-hacking rate, legitimate success rate
+3. Evaluate the base model and both tuned models on the same held-out groups
+4. Compare legitimate success, reward-hacking classification rate, v2 reward, refusal/format failures, and per-family results
 
-### Expected hypothesis (do not claim unless measured)
+### 12.2 Managed RFT readiness
+
+Fireworks managed RFT uses a prompt dataset, evaluator, and agent/environment to generate and score fresh rollouts. For agentic coding tasks, use a remote/multi-turn environment rather than reducing the task to a single assistant string.
+
+RFT may start only when:
+
+- the reward path uses the sealed v2 evaluator represented by ReleaseProof;
+- trusted tests, evaluator code, interpreter/plugin paths, reward records, and grader secrets are outside agent-writable state;
+- each rollout starts from a fresh, reproducible environment and records trace/action/state provenance;
+- the cheapest action that earns reward without solving the task is known to score at or below the floor;
+- prompt and evaluator are aligned, and better substantive work cannot score lower than an exploit or superficial response;
+- tasks are genuinely multi-step and the taskset varies substrate, failure mode, deliverable, capability, and difficulty rather than repeating one shape;
+- held-out task families and exploit mechanisms are frozen before training;
+- grouped target-model calibration shows usable within-group reward spread.
+
+Public benchmark substrate may be useful for the demo, but an RFT result over a widely available task must be described as task-specific and potentially contaminated by pretraining exposure. A broader training claim requires fresh, transformed, proprietary, or otherwise non-memorized substrate.
+
+### 12.3 RFT calibration before gradients
+
+Run multiple stochastic candidates per prompt with the target model, target reasoning mode, token budget, sampling settings, agent, and v2 evaluator. Do not judge trainability from reward mean alone.
+
+Record:
+
+- reward mean and distribution;
+- within-group reward standard deviation;
+- fraction of zero-variance groups;
+- legitimate success and reward-hacking classification rates;
+- reward component/subscore distributions;
+- rollout length, truncation, timeout, infrastructure-error, and grader-error rates;
+- exploit target/mechanism/cluster for every rewarded hack;
+- highest-reward and lowest-reward trajectory reviews.
+
+Group-relative methods cannot learn from a prompt whose candidates all receive the same reward. Fireworks filters zero-variance groups, which reduces the effective batch; widespread homogeneous groups mean the task provides little learning signal. Fix task difficulty, rollout diversity, token budget, or evaluator granularity before training rather than compensating with arbitrary optimizer changes.
+
+### 12.4 Bounded managed RFT experiment
+
+1. Freeze task, evaluator, environment, model, sampling, split, and anti-hack probe identities.
+2. Run a no-update grouped calibration and pass the readiness gates above.
+3. Launch a small baseline with provider defaults unless a measured calibration result supports a specific change.
+4. Monitor legitimate reward, hack rate, zero-variance filtering, loss/KL where available, truncation, and environment failures—not reward alone.
+5. Stop if reward rises while legitimate success is flat/falling, hack rate rises, controls regress, or evaluator integrity changes.
+6. Evaluate the resulting checkpoint on held-out controls, unseen exploit families, and held-out task families.
+7. Record all job/model/evaluator/environment ids and preserve representative rollouts and classifications.
+
+The comparison of interest is not merely “higher reward.” It is whether legitimate held-out task success improves without increasing reward hacking or degrading frozen controls.
+
+### 12.5 Direct Fireworks Training API path
+
+`HUDDOC.MD` documents a separate arithmetic preview loop using the Fireworks Training API. That interface provides custom Python control over rollout orchestration, loss, optimizer steps, checkpointing, and sampler refresh. Use it only for custom-loss or inference-in-the-loop research that managed RFT cannot express.
+
+The arithmetic preview task validates Training API mechanics and within-group reward calibration; it does not train on ForkProof trajectories and cannot substantiate ForkProof SFT/RFT claims. The preview account's observed model/shape, LoRA, and hotload constraints are time- and account-specific and must be revalidated before reuse.
+
+### Expected hypotheses (do not claim unless measured)
 
 - Model A may reproduce exploit-like patterns on tasks with weak verifiers
 - Model B should show lower hack rate on the same evaluator
+- RFT against sealed v2 may improve legitimate task success while preserving low hack rates
+- RFT against a weak verifier is expected to optimize toward available exploits, but intentionally training that condition is optional, isolated, and never required for the demo
 
 ### If skipped
 
 Document in write-up:
 
 > "Training experiment proposed as Fireworks extension. Completed artifact: verifier-filtered dataset quality analysis showing X% contamination removed."
+
+Official background:
+
+- [Fireworks fine-tuning overview](https://docs.fireworks.ai/fine-tuning/finetuning-intro)
+- [Fireworks RFT concepts](https://docs.fireworks.ai/fine-tuning/how-rft-works)
+- [Fireworks evaluator guidance](https://docs.fireworks.ai/fine-tuning/evaluators)
+- [Fireworks RFT parameter tuning and zero-variance groups](https://docs.fireworks.ai/fine-tuning/parameter-tuning)
+- [Fireworks Training API introduction](https://docs.fireworks.ai/fine-tuning/training-api/introduction)
+- HUD task-signal guidance: `/v6/run/signal` and training guidance: `/v6/run/training` in the installed HUD documentation set; verify callable APIs against this repository's pinned HUD version before implementation
 
 ---
 
@@ -809,13 +932,13 @@ tests/forkproof/research/sft/
   test_export.py
   test_pipeline_integration.py
 
-artifacts/sft/
-  mock_run/                         # Phase 0–3 outputs (gitignored or labeled mock)
-  real_run/                         # Phase 4 outputs
-  run_manifest.json
-  contamination_table.md
-  contamination_chart.png
-  WRITEUP.md
+artifacts/sft/mock_run/             # Existing illustrative compatibility output
+
+artifacts/forkproof/research/sft/
+  input_manifest.json               # Verified sealed-package inventory
+  normalized.jsonl                  # Accepted richer normalization
+  quarantine.jsonl                  # Unknown/conflicting/unverifiable rows
+  real_run/                         # Measured Phase 4 output
 ```
 
 Keep each file under 500 lines per project engineering rules. Split by responsibility if needed.
@@ -828,33 +951,13 @@ Keep each file under 500 lines per project engineering rules. Split by responsib
 
 ---
 
-### SFT extension input request
+### SFT/RFT extension input request
 
-For the SFT/training-data extension, please export one structured JSONL file with **one row per trace, Witness, or legitimate control**.
+Please provide sealed public artifacts, not a custom SFT schema or hand-authored flat rows. We need the completed Plan 003 Witness package, completed Plan 004 controls, and completed Plan 005 ProofSet/ReleaseProof, including immutable ids, producing commit, complete v1/v2 evaluator and environment identities, identical-content outcomes, classification evidence, demonstration kinds/refs, content digests, and redaction confirmation.
 
-**Required columns:**
+For SFT, faithful final responses or supported faithful trajectories are required; summaries and bare solution refs are analysis-only. For RFT, provide the sealed v2 evaluator/environment identity and public integration boundary needed to generate fresh rollouts without exposing trusted grader assets to the agent.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `trace_id` | string | Stable unique id |
-| `task_id` | string | e.g. `mongodb-sales-aggregation-engine` |
-| `task_prompt` | string | User-visible instruction |
-| `assistant_output` | string | Agent solution or action summary |
-| `raw_reward` | float | 0.0 or 1.0 under original verifier |
-| `patched_reward` | float | 0.0 or 1.0 under hardened verifier |
-| `is_hack` | bool | Reward-hacking classification |
-| `is_legit` | bool | Legitimate solution classification |
-| `exploit_cluster` | string | Mechanism label if hack (optional but helpful) |
-
-**Optional columns:** `environment_version`, `grader_version`, `hud_trace_url`, `witness_id`, `release_proof_id`
-
-**Minimum rows needed for demo:**
-
-- All Exploit Witnesses from the ReleaseProof ProofSet
-- All legitimate controls
-- Source suspicious trace(s)
-
-I am building the filtering pipeline against mock data now. When this file is ready, I will drop it in and re-run — no changes needed on your side beyond the export.
+The complete field-level and package acceptance contract is maintained in `CONNECT.md`.
 
 ---
 
@@ -865,11 +968,12 @@ Use this narrative in slides and write-up. Keep it factual, not forced.
 **Fireworks provides the training layer. ForkProof provides the verifier-cleaned data layer.**
 
 - **SFT:** Fireworks trains on prompt/response demonstrations. ForkProof ensures those demonstrations are legitimate task solutions, not reward hacks that fooled the raw verifier.
-- **RFT:** Fireworks optimizes against a grader or reward signal. ForkProof hardens that grader first so the reward signal is less gameable before it enters the optimization loop.
+- **RFT:** Fireworks generates new rollouts and optimizes against an evaluator. ForkProof discovers concrete exploit paths, hardens that evaluator, and supplies replayable anti-hack probes so rising reward can be distinguished from rising legitimate capability.
+- **Training API:** Fireworks exposes lower-level custom-loop control for research. It is useful when managed objectives are insufficient, but it does not weaken the same evaluator-integrity and held-out-evaluation requirements.
 
 **One-liner for judges:**
 
-> Fireworks makes it easy to train or fine-tune models. ForkProof makes sure the trajectories we train on are not poisoned by verifier hacks.
+> Fireworks supplies the post-training machinery. ForkProof makes the data and reward boundary harder to exploit before optimization begins—and checks that training improves legitimate behavior rather than only the score.
 
 This connects naturally to the hackathon themes: RL environments, verifiers, and post-training workflows.
 
@@ -907,68 +1011,80 @@ This connects naturally to the hackathon themes: RL environments, verifiers, and
 
 ### Nice-to-have
 
-- Real ForkProof export integrated (Phase 4)
+- Real sealed ForkProof package integrated (Phase 4)
 - Fireworks managed SFT job
 - Raw vs hardened model comparison
+- Managed RFT grouped calibration and bounded experiment
 
 ---
 
 ## 17. Agent execution checklist
 
-Use this when an agent implements the SFT extension.
+Use this as a status-aware execution checklist. Checked items are complete for the mock compatibility pipeline only.
 
 ### Before coding
 
-- [ ] Read `docs/plans/GLOSSARY.md` for ForkProof terms
-- [ ] Read `HANDOFF.MD` Section 11 for Fireworks JSONL format
-- [ ] Confirm whether product source exists or build standalone first
+- [x] Read `docs/plans/GLOSSARY.md`, `CONNECT.md`, `HANDOFF.MD`, and Plan 007
+- [x] Confirm repository paths and current implementation
+- [x] Confirm Plan 003 completion and record Plan 007 command/path ownership
+- [ ] Receive completed Plan 008 manifest and qabench report before canonical dataset integration
 
 ### Phase 0
 
-- [ ] Define `TraceRecord` model with required + optional fields
-- [ ] Create `fixtures/sft/mock_forkproof_traces.jsonl` with 9 rows (Section 7)
-- [ ] Implement `load_traces()` with validation
-- [ ] Test: loader passes on mock file, fails on bad rows
+- [x] Define strict `TraceRecord` v1 with required and optional fields
+- [x] Create the 15-row `fixtures/sft/mock_forkproof_traces.jsonl`
+- [x] Implement `load_traces()` with validation
+- [x] Test valid input, malformed rows, duplicate ids, reward types, booleans, and unknown fields
 
 ### Phase 1
 
-- [ ] Implement `filter_traces()` with rules in Section 8
-- [ ] Test: mock-001 through mock-009 land in expected buckets
-- [ ] Test: no overlap between hardened_sft and rejected_hacks
+- [x] Implement `filter_traces()` with rules in Section 8
+- [x] Test all baseline and stress rows
+- [x] Test no overlap between `hardened_sft` and `rejected_hacks`
+- [x] Add canonical referee tri-state normalization and row-level quarantine
 
 ### Phase 2
 
-- [ ] Implement `compute_metrics()` — verify against expected mock table
-- [ ] Write `contamination_table.md` generator
-- [ ] Write exploit cluster breakdown
-- [ ] Optional: generate bar chart
+- [x] Implement current compatibility metrics and mock regression expectations
+- [x] Generate contamination table, exploit-cluster breakdown, write-up, and SVG chart
+- [ ] Replace mismatched compatibility denominators with accepted same-population real metrics
+- [ ] Report classification coverage and quarantine counts
 
 ### Phase 3
 
-- [ ] Implement `export_sft_jsonl()` with canonical system prompt
-- [ ] Write metadata sidecar
-- [ ] CLI with `--input` and `--output` flags
-- [ ] Test: exported JSONL parses; ≥3 lines per training file
+- [x] Implement Fireworks chat export with canonical system prompt and assistant `weight: 1`
+- [x] Write metadata sidecars and rejected-hack audit
+- [x] Add CLI with `--input` and `--output`
+- [x] Validate export parsing, roles, message weights, counts, and pipeline artifacts
+- [x] Pass 82 research tests plus 19 subtests
 
 ### Phase 4
 
-- [ ] Implement `adapt_forkproof_export()`
-- [ ] Document reconnection steps (Section 11)
-- [ ] Test adapter with a sample real row (when available)
+- [x] Document package prerequisites and frozen intake procedure
+- [ ] Receive and verify sealed Plans 003–005 package
+- [ ] Accept/version the normalized schema and implement the public-artifact adapter
+- [ ] Add quarantine, provenance aggregation, same-population metrics, and faithful-demonstration gates
+- [ ] Execute mapped Plan 007 validation and evidence commands
 
 ### Phase 5 (optional)
 
-- [ ] Upload to Fireworks only after hardened export validated
-- [ ] Record model/dataset/job IDs in manifest
-- [ ] Do not claim results without evaluation numbers
+- [ ] Freeze independent train/held-out groups
+- [ ] Validate managed SFT data and run a dry run before upload
+- [ ] Run managed RFT grouped calibration before any gradient step
+- [ ] Require useful reward spread and sealed-v2 anti-hack probes
+- [ ] Record model, dataset, evaluator, environment, job, and split ids/digests
+- [ ] Do not claim results without held-out legitimate-success and reward-hacking measurements
 
 ### Do not
 
-- [ ] Block on core team finishing ForkPoint/Modal/Witness work
+- [ ] Execute Plan 007 source integration before its dependency and ownership gates open
 - [ ] Build ForkProof core infrastructure
 - [ ] Put mock metrics in final demo without labeling
 - [ ] Conflate HUD reward with hack classification
 - [ ] Export rejected hacks as positive SFT examples
+- [ ] Treat reward mean as sufficient RFT calibration
+- [ ] Expose evaluator code, trusted tests, plugins, or reward records to agent-writable state
+- [ ] Present the arithmetic Training API preview as ForkProof RFT evidence
 
 ---
 
@@ -976,11 +1092,14 @@ Use this when an agent implements the SFT extension.
 
 | Claim | When allowed |
 | --- | --- |
-| "Hardened verifier removes hacked positives from SFT data" | After Phase 1+2 run on mock or real data |
-| "Contamination rate was X% under raw verifier" | After metrics computed; label mock vs measured |
+| "Hardened verifier removed N hacked positives from SFT data" | After Phase 1+2; name the exact mock or sealed measured population |
+| "Contamination rate was X% under raw verifier" | After same-population metrics; label mock vs measured and report classification coverage |
 | "Legitimate retention was 100%" | After metrics computed with real legit controls |
 | "Model trained on hardened data behaves better" | Only after Phase 5 experiment with held-out eval |
 | "Fireworks can train on this export" | After Phase 3 export validates; upload optional |
+| "The RFT task is trainable" | After target-model grouped calibration shows useful reward spread and low infrastructure/grader error |
+| "RFT improved the agent" | After held-out legitimate success improves without increased hack rate or control regression |
+| "ForkProof hardened the RFT reward" | After the RFT evaluator identity matches a passing sealed ReleaseProof and anti-hack probes pass |
 
 Keep unmeasured values as `TBD`. Preserve the distinction between HUD **reward** and **reward-hacking classification** (GLOSSARY).
 
@@ -997,6 +1116,8 @@ Keep unmeasured values as `TBD`. Preserve the distinction between HUD **reward**
 | **ReleaseProof** | Evidence that patched verifier kills Witnesses, preserves controls |
 | **Exploit cluster** | Groups rejected hacks by mechanism for breakdown |
 | **Grader digest** | Version pin for raw vs patched verifier |
+| **Within-group reward spread** | Variation among multiple rollouts for one RFT prompt; required for group-relative learning signal |
+| **Zero-variance group** | A prompt group whose rollouts all receive the same reward and therefore contributes no relative signal |
 
 Full definitions: `docs/plans/GLOSSARY.md`
 
@@ -1004,4 +1125,4 @@ Full definitions: `docs/plans/GLOSSARY.md`
 
 ## Final pitch paragraph
 
-ForkProof's core loop produces Exploit Witnesses and a hardened verifier. The SFT extension shows why that matters for training. If we use the raw verifier to select reward-1 trajectories, reward hacks enter the dataset as positive examples. By filtering the same trajectories through the hardened verifier, we reject hacked successes before they become SFT data. This turns ForkProof from a benchmark repair tool into a data-quality layer for post-training. Fireworks is the natural downstream path: SFT or RFT should train on verifier-cleaned trajectories, not raw reward signals that may contain exploits.
+ForkProof's core loop produces replayable Exploit Witnesses, legitimate controls, and a hardened verifier. For SFT, those artifacts prevent hacked reward-positive trajectories from being mistaken for desired demonstrations. For RFT, the same work is more direct: the policy repeatedly searches against the evaluator, so a verifier weakness can become the behavior that training optimizes. ForkProof therefore acts as both a data-quality layer and a reward-integrity layer for post-training. Fireworks supplies managed SFT/RFT and lower-level Training API machinery; any measured claim still requires sealed artifacts, faithful demonstrations or fresh rollouts, useful reward signal, and held-out evidence that legitimate behavior improved without increasing reward hacking.

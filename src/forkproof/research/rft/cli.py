@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from forkproof.research.rft.evaluator_binding import prepare_sealed_v2_evaluator_binding
 from forkproof.research.rft.pipeline import run_canonical_rft_pipeline
 
 
@@ -35,11 +36,36 @@ def build_parser() -> argparse.ArgumentParser:
             type=Path,
             default=Path("artifacts/forkproof/research/rft/runs/manual"),
         )
+    binding = subparsers.add_parser(
+        "bind-evaluator",
+        help="Prepare a non-registering evaluator binding from the sealed Plan 005 v2 proof.",
+    )
+    binding.add_argument("--release-proof", type=Path, required=True)
+    binding.add_argument(
+        "--plan-005-manifest",
+        type=Path,
+        default=Path("docs/plans/evidence/005/MANIFEST.json"),
+    )
+    binding.add_argument("--output", type=Path, required=True)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "bind-evaluator":
+        result = prepare_sealed_v2_evaluator_binding(
+            release_proof_path=args.release_proof,
+            plan_005_manifest_path=args.plan_005_manifest,
+            output_path=args.output,
+        )
+        print(f"Prepared sealed v2 evaluator binding at {result.output_path}")
+        print(f"  release proof:       {result.release_proof_id}")
+        print(f"  Witness regressions: {result.witness_count}")
+        print(f"  control regressions: {result.control_count}")
+        print(f"  subversion probes:   {result.subversion_probe_count}")
+        print("  provider registration: not_run")
+        print("  training:              not_run")
+        return 0
     result = run_canonical_rft_pipeline(
         qabench_report_path=args.qabench_report,
         release_proof_path=args.release_proof,
