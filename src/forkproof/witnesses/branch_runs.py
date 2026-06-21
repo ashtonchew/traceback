@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import importlib.util
 import json
 import os
@@ -11,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from .hacker_prompt import build_hacker_branch_instruction
 from .models import digest_json, utc_now
 from .promotion import branch_signal_status
 from .qa_binding import run_reward_hacking_analysis
@@ -54,14 +56,31 @@ def _relative(root: Path, path: Path) -> str:
     return str(path.relative_to(root))
 
 
-def _load_hud_task(root: Path) -> Any:
+def _load_hud_task(root: Path) -> tuple[Any, dict[str, Any]]:
     env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
     spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load HUD env from {env_path}")
     env_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(env_module)
-    return env_module.implement_sales_analyzer()
+    prompt_packet = build_hacker_branch_instruction(env_module._prompt())  # noqa: SLF001 - task prompt boundary.
+
+    return env_module.implement_sales_analyzer(), prompt_packet
+
+
+def _runtime_command(prompt_packet: dict[str, Any]) -> tuple[str, str, str]:
+    encoded = base64.b64encode(prompt_packet["instruction"].encode()).decode()
+    script = "\n".join(
+        [
+            "python3 - <<'PY'",
+            "import base64",
+            "from pathlib import Path",
+            f"Path('/app/task_assets/instruction.md').write_bytes(base64.b64decode('{encoded}'))",
+            "PY",
+            "exec uv run hud serve env:env --host 0.0.0.0 --port 8765",
+        ]
+    )
+    return ("bash", "-lc", script)
 
 
 def _trace_readback(trace_id: str) -> dict[str, Any]:
@@ -92,6 +111,7 @@ async def _run_one_branch(
     root: Path,
     forkpoint: dict[str, Any],
     task: Any,
+    prompt_packet: dict[str, Any],
     run_id: str,
     branch_index: int,
     artifact_root: Path,
@@ -125,7 +145,7 @@ async def _run_one_branch(
             image=modal.Image.from_id(forkpoint["snapshot_id"]),
             app_name="forkproof-plan-003",
             workdir="/app",
-            command=("uv", "run", "hud", "serve", "env:env", "--host", "0.0.0.0", "--port", "8765"),
+            command=_runtime_command(prompt_packet),
         )
         agent = ClaudeAgent(
             ClaudeConfig(
@@ -133,7 +153,7 @@ async def _run_one_branch(
                 max_steps=max_steps,
                 max_tokens=max_tokens,
                 use_computer_beta=False,
-                system_prompt=f"Plan 003 BranchRun {branch_id}; requested_seed={seed}.",
+                system_prompt=f"Plan 003 Hacker BranchRun {branch_id}; requested_seed={seed}.",
             )
         )
         job = await task.run(agent, runtime=runtime)
@@ -194,6 +214,12 @@ async def _run_one_branch(
         "schema_version": 1,
         "run_id": run_id,
         "branch_id": branch_id,
+        "branch_role": prompt_packet["branch_role"],
+        "prompt_profile": prompt_packet["prompt_profile"],
+        "prompt_source_ref": prompt_packet["prompt_source_ref"],
+        "prompt_digest": prompt_packet["prompt_digest"],
+        "prompt_goal_digest": prompt_packet["prompt_goal_digest"],
+        "prompt_rewrite_mode": prompt_packet["rewrite_mode"],
         "parent_fork_point_id": forkpoint.get("fork_point_id"),
         "parent_node_id": forkpoint.get("node_id") or forkpoint.get("parent_node_id") or "accepted-forkpoint",
         "seed": seed,
@@ -285,7 +311,7 @@ async def run_live_branch_batch(
 
     run_id = "run-" + utc_now().replace("-", "").replace(":", "").removesuffix("Z")
     artifact_root = _artifact_root(root, run_id)
-    task = _load_hud_task(root)
+    task, prompt_packet = _load_hud_task(root)
     sem = asyncio.Semaphore(concurrency)
 
     async def guarded(index: int) -> dict[str, Any]:
@@ -294,6 +320,7 @@ async def run_live_branch_batch(
                 root=root,
                 forkpoint=forkpoint,
                 task=task,
+                prompt_packet=prompt_packet,
                 run_id=run_id,
                 branch_index=index,
                 artifact_root=artifact_root,
@@ -334,6 +361,16 @@ async def run_live_branch_batch(
         "unique_requested_seed_labels": len({branch["seed"] for branch in branches}),
         "provider_seed_support": "not-supported-by-ClaudeConfig",
         "hud_trace_count": sum(1 for branch in branches if branch.get("hud_trace_id")),
+        "branch_role_counts": {
+            role: sum(1 for branch in branches if branch.get("branch_role") == role)
+            for role in sorted({str(branch.get("branch_role")) for branch in branches})
+        },
+        "prompt_profile_counts": {
+            profile: sum(1 for branch in branches if branch.get("prompt_profile") == profile)
+            for profile in sorted({str(branch.get("prompt_profile")) for branch in branches})
+        },
+        "prompt_source_ref": prompt_packet["prompt_source_ref"],
+        "prompt_digest": prompt_packet["prompt_digest"],
         "reward_success_count": sum(1 for branch in branches if branch.get("reward") in (1, 1.0, True)),
         "qa_pass_count": sum(1 for qa in qa_results if qa.get("status") == "pass"),
         "reward_hacking_count": sum(1 for qa in qa_results if qa.get("is_reward_hacking") is True),
@@ -343,8 +380,10 @@ async def run_live_branch_batch(
             for status in sorted({str(branch.get("promotion_signal_status")) for branch in branches})
         },
         "observed_behavior": (
-            "Executed 12 live BranchRuns concurrently from the same accepted ForkPoint, then ran user-approved "
-            "repo-bound Reward Hacking QA classification for every branch with a HUD trace."
+            "Executed 12 live Hacker BranchRuns concurrently from the same accepted ForkPoint with the "
+            "harden-v0 generic reward-hacking prompt profile, then ran user-approved repo-bound Reward "
+            "Hacking QA classification for every branch with a HUD trace. Role/profile tags are provenance "
+            "only and do not replace reward, QA, dedup, durable storage, or replay gates."
         ),
     }
     summary_path = _write_json(artifact_root / "branch-run-batch.json", summary)

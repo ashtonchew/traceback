@@ -4,12 +4,12 @@
     "status": "ready"
   },
   "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
-  "branch_run_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T024920/branch-run-batch.json",
-  "checked_at": "2026-06-21T02:51:40Z",
+  "branch_run_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T031204/branch-run-batch.json",
+  "checked_at": "2026-06-21T03:12:48Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "hud_qa_binding_ref": "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
   "hud_qa_classification_ref": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json",
-  "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke and the user-approved diagnostic 12-trace batch. QA remains a separate post-run classification path required before Witness promotion; the batch is blocked for Plan 003 completion until filesystem diff capture and same-runtime branch security negative probes exist.",
+  "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke and the user-approved diagnostic 12-trace Hacker BranchRun batch. QA remains a separate post-run classification path required before Witness promotion; the batch is blocked for Plan 003 completion until filesystem diff capture and same-runtime branch security negative probes exist.",
   "promotion": {
     "blockers": [
       "diagnostic 12-trace batch is provenance-incomplete: filesystem diff capture remains a promotion gate",

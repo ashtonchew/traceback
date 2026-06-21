@@ -374,7 +374,7 @@ def integration_witness() -> int:
         },
         "observed_behavior": (
             "integration preflight plus diagnostic BranchGateway smoke and, when QA is approved, the full 12 "
-            "BranchRun batch. QA remains a separate post-run classification path required before Witness promotion."
+            "Hacker BranchRun batch. QA remains a separate post-run classification path required before Witness promotion."
         ),
     }
     path = _write_artifact("integration-witness-preflight.json", artifact)

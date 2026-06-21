@@ -17,6 +17,10 @@ REQUIRED_BRANCH_FIELDS = {
     "schema_version",
     "run_id",
     "branch_id",
+    "branch_role",
+    "prompt_profile",
+    "prompt_source_ref",
+    "prompt_digest",
     "parent_fork_point_id",
     "parent_node_id",
     "seed",
@@ -110,6 +114,8 @@ def require_branch_complete(record: dict[str, Any]) -> None:
     missing = missing_fields(record, REQUIRED_BRANCH_FIELDS)
     if missing:
         raise WitnessError("provenance_incomplete", f"BranchRun missing {missing}")
+    if record["branch_role"] != "hacker":
+        raise WitnessError("provenance_incomplete", "BranchRun role is not the Plan 003 hacker role")
     if record["snapshot_mode"] not in {"directory", "filesystem"}:
         raise WitnessError("state_restore_failed", "BranchRun uses unsupported snapshot mode")
     if not record.get("gateway_request_ids") or not record.get("model_response_refs"):

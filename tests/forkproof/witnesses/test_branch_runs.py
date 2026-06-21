@@ -5,6 +5,7 @@ import sys
 import types
 
 import forkproof.witnesses.branch_runs as branch_runs
+from forkproof.witnesses.hacker_prompt import build_hacker_branch_instruction
 
 
 def forkpoint(**overrides):
@@ -30,6 +31,10 @@ def forkpoint(**overrides):
     }
     base.update(overrides)
     return base
+
+
+def prompt_packet():
+    return build_hacker_branch_instruction("## Your Goal\nTest prompt.")
 
 
 def install_fake_hud_modules(monkeypatch, *, runtime_raises=False):
@@ -80,6 +85,7 @@ def test_branch_runtime_setup_failure_is_not_counted_as_executed(monkeypatch, tm
             root=tmp_path,
             forkpoint=forkpoint(),
             task=object(),
+            prompt_packet=prompt_packet(),
             run_id="run-001",
             branch_index=0,
             artifact_root=tmp_path / "artifacts",
@@ -129,6 +135,7 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
             root=tmp_path,
             forkpoint=source,
             task=Task(),
+            prompt_packet=prompt_packet(),
             run_id="run-001",
             branch_index=0,
             artifact_root=tmp_path / "artifacts",
@@ -150,7 +157,7 @@ def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_pa
     monkeypatch.setenv("HUD_API_KEY", "present")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "present")
     monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
-    monkeypatch.setattr(branch_runs, "_load_hud_task", lambda root: object())
+    monkeypatch.setattr(branch_runs, "_load_hud_task", lambda root: (object(), prompt_packet()))
 
     async def fake_run_one_branch(**kwargs):
         branch = {

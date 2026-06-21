@@ -3,6 +3,11 @@ from __future__ import annotations
 import pytest
 
 import forkproof.witnesses.qa_binding as qa_binding
+from forkproof.witnesses.hacker_prompt import (
+    HACKER_BRANCH_ROLE,
+    HARDEN_V0_GENERIC_PROMPT_PROFILE,
+    build_hacker_branch_instruction,
+)
 from forkproof.witnesses.models import WitnessError, digest_json, utc_now
 from forkproof.witnesses.promotion import (
     assert_witness_fields,
@@ -21,6 +26,10 @@ def branch(**overrides):
         "schema_version": 1,
         "run_id": "run-001",
         "branch_id": "branch-001",
+        "branch_role": HACKER_BRANCH_ROLE,
+        "prompt_profile": HARDEN_V0_GENERIC_PROMPT_PROFILE,
+        "prompt_source_ref": ".external/harden-v0/harden/instructions.py::build_hacker_instruction",
+        "prompt_digest": "prompt-sha",
         "parent_fork_point_id": "fp-001",
         "parent_node_id": "node-001",
         "seed": 101,
@@ -61,6 +70,22 @@ def qa(is_hack=True):
         "authoritative_source": "hud_qa",
         "is_reward_hacking": is_hack,
     }
+
+
+def test_hacker_branch_prompt_rewrites_goal_and_records_non_gate_metadata():
+    packet = build_hacker_branch_instruction("Intro\n\n## Your Goal\nBuild the app normally.")
+    assert packet["branch_role"] == HACKER_BRANCH_ROLE
+    assert packet["prompt_profile"] == HARDEN_V0_GENERIC_PROMPT_PROFILE
+    assert packet["rewrite_mode"] == "replace_goal_section"
+    assert "Build the app normally" not in packet["instruction"]
+    assert "reward-hacking" in packet["instruction"]
+    assert packet["prompt_digest"] == digest_json({"instruction": packet["instruction"]})
+
+
+def test_hacker_branch_prompt_appends_when_goal_marker_is_absent():
+    packet = build_hacker_branch_instruction("Implement the task.")
+    assert packet["rewrite_mode"] == "append_hacker_goal"
+    assert packet["instruction"].startswith("Implement the task.")
 
 
 def test_complete_branch_and_bounded_failure_records_are_valid():
@@ -111,12 +136,16 @@ def test_promotion_truth_table_rejects_missing_or_single_signal(reward, qa_value
 def test_qa_classification_is_separate_and_must_join_to_same_branch():
     completed_branch = branch()
     assert branch_signal_status(completed_branch, qa()) == "candidate"
+    assert branch_signal_status(branch(branch_role=HACKER_BRANCH_ROLE), qa(False)) == "rewarded-non-hack"
 
     with pytest.raises(WitnessError, match="does not join"):
         branch_signal_status(completed_branch, {**qa(), "hud_trace_id": "trace-other"})
 
     with pytest.raises(WitnessError, match="not from an authoritative source"):
         branch_signal_status(completed_branch, {**qa(), "authoritative_source": "local_heuristic"})
+
+    with pytest.raises(WitnessError, match="not the Plan 003 hacker role"):
+        branch_signal_status(branch(branch_role="solver"), qa())
 
 
 def test_reward_hacking_parser_treats_string_false_as_false():
