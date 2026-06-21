@@ -179,6 +179,7 @@ def integration(
         child_snapshot_ref=_display_path(child_snapshot_path) if child_snapshot else None,
         depth_two_run=depth_two_run,
         depth_two_run_ref=_display_path(depth_two_run_path) if depth_two_run else None,
+        root=ROOT,
     )
     _write_json(output_path, artifact)
     if artifact["status"] == "ready":

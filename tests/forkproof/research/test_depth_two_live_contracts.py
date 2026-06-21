@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from forkproof.research.artifacts import build_depth_two_preflight_artifact
 from forkproof.research.depth_two import build_child_forkpoint, run_depth_two
 from forkproof.research.models import DepthTwoRunRecord
 from forkproof.research.resnapshot import (
@@ -21,6 +22,7 @@ from forkproof.research.resnapshot import (
     build_child_snapshot_artifact,
     capture_child_snapshot,
 )
+from forkproof.research.scheduler import ResearchScheduler
 from forkproof.witnesses.branch_task_profile import hud_task_profile
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -312,6 +314,81 @@ def test_run_depth_two_sequential_keeps_single_in_flight(monkeypatch):
     assert max(d["in_flight_count"] for d in result["scheduler_decisions"]) == 1
     assert result["measured_values"]["completed_depth_two_branch_count"] == 4
     assert result["status"] == "completed"
+
+
+def test_run_depth_two_fails_closed_on_invalid_scheduler_config(monkeypatch):
+    _patch_live_branch_execution(monkeypatch)
+
+    result = asyncio.run(
+        run_depth_two(
+            root=ROOT,
+            child_snapshot_artifact=_captured_child_artifact(),
+            child_snapshot_artifact_ref="x",
+            branch_budget=0,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    assert "invalid scheduler configuration" in (result["depth_two_run"]["blocker"] or "")
+    assert result["branch_results"] == []
+
+
+def test_depth_two_run_record_rejects_duplicate_branch_refs():
+    with pytest.raises(ValueError):
+        DepthTwoRunRecord(
+            run_id="r",
+            child_node_id="n",
+            status="completed",
+            branch_budget=4,
+            scheduled_branch_refs=("b1", "b2", "b1"),
+            completed_branch_refs=("b1",),
+            measured_values={"x": 1},
+        )
+
+
+def test_scheduler_rejects_empty_node_id():
+    with pytest.raises(ValueError):
+        ResearchScheduler(node_id="", node_depth=1)
+
+
+def test_integration_preflight_blocks_run_whose_branch_files_are_missing():
+    manifest = _load(ROOT / "docs/plans/evidence/003/MANIFEST.json")
+    fabricated_child = {
+        "status": "captured",
+        "lineage": {"child_depth": 1},
+        "child_snapshot": {
+            "snapshot_mode": "filesystem",
+            "snapshot_id": "im-x",
+            "included_paths": ["/app/conftest.py"],
+            "applied_delta_verification": {"/app/conftest.py": {"status": "present"}},
+        },
+    }
+    fabricated_run = {
+        "status": "completed",
+        "depth_two_run": {
+            "status": "completed",
+            "scheduled_branch_refs": ["does/not/exist/branch-00.json"],
+            "completed_branch_refs": ["does/not/exist/branch-00.json"],
+            "measured_values": {"completed_depth_two_branch_count": 1},
+        },
+        "stop_event": {"node_id": "n", "scheduled_count": 1, "completed_count": 1, "reason": "x"},
+    }
+
+    artifact = build_depth_two_preflight_artifact(
+        plan003_manifest=manifest,
+        child_selection_ref="x",
+        child_selection_exists=True,
+        command_ref="x",
+        recorded_at="2026-06-21T16:00:00Z",
+        child_snapshot=fabricated_child,
+        depth_two_run=fabricated_run,
+        root=ROOT,
+    )
+
+    # The recorded completed branch artifacts do not exist on disk, so the
+    # verifier must stay blocked rather than report a fabricated run as ready.
+    assert artifact["status"] == "blocked"
+    assert artifact["depth_two_execution"]["status"] == "blocked"
 
 
 def test_depth_two_cli_fails_closed_on_unreadable_child_snapshot(tmp_path):

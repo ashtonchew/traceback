@@ -23,7 +23,7 @@ from forkproof.research.scheduler import ResearchScheduler
 from forkproof.witnesses.branch_runs import _run_one_branch
 from forkproof.witnesses.branch_task_profile import load_hud_task
 from forkproof.witnesses.local_env import credential_presence, load_local_env
-from forkproof.witnesses.models import digest_json, utc_now
+from forkproof.witnesses.models import digest_json, reward_success, utc_now
 from forkproof.witnesses.promotion import branch_signal_status, dedup_by_target_mechanism
 from forkproof.witnesses.sealing import build_minimized_delta, infer_target_mechanism, load_candidate_bundle
 
@@ -233,7 +233,19 @@ async def run_depth_two(
     run_id = f"research-depth-two-{stamp}"
     artifact_root = root / BRANCH_ARTIFACT_SUBDIR / run_id
 
-    config = SchedulerConfig(child_budget=branch_budget, concurrency=concurrency)
+    try:
+        config = SchedulerConfig(child_budget=branch_budget, concurrency=concurrency)
+    except ValueError as exc:
+        return _blocked_headline(
+            child_node_id=child_node_id,
+            branch_budget=branch_budget if 1 <= branch_budget <= 8 else 8,
+            concurrency=concurrency,
+            blockers=[f"invalid scheduler configuration: {exc}"],
+            child_snapshot_artifact=child_snapshot_artifact,
+            child_snapshot_artifact_ref=child_snapshot_artifact_ref,
+            presence=presence,
+            recorded_at=recorded_at,
+        )
     scheduler = ResearchScheduler(node_id=child_node_id, node_depth=1, config=config)
 
     clusters: list[dict[str, Any]] = []
@@ -317,7 +329,7 @@ async def run_depth_two(
         "completed_depth_two_branch_count": len(completed_refs),
         "distinct_confirmed_depth_two_clusters": len(clusters),
         "confirmed_cluster_ids": [cluster["cluster_id"] for cluster in clusters],
-        "reward_success_count": sum(1 for item in branch_results if item.get("reward") in (1, 1.0, True)),
+        "reward_success_count": sum(1 for item in branch_results if reward_success(item.get("reward"))),
         "qa_pass_count": sum(1 for item in branch_results if item.get("qa_status") == "pass"),
         "reward_hacking_count": sum(1 for item in branch_results if item.get("qa_is_reward_hacking") is True),
         "candidate_count": sum(1 for item in branch_results if item.get("promotion_signal_status") == "candidate"),
