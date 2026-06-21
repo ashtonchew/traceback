@@ -439,6 +439,19 @@ append-only and may be marked superseded, not rewritten.
   `docker build` + an in-image `numpy`/`scipy` import. The task list lives in
   `envs/qabench/tasks.json`; the per-task import result lives in
   `envs/qabench/IMPORT_REPORT.json`.
+- 2026-06-21 — **Approved cross-plan edit to `src/forkproof/witnesses/branch_runs.py`
+  (Plan 003-owned)** to enable the live 10-task X+Δ run (owner-approved). Plan 003's
+  discovery loop hardwired the mongodb env (`_load_hud_task` loaded
+  `envs/mongodb-…/env.py` + `implement_sales_analyzer()`). Added `_resolve_task_env`,
+  which reads `FORKPROOF_TASK_ENV` (env.py path) + `FORKPROOF_TASK_FACTORY` (default
+  `implement_sales_analyzer`) so the loop loads any materialized qabench env (factory
+  `build_task`) while the mongodb default is unchanged. Minimal + backward-compatible:
+  all 42 Plan 003 witnesses tests still pass; the 008 importer now also emits a
+  per-task HUD `env.py`/`Dockerfile.hud`/`pyproject.toml`/`tasks.py`
+  (`forkproof.qabench.hud_env`), and the sterile referee runs via
+  `forkproof.qabench.clean_verify_runner`. Branch state-roots stay parameterized by
+  the existing `FORKPROOF_BRANCH_STATE_ROOTS`. The `witnesses/**` file remains
+  Plan 003-owned; this is an additive seam, not an ownership transfer.
 
 ### Outcomes & Retrospective
 

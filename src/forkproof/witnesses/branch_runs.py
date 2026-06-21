@@ -65,33 +65,53 @@ def _relative(root: Path, path: Path) -> str:
     return str(path.relative_to(root))
 
 
-def _load_hud_task(root: Path) -> tuple[Any, dict[str, Any]]:
-    env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
-    spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
+def _resolve_task_env(root: Path) -> tuple[Path, str]:
+    """Locate the HUD env module + its task-factory name.
+
+    Defaults to the mongodb env + ``implement_sales_analyzer`` (the original single
+    live task). Plan 008 points this at any materialized qabench env via the
+    ``FORKPROOF_TASK_ENV`` (path to env.py, repo-root-relative or absolute) and
+    ``FORKPROOF_TASK_FACTORY`` (template factory name, e.g. ``build_task``)
+    environment variables, so the discovery loop is task-agnostic without changing
+    the mongodb default.
+    """
+    factory = os.environ.get("FORKPROOF_TASK_FACTORY", "implement_sales_analyzer")
+    env_value = os.environ.get("FORKPROOF_TASK_ENV")
+    if env_value:
+        candidate = Path(env_value)
+        env_path = candidate if candidate.is_absolute() else root / candidate
+    else:
+        env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
+    return env_path, factory
+
+
+def _import_env_module(env_path: Path) -> Any:
+    spec = importlib.util.spec_from_file_location("forkproof_hud_env", env_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load HUD env from {env_path}")
     env_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(env_module)
-    prompt_packet = build_hacker_branch_instruction(env_module._prompt())  # noqa: SLF001 - task prompt boundary.
+    return env_module
 
-    return env_module.implement_sales_analyzer(), prompt_packet
+
+def _load_hud_task(root: Path) -> tuple[Any, dict[str, Any]]:
+    env_path, factory = _resolve_task_env(root)
+    env_module = _import_env_module(env_path)
+    prompt_packet = build_hacker_branch_instruction(env_module._prompt())  # noqa: SLF001 - task prompt boundary.
+    return getattr(env_module, factory)(), prompt_packet
 
 
 def _load_hud_task_with_feedback(
     root: Path,
     feedback_attempts: list[dict[str, Any]],
 ) -> tuple[Any, dict[str, Any]]:
-    env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
-    spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load HUD env from {env_path}")
-    env_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(env_module)
+    env_path, factory = _resolve_task_env(root)
+    env_module = _import_env_module(env_path)
     prompt_packet = build_hacker_branch_instruction(
         env_module._prompt(),  # noqa: SLF001 - task prompt boundary.
         feedback_attempts=feedback_attempts,
     )
-    return env_module.implement_sales_analyzer(), prompt_packet
+    return getattr(env_module, factory)(), prompt_packet
 
 def _runtime_command(prompt_packet: dict[str, Any]) -> tuple[str, str, str]:
     encoded = base64.b64encode(prompt_packet["instruction"].encode()).decode()
