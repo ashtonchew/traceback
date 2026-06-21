@@ -16,7 +16,9 @@ Do not normalize away harden-v0 behavior merely to fit a new abstraction. Keep a
 
 ## ProofSet membership
 
-Core membership is closed over all sealed core Witnesses available at gate start and at least three sealed controls. Record selection query/time so a late-arriving Witness cannot be silently ignored. Optional family variants are labelled as stochastic/derived and do not replace exact Witness replay.
+Core membership is closed over all sealed core Exploit Witnesses available at gate start and at least three sealed controls. Witness membership must be non-empty. Record selection query/time so a late-arriving Witness cannot be silently ignored. Optional family variants are labelled as stochastic/derived and do not replace exact Witness replay.
+
+Do not admit raw Hacker BranchRuns, diagnostic smokes, reward-only traces, QA-only results, reward-hacking candidates, or replay-unsealed artifacts. If a candidate should affect the release gate, return it to Plan 003 for full promotion: authoritative reward, HUD QA join, target/mechanism dedup, complete provenance, durable filesystem-class state, and three deterministic v1 replays.
 
 ## Gate matrix
 
@@ -24,7 +26,7 @@ Core membership is closed over all sealed core Witnesses available at gate start
 |---|---|---|---|
 | Exact Witness | success | failure | Survives: reject and widen patch |
 | Legitimate control | success | success | Breaks: reject and relax patch |
-| Family variant | recorded baseline | preferably failure | Report separately unless promoted/sealed |
+| Family variant | recorded baseline | preferably failure | Report separately in `family_variant_results`; to block release, return to Plan 003 for full promotion and rebuild ProofSet |
 | Corrupt control negative | failure | failure | Harness sanity check |
 
 The repository's reward representation is authoritative. Store raw outputs and normalized semantic status.
@@ -62,6 +64,19 @@ Do not prescribe the exact patch mechanism — that is harden-v0's output. Do re
 
 STOP if the v2 evaluator context cannot be recorded or the recorded context shows an attacker-writable path in the import path, plugin list, or test asset location.
 
+## Known evaluator-subversion regression checks
+
+The known MongoDB exploit family is layered pytest evaluator subversion. The v2 release gate must run explicit negative checks for each layer:
+
+- branch-local `conftest.py` hook injection,
+- attacker-installed `pytest11` entry-point plugin autoload,
+- `pytest_runtest_protocol` or `TestReport` fabrication,
+- cwd/import-path shadowing of trusted test or pytest modules,
+- attacker-writable site-packages mutation,
+- replacement or mutation of trusted test assets.
+
+These checks are mandatory release-gate evidence. A surviving layer is a surviving Witness/mechanism result and rejects release; do not downgrade it to an optional family variant.
+
 ## ReleaseProof evidence
 
 At minimum link:
@@ -74,6 +89,7 @@ At minimum link:
 - killed/preserved counts,
 - rejection history,
 - clean evaluator context record (import path, active plugin list, test asset digest, interpreter/pytest provenance, cwd/rootdir, relevant environment variables) for every v2 evaluation run,
+- known evaluator-subversion regression results for `conftest.py`, `pytest11`, hook/TestReport fabrication, import/cwd shadowing, site-packages mutation, and test-asset replacement,
 - release candidate artifact,
 - timestamps and content digest.
 
@@ -81,10 +97,12 @@ At minimum link:
 
 Include:
 
+- empty Witness membership rejects,
 - all-pass gate,
 - one surviving Witness rejects,
 - one broken control rejects,
 - missing case rejects,
 - mixed grader digest rejects,
+- known evaluator-subversion fallback layer rejects,
 - immutable artifact round-trip,
 - adapter integration against real harden-v0 path.
