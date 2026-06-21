@@ -172,11 +172,11 @@ Task materialization and control generation write to content-addressed staging b
 
 ### Progress
 
-- [ ] Real task pinned and materialized.
-- [ ] Legitimate candidates generated.
-- [ ] Path diversity established.
-- [ ] Controls sealed.
-- [ ] Three-run baseline and negative check pass.
+- [x] Real task pinned and materialized.
+- [x] Legitimate candidates generated.
+- [x] Path diversity established.
+- [x] Controls sealed.
+- [x] Three-run baseline and negative check pass.
 
 ### Surprises & Discoveries
 
@@ -192,4 +192,4 @@ Task materialization and control generation write to content-addressed staging b
 
 ### Outcomes & Retrospective
 
-- Pending execution.
+- 2026-06-20 — Plan 004 complete. Three path-diverse controls (`path-a`, `path-b`, `path-c`) pass the pinned v1 grader locally and in nine HUD Docker baselines; corrupt-control negative returned reward 0. Phase 2 seal records `environment_version` `57cb7f09-89c1-487b-8463-b525edf01153` and stable `task_checksum` across runs.

@@ -82,20 +82,33 @@
       "reason": "Blocked because no sandbox isolation policy or branch execution surface is checked in."
     },
     "plan-004-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/controls/",
+        "-q"
+      ],
       "cwd": ".",
       "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until Gate 1 is accepted and legitimate-control fixture code exists."
+      "timeout_seconds": 600,
+      "reason": "Plan 004 unit tests cover task identity, diversity, local grader success, freeze immutability, and Phase 2 manifest completeness."
     },
     "integration-controls": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.controls.cli",
+        "integration"
+      ],
       "cwd": ".",
       "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because the Terminal Wrench task source is fetched, but no repository-native fixture materialization or control-freezing command exists yet."
+      "timeout_seconds": 900,
+      "reason": "Materializes pinned task digests, verifies three sealed controls, runs nine HUD Docker baselines, and confirms the corrupt-control negative check."
     },
     "plan-005-tests": {
       "status": "not-applicable",
