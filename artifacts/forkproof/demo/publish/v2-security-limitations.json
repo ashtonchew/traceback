@@ -2,23 +2,19 @@
   "schema_version": 1,
   "kind": "hardened-v2-verifier-isolation-limitation",
   "stop_condition": "weak-verifier-isolation",
-  "summary": "The published mongodb-sales-aggregation-engine grader runs the trusted pytest suite, which imports the untrusted agent solution (/app/query.py) INTO THE SAME interpreter that produces the verdict. Because the agent runs as root in-container, it has full in-process control of that interpreter. This is a fundamental isolation weakness that grader hardening can mitigate but not eliminate.",
-  "verified_bypasses_found": [
-    {
-      "id": "in_process_exit_code_hijack",
-      "found_by": "parallel bug-hunt subagent, reproduced directly",
-      "mechanism": "/app/query.py registers atexit.register(lambda: os._exit(0)); pytest computes the real (failing) result, then os._exit(0) overrides the process exit code to 0.",
-      "affected": "published v3 AND v4 (exit-code-trusting graders)",
-      "status_v5": "MITIGATED — v5 grades from pytest's JUnit XML in a SECOND process that never imports the agent solution, so the first process's hijacked exit code is ignored; re-proven blocked in v2-deploy-proof.json (exit_code_hijack_blocked)."
-    }
+  "summary": "The original mongodb-sales-aggregation-engine grader ran the trusted pytest suite, which imports the untrusted candidate solution (/app/query.py) INTO THE SAME interpreter that produces the verdict. With a root candidate in-container, that gives the candidate full in-process control of the verdict. The fix adopts the harden-v0/Harbor convention: run the candidate OUT-OF-PROCESS and grade its outputs in a verdict process that never imports candidate code.",
+  "fix_implemented": {
+    "grader": "v6 out-of-process grader (artifacts/forkproof/demo/publish/v2-env/grader/grade.py + run_solution.py + reference_query.py). env.py runs `python3 -I /tests/grader/grade.py`: for each case it seeds the DB, runs the candidate and the TRUSTED reference solution in throwaway isolated subprocesses, and compares their JSON outputs. The verdict process imports no candidate code; its exit code is the reward. The grader files are digest-pinned at grade time.",
+    "convention_source": "harden-v0 delegates grading to Harbor, which runs the verifier as a SEPARATE process writing a reward FILE (never the candidate's exit code), optionally in a SEPARATE verifier environment / as a non-agent user. See the harden-v0 investigation: harbor/verifier/verifier.py, harbor/trial/trial.py:_run_separate_verifier, harden/instructions.py:291."
+  },
+  "bypass_classes": [
+    {"id": "in_process_exit_code_hijack", "mechanism": "/app/query.py registers atexit -> os._exit(0) to override a failing exit code", "v3_v4": "bypassed", "v5_xml": "blocked (JUnit-XML verdict in a 2nd process)", "v6_out_of_process": "blocked (verdict process never imports candidate; re-proven: exit_code_hijack_blocked)"},
+    {"id": "in_process_monkeypatch", "mechanism": "candidate rewrites os/subprocess/pytest/xml internals in the verdict process", "v3_v4_v5": "could still bypass (candidate ran in the verdict process)", "v6_out_of_process": "blocked (candidate runs only in throwaway subprocesses; re-proven: monkeypatch_blocked)"},
+    {"id": "root_grader_tamper", "mechanism": "root candidate overwrites the grader/reference files or plants a shadowing stdlib module", "v6_out_of_process": "blocked (grader files digest-pinned; runner invoked with python3 -I; re-proven: root_grader_tamper_blocked)"},
+    {"id": "answer_hardcoding", "mechanism": "a root candidate reads the grader + reference + the FIXED test cases and hard-codes the expected outputs keyed by the (fixed) args", "v6_out_of_process": "RESIDUAL — not defeated by an out-of-process grader alone. Requires randomised per-run inputs (so precomputed answers do not match) and/or test data hidden from the candidate (a non-root candidate or a SEPARATE verifier environment). This is an env/Plan-005 hardening, recorded for follow-up."}
   ],
-  "residual_bypass_classes_not_fixed": [
-    "In-process monkeypatch: query.py can replace os/pytest/xml internals or overwrite the JUnit XML (its path leaks via /proc/self/cmdline) before exit, subverting any in-process verdict channel.",
-    "Answer hardcoding: the agent can read the trusted suite at /tests and return the expected outputs without doing the work, because the expected results are derivable from the readable test file/data."
-  ],
-  "shared_with_releaseproof": "The sealed Plan 005 ReleaseProof grader (grader_v2_digest c0d86ae) uses the same import-based suite and is subject to the same in-process bypass class; the ReleaseProof's verification used the recorded conftest exploit, not these in-process attacks.",
-  "scope_of_the_published_claim": "v4/v5 NEUTRALISE the RECORDED conftest/plugin reward hack and /tests tampering (and v5 also the exit-code hijack). They do NOT make the verifier isolation-complete or reward-hack-proof in general.",
-  "proper_fix": "Run the agent solution in an OUT-OF-PROCESS sandbox that returns only raw outputs, grade those in a trusted process that never imports the solution, and HIDE the expected test data from the agent. This is an environment/benchmark redesign owned by the env (Plan 001) and the hardening pipeline (Plan 005), not by the Plan 006 demo/publish slice.",
-  "owner_decision_required": true,
-  "recorded_at": "2026-06-21T16:55:00Z"
+  "shared_with_releaseproof": "The sealed Plan 005 ReleaseProof grader (grader_v2_digest c0d86ae) is the in-process pytest form and is subject to the in-process bypass classes. The v6 out-of-process grader supersedes it for the deployed env and verifies the same functional behaviour by output comparison against the reference.",
+  "deploy_status": "v6 is implemented and re-proven (artifacts/forkproof/demo/publish/v2-deploy-proof.json: deploy_form_pass with witness/exit-hijack/monkeypatch/grader-tamper all blocked and controls preserved). The LIVE published env is still v5 (XML grader: blocks exit-hijack but NOT monkeypatch) pending a v6 deploy decision.",
+  "remaining_to_fully_close": "Deploy v6, then add randomised/hidden test data (or a non-root candidate / SEPARATE verifier environment) to close the answer-hardcoding residual.",
+  "recorded_at": "2026-06-21T18:10:00Z"
 }

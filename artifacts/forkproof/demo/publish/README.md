@@ -33,11 +33,23 @@ force-passes it (the recorded reward hack). The hardened grader:
 3. runs `pytest` from `/` with conftest discovery off (`--noconftest`), plugin auto-load off,
    the cache plugin off, and import shadowing blocked.
 
-## v3 → v4 (security fix)
+## Grader hardening history (v3 → v6)
 
-v3 (build `3bc11838`) was the first hardened publish. A post-publish bug hunt found it still
-bypassable: the agent runs as **root**, and a force-pass `conftest.py` planted directly in
-`/tests/task_assets/` defeated the grader, because `PYTEST_DISABLE_PLUGIN_AUTOLOAD` does not
-disable conftest discovery and the v3 digest gate only covered `test_outputs.py`. **v4**
-(build `d7b8043a`) adds `--noconftest` and the full `/tests` tree allow-list, re-proven by
-`v2-deploy-proof.json`. v4 is the live latest; v3 is retained but superseded.
+Successive bug hunts found that an **in-process** grader (one that imports the candidate
+`/app/query.py` into the verdict process) is fundamentally bypassable by a root candidate:
+
+- **v3** (`3bc11838`): a force-pass `conftest.py` planted in `/tests/task_assets/` bypassed it.
+- **v4** (`d7b8043a`): added `--noconftest` + a `/tests` tree allow-list — but an in-process
+  **exit-code hijack** (`atexit → os._exit(0)`) still bypassed it.
+- **v5** (`0290bbb9`, current live): graded from pytest's JUnit XML in a second process —
+  blocked the exit-code hijack, but an in-process **monkeypatch** could still subvert it.
+- **v6** (committed, proven, not yet deployed): the **out-of-process grader** (`grader/grade.py`).
+  Following the harden-v0/Harbor convention, the candidate runs only in throwaway isolated
+  subprocesses (`grader/run_solution.py`, invoked `python3 -I`); the verdict process compares the
+  candidate's outputs to the **trusted reference** (`grader/reference_query.py`) and never imports
+  candidate code. Re-proven in `v2-deploy-proof.json`: witness, exit-hijack, **monkeypatch**, and
+  root grader-tampering all blocked, controls preserved.
+
+**Residual (recorded):** a root candidate can still read the grader + reference + the *fixed*
+cases and hard-code outputs. Closing that needs randomised/hidden test data or a non-root
+candidate / SEPARATE verifier environment — see `v2-security-limitations.json`.

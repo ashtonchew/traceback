@@ -14,12 +14,17 @@ RUN pip3 install --no-cache-dir uv
 
 RUN mkdir -p /data/db && chown -R mongodb:mongodb /data/db
 
-# HARDENING: the trusted verifier suite is served from /tests, OUTSIDE the
-# agent's /app workspace, and made read-only. The grader (env.py) runs pytest
-# from `/` against /tests with plugin auto-load disabled, so an agent-planted
-# /app/conftest.py or pytest11 plugin is never discovered, and a grade-time
-# digest check rejects any tampering of the trusted suite.
+# HARDENING: the verifier is served from /tests, OUTSIDE the agent's /app
+# workspace. The active grader is the OUT-OF-PROCESS grader at /tests/grader
+# (env.py runs `python3 -I /tests/grader/grade.py`), which compares the
+# candidate's outputs to the trusted reference solution and never imports
+# candidate code in the verdict process. The grader files are digest-pinned at
+# grade time. /tests is also chmod read-only (best-effort; a root candidate is
+# defeated by the digest pins + the out-of-process design, not by permissions).
+# /tests/task_assets/test_outputs.py is retained for ReleaseProof lineage but is
+# no longer the active grader.
 COPY tests /tests
+COPY grader /tests/grader
 RUN chmod -R a-w /tests
 
 WORKDIR /app

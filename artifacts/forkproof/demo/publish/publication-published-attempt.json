@@ -1,8 +1,8 @@
 {
   "command_argv_ref": "docs/plans/repo-map/COMMANDS.json:integration-publication",
   "command_key": "integration-publication",
-  "content_digest": "96bbcf9b2c587c416b9993b9ddaec6bc34be7cb3cc6d75db5905483037420a03",
-  "created_at": "2026-06-21T17:30:00Z",
+  "content_digest": "a7a2d316385d1a363883993b0677ed5bbff2218d4313f88afe870c250854e1ba",
+  "created_at": "2026-06-21T17:47:11Z",
   "evidence_refs": [
     "docs/plans/evidence/005/MANIFEST.json",
     "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json",
