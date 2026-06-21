@@ -2,7 +2,7 @@
 
 **Purpose:** Define the implemented boundary between sealed ForkProof evidence, canonical SFT exports, managed-RFT launch-readiness data, and optional Fireworks jobs.
 
-**Status (2026-06-21):** Plans 003, 004, and 005 are complete. A sealed passing ReleaseProof exists. Plan 007 has a strict Plan 005-joined SFT/RFT analysis path, a separate sterile-referee Model A preparation path, and a non-registering sealed-v2 RFT evaluator binding. The Model A path is implemented but cannot run against the current preliminary diff-based report or incomplete Plan 008 manifest. No Fireworks upload, SFT job, managed RFT job, or held-out model result is claimed.
+**Status (2026-06-21):** Plans 003, 004, and 005 are complete. A sealed passing ReleaseProof exists. Plan 007 has a strict Plan 005-joined SFT/RFT analysis path, a separate sterile-referee Model A preparation path, and a non-registering sealed-v2 RFT evaluator binding. The `sft` branch also has a preliminary QABench/SFT corpus using post-agent snapshots plus sterile `clean_verify`: 59 raw reward-positive trajectories, 21 confirmed reward-hack trajectories, 14 deduped confirmed reward-hack clusters, 5 certified SFT-clean positives, and 33 quarantined rows. No Fireworks upload, SFT job, managed RFT job, or held-out model result is claimed.
 
 **Sources of truth:** repository code and artifacts; `docs/plans/evidence/{003,004,005,007,008}/MANIFEST.json`; `docs/plans/007-depth-two-and-research-extensions.md`; `docs/plans/specs/03-interfaces.md`; `docs/plans/GLOSSARY.md`; and `SFT.MD`. `HUDDOC.MD` describes a separate direct Training API preview and is not evidence that ForkProof SFT or managed RFT ran.
 
@@ -16,8 +16,8 @@
 | **Canonical consumers implemented** | SFT and RFT read completed manifests, verify artifact digests, join qabench rows to ReleaseProof, and fail closed. | PASS: implementation and behavioral tests exist. |
 | **Model A preparation implemented** | SFT-only intake trusts a completed Plan 008 sterile referee without pretending every row belongs to Plan 005's four-case ProofSet. | PASS: preliminary/non-sterile reports fail closed; upload/training remain `not_run`. |
 | **Sealed v2 evaluator bound** | Launch preparation pins the real Plan 005 v2 identities and audits the evaluator trust boundary. | PASS: 1 Witness rejection, 3 control retentions, and 6 blocked subversion probes verified; registration remains `not_run`. |
-| **Plan 008 data available** | A completed Plan 008 manifest lists an exact qabench report and digest. | BLOCKED: Plan 008 is `not-started`. |
-| **Canonical SFT data generated** | Real qabench rows are normalized, quarantined, filtered, and exported. | NOT RUN: awaits Plan 008. |
+| **Plan 008 data available** | A completed Plan 008 manifest lists an exact qabench report and digest. | PARTIAL/BRANCH: original QABench partition plus wave40 artifacts exist; Plan 008 manifest is still not complete. |
+| **Canonical SFT data generated** | Real qabench rows are normalized, quarantined, filtered, and exported. | BRANCH RESULT: `docs/plans/evidence/007/SFT-WAVE40.md` records 59 raw positives, 21 confirmed hacks, 14 deduped confirmed hack clusters, 5 SFT-clean, and 33 quarantined. |
 | **Canonical RFT prompts generated** | Real qabench prompts are joined to ReleaseProof and split into raw/hardened/audit/quarantine artifacts. | NOT RUN: awaits Plan 008. |
 | **SFT launch-ready** | Provider support, LoRA mode/rank, tokenization, dataset registration, cost/time, request, and held-out split are verified. | NOT READY: placeholders remain `TBD`/`not_run`. |
 | **RFT launch-ready** | Provider support, evaluator and dataset registration, environment, grouped calibration, request, and held-out eval are verified. | NOT READY: placeholders remain `TBD`/`not_run`. |

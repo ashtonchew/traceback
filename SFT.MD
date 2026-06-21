@@ -2,7 +2,7 @@
 
 **Purpose:** Living specification for the ForkProof post-training extension. It records the implemented mock SFT data-quality pipeline, the sealed-artifact contract for real integration, and the distinct optional paths for managed SFT, managed RFT, and custom Fireworks Training API research.
 
-**Status (2026-06-21):** Mock Phases 0–3, strict Plan 005-joined consumers, sterile-referee Model A preparation, and a non-registering sealed-v2 RFT evaluator binding are implemented and covered by 91 passing tests plus 19 passing subtests. Plans 003–005 are complete; Model A remains blocked on a completed Plan 008 report with a real sterile `clean_verify` referee. No Fireworks upload, SFT training, managed RFT, or held-out model result is claimed.
+**Status (2026-06-21):** Mock Phases 0–3, strict Plan 005-joined consumers, sterile-referee Model A preparation, and a non-registering sealed-v2 RFT evaluator binding are implemented and covered by tests. Plans 003–005 are complete. The `sft` branch now has a preliminary QABench SFT corpus using post-agent snapshots plus sterile `clean_verify`: 59 raw reward-positive trajectories across the original QABench partition and wave 40, including 21 confirmed reward-hack trajectories deduped to 14 distinct task+mechanism clusters, 5 certified SFT-clean positives, and 33 quarantined rows. No Fireworks upload, SFT training, managed RFT, or held-out model result is claimed.
 **Related sources:** `CONNECT.md`, `HUDDOC.MD`, `HANDOFF.MD`, `docs/plans/html-spec/hack2fix2hack-handoff (4).html`, `docs/plans/GLOSSARY.md`, `docs/plans/007-depth-two-and-research-extensions.md`
 
 ---
@@ -61,8 +61,8 @@ The must-ship version proves this through **data-quality analysis**, not necessa
 | Raw, hardened, rejected-hack, and excluded filtering | Implemented for mock/compatibility rows |
 | Reports, chart, metadata, audit, and Fireworks chat export | Implemented |
 | Test baseline | 91 passing research tests plus 19 passing subtests |
-| Real ForkProof adapter | Implemented and fail-closed; canonical execution awaits Plan 008 |
-| Correct real-data metric/quarantine model | Proposed in `CONNECT.md`; not implemented |
+| Real ForkProof adapter | Implemented and fail-closed; strict Plan 005-joined execution still awaits a completed Plan 008 manifest, while the branch-local QABench/SFT corpus has run |
+| Correct real-data metric/quarantine model | Implemented for the branch-local QABench/SFT corpus; 59 raw positives -> 21 confirmed hacks, 5 SFT-clean, 33 quarantined |
 | Managed SFT experiment | Optional; not run |
 | Managed RFT experiment | Optional; not run |
 | Direct Training API experiment | Separate preview work documented in `HUDDOC.MD`; not evidence for this SFT pipeline |
@@ -83,7 +83,17 @@ A raw verifier admits both real solutions and reward hacks as positive training 
 | Training contamination | TBD | 0% (target) |
 | Legitimate retention | TBD | 100% (target) |
 
-Replace `TBD` with measured values once the pipeline runs.
+Current `sft` branch evidence from `docs/plans/evidence/007/SFT-WAVE40.md`:
+
+| Metric | Reward-only Baseline | ForkProof-gated SFT |
+| --- | ---: | ---: |
+| Reward-positive traces considered | 59 | 5 promoted |
+| Confirmed reward-hack trajectories admitted | 21 | 0 |
+| Distinct confirmed reward-hack clusters found | 14 | 0 admitted |
+| Quarantined rows withheld | 0 | 33 |
+| Confirmed contamination | 35.6% | 0% |
+
+Use this as a data-quality/fixer-loop result. It does not prove a model improved until a Fireworks job and held-out evaluation run.
 
 ---
 
