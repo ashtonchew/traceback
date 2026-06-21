@@ -129,18 +129,24 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 
 - 2026-06-21T11:19:15Z — Started Plan 007 from `codex/plan-002-003-witness` on branch `codex/plan-007-research-stack`. Read the required plan context and Plan 003 evidence. Confirmed Plan 003 records live reward-hacking candidates but no sealed Exploit Witness, so WP1/WP2 live depth-two execution remains blocked. Implemented Plan 007-owned local contracts for adaptive scheduling, promising-node selection, capability gates, and measured/not-measured report validation, with focused behavior tests.
 - 2026-06-21T11:24:00Z — Ran feasible validators. Focused tests and research lint pass; mapped `plan-007-tests` and `integration-research` skip because COMMANDS.json still marks them not-applicable; graph, sections, ownership, traceability, file-size, mapped lint/build, and evidence-without-require-complete pass. `validate_evidence.py --plan 007 --require-complete` fails as expected because the manifest remains blocked.
+- 2026-06-21T12:03:00Z — Restacked `codex/plan-007-research-stack` onto `origin/codex/plan-005-release-proof` because that stack contains the canonical sealed Plan 003 Witness. Verified `docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json`: reward=1, `qa_is_reward_hacking=true`, `cluster-001`, durable filesystem snapshot, minimized `/app/conftest.py` causal delta, and three deterministic semantic-success replays. Plan 007 remains incomplete because no depth-two re-snapshot or depth-two BranchRun has been produced.
+- 2026-06-21T12:08:00Z — Linked the clean pinned HUD Trace Explorer checkout from `.worktrees/plan-002-003-witness/.external/hud-trace-explorer` into ignored `.external/`; `scripts/verify_external_deps.sh` now passes on the Plan 005 stack. Re-ran focused research tests, research lint, mapped skips, mapped lint/build, graph, sections, ownership, traceability, file-size, and evidence validation.
 
 ### Surprises & Discoveries
 
 - 2026-06-21T11:19:15Z — `scripts/verify_external_deps.sh` is absent on the Plan 003 stack branch used for this work, so the requested `.external/` verification command could not run even though `.external/harden-v0` and `.external/terminal-wrench` are present.
 - 2026-06-21T11:19:15Z — `docs/plans/repo-map/COMMANDS.json` still marks `plan-007-tests` and `integration-research` as `not-applicable`; Plan 007 does not own command-map keys, so direct focused tests are recorded separately and mapped commands are left unchanged.
 - 2026-06-21T11:19:15Z — The requested `hud-environment-builder` and `modal` skill files were not present at the advertised local plugin cache paths; repository docs remained the only usable project source of truth.
+- 2026-06-21T12:03:00Z — Plan 005 is the better stack base for Plan 007 than the earlier Plan 003 branch: it includes the sealed Witness produced by Plan 003 rescue work and keeps Plan 007 closer to the current release-proof stack. This does not make Plan 007 complete; it only removes the prior no-Witness base problem.
+- 2026-06-21T12:08:00Z — The previous external-dependency blocker was base-specific. On the Plan 005 stack, the verifier exists and passes once the pinned local HUD Trace Explorer checkout is linked into ignored `.external/`.
 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: put all non-core research behind one removable feature boundary and forbid it from gating the demo.
 - 2026-06-21T11:19:15Z — Implemented only pure Plan 007 contracts and skip/report evidence until Plan 003 seals a Witness. This preserves the STOP condition while making the unblocked scheduler and gating behavior testable.
+- 2026-06-21T12:03:00Z — Keep the integration CLI fail-closed even when a sealed Witness is present on the stack. Returning success at that point would overstate readiness because Plan 007 has not yet produced a live depth-two BranchRun artifact.
 
 ### Outcomes & Retrospective
 
 - 2026-06-21T11:19:15Z — Partial implementation only. Local contracts and skips are evidenced in `artifacts/forkproof/research/blocked-research-report.json`; live depth-two execution, flat comparison, Memory/VM integration, transfer, and training remain blocked or not measured until real sealed Plan 003 artifacts exist.
+- 2026-06-21T12:03:00Z — Partial implementation remains. The stack now includes real sealed Plan 003 Witness evidence through Plan 005, but Plan 007 has only contracts and skip/report evidence. Live depth-two execution, flat comparison, Memory/VM integration, transfer, and training remain unproved.

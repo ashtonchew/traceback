@@ -27,8 +27,11 @@ def integration() -> int:
         if isinstance(check, dict)
     )
     if sealed and manifest.get("status") == "complete":
-        print("READY: Plan 003 has sealed Witness evidence; run the live depth-two executor.")
-        return 0
+        print(
+            "STOP: Plan 003 has sealed Witness evidence on this stack, but Plan 007 has no "
+            "mapped live depth-two executor or completed depth-two BranchRun artifact yet."
+        )
+        return 2
     print(
         "STOP: Plan 007 live depth-two execution is blocked because Plan 003 has no sealed "
         "Exploit Witness with durable packaging, dedup clustering, and three deterministic replays."
