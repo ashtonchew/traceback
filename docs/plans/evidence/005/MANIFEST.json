@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T10:45:00Z",
+  "updated_at": "2026-06-21T10:52:35Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 25 passed in 0.26s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 28 passed in 0.32s."
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-release"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-release invoked forkproof.releases.cli integration with explicit controls-manifest/taskset/selection refs, harden task source, --harden-timeout-seconds 5400, and Anthropic harden model flags. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 completed without adapter timeout, found a rewarded hack, attempted the fixer, and recorded harden_fixer_artifact_layout_drift. No validated candidate patch or real per-case v1/v2 release-results artifact exists."
+      "observed": "RUN: integration-release with terminal-bench authorized-audit prompt default, Anthropic claude-haiku-4-5 models, one harden-v0 total attempt per hacker/solver-precheck/replay (Harbor n_retries=0), hacker_max_turns=80, and fresh run root run-20260621T104504Z. harden-v0 returned 0/status robust after one audit trial reward=0.00; it produced an audit-style hardcoded-output candidate but the grader assigned no reward. Plan 005 correctly exited 2 because no real per-case v1/v2 release-results artifact, evaluator context refs, subversion results, or release candidate ref exists. Summary: artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json."
     },
     {
       "argv": [
@@ -75,7 +75,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 25ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
         "005"
       ],
       "exit_code": 0,
-      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 22 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 24 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -122,12 +122,12 @@
     {
       "name": "Release contract coverage",
       "status": "pass",
-      "evidence": "plan-005-tests passes with ProofSet membership, BranchRun rejection, binary gate, mixed digest, v1 failure, immutable v1/v2 case identity, evaluator-context execution-surface checks, profile-driven mandatory subversion checks, pytest profile inference from replay surface, Anthropic harden model fallback, selected-provider credential preflight, release-results fail-closed behavior, candidate patch rejection history, bounded failure, append-only ReleaseProof sealing, and harden-v0 config/result.json schema inspection."
+      "evidence": "plan-005-tests passes with ProofSet membership, BranchRun rejection, binary gate, mixed digest, v1 failure, immutable v1/v2 case identity, evaluator-context execution-surface checks, profile-driven mandatory subversion checks, pytest profile inference from replay surface, Anthropic harden model fallback, selected-provider credential preflight, harden-v0 zero-attempt guard, authorized-audit prompt default, release-results fail-closed behavior, candidate patch rejection history, bounded failure, append-only ReleaseProof sealing, and harden-v0 config/result.json schema inspection."
     },
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release remains blocked. The adapter fixed the earlier Harbor nested artifact extraction drift, and a later bounded run showed targeted replay can reject a candidate. The latest mapped retry-cap run was interrupted with exit 130 after verifying an active hacker-model refusal loop, not a release pass. No real per-case v1/v2 release-results artifact or ReleaseProof exists."
+      "evidence": "integration-release remains blocked. The current mapped run used the terminal-bench authorized-audit prompt by default, fresh per-run harden output, one harden-v0 total attempt (Harbor n_retries=0), and hacker_max_turns=80. harden-v0 ran without refusal or resume contamination and returned robust after the audit candidate received reward 0.00. No real per-case v1/v2 release-results artifact or ReleaseProof exists."
     }
   ],
   "artifacts": [
@@ -169,7 +169,7 @@
     },
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
-      "description": "Rescue exception update: plan-005-tests and integration-release now have real verified argv instead of not-applicable skip rows."
+      "description": "Rescue exception update: plan-005-tests and integration-release have real verified argv. The integration-release reason now clarifies that harden-v0 retry args are total attempt counts, so value 1 means zero actual retry attempts and value 0 means no attempt."
     },
     {
       "ref": "src/forkproof/releases/harden_inspection.py",
@@ -178,6 +178,18 @@
     {
       "ref": "artifacts/forkproof/releases/refusal-loops/proofset-e497370b2c3d2a69-20260621T103501Z.json",
       "description": "Committed compact refusal-loop summary for the interrupted mapped integration-release run. The raw harden-v0 workdir is intentionally not committed because it is large/mutable; this summary records model, step count, final metrics, blocker code, and retry-policy observation without secret values."
+    },
+    {
+      "ref": "src/forkproof/releases/harden_runtime_patch.py",
+      "description": "Plan 005 harden-v0 runtime patch. It keeps the upstream KernelBench prompt path but defaults generic terminal tasks to the canonical terminal_bench_authorized_audit witness prompt, and preserves the fixer artifact compatibility patch."
+    },
+    {
+      "ref": "tests/forkproof/releases/test_harden_runtime.py",
+      "description": "Focused harden adapter/runtime tests for fresh run roots, one-attempt/zero-retry semantics, zero-attempt rejection, nested fixer artifacts, refusal-loop classification, and authorized-audit prompt default."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json",
+      "description": "Committed compact summary of the latest mapped integration-release harden run. It records prompt profile, attempt/retry semantics, Harbor n_retries=0, harden status, reward outcome, blocker reason, and missing ReleaseProof evidence without committing the raw mutable harden workdir."
     }
   ],
   "screenshots": [],

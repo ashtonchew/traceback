@@ -98,6 +98,11 @@ def run_harden_v0(
 ) -> dict[str, Any]:
     """Run the upstream harden-v0 CLI through this repo's optional dependency boundary."""
 
+    _validate_total_attempts(
+        hacker_retries=hacker_retries,
+        solver_precheck_retries=solver_precheck_retries,
+        replay_retries=replay_retries,
+    )
     load_local_env(repo_root)
     selected_models = select_harden_models(
         hacker_model=hacker_model,
@@ -105,9 +110,12 @@ def run_harden_v0(
         solver_model=solver_model,
     )
     require_selected_model_credentials(selected_models)
-    tasks_root = output_root / "tasks"
+    started_at = utc_now()
+    run_id = "run-" + re.sub(r"[^0-9A-Za-z]+", "", started_at)
+    run_root = output_root / run_id
+    tasks_root = run_root / "tasks"
     task_copy = prepare_harden_task_source(task_source=task_source, tasks_root=tasks_root, task_id=task_id)
-    harden_output = output_root / "harden-output"
+    harden_output = run_root / "harden-output"
     command = [
         "uv",
         "run",
@@ -149,7 +157,6 @@ def run_harden_v0(
     command.extend(["--hacker-model", selected_models["hacker_model"]])
     command.extend(["--fixer-model", selected_models["fixer_model"]])
     command.extend(["--solver-model", selected_models["solver_model"]])
-    started_at = utc_now()
     try:
         completed = subprocess.run(
             command,
@@ -186,6 +193,8 @@ def run_harden_v0(
         "task_copy": str(task_copy),
         "harden_root": str(harden_root),
         "output_root": str(output_root),
+        "run_id": run_id,
+        "run_root": str(run_root),
         "command_argv": command,
         "selected_models": selected_models,
         "credential_presence": credential_presence(
@@ -211,6 +220,28 @@ def run_harden_v0(
         record["harden_blocker"] = blocker
     record["content_digest"] = digest_json(record)
     return record
+
+
+def _validate_total_attempts(
+    *,
+    hacker_retries: int,
+    solver_precheck_retries: int,
+    replay_retries: int,
+) -> None:
+    """harden-v0 retry flags are total attempts; 1 attempt means zero retries."""
+
+    attempt_counts = {
+        "hacker_retries": hacker_retries,
+        "solver_precheck_retries": solver_precheck_retries,
+        "replay_retries": replay_retries,
+    }
+    invalid = {name: value for name, value in attempt_counts.items() if value < 1}
+    if invalid:
+        raise ReleaseError(
+            "harden_attempts_disabled",
+            "harden-v0 retry flags are total attempt counts; use 1 for one attempt with zero retry attempts. "
+            f"Invalid values: {invalid}",
+        )
 
 
 def harden_result_blocker(

@@ -115,8 +115,8 @@
   },
   "observed_behavior": "Plan 005 integration binds harden-v0 schema, closes ProofSet membership, then seals ReleaseProof only from real per-case v1/v2 evaluator results.",
   "proofset": {
-    "content_digest": "2240af500550005fa837b39389abe8a93fa61fcfad45b83278a392bf60f27f96",
-    "created_at": "2026-06-21T09:38:44Z",
+    "content_digest": "c7f14934f4d7c07089153764cc4b75c8cb431beb61c242e356757d798c62e8d5",
+    "created_at": "2026-06-21T10:45:04Z",
     "environment_v1": "57cb7f09-89c1-487b-8463-b525edf01153",
     "evaluator_profiles": [
       "pytest"
@@ -139,35 +139,6 @@
   "release_evaluation": {
     "blocker_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
     "error_class": "release_results_missing",
-    "harden_blocker": {
-      "code": "harden_candidate_broke_solver_validation",
-      "reason": "harden-v0 applied the fixer patch to the validation surface, but solver validation failed, so the candidate patch was rejected before replay or ReleaseProof.",
-      "solver_validation_results": [
-        {
-          "exception_info": null,
-          "finished_at": "2026-06-21T09:36:36.652723Z",
-          "job_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_023308__e908d73a",
-          "reward": 0.0,
-          "schema_version": 1,
-          "started_at": "2026-06-21T09:33:10.070600Z",
-          "task_checksum": "c92ac6603e199e7dcb88d004e3212020b7c6adcbb1a9d1ab1540631800010e35",
-          "trial_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_023308__e908d73a/mongodb-sales-aggregation-engine__PWto898",
-          "trial_result_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_023308__e908d73a/mongodb-sales-aggregation-engine__PWto898/result.json"
-        },
-        {
-          "exception_info": null,
-          "finished_at": "2026-06-21T09:50:32.340581Z",
-          "job_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_024524__adf241c4",
-          "reward": 0.0,
-          "schema_version": 1,
-          "started_at": "2026-06-21T09:45:24.302447Z",
-          "task_checksum": "630116f45e4487860d4df143dd7d638eb445c1f351f102d78473dbfbe84c3be7",
-          "trial_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_024524__adf241c4/mongodb-sales-aggregation-engine__73Pq2cx",
-          "trial_result_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/solver_validate_h0__20260621_024524__adf241c4/mongodb-sales-aggregation-engine__73Pq2cx/result.json"
-        }
-      ],
-      "status": "blocked"
-    },
     "observed_behavior": "release evaluation blocked; wrote /Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
     "status": "blocked"
   },

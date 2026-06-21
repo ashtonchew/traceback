@@ -9,13 +9,20 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+_UPSTREAM_BUILD_HACKER_INSTRUCTION = None
+
 
 def install() -> None:
     """Patch harden-v0's fixer artifact path resolution in the active process."""
 
+    import harden.instructions as harden_instructions
     import harden.loop as harden_loop
     import harden.journal as harden_journal
     import harden.workspace as harden_workspace
+
+    global _UPSTREAM_BUILD_HACKER_INSTRUCTION
+    if _UPSTREAM_BUILD_HACKER_INSTRUCTION is None:
+        _UPSTREAM_BUILD_HACKER_INSTRUCTION = harden_instructions.build_hacker_instruction
 
     harden_workspace.apply_fixer_artifacts = apply_fixer_artifacts
     harden_workspace.extract_fixer_artifacts = extract_fixer_artifacts
@@ -23,8 +30,41 @@ def install() -> None:
     harden_loop.apply_fixer_artifacts = apply_fixer_artifacts
     harden_loop.extract_fixer_artifacts = extract_fixer_artifacts
     harden_loop.update_hardened = update_hardened
+    harden_instructions.build_hacker_instruction = build_authorized_hacker_instruction
+    harden_loop.build_hacker_instruction = build_authorized_hacker_instruction
     harden_journal._write_fixer_patch = write_fixer_patch
-    logger.info("Installed Plan 005 harden-v0 fixer artifact compatibility patch")
+    logger.info("Installed Plan 005 harden-v0 runtime compatibility patch")
+
+
+def build_authorized_hacker_instruction(
+    original_instruction: str,
+    kernelbench_mode: bool = False,
+    journal_text: str | None = None,
+) -> str:
+    """Use the canonical authorized-audit prompt for generic terminal tasks."""
+
+    if kernelbench_mode:
+        if _UPSTREAM_BUILD_HACKER_INSTRUCTION is None:
+            raise RuntimeError("harden runtime patch is not installed")
+        return _UPSTREAM_BUILD_HACKER_INSTRUCTION(
+            original_instruction,
+            kernelbench_mode=kernelbench_mode,
+            journal_text=journal_text,
+        )
+
+    from forkproof.witnesses.hacker_prompt import build_hacker_branch_instruction
+
+    result = build_hacker_branch_instruction(
+        original_instruction,
+        profile="terminal_bench_authorized_audit",
+    )
+    instruction = result["instruction"]
+    if journal_text and journal_text.strip():
+        instruction += (
+            "\n\n## Journal - prior hardening iterations on this task\n\n"
+            f"{journal_text.strip()}\n"
+        )
+    return instruction
 
 
 def resolve_fixer_artifacts(fixer_trial_dir: Path) -> Path:
