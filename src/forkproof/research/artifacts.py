@@ -241,8 +241,9 @@ def build_conditional_research_report(
             status="not-measured",
             protocol_ref=None,
             limitation=(
-                "No comparable flat-restart protocol can be measured until Plan 007 has an "
-                "independent child re-snapshot and at least one completed depth-two BranchRun."
+                "A comparable flat-restart batch under a normalized measured budget was not run; the "
+                "completed depth-two run is recorded without a paired flat baseline, so no "
+                "state-branch-versus-flat superiority is claimed."
             ),
         )
     )
@@ -262,7 +263,7 @@ def build_conditional_research_report(
         require_evidence_backed_skip(
             ResearchSkip(
                 packet="WP4 flat restart comparison",
-                reason="Comparable state-branch and flat-restart budgets are not available before a completed depth-two BranchRun.",
+                reason="The completed depth-two run was not paired with a comparable normalized flat-restart batch in this session, so no state-branch-versus-flat superiority is claimed.",
                 evidence_refs=(sealed_witness_ref, child_selection_ref, preflight_ref),
                 recorded_at=recorded_at,
             )
