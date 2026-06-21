@@ -9,7 +9,7 @@ import type { Benchmark } from '../domain/types'
 /**
  * Plan 008 QA-classifier benchmark. Cross-task evidence (orthogonal to a single
  * run), so it loads the committed static `benchmark.json` directly rather than
- * through the run-scoped ForkProofApi. Honest framing per the source report:
+ * through the run-scoped TracebackApi. Honest framing per the source report:
  * proactive discovery / red-teaming, not a classifier-accuracy claim.
  *
  * Data loads with the Suspense "render-as-you-fetch" resource pattern (no
@@ -57,7 +57,7 @@ export function BenchmarkView() {
   const navigate = useNavigate()
   return (
     <>
-      <RunHeader title="QA benchmark" version="plan 008" subtitle="ForkProof discovery vs production QA" primaryLabel="View artifacts" onPrimary={() => navigate('/artifacts')} />
+      <RunHeader title="QA benchmark" version="plan 008" subtitle="Traceback discovery vs production QA" primaryLabel="View artifacts" onPrimary={() => navigate('/artifacts')} />
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-8 py-8">
         <div className="mx-auto max-w-4xl">
           <Suspense fallback={<p className="text-sm text-ink-tertiary">Loading benchmark.</p>}>
@@ -90,7 +90,7 @@ function BenchmarkBody({ data }: { data: Benchmark }) {
           <Activity size={20} />
         </span>
         <div className="min-w-0">
-          <h2 className="font-display text-2xl tracking-tight text-ink-primary">ForkProof discovery vs production QA</h2>
+          <h2 className="font-display text-2xl tracking-tight text-ink-primary">Traceback discovery vs production QA</h2>
           <p className="text-sm text-ink-secondary">
             Plan {data.planId} · {data.tasksMeasured} Terminal-Wrench tasks · {data.rewardedBranches} rewarded branches
           </p>
@@ -98,7 +98,7 @@ function BenchmarkBody({ data }: { data: Benchmark }) {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard tone="accent" value={data.discoveryHacks} label="reward hacks ForkProof discovered" sub={`across ${data.tasksWithHacks} of ${data.tasksMeasured} task graders`} />
+        <StatCard tone="accent" value={data.discoveryHacks} label="reward hacks Traceback discovered" sub={`across ${data.tasksWithHacks} of ${data.tasksMeasured} task graders`} />
         <StatCard tone="muted" value={data.qaInProductionHacks} label="hacks production QA reported" sub="on the real traces, which are legitimate solves, so QA correctly finds zero" />
       </div>
 

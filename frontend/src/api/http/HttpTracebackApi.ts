@@ -1,5 +1,5 @@
 import { apiBase } from '../config'
-import { DatasetForkProofApi, type Publication, type ReleaseBlock, type ReplayEvidence, type RunDataset } from '../dataset'
+import { DatasetTracebackApi, type Publication, type ReleaseBlock, type ReplayEvidence, type RunDataset } from '../dataset'
 import type { BranchRun, ExploitWitness, ForkPoint, LegitimateControl, Patch, ProofSet } from '../../domain/types'
 
 /** Shape of the exported `release.json` (patches + gate-outcome maps + verdict). */
@@ -55,8 +55,8 @@ async function loadDataset(): Promise<RunDataset> {
   }
 }
 
-/** Real Traceback backend: the {@link DatasetForkProofApi} engine over fetched static JSON. */
-export class HttpForkProofApi extends DatasetForkProofApi {
+/** Real Traceback backend: the {@link DatasetTracebackApi} engine over fetched static JSON. */
+export class HttpTracebackApi extends DatasetTracebackApi {
   constructor() {
     super(loadDataset)
   }

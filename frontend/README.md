@@ -23,17 +23,17 @@ The UI reads a small set of JSON files from `public/api/`. In `http` mode (the
 default) it fetches them at runtime; in `mock` mode it uses an in-memory demo
 dataset instead. Pick the source with one env var (see `frontend/.env.example`):
 
-| `VITE_FORKPROOF_API` | Source |
+| `VITE_TRACEBACK_API` | Source |
 | --- | --- |
 | `http` (default) | Real build-time data from `public/api/*.json` |
 | `mock` | In-memory demo dataset (`src/api/mock/`) |
 
 ```bash
 npm run dev                          # real data (default)
-VITE_FORKPROOF_API=mock npm run dev  # in-memory demo
+VITE_TRACEBACK_API=mock npm run dev  # in-memory demo
 ```
 
-`VITE_FORKPROOF_API_BASE` overrides the static base path (default `/api`).
+`VITE_TRACEBACK_API_BASE` overrides the static base path (default `/api`).
 
 ### Regenerating the data
 
