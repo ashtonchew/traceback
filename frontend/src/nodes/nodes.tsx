@@ -9,7 +9,7 @@ import {
   Copy,
   RefreshCw,
   GitBranch,
-} from 'lucide-react'
+} from '../components/icons'
 import type { ReactNode } from 'react'
 import { Chip, VerdictIcon } from '../components/primitives'
 import type { BranchNodeData } from '../lib/types'
@@ -38,7 +38,7 @@ function Frame({
   children,
   selected,
   status,
-  width = 220,
+  width = 250,
   className,
 }: {
   children: ReactNode
@@ -51,9 +51,9 @@ function Frame({
     <div
       style={{ width }}
       className={clsx(
-        'relative rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition',
-        selected ? 'border-fill-accent ring-2 ring-fill-accent/25' : status && STATUS_RING[status] ? STATUS_RING[status] : 'border-hairline',
-        'hover:border-stroke',
+        'fp-node-frame relative rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm',
+        'transition-[border-color,box-shadow,transform] duration-150 ease-out',
+        selected ? 'border-fill-accent ring-2 ring-fill-accent/25 shadow-md' : status && STATUS_RING[status] ? STATUS_RING[status] : 'border-hairline',
         className,
       )}
     >
@@ -81,9 +81,15 @@ function CardHeader({
     <div className="flex items-start gap-1.5">
       <GripVertical size={13} className="mt-0.5 -ml-1 shrink-0 text-ink-tertiary/70" />
       {icon}
-      <span className="line-clamp-2 flex-1 text-sm font-medium leading-tight text-ink-primary">{title}</span>
-      {tag && <Chip status={status} className="mt-px shrink-0">{tag}</Chip>}
-      {verdict && verdict !== 'none' && <VerdictIcon verdict={verdict} className="mt-px h-4 w-4 shrink-0" />}
+      <div className="min-w-0 flex-1">
+        <div className="break-words text-sm font-medium leading-snug text-ink-primary">{title}</div>
+        {(tag || (verdict && verdict !== 'none')) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {tag && <Chip status={status} className="shrink-0">{tag}</Chip>}
+            {verdict && verdict !== 'none' && <VerdictIcon verdict={verdict} className="h-4 w-4 shrink-0" />}
+          </div>
+        )}
+      </div>
       {chevron && <ChevronRight size={15} className="mt-0.5 shrink-0 text-ink-tertiary" />}
     </div>
   )
@@ -198,17 +204,21 @@ export function QANode({ data }: NodeProps) {
 export function ForkPointNode({ data, selected }: NodeProps) {
   const d = data as BranchNodeData
   return (
-    <Frame width={212} selected={selected || d.selected} status="root">
+    <Frame selected={selected || d.selected} status="root">
       <Handles />
       <div className="flex items-start gap-2">
-        <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-green-50 text-accent-text">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-green-50 text-accent-text">
           <GitFork size={15} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-semibold text-ink-primary">{d.title}</span>
-            <Chip status="root">ROOT</Chip>
-            {d.hasChevron && <ChevronRight size={15} className="ml-auto text-ink-tertiary" />}
+          <div className="flex items-start gap-1.5">
+            <div className="min-w-0 flex-1">
+              <div className="break-words text-sm font-semibold leading-snug text-ink-primary">{d.title}</div>
+              <div className="mt-1">
+                <Chip status="root">ROOT</Chip>
+              </div>
+            </div>
+            {d.hasChevron && <ChevronRight size={15} className="mt-0.5 shrink-0 text-ink-tertiary" />}
           </div>
           {d.rows ? (
             <ul className="mt-2 space-y-1 text-xs text-ink-secondary">
@@ -238,15 +248,19 @@ export function ForkPointNode({ data, selected }: NodeProps) {
 export function SnapshotNode({ data, selected }: NodeProps) {
   const d = data as BranchNodeData
   return (
-    <Frame width={210} selected={selected}>
+    <Frame selected={selected} className="fp-snapshot-card">
       <Handles />
-      <div className="flex items-center gap-1.5">
-        <GripVertical size={13} className="-ml-1 text-ink-tertiary/70" />
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-tint-blue text-ink-secondary-strong">
+      <div className="flex items-start gap-1.5">
+        <GripVertical size={13} className="mt-0.5 -ml-1 shrink-0 text-ink-tertiary/70" />
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-raised text-ink-secondary-strong">
           <RefreshCw size={11} />
         </span>
-        <span className="flex-1 truncate text-sm font-medium text-ink-primary">{d.title}</span>
-        <Chip status="snapshot">{d.tag ?? 'SNAPSHOT'}</Chip>
+        <div className="min-w-0 flex-1">
+          <div className="break-words text-sm font-medium leading-snug text-ink-primary">{d.title}</div>
+          <div className="mt-1">
+            <Chip status="snapshot">{d.tag ?? 'SNAPSHOT'}</Chip>
+          </div>
+        </div>
       </div>
       <div className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-secondary">
         <Database size={12} className="text-ink-tertiary" />

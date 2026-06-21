@@ -31,12 +31,13 @@ function getClusterEdgePath(sourceX: number, sourceY: number, targetX: number, t
 export function ClusterEdge({ sourceX, sourceY, targetX, targetY, data }: EdgeProps) {
   const { path, sourceDot, targetDot } = getClusterEdgePath(sourceX, sourceY, targetX, targetY)
   const color = COLORS[(data?.cluster as string) ?? 'default']
+  const className = ['fp-cluster-edge', data?.entering ? 'fp-enter' : undefined, data?.revealed ? 'fp-enter-revealed' : undefined].filter(Boolean).join(' ')
   return (
-    <>
+    <g className={className}>
       <BaseEdge path={path} style={{ stroke: color, strokeWidth: 1.5 }} />
       <circle cx={sourceDot.cx} cy={sourceDot.cy} r={3} fill={color} />
       <circle cx={targetDot.cx} cy={targetDot.cy} r={3} fill={color} />
-    </>
+    </g>
   )
 }
 

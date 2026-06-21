@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ShieldX, ShieldAlert, Check, ChevronDown, GitFork, ChevronRight, RotateCcw } from 'lucide-react'
+import { ShieldX, ShieldAlert, Check, ChevronDown, GitFork, ChevronRight, RotateCcw } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
+import { getGateCounts, getRunTreeCounts } from '../lib/runFooter'
 import { useRun } from '../store/RunProvider'
+import { Button } from '../components/primitives'
 
 const WITNESSES = [
   { name: 'Whitespace normalization bypass', state: 'KILLED', reward: '1.0' },
@@ -20,16 +22,16 @@ const CONTROLS = ['Legitimate control replay', 'Reference solver baseline', 'Aud
 function WitnessRow({ name, state, reward }: { name: string; state: 'KILLED' | 'SURVIVED'; reward: string }) {
   const survived = state === 'SURVIVED'
   return (
-    <div className={clsx('flex items-center gap-3 rounded-lg border px-4 py-3', survived ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
+    <button type="button" className={clsx('flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', survived ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
       <GitFork size={15} className="text-ink-tertiary" />
-      <span className="flex-1 text-sm font-medium text-ink-primary">{name}</span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-primary">{name}</span>
       <span className={clsx('flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-2xs font-semibold', survived ? 'bg-fill-danger text-ink-inverse' : 'bg-green-50 text-accent-text')}>
         {survived ? <ShieldAlert size={11} /> : <Check size={11} strokeWidth={3} />}
         {state}
       </span>
       <span className="w-20 text-right text-sm text-ink-secondary">reward {reward}</span>
       <ChevronRight size={15} className="text-ink-tertiary" />
-    </div>
+    </button>
   )
 }
 
@@ -56,6 +58,13 @@ export function GateWitnessFailed() {
   const navigate = useNavigate()
   const run = useRun()
   const returnToFixer = () => run.returnToFixer().then(() => navigate('/patch'))
+  const counts = getRunTreeCounts(run)
+  const total = (run.proofSet?.exploitWitnessIds.length ?? 0) + (run.proofSet?.legitimateControlIds.length ?? 0)
+  const results = run.releaseProof?.results ?? run.gate.results
+  const gateCounts = getGateCounts(results, total)
+  const killed = results.filter((result) => result.kind === 'witness' && result.v2 === 0).length
+  const survived = results.filter((result) => result.kind === 'witness' && result.v2 === 1).length
+  const controlsPreserved = results.filter((result) => result.kind === 'control' && result.v2 === 1).length
   return (
     <>
       <RunHeader title="Exploit Witness" version="v3.2" primaryLabel="Resume run" onClose={() => navigate('/witness')} />
@@ -71,7 +80,7 @@ export function GateWitnessFailed() {
             </p>
           </div>
 
-          <div className="mt-6 flex items-center justify-between gap-8">
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div>
               <div className="text-xs text-ink-secondary">Witnesses killed</div>
               <div className="mt-1.5 flex items-center gap-3">
@@ -97,10 +106,10 @@ export function GateWitnessFailed() {
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between">
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-stroke bg-surface-raised px-3 py-1.5 text-sm text-ink-primary">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-1.5 rounded-lg border border-stroke bg-surface-raised px-3 py-1.5 text-sm text-ink-secondary-strong">
               View by witness <ChevronDown size={14} className="text-ink-tertiary" />
-            </button>
+            </div>
             <div className="flex items-center gap-4 text-xs text-ink-secondary">
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-fill-accent" /> Killed</span>
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-fill-danger" /> Survived</span>
@@ -118,12 +127,12 @@ export function GateWitnessFailed() {
             <div className="mb-2 text-sm font-medium text-ink-primary">Controls (must be preserved)</div>
             <div className="space-y-2">
               {CONTROLS.map((c) => (
-                <div key={c} className="flex items-center gap-3 rounded-lg border border-hairline bg-surface-raised px-4 py-3">
+                <button key={c} type="button" className="flex w-full items-center gap-3 rounded-lg border border-hairline bg-surface-raised px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-fill-accent text-ink-inverse"><Check size={12} strokeWidth={3} /></span>
-                  <span className="flex-1 text-sm font-medium text-ink-primary">{c}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-primary">{c}</span>
                   <span className="rounded-sm bg-green-50 px-1.5 py-0.5 text-2xs font-semibold text-accent-text">PRESERVED</span>
                   <ChevronRight size={15} className="text-ink-tertiary" />
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -131,21 +140,19 @@ export function GateWitnessFailed() {
 
         {/* right panel */}
         <aside className="scrollbar-thin flex w-80 shrink-0 flex-col overflow-y-auto border-l border-hairline bg-background px-5 py-5">
-          <div className="rounded-xl border border-red-200 bg-state-red-soft p-4">
+          <div className="rounded-lg border border-red-200 bg-state-red-soft p-4">
             <div className="flex items-center gap-2 text-ink-danger">
               <ShieldX size={16} />
               <span className="font-display text-base tracking-tight">Gate failed · widen patch</span>
             </div>
             <p className="mt-1 text-sm text-ink-secondary-strong">1 exploit survived</p>
             <p className="mt-0.5 text-xs text-ink-secondary">The release is blocked until all witnesses are killed.</p>
-            <button onClick={returnToFixer} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-fill-danger px-4 py-2.5 text-sm font-medium text-ink-inverse hover:opacity-90">
-              <RotateCcw size={14} /> Return to fixer
-            </button>
+            <Button variant="danger" size="md" className="mt-3 w-full" icon={<RotateCcw size={14} />} onClick={returnToFixer}>Return to fixer</Button>
           </div>
 
           <div className="mt-5">
             <div className="mb-2 text-sm font-medium text-ink-primary">Run comparison <span className="ml-1 text-ink-tertiary">v3.1 → v3.2</span></div>
-            <div className="divide-y divide-hairline rounded-xl border border-hairline bg-surface-raised px-4">
+            <div className="divide-y divide-hairline rounded-lg border border-hairline bg-surface-raised px-4">
               {[
                 ['Witnesses killed', '6', '5', '↓ 1', 'text-ink-danger'],
                 ['Witnesses survived', '0', '1', '↑ 1', 'text-ink-danger'],
@@ -166,7 +173,7 @@ export function GateWitnessFailed() {
 
           <div className="mt-5">
             <div className="mb-2 text-sm font-medium text-ink-primary">Witness outcome</div>
-            <div className="flex items-center gap-4 rounded-xl border border-hairline bg-surface-raised p-4">
+            <div className="flex items-center gap-4 rounded-lg border border-hairline bg-surface-raised p-4">
               <Donut />
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-fill-accent" /> Killed <span className="ml-auto font-medium text-ink-primary">5 (83%)</span></div>
@@ -179,16 +186,21 @@ export function GateWitnessFailed() {
       </div>
       <RunSummaryFooter
         stats={[
-          { label: 'Witness', value: 5, tone: 'green' },
-          { label: 'Survived', value: 1, tone: 'red' },
-          { label: 'Controls', value: 3, tone: 'gray' },
+          { label: 'Witness', value: killed, tone: 'green' },
+          { label: 'Survived', value: survived, tone: 'red' },
+          { label: 'Controls', value: controlsPreserved, tone: 'gray' },
         ]}
-        total={6}
+        total={gateCounts.total}
         cards={[
-          { icon: 'witness', label: 'Witness', value: 6 },
-          { icon: 'proofset', label: 'ProofSet', value: 4 },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: 1 },
-          { icon: 'artifacts', label: 'View all artifacts' },
+          { icon: 'witness', label: 'Witness', value: counts.witnesses, onClick: () => navigate('/witness') },
+          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          {
+            icon: 'releaseproof',
+            label: 'ReleaseProof',
+            value: counts.releaseProofs,
+            onClick: () => navigate('/releaseproof'),
+          },
+          { icon: 'artifacts', label: 'Survived', value: survived, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}
       />

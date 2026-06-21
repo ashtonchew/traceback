@@ -1,14 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { Play, Bot, Wrench, Database, Settings, GitFork, ChevronDown } from 'lucide-react'
+import { Play, GitFork } from './icons'
 import type { ReactNode } from 'react'
 
 const NAV = [
   { to: '/', label: 'Runs', icon: Play, end: true },
-  { to: '/agents', label: 'Agents', icon: Bot },
-  { to: '/tools', label: 'Tools', icon: Wrench },
-  { to: '/memory', label: 'Memory', icon: Database },
-  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 function Item({ to, label, icon: Icon, end }: { to: string; label: string; icon: typeof Play; end?: boolean }) {
@@ -42,10 +38,6 @@ export function Sidebar(): ReactNode {
           <Item key={n.to} {...n} />
         ))}
       </nav>
-      <button className="mt-4 flex flex-col items-center gap-1 text-ink-tertiary transition hover:text-ink-secondary">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-fill-primary text-2xs font-semibold text-ink-inverse">AC</span>
-        <ChevronDown size={14} />
-      </button>
     </aside>
   )
 }

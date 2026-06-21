@@ -1,13 +1,14 @@
-import { Activity, GitBranch, RefreshCw, ArrowUpRight, Camera, Sparkles, Play, Eye, PlusCircle, X } from 'lucide-react'
+import { Activity, GitBranch, RefreshCw, ArrowUpRight, Camera, Sparkles, Play, Eye, PlusCircle, X } from './icons'
 import type { ReactNode } from 'react'
-import { Chip } from './primitives'
+import { Chip, IconButton } from './primitives'
 import type { BranchRun } from '../domain/types'
 
 const POP_STATUS: Record<string, { label: string; class: string; chip: string }> = {
-  witness: { label: 'Confirmed witness', class: 'text-accent-text', chip: 'witness' },
-  promising: { label: 'Rewarded · awaiting QA', class: 'text-warn-text', chip: 'promising' },
-  qa_review: { label: 'Rewarded · awaiting QA', class: 'text-warn-text', chip: 'qa-review' },
-  control: { label: 'Legitimate control', class: 'text-ink-secondary-strong', chip: 'control' },
+  witness: { label: 'Confirmed exploit witness', class: 'text-accent-text', chip: 'witness' },
+  promising: { label: 'Candidate exploit path', class: 'text-warn-text', chip: 'promising' },
+  verifying: { label: 'Verifying candidate', class: 'text-warn-text', chip: 'verifying' },
+  qa_review: { label: 'Candidate in QA check', class: 'text-warn-text', chip: 'qa-review' },
+  control: { label: 'Legitimate baseline', class: 'text-ink-secondary-strong', chip: 'control' },
   snapshot: { label: 'Durable snapshot', class: 'text-ink-secondary-strong', chip: 'snapshot' },
 }
 
@@ -30,6 +31,7 @@ export function NodePopover({
   onClose,
   onAddToProofSet,
   onReplay,
+  onViewPreAttackState,
 }: {
   branch: BranchRun
   x: number
@@ -37,19 +39,20 @@ export function NodePopover({
   onClose: () => void
   onAddToProofSet?: () => void
   onReplay?: () => void
+  onViewPreAttackState?: () => void
 }) {
   const sd = POP_STATUS[branch.status] ?? POP_STATUS.promising
   return (
     <div
       style={{ left: x, top: y }}
-      className="animate-dropdown-show absolute z-20 w-72 rounded-xl border border-hairline bg-surface-raised p-4 shadow-lg"
+      className="animate-dropdown-show absolute z-20 w-72 origin-top-left rounded-lg border border-hairline bg-surface-raised p-4 shadow-lg"
     >
       <div className="flex items-center gap-2">
         <span className="truncate text-sm font-semibold text-ink-primary">{branch.title}</span>
-        <Chip status={sd.chip}>{branch.status === 'witness' ? 'WITNESS' : branch.status === 'control' ? 'CONTROL' : 'PROMISING'}</Chip>
-        <button onClick={onClose} className="ml-auto text-ink-tertiary hover:text-ink-primary">
+        <Chip status={sd.chip}>{branch.status === 'witness' ? 'CONFIRMED' : branch.status === 'verifying' ? 'VERIFYING' : branch.status === 'control' ? 'BASELINE' : 'CANDIDATE'}</Chip>
+        <IconButton label="Close node details" onClick={onClose} className="ml-auto h-7 w-7">
           <X size={15} />
-        </button>
+        </IconButton>
       </div>
       <div className="mt-2 divide-y divide-hairline">
         <Row icon={<Activity size={13} />} label="Status">
@@ -59,7 +62,7 @@ export function NodePopover({
           {branch.clusterLabel ?? '—'}
         </Row>
         <Row icon={<RefreshCw size={13} />} label="Replay">
-          {branch.status === 'witness' ? 'Deterministic pass' : 'Not run'}
+          {branch.status === 'witness' ? 'Deterministic pass' : branch.status === 'verifying' ? 'Checking QA + replay' : 'Not confirmed yet'}
         </Row>
         <Row icon={<ArrowUpRight size={13} />} label="Steps from fork">
           +{branch.stepsFromFork}
@@ -73,16 +76,22 @@ export function NodePopover({
           </span>
         </Row>
       </div>
-      <div className="mt-3 flex items-center gap-3 border-t border-hairline pt-3 text-sm">
-        <button onClick={onReplay} className="inline-flex items-center gap-1.5 font-medium text-ink-primary hover:text-accent-text">
-          <Play size={13} /> Replay
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3 text-sm">
+        <button onClick={onReplay} className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 font-medium text-ink-primary transition-[color,background-color,transform] duration-150 ease-out hover:bg-surface hover:text-accent-text active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Play size={13} /> {branch.status === 'witness' ? 'Replay witness' : branch.status === 'verifying' ? 'Verifying' : 'Replay path'}
         </button>
-        <button className="inline-flex items-center gap-1.5 font-medium text-ink-secondary hover:text-ink-primary">
+        <button onClick={onViewPreAttackState} className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 font-medium text-ink-secondary transition-[color,background-color,transform] duration-150 ease-out hover:bg-surface hover:text-ink-primary active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Eye size={13} /> View state
         </button>
-        <button onClick={onAddToProofSet} className="ml-auto inline-flex items-center gap-1.5 font-medium text-accent-text hover:underline">
-          <PlusCircle size={13} /> Add to ProofSet
-        </button>
+        {branch.status === 'witness' ? (
+          <button onClick={onAddToProofSet} className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 font-medium text-accent-text transition-[background-color,transform] duration-150 ease-out hover:bg-green-50 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <PlusCircle size={13} /> Add witness
+          </button>
+        ) : (
+          <span className="ml-auto inline-flex items-center gap-1.5 font-medium text-ink-tertiary">
+            <PlusCircle size={13} /> Await QA
+          </span>
+        )}
       </div>
     </div>
   )

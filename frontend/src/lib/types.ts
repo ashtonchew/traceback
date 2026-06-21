@@ -4,6 +4,7 @@ export type BranchStatus =
   | 'qa'
   | 'snapshot'
   | 'promising'
+  | 'verifying'
   | 'witness'
   | 'rewarded'
   | 'control'
@@ -25,14 +26,14 @@ export interface BranchNodeData {
   kind: NodeKind
   title: string
   status: BranchStatus
-  /** small label chip on the right of the title, e.g. PROMISING, WITNESS, CONTROL */
+  /** small label chip on the right of the title, e.g. CANDIDATE, CONFIRMED, CONTROL */
   tag?: string
   /** sub line, e.g. "reward 0.6", "step 18" */
   meta?: string
   reward?: number
   rows?: MetaRow[]
-  /** show a verdict icon: ok | warn | fail | none */
-  verdict?: 'ok' | 'warn' | 'fail' | 'none'
+  /** show a verdict icon: ok | warn | fail | running | none */
+  verdict?: 'ok' | 'warn' | 'fail' | 'running' | 'none'
   selected?: boolean
   hasChevron?: boolean
   [key: string]: unknown

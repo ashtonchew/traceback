@@ -4,8 +4,10 @@ import type {
   ForkPoint,
   LegitimateControl,
   Patch,
+  PreAttackState,
   ProofSet,
   ReleaseProof,
+  ReplayResult,
   GateMemberResult,
 } from '../domain/types'
 
@@ -61,5 +63,8 @@ export interface ForkProofApi {
   publishRelease(releaseProofId: string): Promise<ReleaseProof>
 
   /** Replay a single Witness deterministically against a target grader version. */
-  replayWitness(witnessId: string): Promise<{ ok: boolean; detail: string }>
+  replayWitness(witnessId: string): Promise<ReplayResult>
+
+  /** Restore and return the captured pre-attack (ForkPoint) state for a Witness. */
+  getPreAttackState(witnessId: string): Promise<PreAttackState>
 }

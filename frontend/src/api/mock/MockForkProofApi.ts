@@ -6,8 +6,10 @@ import type {
   GateMemberResult,
   LegitimateControl,
   Patch,
+  PreAttackState,
   ProofSet,
   ReleaseProof,
+  ReplayResult,
 } from '../../domain/types'
 import {
   branches,
@@ -27,6 +29,24 @@ function delay(ms: number) {
 
 function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v))
+}
+
+function batchDelay(index: number) {
+  return index === 0 ? 640 : 860
+}
+
+function discoveryBatches(source: BranchRun[]): BranchRun[][] {
+  const byDepth = [...source]
+    .sort((a, b) => (a.layout?.x ?? 0) - (b.layout?.x ?? 0))
+    .reduce<Map<number, BranchRun[]>>((groups, branch) => {
+      const depth = branch.layout?.y ?? 0
+      groups.set(depth, [...(groups.get(depth) ?? []), branch])
+      return groups
+    }, new Map())
+
+  return [...byDepth.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, group]) => group)
 }
 
 /**
@@ -54,13 +74,16 @@ export class MockForkProofApi implements ForkProofApi {
 
   async runDiscovery(onBranch?: (b: BranchRun) => void): Promise<BranchRun[]> {
     const out: BranchRun[] = []
-    // stream parents before children so the tree grows top-down
-    const ordered = [...branches].sort((a, b) => (a.layout?.y ?? 0) - (b.layout?.y ?? 0))
-    for (const b of ordered) {
-      await delay(260)
-      const rec = clone(b)
-      out.push(rec)
-      onBranch?.(rec)
+    // Stream by tree depth so sibling branches appear as parallel batches while
+    // still preserving parent-before-child lineage.
+    const batches = discoveryBatches(branches)
+    for (const [index, batch] of batches.entries()) {
+      await delay(batchDelay(index))
+      for (const branch of batch) {
+        const rec = clone(branch)
+        out.push(rec)
+        onBranch?.(rec)
+      }
     }
     return out
   }
@@ -198,8 +221,49 @@ export class MockForkProofApi implements ForkProofApi {
     }
   }
 
-  async replayWitness(witnessId: string): Promise<{ ok: boolean; detail: string }> {
-    await delay(300)
-    return { ok: true, detail: `Witness ${witnessId} replayed deterministically (v1).` }
+  async replayWitness(witnessId: string): Promise<ReplayResult> {
+    await delay(450)
+    const b = branches.find((x) => x.runId === `run-${witnessId}` || x.branchId === witnessId)
+    const reward = b?.reward ?? 1.0
+    const steps = b?.stepsFromFork ?? forkPoint.upToStep
+    const parent = b?.parentSnapshot ?? forkPoint.snapshotId
+    return {
+      witnessId,
+      ok: true,
+      detail: `Witness ${witnessId} replayed deterministically against grader v1.`,
+      graderVersion: 'v1',
+      graderDigest: b?.graderDigest ?? forkPoint.graderDigest,
+      steps,
+      reward,
+      digestMatch: true,
+      checks: [
+        { label: 'Pre-attack snapshot restored', status: 'pass', detail: `${parent}-pre` },
+        { label: 'Action prefix replayed', status: 'pass', detail: `${steps} steps` },
+        { label: 'Exploit reproduced', status: 'pass', detail: `reward ${reward.toFixed(2)}` },
+        { label: 'Output digest match', status: 'pass', detail: 'deterministic' },
+      ],
+    }
+  }
+
+  async getPreAttackState(witnessId: string): Promise<PreAttackState> {
+    await delay(320)
+    const b = branches.find((x) => x.runId === `run-${witnessId}` || x.branchId === witnessId)
+    return {
+      witnessId,
+      snapshotRef: `${b?.parentSnapshot ?? forkPoint.snapshotId}-pre`,
+      snapshotMode: b?.snapshotMode ?? forkPoint.snapshotMode,
+      environmentVersion: b?.environmentVersion ?? forkPoint.environmentVersion,
+      upToStep: forkPoint.upToStep,
+      cumulativeReward: forkPoint.cumulativeReward,
+      capturedAt: forkPoint.createdAt,
+      summary:
+        'State captured at the ForkPoint — the last point shared with legitimate behavior, before this branch diverged into the exploit.',
+      files: [
+        { path: 'src/sales_analyzer.py', status: 'unchanged', note: 'reference solution prefix' },
+        { path: 'tests/test_sales_analyzer.py', status: 'unchanged', note: 'frozen grader fixtures' },
+        { path: 'conftest.py', status: 'diverged', note: 'pytest plugin injected after fork' },
+        { path: 'pytest.ini', status: 'diverged', note: 'test discovery altered after fork' },
+      ],
+    }
   }
 }

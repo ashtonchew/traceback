@@ -6,7 +6,6 @@ export interface Scene {
 
 export const SCENES: Scene[] = [
   { path: '/', label: 'QA ForkPoint (root)', group: 'Discover' },
-  { path: '/tree', label: 'ForkProof Run — branches', group: 'Discover' },
   { path: '/witness', label: 'Exploit Witness — tree', group: 'Witness' },
   { path: '/proofset', label: 'Exploit Witness — ProofSet', group: 'Witness' },
   { path: '/patch', label: 'Verifier Patch v2', group: 'Fix' },

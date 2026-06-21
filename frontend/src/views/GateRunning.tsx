@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { clsx } from 'clsx'
 import { useNavigate } from 'react-router-dom'
-import { Layers, ShieldCheck, RotateCw, Ban, Loader2, Check, Circle, X, ChevronRight, FileText } from 'lucide-react'
+import { Layers, ShieldCheck, RotateCw, Ban, Loader2, Check, Circle, X, ChevronRight, FileText } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
 import { Chip } from '../components/primitives'
+import { getGateCounts } from '../lib/runFooter'
 import { useRun } from '../store/RunProvider'
 import type { GateMemberResult } from '../domain/types'
 
@@ -34,11 +35,10 @@ function GateRow({ status, name, sub, right, rightTone }: { status: RowStatus; n
     <div className="flex items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0">
       <StatusIcon status={status} />
       <div className="min-w-0 flex-1">
-        <div className={clsx('text-sm font-medium', status === 'pending' ? 'text-ink-secondary' : 'text-ink-primary')}>{name}</div>
-        <div className="text-xs text-ink-tertiary">{sub}</div>
+        <div className={clsx('truncate text-sm font-medium', status === 'pending' ? 'text-ink-secondary' : 'text-ink-primary')}>{name}</div>
+        <div className="truncate text-xs text-ink-tertiary">{sub}</div>
       </div>
-      <span className={clsx('flex items-center gap-1 text-sm font-medium', tone)}>
-        {status === 'running' && <Loader2 size={13} className="animate-spin" />}
+      <span className={clsx('flex shrink-0 items-center gap-1 text-sm font-medium', tone)}>
         {right}
       </span>
     </div>
@@ -53,6 +53,7 @@ function GateColumn({
   icon,
   children,
   footerLabel,
+  onFooterClick,
 }: {
   title: string
   badge: string
@@ -61,9 +62,10 @@ function GateColumn({
   icon: React.ReactNode
   children: React.ReactNode
   footerLabel: string
+  onFooterClick: () => void
 }) {
   return (
-    <section className="flex flex-col overflow-hidden rounded-xl border border-hairline bg-surface-raised">
+    <section className="flex flex-col overflow-hidden rounded-lg border border-hairline bg-surface-raised">
       <div className="flex items-start gap-3 border-b border-hairline p-4">
         <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-state-red-soft text-ink-danger">{icon}</span>
         <div className="flex-1">
@@ -73,14 +75,14 @@ function GateColumn({
           </div>
           <div className="mt-2 flex items-center gap-3">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-sunken">
-              <div className="h-full rounded-full bg-fill-accent transition-all" style={{ width: `${progress}%` }} />
+              <div className="h-full origin-left rounded-full bg-fill-accent transition-transform duration-200 ease-out" style={{ transform: `scaleX(${progress / 100})` }} />
             </div>
             <span className="text-xs text-ink-secondary">{progressText}</span>
           </div>
         </div>
       </div>
       <div>{children}</div>
-      <button className="flex items-center gap-1.5 border-t border-hairline px-4 py-2.5 text-sm text-ink-secondary hover:text-ink-primary">
+      <button type="button" onClick={onFooterClick} className="flex items-center gap-1.5 border-t border-hairline px-4 py-2.5 text-sm text-ink-secondary transition-[background-color,color,transform] duration-150 ease-out hover:bg-surface hover:text-ink-primary active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <FileText size={13} /> {footerLabel} <ChevronRight size={13} className="ml-auto" />
       </button>
     </section>
@@ -89,12 +91,12 @@ function GateColumn({
 
 function InfoCard({ icon, label, title, sub, tone }: { icon: React.ReactNode; label: string; title: React.ReactNode; sub: string; tone?: 'green' }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-hairline bg-surface-raised p-4">
+    <div className="flex items-center gap-3 rounded-lg border border-hairline bg-surface-raised p-4">
       <span className={clsx('flex h-9 w-9 items-center justify-center rounded-lg', tone === 'green' ? 'bg-green-50 text-accent-text' : 'bg-surface-sunken text-ink-secondary')}>{icon}</span>
-      <div>
+      <div className="min-w-0">
         <div className="text-2xs uppercase tracking-wide text-ink-tertiary">{label}</div>
-        <div className="text-sm font-medium text-ink-primary">{title}</div>
-        <div className="text-xs text-ink-tertiary">{sub}</div>
+        <div className="min-w-0 text-sm font-medium text-ink-primary">{title}</div>
+        <div className="truncate text-xs text-ink-tertiary">{sub}</div>
       </div>
     </div>
   )
@@ -151,8 +153,7 @@ export function GateRunning() {
 
   const done = run.gate.results.length
   const total = witnessIds.length + controlIds.length
-  const passed = run.gate.results.filter((r) => (r.kind === 'witness' ? r.v2 === 0 : r.v2 === 1)).length
-  const failed = run.gate.results.filter((r) => (r.kind === 'witness' ? r.v2 === 1 : r.v2 === 0)).length
+  const gateCounts = getGateCounts(run.gate.results, total)
   const patchLabel = run.patch?.label ?? `Patch v${run.fixIteration + 1}`
 
   return (
@@ -179,6 +180,7 @@ export function GateRunning() {
             progressText={`${witnessDone} / ${witnessIds.length} complete`}
             icon={<Ban size={15} />}
             footerLabel="View all witnesses"
+            onFooterClick={() => navigate('/witness')}
           >
             {witnessIds.map((id) => {
               const r = witnessRow(resultFor(id))
@@ -193,6 +195,7 @@ export function GateRunning() {
             progressText={`${controlDone} / ${controlIds.length} complete`}
             icon={<ShieldCheck size={15} />}
             footerLabel="View all controls"
+            onFooterClick={() => navigate('/proofset')}
           >
             {controlIds.map((id) => {
               const r = controlRow(resultFor(id))
@@ -203,16 +206,16 @@ export function GateRunning() {
       </div>
       <RunSummaryFooter
         stats={[
-          { label: 'Passed', value: passed, tone: 'green' },
-          { label: 'Failed', value: failed, tone: 'red' },
-          { label: 'Pending', value: total - done, tone: 'gray' },
+          { label: 'Passed', value: gateCounts.passed, tone: 'green' },
+          { label: 'Failed', value: gateCounts.failed, tone: 'red' },
+          { label: 'Pending', value: gateCounts.pending, tone: 'gray' },
         ]}
-        total={total}
+        total={gateCounts.total}
         cards={[
-          { icon: 'witness', label: 'Witnesses', value: witnessIds.length },
-          { icon: 'releaseproof', label: 'Controls', value: controlIds.length },
+          { icon: 'witness', label: 'Witnesses', value: witnessIds.length, onClick: () => navigate('/witness') },
+          { icon: 'releaseproof', label: 'Controls', value: controlIds.length, onClick: () => navigate('/proofset') },
           { icon: 'proofset', label: 'Deterministic' },
-          { icon: 'artifacts', label: 'View gate log' },
+          { icon: 'artifacts', label: 'View gate log', onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}
       />

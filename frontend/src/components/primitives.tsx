@@ -1,5 +1,5 @@
 import { clsx } from 'clsx'
-import { Check, X, AlertTriangle, Loader2, Copy } from 'lucide-react'
+import { Check, X, AlertTriangle, Loader2, Copy } from './icons'
 import type { ReactNode } from 'react'
 import type { BranchStatus } from '../lib/types'
 
@@ -13,6 +13,7 @@ const CHIP: Record<string, string> = {
   rewarded: 'bg-green-50 text-accent-text',
   'control-pass': 'bg-green-50 text-accent-text',
   promising: 'bg-warn-soft text-warn-text',
+  verifying: 'bg-warn-soft text-warn-text',
   'qa-review': 'bg-warn-soft text-warn-text',
   control: 'bg-state-gray-soft text-ink-secondary-strong',
   snapshot: 'bg-tint-blue text-ink-secondary-strong',
@@ -82,9 +83,10 @@ type BtnProps = {
   className?: string
   icon?: ReactNode
   onClick?: () => void
+  disabled?: boolean
 }
 
-export function Button({ children, variant = 'secondary', size = 'md', className, icon, onClick }: BtnProps) {
+export function Button({ children, variant = 'secondary', size = 'md', className, icon, onClick, disabled }: BtnProps) {
   const variants: Record<string, string> = {
     primary: 'bg-fill-accent text-ink-inverse hover:bg-fill-accent-hover',
     dark: 'bg-fill-primary text-ink-inverse hover:bg-fill-primary-hover',
@@ -100,10 +102,13 @@ export function Button({ children, variant = 'secondary', size = 'md', className
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={clsx(
-        'inline-flex items-center justify-center font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity,transform] duration-150 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        !disabled && 'active:scale-[0.97]',
         variants[variant],
         sizes[size],
+        disabled && 'cursor-not-allowed opacity-55 hover:bg-surface-raised hover:text-ink-primary active:scale-100',
         className,
       )}
     >
@@ -120,7 +125,7 @@ export function IconButton({ children, onClick, className, label }: { children: 
       aria-label={label}
       onClick={onClick}
       className={clsx(
-        'inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-secondary transition hover:bg-surface hover:text-ink-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-secondary transition-[background-color,color,transform] duration-150 ease-out hover:bg-surface hover:text-ink-primary active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         className,
       )}
     >
@@ -148,8 +153,8 @@ export function VersionPill({ children }: { children: ReactNode }) {
 
 export function MonoCopy({ value }: { value: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-sm text-ink-primary">
-      {value}
+    <span className="inline-flex min-w-0 items-center gap-1.5 font-mono text-sm text-ink-primary">
+      <span className="min-w-0 truncate">{value}</span>
       <Copy size={12} className="text-ink-tertiary" />
     </span>
   )

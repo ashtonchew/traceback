@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { api } from '../api'
 import type {
   BranchRun,
@@ -6,10 +6,16 @@ import type {
   GateMemberResult,
   LegitimateControl,
   Patch,
+  PreAttackState,
   ProofSet,
   ReleaseProof,
+  ReplayResult,
   RunPhase,
 } from '../domain/types'
+
+function confirmationDelay(branch: BranchRun) {
+  return 760 + (branch.seed % 5) * 170
+}
 
 interface RunState {
   phase: RunPhase
@@ -30,6 +36,7 @@ type Action =
   | { type: 'PHASE'; phase: RunPhase }
   | { type: 'RESET_BRANCHES' }
   | { type: 'ADD_BRANCH'; branch: BranchRun }
+  | { type: 'CONFIRM_BRANCH'; branch: BranchRun }
   | { type: 'SELECT'; id?: string }
   | { type: 'PROOFSET'; proofSet: ProofSet }
   | { type: 'PATCH'; patch: Patch; iteration: number }
@@ -63,9 +70,14 @@ function reducer(state: RunState, action: Action): RunState {
     case 'PHASE':
       return { ...state, phase: action.phase }
     case 'RESET_BRANCHES':
-      return { ...state, branches: [], phase: 'discovering' }
+      return { ...state, branches: [], phase: 'discovering', selectedBranchId: undefined }
     case 'ADD_BRANCH':
       return { ...state, branches: [...state.branches, action.branch] }
+    case 'CONFIRM_BRANCH':
+      return {
+        ...state,
+        branches: state.branches.map((branch) => (branch.runId === action.branch.runId ? action.branch : branch)),
+      }
     case 'SELECT':
       return { ...state, selectedBranchId: action.id }
     case 'PROOFSET':
@@ -100,13 +112,16 @@ interface RunActions {
   runGate: () => Promise<ReleaseProof | undefined>
   returnToFixer: () => Promise<void>
   publish: () => Promise<void>
-  replayWitness: (branchId: string) => Promise<void>
+  replayWitness: (branchId: string) => Promise<ReplayResult>
+  viewPreAttackState: (branchId: string) => Promise<PreAttackState>
 }
 
 const RunContext = createContext<(RunState & RunActions) | null>(null)
 
 export function RunProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initial)
+  const discoveryToken = useRef(0)
+  const confirmationTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
 
   useEffect(() => {
     let alive = true
@@ -120,9 +135,32 @@ export function RunProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    return () => {
+      confirmationTimers.current.forEach((timer) => clearTimeout(timer))
+      confirmationTimers.current.clear()
+    }
+  }, [])
+
   const startDiscovery = useCallback(async () => {
+    discoveryToken.current += 1
+    const token = discoveryToken.current
+    confirmationTimers.current.forEach((timer) => clearTimeout(timer))
+    confirmationTimers.current.clear()
     dispatch({ type: 'RESET_BRANCHES' })
-    await api.runDiscovery((branch) => dispatch({ type: 'ADD_BRANCH', branch }))
+    await api.runDiscovery((branch) => {
+      if (branch.status !== 'witness') {
+        dispatch({ type: 'ADD_BRANCH', branch })
+        return
+      }
+
+      dispatch({ type: 'ADD_BRANCH', branch: { ...branch, status: 'verifying' } })
+      const timer = setTimeout(() => {
+        confirmationTimers.current.delete(timer)
+        if (discoveryToken.current === token) dispatch({ type: 'CONFIRM_BRANCH', branch })
+      }, confirmationDelay(branch))
+      confirmationTimers.current.add(timer)
+    })
     dispatch({ type: 'PHASE', phase: 'discovered' })
   }, [])
 
@@ -173,9 +211,9 @@ export function RunProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'RELEASEPROOF', releaseProof })
   }, [])
 
-  const replayWitness = useCallback(async (branchId: string) => {
-    await api.replayWitness(branchId)
-  }, [])
+  const replayWitness = useCallback((branchId: string) => api.replayWitness(branchId), [])
+
+  const viewPreAttackState = useCallback((branchId: string) => api.getPreAttackState(branchId), [])
 
   const value = useMemo(
     () => ({
@@ -190,8 +228,9 @@ export function RunProvider({ children }: { children: ReactNode }) {
       returnToFixer,
       publish,
       replayWitness,
+      viewPreAttackState,
     }),
-    [state, startDiscovery, select, selectedBranch, addToProofSet, removeFromProofSet, loadPatch, runGate, returnToFixer, publish, replayWitness],
+    [state, startDiscovery, select, selectedBranch, addToProofSet, removeFromProofSet, loadPatch, runGate, returnToFixer, publish, replayWitness, viewPreAttackState],
   )
 
   return <RunContext.Provider value={value}>{children}</RunContext.Provider>

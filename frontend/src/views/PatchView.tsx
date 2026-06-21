@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ArrowLeft, ShieldCheck, Play, FileCode2, FileText, Hash, Check } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, Play, FileCode2, FileText, Hash, Check } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
 import { Button, Chip } from '../components/primitives'
+import { getRunTreeCounts } from '../lib/runFooter'
 import { useRun } from '../store/RunProvider'
 import type { DiffLine } from '../domain/types'
 
@@ -46,9 +47,9 @@ export function PatchView() {
     if (!patch || patch.iteration !== run.fixIteration) run.loadPatch(run.fixIteration)
   }, [patch, run])
 
-  const witnessCount = run.proofSet?.exploitWitnessIds.length ?? 0
-  const controlCount = run.proofSet?.legitimateControlIds.length ?? 0
-  const promisingCount = run.branches.filter((b) => b.status === 'promising' || b.status === 'qa_review').length
+  const counts = getRunTreeCounts(run)
+  const witnessCount = run.proofSet?.exploitWitnessIds.length ?? counts.witnesses
+  const controlCount = run.proofSet?.legitimateControlIds.length ?? counts.controls
 
   if (!patch) {
     return (
@@ -64,7 +65,7 @@ export function PatchView() {
       <RunHeader title="Exploit Witness" version="v3.2" primaryLabel="Resume run" />
       <div className="flex min-h-0 flex-1">
         <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto px-8 py-6">
-          <button onClick={() => navigate('/proofset')} className="mb-5 flex items-center gap-1.5 text-sm text-ink-secondary hover:text-ink-primary">
+          <button onClick={() => navigate('/proofset')} className="mb-5 flex items-center gap-1.5 rounded-md text-sm text-ink-secondary transition-[color,transform] duration-150 ease-out hover:text-ink-primary active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ArrowLeft size={15} /> Back to run
           </button>
           <div className="max-w-3xl">
@@ -80,32 +81,32 @@ export function PatchView() {
             </p>
             <p className="mt-3 text-sm text-ink-secondary-strong">{patch.description}</p>
 
-            <div className="mt-5 overflow-hidden rounded-xl border border-hairline bg-surface-raised">
+            <div className="mt-5 overflow-hidden rounded-lg border border-hairline bg-surface-raised">
               <div className="flex items-center justify-between border-b border-hairline bg-surface px-4 py-2.5">
-                <span className="flex items-center gap-2 font-mono text-xs text-ink-primary">
+                <span className="flex min-w-0 items-center gap-2 font-mono text-xs text-ink-primary">
                   <FileCode2 size={14} className="text-ink-tertiary" />
-                  {patch.filePath}
+                  <span className="truncate">{patch.filePath}</span>
                 </span>
                 <span className="font-mono text-xs">
                   <span className="text-accent-text">+{patch.added}</span> <span className="text-ink-danger">-{patch.removed}</span>
                 </span>
               </div>
-              <div className="py-2">
+              <div className="overflow-x-auto py-2">
                 {patch.diff.map((l, i) => (
                   <DiffRow key={i} line={l} />
                 ))}
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
               <StatCard icon={<FileText size={13} />} title="Patch summary">
                 {patch.summary}
               </StatCard>
               <StatCard icon={<FileCode2 size={13} />} title="Files changed">
-                1<div className="text-xs text-ink-secondary">{patch.filePath}</div>
+                1<div className="break-all text-xs text-ink-secondary">{patch.filePath}</div>
               </StatCard>
               <StatCard icon={<Hash size={13} />} title="Patch digest">
-                <span className="font-mono text-xs">{patch.patchDigest}</span>
+                <span className="break-all font-mono text-xs">{patch.patchDigest}</span>
               </StatCard>
             </div>
 
@@ -122,7 +123,7 @@ export function PatchView() {
             <ShieldCheck size={16} className="text-accent-text" />
             <h3 className="font-display text-lg tracking-tight text-ink-primary">Selected for proof</h3>
           </div>
-          <div className="mt-4 rounded-xl border border-hairline bg-surface-raised p-4">
+          <div className="mt-4 rounded-lg border border-hairline bg-surface-raised p-4">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-ink-primary">ProofSet {witnessCount + controlCount}</span>
               <span className="text-ink-tertiary">Total {witnessCount + controlCount + (run.proofSet?.exploitFamilyVariantIds.length ?? 0)}</span>
@@ -131,7 +132,7 @@ export function PatchView() {
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               {[
                 ['Witnesses', String(witnessCount), 'text-accent-text'],
-                ['Promising', String(promisingCount), 'text-warn-text'],
+                ['Promising', String(counts.candidates), 'text-warn-text'],
                 ['Controls', String(controlCount), 'text-ink-secondary-strong'],
               ].map(([l, v, c]) => (
                 <div key={l} className="rounded-lg bg-surface px-2 py-2">
@@ -160,11 +161,9 @@ export function PatchView() {
 
           <div className="mt-auto space-y-2 pt-5">
             <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Next step</div>
+            <div className="mb-2 text-sm text-ink-secondary-strong">{patch.label}</div>
             <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={() => navigate('/gate')}>
-              Run ProofSet against {patch.label.replace('Patch ', '')}
-            </Button>
-            <Button variant="secondary" size="md" className="w-full" icon={<FileCode2 size={14} />}>
-              View patch in editor
+              Run ProofSet
             </Button>
           </div>
         </aside>
@@ -172,15 +171,20 @@ export function PatchView() {
       <RunSummaryFooter
         stats={[
           { label: 'Witness', value: witnessCount, tone: 'green' },
-          { label: 'Promising', value: promisingCount, tone: 'warn' },
+          { label: 'Promising', value: counts.candidates, tone: 'warn' },
           { label: 'Controls', value: controlCount, tone: 'gray' },
         ]}
-        total={witnessCount + promisingCount + controlCount}
+        total={counts.proofSetMembers || witnessCount + counts.candidates + controlCount}
         cards={[
-          { icon: 'witness', label: 'Witness', value: witnessCount },
-          { icon: 'proofset', label: 'ProofSet', value: witnessCount + controlCount },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: run.releaseProof?.status === 'committed' ? 1 : 0 },
-          { icon: 'artifacts', label: 'View all artifacts' },
+          { icon: 'witness', label: 'Witness', value: witnessCount, onClick: () => navigate('/witness') },
+          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          {
+            icon: 'releaseproof',
+            label: 'ReleaseProof',
+            value: counts.releaseProofs,
+            onClick: () => navigate('/releaseproof'),
+          },
+          { icon: 'artifacts', label: 'Patch artifacts', value: patch ? 1 : 0, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}
       />

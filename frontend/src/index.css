@@ -51,6 +51,7 @@
   --fp-dot-witness: var(--ds-green-500);
   --fp-dot-promising: #b07d22;
   --fp-dot-control: var(--ds-neutral-700);
+  --fp-snapshot-border: #b9d7f3;
 }
 
 /* React Flow surface alignment with design system */
@@ -60,6 +61,48 @@
 
 .react-flow__node {
   font-family: inherit;
+}
+
+.fp-snapshot-card {
+  border-color: var(--fp-snapshot-border);
+  background: color-mix(in srgb, var(--ds-tint-blue) 70%, var(--ds-white));
+}
+
+.react-flow__node.fp-enter {
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 0.22s var(--ds-ease-out-expo),
+    transform 0.22s var(--ds-ease-out-expo);
+}
+
+.react-flow__node.fp-enter.fp-enter-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.react-flow__edge .fp-cluster-edge.fp-enter {
+  opacity: 0;
+  transition: opacity 0.24s var(--ds-ease-out-expo) 40ms;
+}
+
+.react-flow__edge .fp-cluster-edge.fp-enter.fp-enter-revealed {
+  opacity: 1;
+}
+
+.react-flow__edge .fp-cluster-edge path,
+.react-flow__edge .fp-cluster-edge circle {
+  transition:
+    stroke 0.15s ease,
+    fill 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fp-node-frame:hover {
+    border-color: var(--ds-stroke);
+    box-shadow: var(--ds-shadow);
+    transform: translateY(-1px);
+  }
 }
 
 .react-flow__attribution {
@@ -73,4 +116,17 @@
 .react-flow__handle {
   opacity: 0;
   border: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__node.fp-enter,
+  .react-flow__edge .fp-cluster-edge.fp-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .animate-dropdown-show {
+    animation: none;
+  }
 }

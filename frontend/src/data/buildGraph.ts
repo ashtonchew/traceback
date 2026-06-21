@@ -15,19 +15,28 @@ const CLUSTER_COLOR: Record<string, EdgeCluster> = {
   control: 'control',
 }
 
+function edgeCluster(b: BranchRun): EdgeCluster {
+  if (b.status === 'witness') return 'witness'
+  if (b.status === 'control' || b.status === 'control_pass') return 'control'
+  if (b.status === 'promising' || b.status === 'verifying' || b.status === 'qa_review' || b.status === 'rewarded') return 'promising'
+  return CLUSTER_COLOR[b.clusterId ?? ''] ?? 'default'
+}
+
 /** Map a domain BranchStatus onto the node's visual display fields. */
 function display(b: BranchRun): Partial<BranchNodeData> {
   switch (b.status) {
     case 'witness':
-      return { status: 'witness', verdict: 'ok' }
+      return { status: 'witness', tag: 'CONFIRMED', verdict: 'ok' }
     case 'promising':
-      return { status: 'promising', tag: 'PROMISING', verdict: 'none' }
+      return { status: 'promising', tag: 'CANDIDATE', verdict: 'none' }
+    case 'verifying':
+      return { status: 'verifying', tag: 'VERIFYING', verdict: 'running' }
     case 'qa_review':
-      return { status: 'qa-review', verdict: 'warn' }
+      return { status: 'qa-review', tag: 'QA CHECK', verdict: 'warn' }
     case 'control':
-      return { status: 'control', tag: 'CONTROL', verdict: 'none' }
+      return { status: 'control', tag: 'BASELINE', verdict: 'none' }
     case 'control_pass':
-      return { status: 'control-pass', tag: 'CONTROL PASS', verdict: 'ok' }
+      return { status: 'control-pass', tag: 'BASELINE PASS', verdict: 'ok' }
     case 'dead_end':
       return { status: 'dead-end', tag: 'DEAD END', verdict: 'fail' }
     case 'duplicate':
@@ -48,10 +57,9 @@ function display(b: BranchRun): Partial<BranchNodeData> {
 export function buildRunGraph(forkPoint: ForkPoint | undefined, branches: BranchRun[], selectedId?: string): { nodes: N[]; edges: Edge[] } {
   if (!forkPoint) return { nodes: [], edges: [] }
 
-  const topLevel = branches.filter((b) => !b.parentNodeId)
-  const centers = topLevel.map((b) => (b.layout?.x ?? 0) + 110)
-  const forkCenter = centers.length ? (Math.min(...centers) + Math.max(...centers)) / 2 : 660
-  const forkX = forkCenter - 106
+  // Fixed position — do not recompute from streaming branches or the node drifts
+  // as top-level children appear. Keep the fork centered over the final tree.
+  const forkX = 619
 
   const forkNode: N = {
     id: 'fork',
@@ -90,7 +98,7 @@ export function buildRunGraph(forkPoint: ForkPoint | undefined, branches: Branch
   const edges: Edge[] = branches.map((b) => {
     const id = shortId(b)
     const source = b.parentNodeId ?? 'fork'
-    const cluster = CLUSTER_COLOR[b.clusterId ?? ''] ?? 'default'
+    const cluster = edgeCluster(b)
     return {
       id: `e-${source}-${id}`,
       source,

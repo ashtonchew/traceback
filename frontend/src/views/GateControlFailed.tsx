@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ShieldX, RefreshCw, ChevronDown, Check, X, RotateCcw, FileText, Eye } from 'lucide-react'
+import { ShieldX, RefreshCw, Check, X, RotateCcw, FileText, Eye } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
 import { KV } from '../components/panels'
+import { Button } from '../components/primitives'
+import { getGateCounts, getRunTreeCounts } from '../lib/runFooter'
 import { useRun } from '../store/RunProvider'
 
 const CONTROLS = [
@@ -18,7 +20,7 @@ const WITNESSES = ['Trim + collapse variant', 'Company alias escalation', 'Confe
 function StatBlock({ label, big, sub, pct, tone }: { label: string; big: string; sub: string; pct: number; tone: 'green' | 'warn' | 'red' }) {
   const bar = tone === 'green' ? 'bg-fill-accent' : tone === 'warn' ? 'bg-warn' : 'bg-fill-danger'
   return (
-    <div className="rounded-xl border border-hairline bg-surface-raised p-4">
+    <div className="rounded-lg border border-hairline bg-surface-raised p-4">
       <div className="text-xs text-ink-secondary">{label}</div>
       <div className="mt-1 flex items-baseline gap-2">
         <span className="font-display text-2xl tracking-tight text-ink-primary">{big}</span>
@@ -38,19 +40,23 @@ export function GateControlFailed() {
   const navigate = useNavigate()
   const run = useRun()
   const returnToFixer = () => run.returnToFixer().then(() => navigate('/patch'))
+  const counts = getRunTreeCounts(run)
+  const total = (run.proofSet?.exploitWitnessIds.length ?? 0) + (run.proofSet?.legitimateControlIds.length ?? 0)
+  const gateCounts = getGateCounts(run.releaseProof?.results ?? run.gate.results, total)
+  const preserved = (run.releaseProof?.results ?? run.gate.results).filter((result) => result.kind === 'control' && result.v2 === 1).length
   return (
     <>
       <RunHeader title="Release Gate" version="v3.2" status={{ tone: 'red', label: 'Failed' }} primaryLabel="Resume run" onClose={() => navigate('/witness')} />
       <div className="flex min-h-0 flex-1">
         <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto px-8 py-6">
           {/* banner */}
-          <div className="flex items-center gap-4 rounded-xl border border-red-200 bg-state-red-soft p-4">
+          <div className="flex flex-wrap items-center gap-4 rounded-lg border border-red-200 bg-state-red-soft p-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-fill-danger text-ink-inverse"><ShieldX size={18} /></span>
-            <div className="flex-1">
+            <div className="min-w-64 flex-1">
               <div className="font-display text-lg tracking-tight text-ink-danger">Gate failed · relax patch</div>
               <div className="text-sm text-ink-secondary-strong">A control rejected. The release gate is not satisfied.</div>
             </div>
-            <div className="flex items-center gap-6 text-center">
+            <div className="flex flex-wrap items-center gap-4 text-center">
               <div>
                 <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Evaluated</div>
                 <div className="font-display text-xl text-ink-primary">8</div>
@@ -59,16 +65,14 @@ export function GateControlFailed() {
                 <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Failed</div>
                 <div className="font-display text-xl text-ink-danger">1</div>
               </div>
-              <button className="flex items-center gap-1.5 rounded-lg border border-stroke bg-surface-raised px-3 py-2 text-sm font-medium text-ink-primary hover:bg-surface">
-                <RefreshCw size={14} /> Apply relaxation <ChevronDown size={14} className="text-ink-tertiary" />
-              </button>
+              <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={returnToFixer}>Apply relaxation</Button>
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-4">
+          <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <StatBlock label="Witnesses" big="6 / 6" sub="killed" pct={100} tone="green" />
             <StatBlock label="Controls" big="2 / 3" sub="preserved" pct={67} tone="warn" />
-            <div className="flex flex-col justify-center rounded-xl border border-hairline bg-surface-raised p-4">
+            <div className="flex flex-col justify-center rounded-lg border border-hairline bg-surface-raised p-4">
               <div className="text-xs text-ink-secondary">Release gate</div>
               <div className="mt-1 flex items-center gap-2 font-display text-2xl tracking-tight text-ink-danger">
                 <ShieldX size={20} /> FAILED
@@ -79,18 +83,18 @@ export function GateControlFailed() {
           {/* controls table */}
           <div className="mt-6">
             <div className="mb-2 text-sm font-medium text-ink-primary">Controls (3)</div>
-            <div className="overflow-hidden rounded-xl border border-hairline">
-              <div className="grid grid-cols-[1fr_120px_120px_100px] bg-surface px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">
+            <div className="overflow-x-auto rounded-lg border border-hairline">
+              <div className="grid min-w-[680px] grid-cols-[minmax(0,1fr)_120px_120px_100px] bg-surface px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">
                 <span>Control</span>
                 <span>Status</span>
                 <span>Result</span>
                 <span className="text-right">Reward (H2F)</span>
               </div>
               {CONTROLS.map((c) => (
-                <div key={c.name} className={clsx('grid grid-cols-[1fr_120px_120px_100px] items-center border-t border-hairline px-4 py-3 text-sm', c.broken ? 'bg-state-red-soft' : 'bg-surface-raised')}>
-                  <span className="flex items-center gap-2 font-medium text-ink-primary">
+                <div key={c.name} className={clsx('grid min-w-[680px] grid-cols-[minmax(0,1fr)_120px_120px_100px] items-center border-t border-hairline px-4 py-3 text-sm', c.broken ? 'bg-state-red-soft' : 'bg-surface-raised')}>
+                  <span className="flex min-w-0 items-center gap-2 font-medium text-ink-primary">
                     {c.broken ? <ShieldX size={14} className="text-ink-danger" /> : <Check size={14} className="text-accent-text" />}
-                    {c.name}
+                    <span className="truncate">{c.name}</span>
                     {c.tag && <span className="rounded-sm bg-state-gray-soft px-1.5 py-0.5 text-2xs font-semibold text-ink-secondary-strong">{c.tag}</span>}
                   </span>
                   <span className={clsx('font-semibold', c.broken ? 'text-ink-danger' : 'text-accent-text')}>{c.status}</span>
@@ -130,7 +134,7 @@ export function GateControlFailed() {
             </div>
             <div className="mt-4 flex gap-5 border-b border-hairline">
               {['Overview', 'Evidence', 'State Diff'].map((t, i) => (
-                <button key={t} className={clsx('-mb-px border-b-2 pb-2 text-sm', i === 0 ? 'border-ink-primary font-medium text-ink-primary' : 'border-transparent text-ink-secondary')}>
+                <button key={t} type="button" className={clsx('-mb-px border-b-2 pb-2 text-sm transition-[border-color,color,transform] duration-150 ease-out active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', i === 0 ? 'border-ink-primary font-medium text-ink-primary' : 'border-transparent text-ink-secondary hover:text-ink-primary')}>
                   {t}
                 </button>
               ))}
@@ -149,31 +153,30 @@ export function GateControlFailed() {
             </div>
             <div className="mt-5 space-y-2">
               <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Actions</div>
-              <button onClick={returnToFixer} className="flex w-full items-center justify-center gap-2 rounded-lg bg-fill-danger px-4 py-2.5 text-sm font-medium text-ink-inverse hover:opacity-90">
-                <RotateCcw size={14} /> Return to fixer
-              </button>
-              <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-stroke bg-surface-raised px-4 py-2.5 text-sm font-medium text-ink-primary hover:bg-surface">
-                <FileText size={14} /> View failed control
-              </button>
-              <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-stroke bg-surface-raised px-4 py-2.5 text-sm font-medium text-ink-primary hover:bg-surface">
-                <Eye size={14} /> View baseline state
-              </button>
+              <Button variant="danger" size="md" className="w-full" icon={<RotateCcw size={14} />} onClick={returnToFixer}>Return to fixer</Button>
+              <Button variant="secondary" size="md" className="w-full" icon={<FileText size={14} />} onClick={() => navigate('/artifacts')}>View failed control</Button>
+              <Button variant="secondary" size="md" className="w-full" icon={<Eye size={14} />} onClick={() => navigate('/artifacts')}>View baseline state</Button>
             </div>
           </div>
         </aside>
       </div>
       <RunSummaryFooter
         stats={[
-          { label: 'Killed', value: 6, tone: 'green' },
-          { label: 'Failed', value: 1, tone: 'red' },
-          { label: 'Preserved', value: 2, tone: 'warn' },
+          { label: 'Killed', value: gateCounts.passed - preserved, tone: 'green' },
+          { label: 'Failed', value: gateCounts.failed, tone: 'red' },
+          { label: 'Preserved', value: preserved, tone: 'warn' },
         ]}
-        total={9}
+        total={gateCounts.total}
         cards={[
-          { icon: 'witness', label: 'Witness', value: 6 },
-          { icon: 'proofset', label: 'ProofSet', value: 4 },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: 1 },
-          { icon: 'artifacts', label: 'View all artifacts' },
+          { icon: 'witness', label: 'Witness', value: counts.witnesses, onClick: () => navigate('/witness') },
+          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          {
+            icon: 'releaseproof',
+            label: 'ReleaseProof',
+            value: counts.releaseProofs,
+            onClick: () => navigate('/releaseproof'),
+          },
+          { icon: 'artifacts', label: 'Failed controls', value: gateCounts.failed, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}
       />

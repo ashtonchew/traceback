@@ -1,37 +1,18 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ShieldCheck, Check, ArrowRight, Database, ExternalLink, Copy, FileDiff, Download } from 'lucide-react'
+import { ShieldCheck, Check, ArrowRight, Database, ExternalLink, Copy, FileDiff, Download } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
 import { KV } from '../components/panels'
 import { Button, Chip } from '../components/primitives'
+import { getRunTreeCounts } from '../lib/runFooter'
 import { useRun } from '../store/RunProvider'
-
-function Confetti() {
-  const bits = [
-    { x: '8%', y: '14%', c: 'bg-fill-accent', r: '12deg' },
-    { x: '22%', y: '40%', c: 'bg-accent', r: '-20deg' },
-    { x: '70%', y: '12%', c: 'bg-warn', r: '30deg' },
-    { x: '86%', y: '34%', c: 'bg-fill-accent', r: '-12deg' },
-    { x: '15%', y: '70%', c: 'bg-green-300', r: '40deg' },
-    { x: '90%', y: '64%', c: 'bg-accent', r: '18deg' },
-    { x: '50%', y: '8%', c: 'bg-green-300', r: '-30deg' },
-    { x: '40%', y: '76%', c: 'bg-warn', r: '22deg' },
-  ]
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {bits.map((b, i) => (
-        <span key={i} className={clsx('absolute h-2 w-1.5 rounded-sm opacity-70', b.c)} style={{ left: b.x, top: b.y, transform: `rotate(${b.r})` }} />
-      ))}
-    </div>
-  )
-}
 
 function BigStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-state-green-border bg-state-green-soft py-6">
+    <div className="flex flex-col items-center rounded-lg border border-state-green-border bg-state-green-soft py-6">
       <div className="font-display text-5xl tracking-tight text-ink-primary">{value}</div>
       <div className="mt-1 text-sm text-ink-secondary-strong">{label}</div>
       <div className="mt-1 flex items-center gap-1 text-sm font-medium text-accent-text">
@@ -43,9 +24,9 @@ function BigStat({ value, label }: { value: string; label: string }) {
 
 function EnvCard({ when, version, status, rows, published }: { when: string; version: string; status: string; rows: [string, string, boolean | null][]; published?: boolean }) {
   return (
-    <div className={clsx('rounded-xl border p-4', published ? 'border-state-green-border bg-state-green-soft' : 'border-hairline bg-surface-raised')}>
+    <div className={clsx('rounded-lg border p-4', published ? 'border-state-green-border bg-state-green-soft' : 'border-hairline bg-surface-raised')}>
       <div className="flex items-center justify-between">
-        <span className="font-display text-base tracking-tight text-ink-primary">Environment {version}</span>
+            <span className="min-w-0 truncate font-display text-base tracking-tight text-ink-primary">Environment {version}</span>
         <span className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">{when}</span>
       </div>
       <div className="mt-3 space-y-1.5 text-sm">
@@ -81,12 +62,14 @@ export function ReleaseProof() {
   const commitId = rp?.commitId ?? 'rpf-20250508-102431'
   const reward = (rp?.reward ?? 1.0).toFixed(2)
   const similarity = (rp?.similarity ?? 0.92).toFixed(2)
+  const counts = getRunTreeCounts(run)
+  const witnessTotal = wk[1]
+  const controlTotal = cp[1]
   return (
     <>
       <RunHeader title="Exploit Witness" version="v3.2" primaryLabel="Resume run" onClose={() => navigate('/witness')} />
       <div className="flex min-h-0 flex-1">
         <div className="scrollbar-thin relative min-w-0 flex-1 overflow-y-auto px-8 py-8">
-          <Confetti />
           <div className="relative mx-auto max-w-3xl">
             <div className="flex flex-col items-center text-center">
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-accent-text">
@@ -102,7 +85,7 @@ export function ReleaseProof() {
               <BigStat value={`${cp[0]} / ${cp[1]}`} label="controls preserved" />
             </div>
 
-            <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <div className="mt-5 grid grid-cols-1 items-center gap-3 xl:grid-cols-[1fr_auto_1fr]">
               <EnvCard
                 when="Before"
                 version="v1"
@@ -113,7 +96,7 @@ export function ReleaseProof() {
                   ['ReleaseProof', 'Not committed', null],
                 ]}
               />
-              <ArrowRight size={20} className="text-ink-tertiary" />
+              <ArrowRight size={20} className="hidden text-ink-tertiary xl:block" />
               <EnvCard
                 when="After (published)"
                 version="v2"
@@ -127,14 +110,14 @@ export function ReleaseProof() {
               />
             </div>
 
-            <div className="mt-5 flex items-center gap-3 rounded-xl border border-state-green-border bg-state-green-soft p-4">
+            <div className="mt-5 flex flex-wrap items-center gap-3 rounded-lg border border-state-green-border bg-state-green-soft p-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-fill-accent text-ink-inverse"><Database size={18} /></span>
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Published</div>
-                <div className="text-sm font-medium text-ink-primary">{publishedRef}</div>
+                <div className="truncate text-sm font-medium text-ink-primary">{publishedRef}</div>
                 <div className="text-xs text-ink-secondary">Environment successfully published and live.</div>
               </div>
-              <Button variant="secondary" size="sm" icon={<ExternalLink size={14} />}>View in HUD</Button>
+              <Button variant="secondary" size="sm" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View in HUD</Button>
             </div>
           </div>
         </div>
@@ -151,7 +134,9 @@ export function ReleaseProof() {
               <KV label="Environment" valueClass="text-xs">{env}</KV>
               <KV label="Published version">v2</KV>
               <KV label="Commit ID" valueClass="font-mono text-xs">
-                <span className="inline-flex items-center gap-1">{commitId} <Copy size={11} className="text-ink-tertiary" /></span>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(commitId)} className="inline-flex min-w-0 items-center gap-1 rounded-sm transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span className="truncate">{commitId}</span> <Copy size={11} className="shrink-0 text-ink-tertiary" />
+                </button>
               </KV>
               <KV label="Status" valueClass="text-accent-text text-xs font-semibold">COMMITTED</KV>
               <KV label="Reward (H2F)">{reward}</KV>
@@ -163,24 +148,24 @@ export function ReleaseProof() {
             </div>
             <div className="mt-5 space-y-2">
               <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Actions</div>
-              <Button variant="primary" size="md" className="w-full" icon={<ExternalLink size={14} />}>View ReleaseProof</Button>
-              <Button variant="secondary" size="md" className="w-full" icon={<FileDiff size={14} />}>View state diff</Button>
-              <Button variant="secondary" size="md" className="w-full" icon={<Download size={14} />}>Download evidence</Button>
+              <Button variant="primary" size="md" className="w-full" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View ReleaseProof</Button>
+              <Button variant="secondary" size="md" className="w-full" icon={<FileDiff size={14} />} onClick={() => navigate('/artifacts')}>View state diff</Button>
+              <Button variant="secondary" size="md" className="w-full" icon={<Download size={14} />} onClick={() => navigate('/artifacts')}>Download evidence</Button>
             </div>
           </div>
         </aside>
       </div>
       <RunSummaryFooter
         stats={[
-          { label: 'Witnesses', value: 6, tone: 'green' },
-          { label: 'Controls', value: 3, tone: 'gray' },
+          { label: 'Witnesses', value: `${wk[0]} / ${witnessTotal}`, tone: 'green' },
+          { label: 'Controls', value: `${cp[0]} / ${controlTotal}`, tone: 'gray' },
         ]}
-        total={9}
+        total={witnessTotal + controlTotal}
         cards={[
-          { icon: 'witness', label: 'Witness', value: 2 },
-          { icon: 'proofset', label: 'ProofSet', value: 4 },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: 1 },
-          { icon: 'artifacts', label: 'View all artifacts' },
+          { icon: 'witness', label: 'Witness', value: counts.witnesses, onClick: () => navigate('/witness') },
+          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'releaseproof', label: 'ReleaseProof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
+          { icon: 'artifacts', label: 'Evidence artifacts', value: witnessTotal + controlTotal, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}
       />

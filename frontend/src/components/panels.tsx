@@ -6,17 +6,17 @@ import {
   FolderClosed,
   Clock,
   Copy,
-  ExternalLink,
   Eye,
   Shuffle,
   Play,
   PlusCircle,
   ShieldCheck,
+  ShieldAlert,
   CircleSlash,
-} from 'lucide-react'
+} from './icons'
 import type { ReactNode } from 'react'
 import { Button, Chip, Divider } from './primitives'
-import type { BranchRun, LegitimateControl, ProofSet } from '../domain/types'
+import type { BranchRun, ForkPoint, LegitimateControl, ProofSet } from '../domain/types'
 
 /* ------------------------------------------------------------------ */
 /* Shell + building blocks                                             */
@@ -104,7 +104,6 @@ export function ForkPointPanel({ onStart, onClose }: { onStart?: () => void; onC
       title="QA ForkPoint · S0"
       tag="ROOT"
       tagStatus="root"
-      tabs={['Overview', 'Evidence', 'State Diff']}
       onClose={onClose}
       footer={
         <div className="space-y-2 text-2xs text-ink-tertiary">
@@ -125,9 +124,6 @@ export function ForkPointPanel({ onStart, onClose }: { onStart?: () => void; onC
       <Divider />
       <Section icon={<FileText size={14} />} title="Trace evidence">
         Trace shows reward gained after plugin injection and altered test discovery.
-        <a className="mt-1.5 flex items-center gap-1 text-accent-text hover:underline" href="#">
-          View trace excerpt <ExternalLink size={12} />
-        </a>
       </Section>
       <Divider />
       <Section icon={<FolderClosed size={14} />} title="Snapshot mode">
@@ -145,16 +141,8 @@ export function ForkPointPanel({ onStart, onClose }: { onStart?: () => void; onC
         <KV label="Cumulative reward">1.00</KV>
       </Section>
       <Divider />
-      <div className="grid grid-cols-2 gap-2 pt-3">
-        <Button variant="secondary" size="sm" icon={<Eye size={14} />}>
-          View trace
-        </Button>
-        <Button variant="secondary" size="sm" icon={<Shuffle size={14} />}>
-          View state
-        </Button>
-      </div>
-      <Button variant="primary" size="md" className="mt-2 w-full" icon={<Shuffle size={15} />} onClick={onStart}>
-        Start stochastic branches
+      <Button variant="primary" size="md" className="mt-3 w-full" icon={<Shuffle size={15} />} onClick={onStart}>
+        Start candidate exploit paths
       </Button>
     </PanelShell>
   )
@@ -165,11 +153,12 @@ export function ForkPointPanel({ onStart, onClose }: { onStart?: () => void; onC
 /* ------------------------------------------------------------------ */
 
 const STATUS_DISPLAY: Record<string, { label: string; class: string; tag: string; tagStatus: string }> = {
-  witness: { label: 'CONFIRMED WITNESS', class: 'text-accent-text text-xs font-semibold', tag: 'WITNESS', tagStatus: 'witness' },
-  promising: { label: 'PROMISING CANDIDATE', class: 'text-warn-text text-xs font-semibold', tag: 'PROMISING', tagStatus: 'promising' },
-  qa_review: { label: 'AWAITING QA', class: 'text-warn-text text-xs font-semibold', tag: 'QA REVIEW', tagStatus: 'qa-review' },
-  control: { label: 'LEGITIMATE CONTROL', class: 'text-ink-secondary-strong text-xs font-semibold', tag: 'CONTROL', tagStatus: 'control' },
-  control_pass: { label: 'CONTROL PASS', class: 'text-accent-text text-xs font-semibold', tag: 'CONTROL PASS', tagStatus: 'control-pass' },
+  witness: { label: 'CONFIRMED EXPLOIT WITNESS', class: 'text-accent-text text-xs font-semibold', tag: 'CONFIRMED', tagStatus: 'witness' },
+  promising: { label: 'CANDIDATE EXPLOIT PATH', class: 'text-warn-text text-xs font-semibold', tag: 'CANDIDATE', tagStatus: 'promising' },
+  verifying: { label: 'VERIFYING CANDIDATE', class: 'text-warn-text text-xs font-semibold', tag: 'VERIFYING', tagStatus: 'verifying' },
+  qa_review: { label: 'CANDIDATE IN QA CHECK', class: 'text-warn-text text-xs font-semibold', tag: 'QA CHECK', tagStatus: 'qa-review' },
+  control: { label: 'LEGITIMATE BASELINE', class: 'text-ink-secondary-strong text-xs font-semibold', tag: 'BASELINE', tagStatus: 'control' },
+  control_pass: { label: 'BASELINE PASS', class: 'text-accent-text text-xs font-semibold', tag: 'BASELINE PASS', tagStatus: 'control-pass' },
   dead_end: { label: 'DEAD END', class: 'text-ink-danger text-xs font-semibold', tag: 'DEAD END', tagStatus: 'dead-end' },
   duplicate: { label: 'DUPLICATE', class: 'text-ink-secondary-strong text-xs font-semibold', tag: 'DUPLICATE', tagStatus: 'duplicate' },
   snapshot: { label: 'SNAPSHOT', class: 'text-ink-secondary-strong text-xs font-semibold', tag: 'SNAPSHOT', tagStatus: 'snapshot' },
@@ -182,6 +171,7 @@ export function BranchPanel({
   onAddToProofSet,
   onRemoveFromProofSet,
   onReplay,
+  onViewPreAttackState,
 }: {
   branch: BranchRun
   inProofSet?: boolean
@@ -189,6 +179,7 @@ export function BranchPanel({
   onAddToProofSet?: () => void
   onRemoveFromProofSet?: () => void
   onReplay?: () => void
+  onViewPreAttackState?: () => void
 }) {
   const sd = STATUS_DISPLAY[branch.status] ?? STATUS_DISPLAY.promising
   const rows: { label: string; value: ReactNode; valueClass?: string; copy?: boolean }[] = [
@@ -197,7 +188,7 @@ export function BranchPanel({
     ...(branch.qa
       ? [{ label: 'QA classification', value: branch.qa.classification, valueClass: branch.qa.isRewardHacking ? 'text-warn-text' : 'text-ink-secondary-strong' }]
       : []),
-    { label: 'Replay', value: branch.status === 'witness' ? 'Deterministic pass' : 'Not run', valueClass: branch.status === 'witness' ? 'text-accent-text' : 'text-ink-secondary' },
+    { label: 'Confirmation', value: branch.status === 'witness' ? 'Deterministic pass' : branch.status === 'verifying' ? 'Checking QA + replay' : 'Not confirmed yet', valueClass: branch.status === 'witness' ? 'text-accent-text' : branch.status === 'verifying' ? 'text-warn-text' : 'text-ink-secondary' },
     { label: 'Cluster', value: branch.clusterLabel ?? '—' },
     { label: 'Reward (H2F)', value: branch.reward.toFixed(2) },
     { label: 'Seed', value: String(branch.seed), valueClass: 'font-mono text-xs' },
@@ -209,7 +200,7 @@ export function BranchPanel({
     { label: 'Grader digest', value: branch.graderDigest, valueClass: 'font-mono text-xs', copy: true },
   ]
   return (
-    <PanelShell title={branch.title} tag={sd.tag} tagStatus={sd.tagStatus} tabs={['Overview', 'Evidence', 'State', 'Replay']} onClose={onClose}>
+    <PanelShell title={branch.title} tag={sd.tag} tagStatus={sd.tagStatus} onClose={onClose}>
       <div className="divide-y divide-hairline">
         {rows.map((r) => (
           <KV key={r.label} label={r.label} valueClass={r.valueClass}>
@@ -229,9 +220,9 @@ export function BranchPanel({
       <div className="mt-5 space-y-2">
         <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Actions</div>
         <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={onReplay}>
-          Replay witness
+          {branch.status === 'witness' ? 'Replay confirmed witness' : branch.status === 'verifying' ? 'Replay after confirmation' : 'Replay candidate path'}
         </Button>
-        <Button variant="secondary" size="md" className="w-full" icon={<Eye size={14} />}>
+        <Button variant="secondary" size="md" className="w-full" icon={<Eye size={14} />} onClick={onViewPreAttackState}>
           View pre-attack state
         </Button>
         {inProofSet ? (
@@ -239,8 +230,15 @@ export function BranchPanel({
             Remove from ProofSet
           </Button>
         ) : (
-          <Button variant="secondary" size="md" className="w-full" icon={<PlusCircle size={14} />} onClick={onAddToProofSet}>
-            Add to ProofSet
+          <Button
+            variant="secondary"
+            size="md"
+            className="w-full"
+            icon={<PlusCircle size={14} />}
+            onClick={branch.status === 'witness' ? onAddToProofSet : undefined}
+            disabled={branch.status !== 'witness'}
+          >
+            {branch.status === 'witness' ? 'Add confirmed witness to ProofSet' : 'Await confirmation'}
           </Button>
         )}
       </div>
@@ -261,11 +259,11 @@ function ProofRow({ name, badge, tone }: { name: string; badge: string; tone: 'f
   const Icon = tone === 'fail' ? CircleSlash : tone === 'pass' ? ShieldCheck : Shuffle
   return (
     <div className="flex items-center justify-between gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-2.5">
-      <span className="flex items-center gap-2 text-sm text-ink-primary">
+      <span className="flex min-w-0 items-center gap-2 text-sm text-ink-primary">
         <Icon size={14} className={tone === 'fail' ? 'text-ink-danger' : tone === 'pass' ? 'text-accent-text' : 'text-ink-secondary'} />
-        {name}
+        <span className="truncate">{name}</span>
       </span>
-      <span className={clsx('rounded-sm px-1.5 py-0.5 text-2xs font-semibold', toneCls)}>{badge}</span>
+      <span className={clsx('shrink-0 rounded-sm px-1.5 py-0.5 text-2xs font-semibold', toneCls)}>{badge}</span>
     </div>
   )
 }
@@ -278,6 +276,57 @@ function ProofGroup({ title, count, children }: { title: string; count: number; 
       </div>
       <div className="space-y-2">{children}</div>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Source Trace panel  [step 1 — before ForkPoint]                     */
+/* ------------------------------------------------------------------ */
+
+export function TracePanel({ forkPoint, onOpenForkPoint }: { forkPoint: ForkPoint; onOpenForkPoint?: () => void }) {
+  return (
+    <PanelShell
+      title="Suspicious HUD Trace"
+      tag={`#${forkPoint.hudTraceId}`}
+      tagStatus="qa-review"
+      footer={
+        <div className="space-y-1.5 text-2xs text-ink-tertiary">
+          <div className="flex justify-between">
+            <span>Task</span>
+            <span className="font-mono text-ink-secondary">{forkPoint.taskId}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Environment</span>
+            <span className="text-ink-secondary">{forkPoint.environmentVersion}</span>
+          </div>
+        </div>
+      }
+    >
+      <Section icon={<ShieldAlert size={14} />} title="QA verdict">
+        <span className="font-medium text-warn-text">Likely reward hacking</span>
+        <div className="mt-0.5">pytest plugin subversion strategy</div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-ink-tertiary">
+          <span className="rounded-sm bg-state-red-soft px-1.5 py-0.5 font-semibold uppercase text-ink-danger">HIGH</span>
+          Independent QA classification
+        </div>
+      </Section>
+      <Divider />
+      <Section icon={<FileText size={14} />} title="Trace evidence">
+        {forkPoint.traceEvidence}
+      </Section>
+      <Divider />
+      <Section icon={<Clock size={14} />} title="Execution">
+        <KV label="Steps">1 – {forkPoint.upToStep}</KV>
+        <KV label="Cumulative reward" valueClass="text-warn-text">{forkPoint.cumulativeReward.toFixed(2)}</KV>
+        <KV label="Grader digest">
+          <span className="font-mono text-xs">{forkPoint.graderDigest.slice(0, 12)}…</span>
+        </KV>
+      </Section>
+      <Divider />
+      <Button variant="primary" size="md" className="mt-3 w-full" icon={<GitFork size={15} />} onClick={onOpenForkPoint}>
+        Open as ForkPoint
+      </Button>
+    </PanelShell>
   )
 }
 
@@ -324,7 +373,7 @@ export function ProofSetPanel({
           <ProofRow key={id} name={witnessName(id)} badge="MUST FAIL" tone="fail" />
         ))}
       </ProofGroup>
-      <ProofGroup title="Legitimate Controls" count={proofSet.legitimateControlIds.length}>
+      <ProofGroup title="Legitimate Baselines" count={proofSet.legitimateControlIds.length}>
         {proofSet.legitimateControlIds.map((id) => (
           <ProofRow key={id} name={controlName(id)} badge="MUST PASS" tone="pass" />
         ))}

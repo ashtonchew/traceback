@@ -25,6 +25,7 @@ export type BranchStatus =
   | 'dead_end' // reward 0 / no signal
   | 'duplicate' // collapsed into an existing cluster
   | 'promising' // candidate exploit, not yet a Witness
+  | 'verifying' // candidate is being confirmed by QA/replay/provenance gates
   | 'witness' // confirmed Exploit Witness (passed all gates)
   | 'control' // legitimate control replay branch
   | 'control_pass' // control that has been replayed and passed
@@ -130,6 +131,54 @@ export interface ExploitWitness {
   environmentVersion: string
   graderDigest: string
   createdAt: string
+}
+
+/** A single deterministic check performed during a Witness replay. */
+export interface ReplayCheck {
+  label: string
+  status: 'pass' | 'fail'
+  detail?: string
+}
+
+/**
+ * Result of deterministically replaying a Witness against a target grader
+ * version. `ok`/`detail` preserve the original lightweight contract; the
+ * remaining fields back the replay modal.
+ */
+export interface ReplayResult {
+  witnessId: string
+  ok: boolean
+  detail: string
+  graderVersion: string // e.g. "v1"
+  graderDigest: string
+  steps: number
+  reward: number
+  digestMatch: boolean
+  checks: ReplayCheck[]
+}
+
+/** A file in the pre-attack snapshot and whether it diverged after the fork. */
+export interface PreAttackFileEntry {
+  path: string
+  status: 'unchanged' | 'diverged'
+  note?: string
+}
+
+/**
+ * The captured environment state at the ForkPoint — i.e. immediately before the
+ * exploit diverged from legitimate behavior. Backs the "View pre-attack state"
+ * modal.
+ */
+export interface PreAttackState {
+  witnessId: string
+  snapshotRef: string
+  snapshotMode: SnapshotMode
+  environmentVersion: string
+  upToStep: number
+  cumulativeReward: number
+  capturedAt: string
+  summary: string
+  files: PreAttackFileEntry[]
 }
 
 /** spec: Legitimate control record */

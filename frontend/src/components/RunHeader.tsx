@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { Share2, MoreHorizontal, Play, ChevronDown, X, Database, Check } from 'lucide-react'
+import { Play, ChevronDown, X, Database, Check } from './icons'
 import { Button, IconButton, LiveDot, VersionPill } from './primitives'
 import { SCENES } from '../lib/scenes'
 
@@ -9,6 +9,13 @@ function SceneMenu({ tone }: { tone: 'primary' | 'dark' }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const { pathname } = useLocation()
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
   const variant = tone === 'primary' ? 'bg-fill-accent text-ink-inverse hover:bg-fill-accent-hover' : 'bg-fill-primary text-ink-inverse hover:bg-fill-primary-hover'
   return (
     <div className="relative flex items-stretch">
@@ -16,16 +23,18 @@ function SceneMenu({ tone }: { tone: 'primary' | 'dark' }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={clsx(
-          'inline-flex h-full items-center justify-center rounded-lg rounded-l-none border-l border-black/10 px-2 text-sm transition',
+          'inline-flex h-full origin-left items-center justify-center rounded-lg rounded-l-none border-l border-black/10 px-2 text-sm transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           variant,
         )}
+        aria-label="Open screen menu"
+        aria-expanded={open}
       >
         <ChevronDown size={14} />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="animate-dropdown-show absolute right-0 z-40 mt-2 w-72 rounded-xl border border-hairline bg-surface-raised p-1.5 shadow-lg">
+          <div className="fixed inset-0 z-[100]" onClick={() => setOpen(false)} />
+          <div className="animate-dropdown-show origin-top-right absolute right-0 z-[101] mt-2 w-72 rounded-lg border border-hairline bg-surface-raised p-1.5 shadow-lg">
             <div className="px-2.5 py-1.5 text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Jump to screen</div>
             {SCENES.map((s) => (
               <button
@@ -34,10 +43,13 @@ function SceneMenu({ tone }: { tone: 'primary' | 'dark' }) {
                   navigate(s.path)
                   setOpen(false)
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink-primary hover:bg-surface"
+                className={clsx(
+                  'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink-primary transition-[background-color,color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  pathname === s.path && 'bg-surface',
+                )}
               >
                 <span className="w-12 shrink-0 text-2xs text-ink-tertiary">{s.group}</span>
-                <span className="flex-1">{s.label}</span>
+                <span className="min-w-0 flex-1 truncate">{s.label}</span>
                 {pathname === s.path && <Check size={14} className="text-accent-text" />}
               </button>
             ))}
@@ -87,12 +99,6 @@ export function RunHeader({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" icon={<Share2 size={15} />}>
-          Share
-        </Button>
-        <IconButton label="More">
-          <MoreHorizontal size={18} />
-        </IconButton>
         <div className="inline-flex items-stretch">
           <Button variant={primaryTone} size="sm" icon={<Play size={14} />} className="rounded-r-none" onClick={onPrimary}>
             {primaryLabel}
