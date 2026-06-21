@@ -6,7 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
-from .models import with_content_digest
+from .models import DemoError, utc_now, with_content_digest
+from .report import validate_demo_report
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -14,6 +15,10 @@ ROOT = Path(__file__).resolve().parents[3]
 def _write_json(path: Path, record: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(with_content_digest(record), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def demo_preflight() -> int:
@@ -44,13 +49,99 @@ def demo_preflight() -> int:
     return 2
 
 
+def validate_report(*, report: Path, output: Path | None) -> int:
+    """Validate an existing report.json and optionally persist the result."""
+
+    record = _load_json(report)
+    try:
+        validate_demo_report(record)
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "source_report_ref": report.as_posix(),
+            "error_class": exc.error_class,
+            "observed_behavior": str(exc),
+            "validated_at": utc_now(),
+        }
+        if output:
+            _write_json(output, result)
+            print(f"WROTE {output}")
+        print(f"FAIL: {exc.error_class}: {exc}")
+        return 2
+    result = {
+        "schema_version": 1,
+        "status": "pass",
+        "source_report_ref": report.as_posix(),
+        "source_invocation_id": record["invocation_id"],
+        "demo_mode": record["demo_mode"],
+        "observed_behavior": "Report validated without creating new proof, replay, publication, or branch evidence.",
+        "validated_at": utc_now(),
+    }
+    if output:
+        _write_json(output, result)
+        print(f"WROTE {output}")
+    print(f"PASS: report={report} invocation={record['invocation_id']}")
+    return 0
+
+
+def report_replay(*, source_report: Path, output: Path) -> int:
+    """Audit-only report replay validation."""
+
+    record = _load_json(source_report)
+    try:
+        validate_demo_report(record)
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "replay_type": "demo-report-replay",
+            "source_report_ref": source_report.as_posix(),
+            "error_class": exc.error_class,
+            "observed_behavior": str(exc),
+            "validated_at": utc_now(),
+        }
+        _write_json(output, result)
+        print(f"WROTE {output}")
+        print(f"FAIL: {exc.error_class}: {exc}")
+        return 2
+    result = {
+        "schema_version": 1,
+        "status": "pass",
+        "replay_type": "demo-report-replay",
+        "source_report_ref": source_report.as_posix(),
+        "source_invocation_id": record["invocation_id"],
+        "created_branch_refs": [],
+        "new_replay_ref": None,
+        "new_release_proof_ref": None,
+        "new_publication_attempt_ref": None,
+        "published_environment_ref": None,
+        "observed_behavior": "Audit-only replay revalidated the source report and created no new branch, replay, ReleaseProof, publication attempt, or publish evidence.",
+        "validated_at": utc_now(),
+    }
+    _write_json(output, result)
+    print(f"WROTE {output}")
+    print(f"PASS: report-replay source_invocation_id={record['invocation_id']}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("demo-preflight")
+    validate_parser = sub.add_parser("validate-report")
+    validate_parser.add_argument("--report", required=True, type=Path)
+    validate_parser.add_argument("--output", type=Path)
+    replay_parser = sub.add_parser("report-replay")
+    replay_parser.add_argument("--source-report", required=True, type=Path)
+    replay_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "demo-preflight":
         return demo_preflight()
+    if args.command == "validate-report":
+        return validate_report(report=args.report, output=args.output)
+    if args.command == "report-replay":
+        return report_replay(source_report=args.source_report, output=args.output)
     raise AssertionError(args.command)
 
 
