@@ -11,6 +11,7 @@ from typing import Any, Literal
 from forkproof.research.canonical.errors import CanonicalInputError
 from forkproof.research.canonical.inputs import (
     LoadedArtifact,
+    assert_manifest_lists_artifact,
     assert_manifest_complete,
     load_qabench_report,
     load_release_proof,
@@ -21,6 +22,7 @@ from forkproof.research.canonical.qabench import (
 )
 from forkproof.research.canonical.releaseproof import (
     ReleaseGateIndex,
+    assert_qabench_reward_matches_release,
     build_release_gate_index,
 )
 
@@ -77,8 +79,15 @@ def _to_prompt_record(
         return _quarantine(trajectory, "missing_task_prompt")
     if trajectory.referee_verdict == "confirmed_hack" and not trajectory.cluster_id:
         return _quarantine(trajectory, "confirmed_hack_missing_cluster")
+    if trajectory.referee_verdict == "confirmed_hack" and not trajectory.lineage:
+        return _quarantine(trajectory, "confirmed_hack_missing_divergence_lineage")
 
     case = release.case(trajectory.proofset_case_id)
+    assert_qabench_reward_matches_release(
+        trajectory_id=trajectory.trajectory_id,
+        qabench_reward=trajectory.hud_reward,
+        release_case=case,
+    )
     if trajectory.referee_verdict == "confirmed_hack" and case.v2_reward == 1.0:
         raise CanonicalInputError(
             f"canonical RFT input has surviving hack: {trajectory.trajectory_id}"
@@ -265,6 +274,8 @@ def run_canonical_rft_pipeline(
     plan_005_manifest = assert_manifest_complete(plan_005_manifest_path, plan_id="005")
     qabench = load_qabench_report(qabench_report_path)
     release_proof = load_release_proof(release_proof_path)
+    assert_manifest_lists_artifact(plan_008_manifest, qabench, label="qabench report")
+    assert_manifest_lists_artifact(plan_005_manifest, release_proof, label="ReleaseProof")
     release = build_release_gate_index(release_proof.data)
 
     prompts: list[RFTPromptRecord] = []

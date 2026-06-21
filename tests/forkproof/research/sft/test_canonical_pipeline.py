@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +20,17 @@ def _write_json(path: Path, payload: dict[str, object]) -> Path:
 
 def _complete_manifest(plan_id: str) -> dict[str, object]:
     return {"schema_version": 1, "plan_id": plan_id, "status": "complete"}
+
+
+def _digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _seal(payload: dict[str, object]) -> dict[str, object]:
+    canonical = {key: value for key, value in payload.items() if key != "content_digest"}
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    payload["content_digest"] = hashlib.sha256(encoded).hexdigest()
+    return payload
 
 
 def _qabench_report() -> dict[str, object]:
@@ -62,7 +74,7 @@ def _qabench_report() -> dict[str, object]:
 
 
 def _release_proof() -> dict[str, object]:
-    return {
+    return _seal({
         "schema_version": 1,
         "release_proof_id": "rp-1",
         "proof_set_id": "ps-1",
@@ -78,7 +90,7 @@ def _release_proof() -> dict[str, object]:
         "trace_links": ["traces/wit-1", "traces/ctrl-1"],
         "release_candidate_ref": "releases/candidates/env-v2",
         "created_at": "2026-06-21T00:00:00Z",
-        "content_digest": "sha256:release-proof",
+        "content_digest": "TBD",
         "exploit_witness_ids": ["wit-1"],
         "legitimate_control_ids": ["ctrl-1"],
         "v1_results": [
@@ -89,17 +101,31 @@ def _release_proof() -> dict[str, object]:
             {"case_id": "wit-1", "case_kind": "witness", "reward": 0.0},
             {"case_id": "ctrl-1", "case_kind": "control", "reward": 1.0},
         ],
-    }
+    })
 
 
 class CanonicalPipelineTests(unittest.TestCase):
     def _fixture_paths(self, tmp: str):
         root = Path(tmp)
+        qabench = _write_json(root / "qabench.json", _qabench_report())
+        release = _write_json(root / "release.json", _release_proof())
         return {
-            "plan_008": _write_json(root / "008.json", _complete_manifest("008")),
-            "plan_005": _write_json(root / "005.json", _complete_manifest("005")),
-            "qabench": _write_json(root / "qabench.json", _qabench_report()),
-            "release": _write_json(root / "release.json", _release_proof()),
+            "plan_008": _write_json(
+                root / "008.json",
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(qabench), "digest": _digest(qabench)}],
+                },
+            ),
+            "plan_005": _write_json(
+                root / "005.json",
+                {
+                    **_complete_manifest("005"),
+                    "artifacts": [{"path": str(release), "digest": _digest(release)}],
+                },
+            ),
+            "qabench": qabench,
+            "release": release,
             "out": root / "out",
         }
 
@@ -199,6 +225,77 @@ class CanonicalPipelineTests(unittest.TestCase):
                     plan_005_manifest_path=paths["plan_005"],
                     output_dir=paths["out"],
                 )
+
+    def test_manifest_must_list_qabench_artifact_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixture_paths(tmp)
+            _write_json(
+                paths["plan_008"],
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(paths["qabench"]), "digest": "not-the-digest"}],
+                },
+            )
+            with self.assertRaises(CanonicalInputError):
+                run_canonical_sft_pipeline(
+                    qabench_report_path=paths["qabench"],
+                    release_proof_path=paths["release"],
+                    plan_008_manifest_path=paths["plan_008"],
+                    plan_005_manifest_path=paths["plan_005"],
+                    output_dir=paths["out"],
+                )
+
+    def test_qabench_reward_must_match_releaseproof_v1(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixture_paths(tmp)
+            report = _qabench_report()
+            trajectories = report["trajectories"]
+            assert isinstance(trajectories, list)
+            trajectories[0]["reward"] = 0.0
+            _write_json(paths["qabench"], report)
+            _write_json(
+                paths["plan_008"],
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(paths["qabench"]), "digest": _digest(paths["qabench"])}],
+                },
+            )
+
+            with self.assertRaises(CanonicalInputError):
+                run_canonical_sft_pipeline(
+                    qabench_report_path=paths["qabench"],
+                    release_proof_path=paths["release"],
+                    plan_008_manifest_path=paths["plan_008"],
+                    plan_005_manifest_path=paths["plan_005"],
+                    output_dir=paths["out"],
+                )
+
+    def test_missing_hack_lineage_quarantines_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixture_paths(tmp)
+            report = _qabench_report()
+            trajectories = report["trajectories"]
+            assert isinstance(trajectories, list)
+            trajectories[0].pop("lineage")
+            _write_json(paths["qabench"], report)
+            _write_json(
+                paths["plan_008"],
+                {
+                    **_complete_manifest("008"),
+                    "artifacts": [{"path": str(paths["qabench"]), "digest": _digest(paths["qabench"])}],
+                },
+            )
+
+            result = run_canonical_sft_pipeline(
+                qabench_report_path=paths["qabench"],
+                release_proof_path=paths["release"],
+                plan_008_manifest_path=paths["plan_008"],
+                plan_005_manifest_path=paths["plan_005"],
+                output_dir=paths["out"],
+            )
+
+            self.assertEqual(result.rejected_hack_records, 0)
+            self.assertEqual(len(result.quarantined), 2)
 
 
 if __name__ == "__main__":

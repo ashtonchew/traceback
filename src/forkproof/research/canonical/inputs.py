@@ -45,6 +45,78 @@ def _read_json(path: str | Path, *, label: str) -> LoadedArtifact:
     )
 
 
+def _digest_json_without_content_digest(data: JsonObject) -> str:
+    canonical = {
+        key: value
+        for key, value in data.items()
+        if key != "content_digest"
+    }
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _artifact_entries(manifest: LoadedArtifact) -> list[dict[str, Any]]:
+    raw_entries = manifest.data.get("artifacts")
+    if not isinstance(raw_entries, list) or not raw_entries:
+        raise CanonicalInputError(
+            f"Plan {manifest.data.get('plan_id')!s} manifest lists no artifacts"
+        )
+    entries: list[dict[str, Any]] = []
+    for raw in raw_entries:
+        if isinstance(raw, str):
+            entries.append({"path": raw})
+        elif isinstance(raw, dict):
+            entries.append(raw)
+    return entries
+
+
+def _entry_path(entry: dict[str, Any]) -> str | None:
+    for field in ("path", "artifact_path", "ref", "uri"):
+        value = entry.get(field)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _entry_digest(entry: dict[str, Any]) -> str | None:
+    for field in ("digest", "sha256", "content_digest"):
+        value = entry.get(field)
+        if isinstance(value, str) and value.strip():
+            return value.removeprefix("sha256:").strip()
+    return None
+
+
+def assert_manifest_lists_artifact(
+    manifest: LoadedArtifact,
+    artifact: LoadedArtifact,
+    *,
+    label: str,
+) -> None:
+    """Require a completed upstream manifest to name the exact artifact and digest."""
+    artifact_path = artifact.path
+    matches = []
+    for entry in _artifact_entries(manifest):
+        raw_path = _entry_path(entry)
+        if raw_path is None:
+            continue
+        candidate = Path(raw_path)
+        if candidate == artifact_path or candidate.resolve() == artifact_path.resolve():
+            matches.append(entry)
+
+    if not matches:
+        raise CanonicalInputError(
+            f"{label} is not listed in Plan {manifest.data.get('plan_id')!s} manifest artifacts"
+        )
+
+    for entry in matches:
+        digest = _entry_digest(entry)
+        if digest == artifact.digest:
+            return
+    raise CanonicalInputError(
+        f"{label} digest does not match Plan {manifest.data.get('plan_id')!s} manifest"
+    )
+
+
 def assert_manifest_complete(manifest_path: str | Path, *, plan_id: str) -> LoadedArtifact:
     """Load a plan manifest and require it to represent completed evidence."""
     artifact = _read_json(manifest_path, label=f"Plan {plan_id} manifest")
@@ -110,4 +182,8 @@ def load_release_proof(path: str | Path) -> LoadedArtifact:
         raise CanonicalInputError(
             "ReleaseProof must include published_environment_ref or release_candidate_ref"
         )
+    expected = str(artifact.data["content_digest"]).removeprefix("sha256:")
+    actual = _digest_json_without_content_digest(artifact.data)
+    if expected != actual:
+        raise CanonicalInputError("ReleaseProof content_digest mismatch")
     return artifact

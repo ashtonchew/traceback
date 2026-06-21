@@ -96,6 +96,22 @@ class ExportTests(unittest.TestCase):
             self.assertIn("patched verifier still returns reward 1", joined)
             self.assertIn("classification pending qa review", joined)
 
+    def test_raw_export_gives_confirmed_hacks_zero_training_weight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "raw.jsonl"
+            export_sft_jsonl(self.filtered.raw_sft, path, source_filter="raw_sft")
+            rows = [
+                json.loads(line)
+                for line in path.read_text(encoding="utf-8").strip().splitlines()
+            ]
+            hack_rows = [
+                row for row in rows if "pytest plugin" in row["messages"][-1]["content"]
+            ]
+            self.assertTrue(hack_rows)
+            self.assertTrue(
+                all(row["messages"][-1]["weight"] == 0 for row in hack_rows)
+            )
+
     def test_hardened_export_excludes_known_hacks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "hardened.jsonl"

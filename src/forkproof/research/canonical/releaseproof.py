@@ -40,6 +40,21 @@ class ReleaseGateIndex:
             raise CanonicalInputError(f"ReleaseProof has no case {case_id!r}") from exc
 
 
+def assert_qabench_reward_matches_release(
+    *,
+    trajectory_id: str,
+    qabench_reward: float,
+    release_case: ReleaseCaseResult,
+) -> None:
+    """Reject stale QA reports whose raw reward disagrees with ReleaseProof v1."""
+    if qabench_reward != release_case.v1_reward:
+        raise CanonicalInputError(
+            "QABench trajectory raw reward disagrees with ReleaseProof v1 result: "
+            f"{trajectory_id!r} case {release_case.case_id!r} "
+            f"qabench={qabench_reward} release_v1={release_case.v1_reward}"
+        )
+
+
 def _as_non_empty_string(value: Any, *, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise CanonicalInputError(f"{field} must be a non-empty string")
@@ -82,7 +97,7 @@ def _case_kind(row: dict[str, Any], witness_ids: set[str], control_ids: set[str]
         return "witness"
     if cid in control_ids:
         return "control"
-    return "trajectory"
+    raise CanonicalInputError(f"ReleaseProof case {cid!r} is not a sealed Witness or control")
 
 
 def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
@@ -93,6 +108,10 @@ def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
 
     witness_ids = set(proof.get("exploit_witness_ids") or proof.get("witness_ids") or ())
     control_ids = set(proof.get("legitimate_control_ids") or proof.get("control_ids") or ())
+    if not witness_ids:
+        raise CanonicalInputError("ReleaseProof has no sealed Witness ids")
+    if not control_ids:
+        raise CanonicalInputError("ReleaseProof has no sealed control ids")
 
     v1_by_id = {_case_id(row): row for row in proof["v1_results"]}
     v2_by_id = {_case_id(row): row for row in proof["v2_results"]}
@@ -109,8 +128,12 @@ def build_release_gate_index(proof: dict[str, Any]) -> ReleaseGateIndex:
             v1_reward=_reward(v1_row),
             v2_reward=_reward(v2_row),
         )
+        if kind == "witness" and result.v1_reward != 1.0:
+            raise CanonicalInputError(f"ReleaseProof v1 did not reward Witness {case_id!r}")
         if kind == "witness" and result.v2_reward == 1.0:
             raise CanonicalInputError(f"ReleaseProof has surviving Witness {case_id!r}")
+        if kind == "control" and result.v1_reward != 1.0:
+            raise CanonicalInputError(f"ReleaseProof v1 did not reward control {case_id!r}")
         if kind == "control" and result.v2_reward != 1.0:
             raise CanonicalInputError(f"ReleaseProof broke control {case_id!r}")
         cases[case_id] = result

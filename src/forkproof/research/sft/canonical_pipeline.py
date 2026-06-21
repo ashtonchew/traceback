@@ -10,6 +10,7 @@ from typing import Any
 
 from forkproof.research.canonical.inputs import (
     LoadedArtifact,
+    assert_manifest_lists_artifact,
     assert_manifest_complete,
     load_qabench_report,
     load_release_proof,
@@ -31,6 +32,7 @@ from forkproof.research.canonical.qabench import (
 )
 from forkproof.research.canonical.releaseproof import (
     ReleaseGateIndex,
+    assert_qabench_reward_matches_release,
     build_release_gate_index,
 )
 from forkproof.research.sft.report import write_phase2_report
@@ -78,10 +80,17 @@ def _to_trace_record(
         return _record_quarantine(trajectory, "missing_faithful_demonstration")
 
     case = release.case(trajectory.proofset_case_id)
+    assert_qabench_reward_matches_release(
+        trajectory_id=trajectory.trajectory_id,
+        qabench_reward=trajectory.hud_reward,
+        release_case=case,
+    )
     is_hack = trajectory.referee_verdict == "confirmed_hack"
     is_legit = trajectory.referee_verdict == "legitimate"
     if is_hack and not trajectory.cluster_id:
         return _record_quarantine(trajectory, "confirmed_hack_missing_cluster")
+    if is_hack and not trajectory.lineage:
+        return _record_quarantine(trajectory, "confirmed_hack_missing_divergence_lineage")
 
     return TraceRecord(
         trace_id=trajectory.trajectory_id,
@@ -255,6 +264,8 @@ def run_canonical_sft_pipeline(
     plan_005_manifest = assert_manifest_complete(plan_005_manifest_path, plan_id="005")
     qabench = load_qabench_report(qabench_report_path)
     release_proof = load_release_proof(release_proof_path)
+    assert_manifest_lists_artifact(plan_008_manifest, qabench, label="qabench report")
+    assert_manifest_lists_artifact(plan_005_manifest, release_proof, label="ReleaseProof")
     release = build_release_gate_index(release_proof.data)
 
     traces: list[TraceRecord] = []

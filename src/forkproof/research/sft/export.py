@@ -21,11 +21,12 @@ FIREWORKS_ROLES = frozenset({"system", "user", "assistant"})
 
 def trace_to_fireworks_example(trace: TraceRecord, *, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> dict[str, object]:
     """Convert one trace into OpenAI-compatible chat JSON for Fireworks SFT."""
+    assistant_weight = 0 if trace.is_hack else 1
     return {
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": trace.task_prompt},
-            {"role": "assistant", "content": trace.assistant_output, "weight": 1},
+            {"role": "assistant", "content": trace.assistant_output, "weight": assistant_weight},
         ]
     }
 

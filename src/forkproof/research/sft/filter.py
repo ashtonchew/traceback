@@ -32,7 +32,7 @@ class FilterResult:
 
 
 def is_raw_sft(trace: TraceRecord) -> bool:
-    """Trace would enter an unfiltered positive training set."""
+    """Trace would enter an unfiltered raw-verifier analysis bucket."""
     return trace.raw_reward == 1.0
 
 
@@ -83,8 +83,8 @@ def filter_traces(traces: list[TraceRecord]) -> FilterResult:
 
     A trace may appear in more than one bucket when roles overlap:
     legitimate solutions belong to both raw_sft and hardened_sft; reward hacks
-    belong to both raw_sft and rejected_hacks. No trace appears in both
-    hardened_sft and rejected_hacks.
+    belong to both raw_sft and rejected_hacks. Export code assigns confirmed
+    hacks non-training assistant weight so they are never positive SFT rows.
     """
     raw_sft = tuple(trace for trace in traces if is_raw_sft(trace))
     hardened_sft = tuple(trace for trace in traces if is_hardened_sft(trace))

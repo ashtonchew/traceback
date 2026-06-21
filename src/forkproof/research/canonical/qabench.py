@@ -101,8 +101,6 @@ def iter_qabench_training_candidates(report: dict[str, Any]) -> Iterator[QABench
         origin = _origin(raw)
         verdict = _verdict(raw)
         lineage = _lineage(raw)
-        if origin == "branch" and verdict == "confirmed_hack" and not lineage:
-            raise CanonicalInputError("confirmed branch hack lacks divergence lineage")
         yield QABenchTrajectory(
             trajectory_id=_required_string(raw, "trajectory_id", "id", "trace_id"),
             task_id=_required_string(raw, "task_id"),
