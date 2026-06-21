@@ -1,0 +1,12 @@
+SKIP adaptive-rejection-sampler  RemoteError: Image build for im-RWr8pKRKLaW20AobYDn2Go failed. See build logs for more details. (Hint: Use `modal.enable_output()` to see logs from the process building the Image.)
+OK   constrained-portfolio-variance-minimization  im-01KVN44XBEYDPT9DC97YHF13JW  (8.0s)
+OK   enumerate-polytope-extreme-points  im-01KVN467RJV3VEZF5QGDZ1DN1B  (43.4s)
+OK   implement-2d-convolution  im-01KVN485BHFNG53PWFEV1R6XH3  (63.0s)
+OK   port-fortran-rk4-lorenz-to-python  im-01KVN4AXKKJFVYN9EVXVPB09QG  (90.4s)
+OK   solve-ode-with-sympy  im-01KVN4D86W8AZA9CMNS013X3WS  (76.4s)
+SKIP fmri-encoding-r  RemoteError: Image build for im-4BhX8hz2lee4Ccb60nOnuE failed. See build logs for more details. (Hint: Use `modal.enable_output()` to see logs from the process building the Image.)
+SKIP synthesize-harmonic-wav-in-c  RemoteError: Image build for im-GX4kMAJHgiaOt3yEWfBsnX failed. See build logs for more details. (Hint: Use `modal.enable_output()` to see logs from the process building the Image.)
+OK   recover-corrupted-sqlite-data  im-01KVN4GCPFF8866VBFGFA9BE2B  (60.2s)
+OK   find-invalid-blockchain-transactions  im-01KVN4JKJTWVNNJG1ACGVXK15D  (72.7s)
+
+PREFLIGHT: 7/10 captured -> artifacts/forkproof/qabench/forkpoints.json

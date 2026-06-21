@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -377,7 +378,15 @@ async def run_live_branch_batch(
             "observed_behavior": "12-branch batch skipped because external QA export is not approved",
         }
 
-    run_id = "run-" + utc_now().replace("-", "").replace(":", "").removesuffix("Z")
+    # Second-precision timestamp alone collides when batches run concurrently (e.g.
+    # the qabench parallel benchmark), which would mix multiple tasks' branch
+    # artifacts into one run dir. A uuid suffix keeps each run's artifact dir unique.
+    run_id = (
+        "run-"
+        + utc_now().replace("-", "").replace(":", "").removesuffix("Z")
+        + "-"
+        + uuid.uuid4().hex[:8]
+    )
     artifact_root = _artifact_root(root, run_id)
     task, prompt_packet = load_hud_task(root, forkpoint)
     sem = asyncio.Semaphore(concurrency)
