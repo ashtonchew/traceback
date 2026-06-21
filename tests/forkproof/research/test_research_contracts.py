@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from forkproof.research.capability import CapabilityGateError, classify_capability_gate
+from forkproof.research.artifacts import build_child_selection_artifact
 from forkproof.research.models import (
     ChildCandidate,
     DepthTwoRunRecord,
@@ -28,6 +29,12 @@ from forkproof.research.selection import ResearchError, select_promising_child
 ROOT = Path(__file__).resolve().parents[3]
 CHILD_SELECTION_ARTIFACT = (
     ROOT / "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+)
+SOURCE_WITNESS = (
+    ROOT / "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json"
+)
+SOURCE_CAUSAL_DELTA = (
+    ROOT / "docs/plans/evidence/003/artifacts/sealed/causal-deltas/run-20260621T075711-branch-08.json"
 )
 
 
@@ -253,6 +260,23 @@ def test_committed_child_selection_artifact_matches_public_contracts():
     assert run_record["status"] == "blocked"
     assert run_record["completed_branch_refs"] == []
     assert run_record["measured_values"]["completed_depth_two_branch_count"] == 0
+
+
+def test_child_selection_artifact_is_reproducible_from_sealed_witness():
+    expected = json.loads(CHILD_SELECTION_ARTIFACT.read_text(encoding="utf-8"))
+    witness = json.loads(SOURCE_WITNESS.read_text(encoding="utf-8"))
+    causal_delta = json.loads(SOURCE_CAUSAL_DELTA.read_text(encoding="utf-8"))
+
+    generated = build_child_selection_artifact(
+        witness=witness,
+        causal_delta=causal_delta,
+        source_witness_ref=expected["source_witness_ref"],
+        source_causal_delta_ref=expected["source_causal_delta_ref"],
+        alternatives_considered=tuple(expected["selection_record"]["alternatives_considered"]),
+        recorded_at=expected["recorded_at"],
+    )
+
+    assert generated == expected
 
 
 def test_capability_gate_returns_exact_unavailable_outcome_without_scaffold_refs():

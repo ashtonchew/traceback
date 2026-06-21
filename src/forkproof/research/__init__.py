@@ -7,6 +7,7 @@ releases.
 """
 
 from .capability import CapabilityOutcome, classify_capability_gate
+from .artifacts import build_child_selection_artifact
 from .models import (
     CapabilityGateRecord,
     ChildCandidate,
@@ -35,6 +36,7 @@ __all__ = [
     "SchedulerDecision",
     "StopEvent",
     "TransferTrainingReport",
+    "build_child_selection_artifact",
     "classify_capability_gate",
     "select_promising_child",
 ]

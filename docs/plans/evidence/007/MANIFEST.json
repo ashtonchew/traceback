@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T13:00:00Z",
+  "updated_at": "2026-06-21T13:12:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -25,7 +25,7 @@
         "-q"
       ],
       "exit_code": 0,
-      "observed": "14 passed in 0.03s. Tests cover scheduler policy, child selection, lineage, depth-two run records, capability gates, reports, skips, and the committed child-selection artifact."
+      "observed": "15 passed in 0.02s. Tests cover scheduler policy, child selection, lineage, depth-two run records, capability gates, reports, skips, committed child-selection artifact validation, and exact artifact reproduction from sealed Witness inputs."
     },
     {
       "argv": [
@@ -127,7 +127,7 @@
         "007"
       ],
       "exit_code": 0,
-      "observed": "PASS after manifest compaction: 13 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target. MANIFEST.json is 267 lines."
+      "observed": "PASS: 14 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -180,7 +180,7 @@
     {
       "name": "Child selection and lineage artifact",
       "status": "pass",
-      "evidence": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json selects sealed Witness branch run-20260621T075711-branch-08 as a promising child using observable file_change, cluster_precursor, and grader_visible_state signals. tests/forkproof/research/test_research_contracts.py loads this committed artifact and validates its selection, lineage, and blocked depth-two run sections through public Plan 007 contracts."
+      "evidence": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json selects sealed Witness branch run-20260621T075711-branch-08 as a promising child using observable file_change, cluster_precursor, and grader_visible_state signals. tests/forkproof/research/test_research_contracts.py loads this committed artifact, validates its sections through public Plan 007 contracts, and proves src/forkproof/research/artifacts.py reproduces it from sealed Witness and causal-delta inputs."
     },
     {
       "name": "Depth-two execution",
@@ -195,7 +195,7 @@
     },
     {
       "ref": "src/forkproof/research/**",
-      "description": "Plan 007 research contract implementation."
+      "description": "Plan 007 research contract implementation, including reproducible child-selection artifact builder."
     },
     {
       "ref": "tests/forkproof/research/**",

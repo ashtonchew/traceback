@@ -133,6 +133,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T12:08:00Z — Linked the clean pinned HUD Trace Explorer checkout from `.worktrees/plan-002-003-witness/.external/hud-trace-explorer` into ignored `.external/`; `scripts/verify_external_deps.sh` now passes on the Plan 005 stack. Re-ran focused research tests, research lint, mapped skips, mapped lint/build, graph, sections, ownership, traceability, file-size, and evidence validation.
 - 2026-06-21T12:32:00Z — Added Plan 007-owned lineage and depth-two run record contracts plus `artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json`. The artifact selects the sealed Witness branch as the promising child using observable file-change, cluster, and grader-visible signals, but marks the depth-two run blocked because no child re-snapshot or depth-two BranchRun has been produced.
 - 2026-06-21T12:52:00Z — Added a behavior test that loads the committed child-selection artifact and validates its selection, lineage, and blocked depth-two run sections through public Plan 007 contracts. Focused research tests now pass at 14 tests.
+- 2026-06-21T13:12:00Z — Added `src/forkproof/research/artifacts.py` so the selected-child artifact is reproducible from the sealed Witness and causal-delta inputs rather than only hand-written JSON. Focused research tests now pass at 15 tests.
 
 ### Surprises & Discoveries
 
