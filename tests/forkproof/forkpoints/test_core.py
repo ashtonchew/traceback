@@ -11,6 +11,7 @@ from forkproof.forkpoints.core import (
     InMemorySnapshotProvider,
     boundary_token,
     capture_forkpoint,
+    environment_source_digest,
     load_source_trace,
     restore_forkpoint,
 )
@@ -175,3 +176,28 @@ def test_finalized_record_is_immutable(tmp_path: Path):
     store = ForkPointStore(tmp_path / "store")
     with pytest.raises(ForkPointError):
         store.put(record)
+
+
+def test_environment_source_digest_covers_copied_task_assets(tmp_path: Path):
+    env_root = tmp_path / "envs" / "mongodb-sales-aggregation-engine"
+    for path in (
+        env_root / ".hud" / "config.json",
+        env_root / "Dockerfile.hud",
+        env_root / "env.py",
+        env_root / "pyproject.toml",
+        env_root / "tasks.py",
+        env_root / "uv.lock",
+        env_root / "task_assets" / "init_data.py",
+        env_root / "task_assets" / "instruction.md",
+        env_root / "task_assets" / "orders.json",
+        env_root / "task_assets" / "products.json",
+        env_root / "task_assets" / "reference_solution.sh",
+        env_root / "task_assets" / "test_outputs.py",
+    ):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(path.name, encoding="utf-8")
+
+    before = environment_source_digest(tmp_path)
+    (env_root / "task_assets" / "reference_solution.sh").write_text("changed", encoding="utf-8")
+
+    assert environment_source_digest(tmp_path) != before

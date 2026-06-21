@@ -33,7 +33,7 @@
   "remaining_real_system_gaps": [
     "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
     "full branch security acceptance remains outside Plan 002 despite restored-sandbox surface inventory",
-    "environment image identity combines Docker registry base manifest, checked-in source tree, and Modal recipe rather than a Modal-internal built image manifest"
+    "environment image identity records Docker registry base manifest plus the checked-in source tree and Modal recipe; a Modal-internal built image manifest remains unavailable"
   ],
   "scope": "checked-in-trace-evidence plus local provider contract",
   "status": "readiness-pass",

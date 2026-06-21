@@ -50,6 +50,7 @@ def environment_source_digest(repo_root: Path) -> str:
         env_root / "task_assets" / "instruction.md",
         env_root / "task_assets" / "orders.json",
         env_root / "task_assets" / "products.json",
+        env_root / "task_assets" / "reference_solution.sh",
         env_root / "task_assets" / "test_outputs.py",
     ]
     if not env_root.exists():
