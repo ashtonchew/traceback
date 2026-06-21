@@ -84,6 +84,27 @@ def test_acceptance_report_rejects_fake_live_branch_claims():
     with pytest.raises(DemoError, match="cannot claim a new Witness"):
         validate_demo_report(report(discovery_source="live-no-witness", live_attempt_result="new-witness"))
 
+    with pytest.raises(DemoError, match="gate-passing live Witness"):
+        validate_demo_report(report(discovery_source="live-new-witness", live_attempt_result="new-witness"))
+
+    validate_demo_report(
+        report(
+            status="pass",
+            discovery_source="live-new-witness",
+            live_attempt_result="new-witness",
+            live_witness_ref="witness-live-001.json",
+            live_witness_digest="sha256:live-witness",
+            live_witness_gate_status="pass",
+            release_proof_ref="release-proof.json",
+            publication_attempt_ref="publication-attempt.json",
+        )
+    )
+
+
+def test_passing_report_rejects_blocked_release_or_publication_refs():
+    with pytest.raises(DemoError, match="passing report cannot use blocked refs"):
+        validate_demo_report(report(status="pass"))
+
 
 def test_prior_run_fallback_requires_visible_label_and_replay_refs():
     with pytest.raises(DemoError, match="prior-run replay requires"):
@@ -96,7 +117,9 @@ def test_prior_run_fallback_requires_visible_label_and_replay_refs():
             discovery_source="prior-run-replay",
             live_attempt_result="timeout",
             steps=steps,
+            prior_run_id="run-001",
             prior_run_witness_ref="wit-001.json",
+            prior_run_witness_digest="sha256:wit-001",
             new_replay_ref="replay-001.json",
         )
     )
@@ -137,6 +160,17 @@ def test_report_replay_is_audit_only():
     with pytest.raises(DemoError, match="audit-only"):
         validate_demo_report(report(demo_mode="report-replay", source_invocation_id="demo-source"))
 
+    with pytest.raises(DemoError, match="cannot claim new evidence"):
+        validate_demo_report(
+            report(
+                demo_mode="report-replay",
+                live_attempt_result="audit-only",
+                source_invocation_id="demo-source",
+                live_branch_refs=["branch-run-new.json"],
+                resource_stop_ref="not-required-for-report-replay",
+            )
+        )
+
 
 def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
     with pytest.raises(DemoError, match="bounded budget"):
@@ -151,7 +185,9 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
             live_attempt_result="timeout",
             presentation_budget_seconds=30,
             fallback_reason="presentation timeout",
+            prior_run_id="run-001",
             prior_run_witness_ref="wit-001.json",
+            prior_run_witness_digest="sha256:wit-001",
             new_replay_ref="replay-001.json",
             steps=steps,
         )

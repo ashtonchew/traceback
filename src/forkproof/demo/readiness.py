@@ -84,6 +84,8 @@ def _validate_checks(checks: list[dict[str, Any]], pack_status: str) -> None:
             raise DemoError("readiness_check_incomplete", f"readiness check {check['name']} lacks evidence refs")
         if check["status"] in {"blocked", "failed", "expected-block", "not-applicable"} and not check.get("reason"):
             raise DemoError("readiness_check_incomplete", f"readiness check {check['name']} needs reason")
+        if check["name"] in by_name:
+            raise DemoError("readiness_invalid", f"readiness check {check['name']} is duplicated")
         by_name[check["name"]] = check
     missing = sorted(REQUIRED_CHECKS - set(by_name))
     if missing:

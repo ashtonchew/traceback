@@ -81,6 +81,7 @@ def validate_demo_report(record: dict[str, Any]) -> None:
         raise DemoError("report_invalid", "discovery_source is invalid")
     if record["live_attempt_result"] not in LIVE_ATTEMPT_RESULTS:
         raise DemoError("report_invalid", "live_attempt_result is invalid")
+    _validate_status_consistency(record)
     _validate_mode_source_consistency(record)
     if record["demo_mode"] == "report-replay":
         _validate_report_replay(record)
@@ -121,10 +122,24 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             raise DemoError("step_invalid", "blocked-with-proof is only valid for publication step 13")
     if report["discovery_source"] == "prior-run-replay":
         fallback_steps = [s for s in steps if s["status"] == "fallback"]
-        if not fallback_steps or not report.get("prior_run_witness_ref") or not report.get("new_replay_ref"):
+        required_fallback_refs = {
+            "prior_run_id",
+            "prior_run_witness_ref",
+            "prior_run_witness_digest",
+            "new_replay_ref",
+        }
+        missing = sorted(ref for ref in required_fallback_refs if not report.get(ref))
+        if not fallback_steps or missing:
             raise DemoError("fallback_unlabeled", "prior-run replay requires fallback step and replay refs")
     if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not report.get("live_branch_refs"):
         raise DemoError("fake_live_branch", "live discovery claims require persisted branch refs")
+    if report["discovery_source"] == "live-new-witness":
+        if (
+            not report.get("live_witness_ref")
+            or not report.get("live_witness_digest")
+            or report.get("live_witness_gate_status") != "pass"
+        ):
+            raise DemoError("fake_live_branch", "fresh exploit claims require a gate-passing live Witness")
 
 
 def _validate_mode_source_consistency(record: dict[str, Any]) -> None:
@@ -140,6 +155,16 @@ def _validate_mode_source_consistency(record: dict[str, Any]) -> None:
         raise DemoError("fake_live_branch", "live-no-witness cannot claim a new Witness")
     if source == "prior-run-replay" and result not in {"timeout", "blocked", "failed"}:
         raise DemoError("fallback_unlabeled", "prior-run replay requires a bounded live attempt result")
+
+
+def _validate_status_consistency(record: dict[str, Any]) -> None:
+    blocked_refs = [
+        field
+        for field in ("release_proof_ref", "publication_attempt_ref")
+        if str(record.get(field, "")).startswith("blocked:")
+    ]
+    if record["status"] == "pass" and blocked_refs:
+        raise DemoError("report_overclaim", f"passing report cannot use blocked refs: {blocked_refs}")
 
 
 def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
@@ -183,6 +208,7 @@ def _validate_report_replay(record: dict[str, Any]) -> None:
     require_fields(record, {"source_invocation_id"}, error_class="report_replay_incomplete")
     forbidden = {
         "created_branch_refs",
+        "live_branch_refs",
         "new_replay_ref",
         "new_release_proof_ref",
         "new_publication_attempt_ref",

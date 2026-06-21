@@ -215,6 +215,7 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T10:47:12Z — Implementation decision: readiness pack validation is static and artifact-backed before Plan 005 merges. It records `expected-block` for missing proof/candidate/publish authority instead of probing credentials, network, HUD, Modal, or reading secrets.
 - 2026-06-21T11:02:44Z — Stack decision: keep PR #29 based on `codex/plan-005-release-proof` after PR #27 advanced. Because Plan 005 is still draft/open and blocked, this branch remains a draft stacked PR rather than retargeting to `main`.
 - 2026-06-21T11:12:36Z — Contract decision: the core metrics list is required even before the full demo runs, but absent values must be explicitly labelled `not-measured` or `not-applicable` with reasons instead of omitted or marked `TBD`.
+- 2026-06-21T11:25:00Z — Adversarial hardening decision: a passing `report.json` cannot point at `blocked:*` ReleaseProof or publication refs; fresh live Witness claims require a live Witness ref, digest, and gate status `pass`; Prior-Run Witness Replay requires original run id, Witness ref/digest, and new replay ref; Demo Report Replay cannot carry live branch refs; readiness packs reject duplicate check names.
 
 ### Outcomes & Retrospective
 
@@ -231,3 +232,4 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T10:47:12Z — Readiness pack validation pass complete. Remaining missing pieces are unchanged: sealed Plan 005 proof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
 - 2026-06-21T11:02:44Z — Restack pass complete. Remaining missing pieces are unchanged after the updated Plan 005 base: sealed ReleaseProof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
 - 2026-06-21T11:12:36Z — Core metrics contract pass complete. Remaining missing pieces are unchanged: sealed ReleaseProof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
+- 2026-06-21T11:25:00Z — Adversarial report/readiness hardening pass complete. `plan-006-tests` passes with 41 behavior tests, focused lint passes, and feasible graph/sections/ownership/traceability/lint/build/file-size/evidence validators pass. `demo` still exits 2 with the expected Plan 005/Gate 4 and publish-binding blockers.

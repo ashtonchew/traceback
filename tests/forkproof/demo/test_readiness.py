@@ -68,6 +68,14 @@ def test_readiness_pack_rejects_missing_checks_and_artifact_refs():
         validate_readiness_pack(readiness_pack(artifact_refs=refs))
 
 
+def test_readiness_pack_rejects_duplicate_check_names():
+    checks = [check(name) for name in sorted(REQUIRED_CHECKS)]
+    checks.append(check("hud_auth"))
+
+    with pytest.raises(DemoError, match="duplicated"):
+        validate_readiness_pack(readiness_pack(status="pass", checks=checks))
+
+
 def test_readiness_pack_rejects_secret_like_content():
     with pytest.raises(DemoError, match="unredacted"):
         validate_readiness_pack(readiness_pack(notes="Authorization: Bearer abc123"))
