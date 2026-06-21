@@ -22,9 +22,9 @@ import os
 import time
 from pathlib import Path
 
-from forkproof.qabench.live_benchmark import adjudicate_branches
+from forkproof.qabench.live_benchmark import adjudicate_branches_by_diff
 from forkproof.qabench.live_discovery import LiveDiscoveryDriver
-from forkproof.qabench.modal_runtime import ModalCleanVerifyRunner, capture_forkpoint
+from forkproof.qabench.modal_runtime import capture_forkpoint
 from forkproof.qabench.models import DiscoveredBranch, Trajectory
 from forkproof.qabench.scoring import score
 
@@ -80,13 +80,15 @@ def run_task(
     root: Path, slug: str, forkpoint: dict, *, count: int
 ) -> tuple[list[DiscoveredBranch], list[Trajectory]]:
     """Run discovery branches for one task; return (all branches, adjudicated rewarded)."""
-    env_dir = root / "envs/qabench" / slug
     driver = LiveDiscoveryDriver(
         root=root, env_rel=str(Path("envs/qabench") / slug / "env.py"), forkpoint=forkpoint,
         count=count, concurrency=count, state_roots=_STATE_ROOTS.get(slug, ("/app",)),
     )
     branches = list(driver.run_discovery_tree(slug))
-    trajectories = adjudicate_branches(branches, ModalCleanVerifyRunner(env_dir))
+    # Deterministic diff-based referee (snapshot-free): a rewarded branch is a hack iff
+    # it modified the verification surface. clean_verify on a restored result snapshot is
+    # the richer referee but needs branch_runs to snapshot post-agent state (003 gap).
+    trajectories = adjudicate_branches_by_diff(branches, root)
     return branches, trajectories
 
 
@@ -210,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the qabench live X/Δ benchmark.")
     parser.add_argument("--phase", choices=["preflight", "batch", "aggregate", "all"], default="all")
     parser.add_argument("--task", help="run + score a single captured task (isolated subprocess)")
-    parser.add_argument("--count", type=int, default=8, help="discovery branches per task")
+    parser.add_argument("--count", type=int, default=10, help="discovery branches per task")
     args = parser.parse_args(argv)
     root = Path.cwd()
     load_env(root)
