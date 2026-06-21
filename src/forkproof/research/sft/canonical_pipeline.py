@@ -180,15 +180,14 @@ def _write_pending_training_artifacts(
                 "LoRA and is strong enough for held-out evaluation."
             ),
             "first_candidate": {
-                "model_family": "Qwen 3.5",
+                "model_family": "Qwen 3",
                 "size": "4B",
-                "base_model_id": "TBD",
+                "base_model_id": "accounts/fireworks/models/qwen3-4b",
                 "use_only_if_provider_confirms_managed_sft_lora": True,
             },
             "fallback_policy": (
-                "If Qwen 3.5 4B is unavailable or not LoRA-capable in Fireworks "
-                "managed SFT, pick the next-smallest confirmed LoRA-capable managed "
-                "base that passes the held-out eval gate."
+                "Stop if Qwen3 4B is unavailable or not LoRA-capable in Fireworks "
+                "managed SFT; do not silently substitute another base for this pilot."
             ),
             "do_not_default_to": {
                 "document": "HUDDOC.MD",
@@ -238,7 +237,7 @@ def _write_pending_training_artifacts(
             "actual_base_model_id": "TBD",
             "actual_lora_config": "TBD",
             "claim_guard": (
-                "Only claim `we did LoRA SFT on Qwen 3.5 4B` when this artifact "
+                "Only claim `we did LoRA SFT on Qwen3 4B` when this artifact "
                 "and sft_job_request.json prove the actual base model and LoRA config."
             ),
         },

@@ -112,6 +112,24 @@ class ExportTests(unittest.TestCase):
                 all(row["messages"][-1]["weight"] == 0 for row in hack_rows)
             )
 
+    def test_model_a_export_trains_on_confirmed_hacks_explicitly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model-a.jsonl"
+            export_sft_jsonl(
+                self.filtered.raw_sft,
+                path,
+                source_filter="raw_sft",
+                assistant_weight_policy="model_a_contaminated",
+            )
+            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            hack_rows = [
+                row for row in rows if "pytest plugin" in row["messages"][-1]["content"]
+            ]
+            self.assertTrue(hack_rows)
+            self.assertTrue(
+                all(row["messages"][-1]["weight"] == 1 for row in hack_rows)
+            )
+
     def test_hardened_export_excludes_known_hacks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "hardened.jsonl"

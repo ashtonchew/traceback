@@ -9,6 +9,7 @@ from typing import Literal
 from forkproof.research.sft.models import TraceRecord
 
 SourceFilter = Literal["raw_sft", "hardened_sft", "rejected_hacks", "excluded"]
+AssistantWeightPolicy = Literal["safe_analysis", "model_a_contaminated"]
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a coding agent working in a sandboxed environment. Solve the task "
@@ -19,9 +20,19 @@ DEFAULT_SYSTEM_PROMPT = (
 FIREWORKS_ROLES = frozenset({"system", "user", "assistant"})
 
 
-def trace_to_fireworks_example(trace: TraceRecord, *, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> dict[str, object]:
+def trace_to_fireworks_example(
+    trace: TraceRecord,
+    *,
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+    assistant_weight_policy: AssistantWeightPolicy = "safe_analysis",
+) -> dict[str, object]:
     """Convert one trace into OpenAI-compatible chat JSON for Fireworks SFT."""
-    assistant_weight = 0 if trace.is_hack else 1
+    if assistant_weight_policy == "safe_analysis":
+        assistant_weight = 0 if trace.is_hack else 1
+    elif assistant_weight_policy == "model_a_contaminated":
+        assistant_weight = 1
+    else:
+        raise ValueError(f"unsupported assistant weight policy: {assistant_weight_policy}")
     return {
         "messages": [
             {"role": "system", "content": system_prompt},
@@ -58,6 +69,13 @@ def trace_to_metadata_record(trace: TraceRecord, *, source_filter: SourceFilter)
         "environment_v2",
         "grader_v1_digest",
         "grader_v2_digest",
+        "referee_id",
+        "referee_digest",
+        "classification_source",
+        "source_trace_id",
+        "lineage_key",
+        "solution_family",
+        "template_family",
     ):
         value = getattr(trace, field)
         if value is not None:
@@ -94,6 +112,7 @@ def export_sft_jsonl(
     *,
     source_filter: SourceFilter,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+    assistant_weight_policy: AssistantWeightPolicy = "safe_analysis",
 ) -> int:
     """
     Write Fireworks-ready chat JSONL for one positive SFT bucket.
@@ -105,7 +124,11 @@ def export_sft_jsonl(
 
     lines: list[str] = []
     for trace in traces:
-        example = trace_to_fireworks_example(trace, system_prompt=system_prompt)
+        example = trace_to_fireworks_example(
+            trace,
+            system_prompt=system_prompt,
+            assistant_weight_policy=assistant_weight_policy,
+        )
         validate_fireworks_example(example)
         lines.append(json.dumps(example, ensure_ascii=False))
 

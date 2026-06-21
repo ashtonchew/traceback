@@ -176,7 +176,11 @@ class CanonicalPipelineTests(unittest.TestCase):
             )
             self.assertEqual(capability["status"], "not_run")
             self.assertEqual(capability["provider"], "fireworks")
-            self.assertEqual(capability["first_candidate"]["model_family"], "Qwen 3.5")
+            self.assertEqual(capability["first_candidate"]["model_family"], "Qwen 3")
+            self.assertEqual(
+                capability["first_candidate"]["base_model_id"],
+                "accounts/fireworks/models/qwen3-4b",
+            )
             self.assertTrue(
                 capability["first_candidate"][
                     "use_only_if_provider_confirms_managed_sft_lora"

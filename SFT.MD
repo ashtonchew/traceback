@@ -2,7 +2,7 @@
 
 **Purpose:** Living specification for the ForkProof post-training extension. It records the implemented mock SFT data-quality pipeline, the sealed-artifact contract for real integration, and the distinct optional paths for managed SFT, managed RFT, and custom Fireworks Training API research.
 
-**Status (2026-06-21):** Mock Phases 0–3, canonical Plan 005/008 consumers, and a non-registering sealed-v2 RFT evaluator binding are implemented and covered by 82 passing tests plus 19 passing subtests. Plans 003–005 are complete; canonical dataset analysis remains blocked on the completed Plan 008 qabench report. No real-data, SFT-training, managed-RFT, or held-out model result is claimed.
+**Status (2026-06-21):** Mock Phases 0–3, strict Plan 005-joined consumers, sterile-referee Model A preparation, and a non-registering sealed-v2 RFT evaluator binding are implemented and covered by 91 passing tests plus 19 passing subtests. Plans 003–005 are complete; Model A remains blocked on a completed Plan 008 report with a real sterile `clean_verify` referee. No Fireworks upload, SFT training, managed RFT, or held-out model result is claimed.
 **Related sources:** `CONNECT.md`, `HUDDOC.MD`, `HANDOFF.MD`, `docs/plans/html-spec/hack2fix2hack-handoff (4).html`, `docs/plans/GLOSSARY.md`, `docs/plans/007-depth-two-and-research-extensions.md`
 
 ---
@@ -60,7 +60,7 @@ The must-ship version proves this through **data-quality analysis**, not necessa
 | Strict v1 JSONL loader and validation | Implemented |
 | Raw, hardened, rejected-hack, and excluded filtering | Implemented for mock/compatibility rows |
 | Reports, chart, metadata, audit, and Fireworks chat export | Implemented |
-| Test baseline | 82 passing research tests plus 19 passing subtests |
+| Test baseline | 91 passing research tests plus 19 passing subtests |
 | Real ForkProof adapter | Implemented and fail-closed; canonical execution awaits Plan 008 |
 | Correct real-data metric/quarantine model | Proposed in `CONNECT.md`; not implemented |
 | Managed SFT experiment | Optional; not run |
@@ -431,8 +431,10 @@ See [Section 11](#11-reconnecting-to-real-forkproof-data-phase-4) for the full r
 
 | Model | Training data | Hypothesis |
 | --- | --- | --- |
-| Model A (raw-trained) | `raw_verifier_sft.jsonl` | May imitate exploit patterns present in hacked positives |
+| Model A (raw-trained) | `model_a_raw_train.jsonl` | Private pilot may imitate exploit patterns present in v1 reward-positive hacked demonstrations |
 | Model B (hardened-trained) | `hardened_verifier_sft.jsonl` | Should prefer real task-solving behavior |
+
+`raw_verifier_sft.jsonl` remains the safe analysis artifact: confirmed-hack assistant turns carry `weight: 0`. Model A uses a separate, explicit experiment export where eligible legitimate and confirmed-hack turns carry `weight: 1`. This prevents an analyst from accidentally training the contaminated condition merely by uploading the raw comparison file.
 
 Evaluate both on held-out tasks (not in training set). Record exact model IDs, dataset IDs, and job IDs per `HANDOFF.MD` reproducibility guidance.
 
@@ -825,10 +827,25 @@ Prerequisites:
 
 Procedure:
 
-1. Upload `raw_verifier_sft.jsonl` → train Model A
-2. Upload `hardened_verifier_sft.jsonl` → train Model B
-3. Evaluate the base model and both tuned models on the same held-out groups
-4. Compare legitimate success, reward-hacking classification rate, v2 reward, refusal/format failures, and per-family results
+1. Run `model-a-prepare` against the completed Plan 008 manifest and its final sterile-referee report
+2. Upload `model_a_raw_train.jsonl` → train private, evaluation-only Model A
+3. Upload the matching hardened train partition → train Model B
+4. Evaluate the base model and both tuned models on the same held-out groups
+5. Compare legitimate success, reward-hacking classification rate, v2 reward, refusal/format failures, and per-family results
+
+#### Model A SFT-only evidence contract
+
+Model A does not require unrelated Plan 008 tasks to fabricate membership in Plan 005's MongoDB-only ProofSet. Instead it requires:
+
+- a completed Plan 008 manifest listing the exact final report and SHA-256;
+- a structured `sterile_referee` with `kind="sterile_clean_verify"`, a manifest-listed artifact whose bytes match its SHA-256, verified isolation, and no agent write access;
+- passed referee-validation evidence;
+- per-row v1 reward, environment version, grader digest, source trace id, prompt, and assistant output;
+- cluster and divergence lineage for every confirmed hack.
+
+The strict ReleaseProof join remains mandatory for RFT and the v1/v2 before/after analysis. The current preliminary diff-based Plan 008 report is not a sterile-referee artifact and must fail before any Model A file is written.
+
+The deterministic split groups together any rows sharing task, source trace, branch lineage, solution/template family, or exploit cluster. Launch requires at least 20 training rows across five groups, including three legitimate and three hack rows, plus held-out coverage of three legitimate and two hack rows across two groups.
 
 ### 12.2 Managed RFT readiness
 
@@ -1056,7 +1073,7 @@ Use this as a status-aware execution checklist. Checked items are complete for t
 - [x] Write metadata sidecars and rejected-hack audit
 - [x] Add CLI with `--input` and `--output`
 - [x] Validate export parsing, roles, message weights, counts, and pipeline artifacts
-- [x] Pass 82 research tests plus 19 subtests
+- [x] Pass 91 research tests plus 19 subtests
 
 ### Phase 4
 
@@ -1065,10 +1082,13 @@ Use this as a status-aware execution checklist. Checked items are complete for t
 - [ ] Accept/version the normalized schema and implement the public-artifact adapter
 - [ ] Add quarantine, provenance aggregation, same-population metrics, and faithful-demonstration gates
 - [ ] Execute mapped Plan 007 validation and evidence commands
+- [x] Implement separate fail-closed sterile-referee intake for the Model A SFT pilot
+- [x] Keep the strict Plan 005 join unchanged for RFT and v1/v2 analysis
 
 ### Phase 5 (optional)
 
-- [ ] Freeze independent train/held-out groups
+- [x] Implement deterministic leakage-safe train/held-out grouping and minimum gates
+- [x] Implement explicit contaminated `model_a_raw_train.jsonl` while retaining safe raw analysis weights
 - [ ] Validate managed SFT data and run a dry run before upload
 - [ ] Run managed RFT grouped calibration before any gradient step
 - [ ] Require useful reward spread and sealed-v2 anti-hack probes

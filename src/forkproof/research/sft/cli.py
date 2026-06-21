@@ -8,7 +8,10 @@ from pathlib import Path
 
 from forkproof.research.sft.canonical_pipeline import run_canonical_sft_pipeline
 from forkproof.research.sft.loader import DEFAULT_MOCK_FIXTURE
+from forkproof.research.sft.model_a_pipeline import prepare_model_a_from_plan008
 from forkproof.research.sft.pipeline import run_sft_pipeline
+from forkproof.research.sft.preliminary_model_a import prepare_preliminary_model_a
+from forkproof.research.sft.qabench_pipeline import run_qabench_sft_pipeline
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -58,6 +61,55 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("artifacts/forkproof/research/sft/runs/manual"),
     )
 
+    qabench = subparsers.add_parser(
+        "qabench",
+        help="Run SFT from a Plan 008 qabench benchmark report (preliminary path).",
+    )
+    qabench.add_argument(
+        "--report",
+        type=Path,
+        default=Path("artifacts/forkproof/qabench/benchmark-report.json"),
+        help="Plan 008 qabench benchmark report JSON",
+    )
+    qabench.add_argument(
+        "--output",
+        type=Path,
+        default=Path("artifacts/forkproof/research/sft/runs/qabench_preliminary"),
+    )
+    qabench.add_argument(
+        "--source-label",
+        default="qabench_preliminary",
+        help="Provenance label for reports (default: qabench_preliminary)",
+    )
+
+    model_a = subparsers.add_parser(
+        "model-a-prepare",
+        help="Freeze the private Model A pilot from completed sterile-referee Plan 008 evidence.",
+    )
+    model_a.add_argument("--qabench-report", type=Path, required=True)
+    model_a.add_argument(
+        "--plan-008-manifest",
+        type=Path,
+        default=Path("docs/plans/evidence/008/MANIFEST.json"),
+    )
+    model_a.add_argument(
+        "--output",
+        type=Path,
+        default=Path("artifacts/forkproof/research/sft/model-a/manual"),
+    )
+
+    preliminary_model_a = subparsers.add_parser(
+        "model-a-prepare-preliminary",
+        help="Prepare a disposable private Model A pilot from unverified diff labels.",
+    )
+    preliminary_model_a.add_argument("--qabench-report", type=Path, required=True)
+    preliminary_model_a.add_argument("--output", type=Path, required=True)
+    preliminary_model_a.add_argument(
+        "--acknowledge-unverified-labels",
+        action="store_true",
+        help="Required acknowledgement that this cannot support model-quality claims.",
+    )
+
     # Backward-compatible root flags keep older mock invocations working.
     parser.add_argument(
         "--input",
@@ -81,6 +133,65 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+
+    if args.command == "qabench":
+        if not args.report.is_file():
+            print(f"error: qabench report not found: {args.report}", file=sys.stderr)
+            return 1
+        result = run_qabench_sft_pipeline(
+            args.report,
+            args.output,
+            source_label=args.source_label,
+        )
+        print(f"Wrote qabench pipeline outputs to {result.output_dir}")
+        print(f"  report digest:         {result.report_digest[:12]}...")
+        print(f"  raw SFT examples:      {result.raw_sft_examples}")
+        print(f"  hardened SFT examples: {result.hardened_sft_examples}")
+        print(f"  rejected hack records: {result.rejected_hack_records}")
+        print(f"  quarantined records:   {len(result.quarantined)}")
+        print(
+            "  contamination (raw):   "
+            f"{result.metrics.raw_contamination_rate * 100:.1f}%"
+        )
+        return 0
+
+    if args.command == "model-a-prepare":
+        result = prepare_model_a_from_plan008(
+            qabench_report_path=args.qabench_report,
+            plan_008_manifest_path=args.plan_008_manifest,
+            output_dir=args.output,
+        )
+        print(f"Prepared private Model A files at {result.output_dir}")
+        print(f"  dataset id:        {result.dataset_id}")
+        print(f"  split digest:      {result.split_digest}")
+        print(f"  train examples:    {result.train_count}")
+        print(f"  held-out examples: {result.heldout_count}")
+        print(f"  quarantined:       {result.quarantine_count}")
+        print("  Fireworks upload:  not_run")
+        print("  training:          not_run")
+        return 0
+
+    if args.command == "model-a-prepare-preliminary":
+        if not args.acknowledge_unverified_labels:
+            print(
+                "error: --acknowledge-unverified-labels is required for preliminary mode",
+                file=sys.stderr,
+            )
+            return 2
+        result = prepare_preliminary_model_a(
+            qabench_report_path=args.qabench_report,
+            output_dir=args.output,
+        )
+        print(f"Prepared disposable preliminary Model A files at {result.output_dir}")
+        print(f"  dataset id:        {result.dataset_id}")
+        print(f"  split digest:      {result.split_digest}")
+        print(f"  train examples:    {result.train_count}")
+        print(f"  held-out examples: {result.heldout_count}")
+        print(f"  quarantined:       {result.quarantine_count}")
+        print("  evidence level:    preliminary_diff_labeled_unverified")
+        print("  Fireworks upload:  not_run")
+        print("  training:          not_run")
+        return 0
 
     if args.command == "canonical":
         result = run_canonical_sft_pipeline(

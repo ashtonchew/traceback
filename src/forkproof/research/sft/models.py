@@ -52,6 +52,13 @@ class TraceRecord:
     environment_v2: str | None = None
     grader_v1_digest: str | None = None
     grader_v2_digest: str | None = None
+    referee_id: str | None = None
+    referee_digest: str | None = None
+    classification_source: str | None = None
+    source_trace_id: str | None = None
+    lineage_key: str | None = None
+    solution_family: str | None = None
+    template_family: str | None = None
     needs_review: bool = False
     source: TraceSource = "forkproof_export"
 
@@ -84,6 +91,13 @@ class TraceRecord:
             "environment_v2": self.environment_v2,
             "grader_v1_digest": self.grader_v1_digest,
             "grader_v2_digest": self.grader_v2_digest,
+            "referee_id": self.referee_id,
+            "referee_digest": self.referee_digest,
+            "classification_source": self.classification_source,
+            "source_trace_id": self.source_trace_id,
+            "lineage_key": self.lineage_key,
+            "solution_family": self.solution_family,
+            "template_family": self.template_family,
             "needs_review": self.needs_review,
             "source": self.source,
         }

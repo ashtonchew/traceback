@@ -24,6 +24,11 @@ class QABenchTrajectory:
     qa_verdict: str | None
     cluster_id: str | None
     lineage: dict[str, Any] | None
+    environment_version: str | None
+    grader_digest: str | None
+    source_trace_id: str | None
+    solution_family: str | None
+    template_family: str | None
 
 
 def _quarantine_row(raw: Any, *, row_index: int, reason: str) -> dict[str, Any]:
@@ -119,6 +124,11 @@ def parse_qabench_training_candidate(row: dict[str, Any]) -> QABenchTrajectory:
         qa_verdict=_qa_verdict(row),
         cluster_id=_string(row, "cluster_id", "exploit_cluster"),
         lineage=lineage,
+        environment_version=_string(row, "environment_version", "environment_v1"),
+        grader_digest=_string(row, "grader_digest", "grader_v1_digest"),
+        source_trace_id=_string(row, "source_trace_id", "parent_trace_id", "hud_trace_id"),
+        solution_family=_string(row, "solution_family", "solution_template_family"),
+        template_family=_string(row, "template_family", "prompt_template_family"),
     )
 
 
