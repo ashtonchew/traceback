@@ -128,9 +128,10 @@ _BRANCH_RUNS = Path("docs/plans/evidence/003/artifacts/branch-runs")
 
 def _recorded_diff(branch_id: str) -> dict:
     run = branch_id.rsplit("-branch-", 1)[0]
-    return json.loads(
-        (_BRANCH_RUNS / run / "file-diffs" / f"{branch_id}.json").read_text(encoding="utf-8")
-    )
+    path = _BRANCH_RUNS / run / "file-diffs" / f"{branch_id}.json"
+    if not path.exists():
+        pytest.skip(f"recorded branch diff not present: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @pytest.mark.skipif(not _BRANCH_RUNS.exists(), reason="003 branch-run evidence not present")

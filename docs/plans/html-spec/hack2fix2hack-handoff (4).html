@@ -218,6 +218,7 @@
   .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;font-weight:600}
   .tag.mvp{background:var(--good-soft);color:var(--good)}
   .tag.stretch{background:var(--research-soft);color:var(--research)}
+  .tag.done{background:var(--accent-soft);color:var(--accent-ink)}
 
   /* ---- demo list ---- */
   .demo{list-style:none;counter-reset:d;margin-top:8px;display:grid;gap:0}
@@ -322,6 +323,7 @@
     <a href="#risks">Risks</a>
     <a href="#outputs">Outputs</a>
     <a href="#refs">References</a>
+    <a href="#appendix">SFT</a>
   </div>
 </nav>
 
@@ -1116,7 +1118,7 @@
       <li><h3>One child state re-snapshotted, one depth-two branch <span class="tag stretch">STRETCH</span></h3><p>Re-snapshot a promising child and find a multi-step exploit a flat search misses.</p></li>
       <li><h3>Adaptive branch stopping <span class="tag stretch">STRETCH</span></h3><p>Stop expanding a node once new distinct exploit clusters dry up.</p></li>
       <li><h3>Memory Snapshot mode &amp; VM Sandbox direct Harbor mode <span class="tag stretch">STRETCH</span></h3><p>Profile C process-state branching and, if access is granted, Profile B Docker-in-VM.</p></li>
-      <li><h3>Cross-task defense transfer &amp; training consequences <span class="tag stretch">STRETCH</span></h3><p>harden-v0's shared defense pool, and the appendix training-data contrast. Training is never on the live path.</p></li>
+      <li><h3>Cross-task defense transfer &amp; training consequences <span class="tag stretch">STRETCH</span></h3><p>harden-v0's shared defense pool, and the appendix SFT extension (<a href="#appendix">&sect;19</a>): filtering pipeline implemented on mock data; Fireworks managed SFT handoff smoke-tested. Held-out model comparison remains optional. Never on the live demo path.</p></li>
     </ol>
     <p style="font-size:.93rem;margin-top:18px">Out of scope by design: a broad benchmark campaign, a general MCTS system, complete exploit coverage, and live RL training. We scope the claim to verifier-level hardening so we do not over-promise &ldquo;harden anything.&rdquo;</p>
   </div>
@@ -1254,7 +1256,8 @@
         <li>Reward Hacking Benchmark (RHB) — exploits in tool-use agents; a controlled sibling comparison where RL post-training raised exploit rates (Thaman, 2026).<span class="src"><a href="https://arxiv.org/abs/2605.02964" target="_blank" rel="noopener">arxiv.org/abs/2605.02964</a></span></li>
         <li>The Meta-Agent Challenge — autonomous agent development under optimization pressure surfaces ground-truth exfiltration (2026).<span class="src"><a href="https://arxiv.org/abs/2606.04455" target="_blank" rel="noopener">arxiv.org/abs/2606.04455</a></span></li>
         <li>ARE — Scaling Up Agent Environments and Evaluations (Gaia2).<span class="src"><a href="https://arxiv.org/abs/2509.17158" target="_blank" rel="noopener">arxiv.org/abs/2509.17158</a></span></li>
-        <li>Fireworks — Reinforcement Fine-Tuning for open models (RLVR); the optional training-contrast experiment in the appendix.<span class="src"><a href="https://fireworks.ai/blog/reinforcement-fine-tuning" target="_blank" rel="noopener">fireworks.ai/blog/reinforcement-fine-tuning</a></span></li>
+        <li>Fireworks — managed SFT for the appendix two-model contrast; optional RFT if time and evaluators allow.<span class="src"><a href="https://docs.fireworks.ai/fine-tuning/fine-tuning-models" target="_blank" rel="noopener">docs.fireworks.ai/fine-tuning/fine-tuning-models</a></span></li>
+        <li>SFT extension spec — <code>SFT.MD</code>, <code>fixtures/sft/schema/trace_record.schema.json</code>, and <code>src/forkproof/research/sft/</code> in the repo.<span class="src">internal</span></li>
       </ul>
     </div>
   </div>
@@ -1264,18 +1267,29 @@
   <div class="wrap">
     <div class="eyebrow"><span class="num">19</span> Research appendix</div>
     <h2>Training consequences of a stronger verifier.</h2>
-    <p class="lead">This is a research extension, not part of the core architecture, the must-ship build, or the live demo. It explains <em>why</em> a hardened verifier matters beyond a cleaner score: a hackable verifier poisons the data you train on. Nothing here runs live on stage.</p>
+    <p class="lead">This is a research extension, not part of the core architecture, the must-ship build, or the live demo. It explains <em>why</em> a hardened verifier matters beyond a cleaner score: a hackable verifier poisons the data you train on. The SFT pipeline is implemented and validated on mock data; swapping in real ForkProof exports is a file swap, not a rewrite.</p>
 
-    <details class="appendix">
-      <summary>Open the training-consequences extension <span class="hint">research · stretch</span><span class="chev" aria-hidden="true">&#9656;</span></summary>
+    <details class="appendix" open>
+      <summary>Open the SFT / training-data extension <span class="hint">implemented · mock validated</span><span class="chev" aria-hidden="true">&#9656;</span></summary>
       <div class="ap-body">
-        <p>The hackathon's premise is that you can teach a model anything you can verify, so the verifier is half the system. If the verifier is hackable, every reward-1 trajectory it admits is a candidate training example, including the ones that gamed it. Filtering with a hardened verifier is what keeps the optimization signal clean.</p>
+        <p>The hackathon's premise is that you can teach a model anything you can verify, so the verifier is half the system. If the verifier is hackable, every reward-1 trajectory it admits is a candidate training example, including the ones that gamed it. Filtering with a hardened verifier is what keeps the optimization signal clean. <strong>SFT does not fix reward hacking by itself</strong> — ForkProof hardens the verifier and labels Witnesses; this extension shows what would enter a downstream training set before any gradient step.</p>
+
+        <div class="sot" style="margin-top:24px">
+          <div class="sot-head">Implementation status · June 2026</div>
+          <ul>
+            <li>Phases 0–3 (loader, filter, metrics, export, CLI) <b><span class="status research">DONE</span></b></li>
+            <li>Mock pipeline + 48 unit tests <b><span class="status research">PASSING</span></b></li>
+            <li>Fireworks managed SFT + deployment + inference <b><span class="status research">SMOKE-TESTED</span></b></li>
+            <li>Phase 4 real ForkProof export swap <b><span class="status beta">WAITING ON CORE</span></b></li>
+            <li>Phase 5 held-out A/B eval (raw-trained vs hardened-trained) <b><span class="status alpha">OPTIONAL</span></b></li>
+          </ul>
+        </div>
 
         <div class="figure" style="margin-top:30px">
           <div class="plate">
             <div class="plate-head">
-              <span class="plate-title">Verifier quality &rarr; data quality</span>
-              <span class="plate-meta">schematic &middot; bar heights are illustrative, not measured</span>
+              <span class="plate-title">Verifier quality &rarr; data quality &rarr; optional SFT contrast</span>
+              <span class="plate-meta">schematic flow · held-out bar heights are hypothetical until measured</span>
             </div>
             <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Contrast diagram. Rollouts split two ways: filtered by the raw verifier, the training set mixes real solutions with reward hacks; filtered by the hardened verifier, the set is all real. Each trains a small model, and the hardened-trained model scores higher on held-out true performance.">
   <defs>
@@ -1308,18 +1322,18 @@
     <rect x="158" y="224" width="38" height="13" rx="2" fill="#1C8A57"/><rect x="202" y="224" width="38" height="13" rx="2" fill="#1C8A57"/>
     <rect x="158" y="242" width="38" height="13" rx="2" fill="#1C8A57"/><rect x="202" y="242" width="38" height="13" rx="2" fill="#1C8A57"/>
   </g>
-  <text x="199" y="270" font-family="JetBrains Mono" font-size="9.5" fill="#1C8A57" text-anchor="middle">all real</text>
+  <text x="199" y="270" font-family="JetBrains Mono" font-size="9.5" fill="#1C8A57" text-anchor="middle">verifier-clean</text>
 
   <!-- merge into tiny model -->
   <path d="M242 100 C 360 100, 400 150, 434 158" fill="none" stroke="#9AA4B5" stroke-width="1.4" marker-end="url(#apg)"/>
   <path d="M242 224 C 360 224, 400 180, 434 172" fill="none" stroke="#9AA4B5" stroke-width="1.4" marker-end="url(#apg)"/>
   <rect x="436" y="146" width="104" height="44" rx="8" fill="#FFFFFF" stroke="#DCE2EC"/>
   <text x="488" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#10141B">tiny model</text>
-  <text x="488" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#737E8E">SFT / RFT</text>
+  <text x="488" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#737E8E">Fireworks SFT</text>
   <path d="M540 168 H584" fill="none" stroke="#9AA4B5" stroke-width="1.4" marker-end="url(#apg)"/>
 
   <!-- held-out true performance chart -->
-  <text x="600" y="60" font-family="JetBrains Mono" font-size="10.5" fill="#10141B">held-out true perf</text>
+  <text x="600" y="60" font-family="JetBrains Mono" font-size="10.5" fill="#10141B">held-out eval</text>
   <line x1="606" y1="72" x2="606" y2="210" stroke="#DCE2EC" stroke-width="1"/>
   <line x1="606" y1="210" x2="752" y2="210" stroke="#DCE2EC" stroke-width="1"/>
   <rect x="624" y="150" width="36" height="60" rx="2" fill="#A85B12"/>
@@ -1332,17 +1346,89 @@
               <span><i style="background:#A85B12"></i>reward hack</span>
             </div>
           </div>
-          <div class="fig-cap">Illustrative. A hackable verifier doesn't just inflate a score, it poisons the training set. Hardening is what makes the optimization signal clean. Bar heights are schematic, not measured.</div>
+          <div class="fig-cap">Illustrative flow. A hackable verifier poisons the training set; hardening filters hacks before SFT. The held-out comparison is Phase 5 and remains a hypothesis until measured on real data.</div>
         </div>
 
-        <h3 style="margin-top:34px">Extensions, in priority order</h3>
+        <h3 style="margin-top:34px">Phase roadmap</h3>
+        <table class="matrix">
+          <thead><tr><th>Phase</th><th>Goal</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>0 — Mock + loader</td><td><code>TraceRecord</code> schema, <code>fixtures/sft/mock_forkproof_traces.jsonl</code>, validation</td><td><span class="tag done">DONE</span></td></tr>
+            <tr><td>1 — Filtering</td><td>Partition into raw / hardened / rejected / excluded buckets</td><td><span class="tag done">DONE</span></td></tr>
+            <tr><td>2 — Metrics</td><td>Contamination table, exploit clusters, chart, write-up</td><td><span class="tag done">DONE</span></td></tr>
+            <tr><td>3 — Export + CLI</td><td>Fireworks chat JSONL, metadata sidecars, <code>run_manifest.json</code></td><td><span class="tag done">DONE</span></td></tr>
+            <tr><td>4 — Real data swap</td><td>Core team <code>forkproof_export.jsonl</code>; re-run pipeline; update measured numbers</td><td><span class="tag stretch">PENDING</span></td></tr>
+            <tr><td>5 — Training experiment</td><td>Model A (raw-trained) vs Model B (hardened-trained) on held-out HUD tasks</td><td><span class="tag stretch">OPTIONAL</span></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Four dataset buckets</h3>
+        <p style="font-size:.94rem">Each ForkProof trace row is scored under both verifier versions. The filter assigns buckets; exports come from the first two.</p>
+        <table class="matrix">
+          <thead><tr><th>Bucket</th><th>Rule</th><th>Export file</th></tr></thead>
+          <tbody>
+            <tr><td>raw_sft</td><td><code>raw_reward == 1</code></td><td><code>raw_verifier_sft.jsonl</code> — intentionally dirty (Model A)</td></tr>
+            <tr><td>hardened_sft</td><td><code>patched_reward == 1</code> and <code>is_legit == true</code></td><td><code>hardened_verifier_sft.jsonl</code> — verifier-clean positives (Model B)</td></tr>
+            <tr><td>rejected_hacks</td><td><code>raw_reward == 1</code>, <code>patched_reward == 0</code>, <code>is_hack == true</code></td><td><code>rejected_hacks_audit.jsonl</code> — audit only</td></tr>
+            <tr><td>excluded</td><td>Failed attempts and ambiguous rows</td><td>Not exported as positive SFT</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.93rem;margin-top:12px"><strong>Verifier-clean reward-1</strong> means the hardened verifier still passes the trace <em>and</em> ForkProof labeled it a legitimate control — not an Exploit Witness. Real ReleaseProof data should target <strong>zero</strong> hacks in the hardened export; the mock fixture intentionally includes one <code>needs_review</code> stress row.</p>
+
+        <h3>Mock run metrics (illustrative only)</h3>
+        <p style="font-size:.94rem">15-row mock fixture anchored on Terminal Wrench <code>mongodb-sales-aggregation-engine</code>. Label all pitch numbers as mock until Phase 4 re-runs on real ForkProof output.</p>
+        <table class="matrix">
+          <thead><tr><th>Metric</th><th>Raw verifier</th><th>Hardened verifier</th></tr></thead>
+          <tbody>
+            <tr><td>Reward-1 traces admitted</td><td>12</td><td>4</td></tr>
+            <tr><td>Hacks admitted</td><td>7</td><td>1 (stress case)</td></tr>
+            <tr><td>Training contamination</td><td>58.3%</td><td>25.0%</td></tr>
+            <tr><td>Legitimate retention</td><td>80.0%</td><td>80.0%</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Repository layout &amp; CLI</h3>
+        <p style="font-size:.94rem;margin-bottom:10px">Code lives under <code>src/forkproof/research/sft/</code>. Run the pipeline:</p>
+        <p style="font-family:var(--mono);font-size:.82rem;background:#EEF1F7;border:1px solid var(--line);padding:14px 16px;border-radius:10px;line-height:1.55;margin-bottom:16px">PYTHONPATH=src python -m forkproof.research.sft.cli \<br>&nbsp;&nbsp;--input fixtures/sft/mock_forkproof_traces.jsonl \<br>&nbsp;&nbsp;--output artifacts/sft/mock_run</p>
+        <p style="font-size:.94rem">Outputs: <code>contamination_table.md</code>, <code>WRITEUP.md</code>, <code>contamination_chart.svg</code>, <code>raw_verifier_sft.jsonl</code>, <code>hardened_verifier_sft.jsonl</code>, <code>rejected_hacks_audit.jsonl</code>, <code>run_manifest.json</code>.</p>
+
+        <h3>Core-team integration contract</h3>
+        <p style="font-size:.94rem">Deliver one JSONL file — one row per trace, Exploit Witness, or legitimate control. Required fields: <code>trace_id</code>, <code>task_id</code>, <code>task_prompt</code>, <code>assistant_output</code>, <code>raw_reward</code>, <code>patched_reward</code>, <code>is_hack</code>, <code>is_legit</code>. Optional: <code>exploit_cluster</code>, <code>witness_id</code>, <code>release_proof_id</code>. Full schema: <code>fixtures/sft/schema/trace_record.schema.json</code>. If column names differ, only a thin adapter changes — not filter, metrics, or export logic.</p>
+
+        <h3>Phase 4 — reconnect to real ForkProof data</h3>
         <ol class="steps">
-          <li><h3>Raw-vs-patched trajectory filtering <span class="tag stretch">RESEARCH</span></h3><p>No gradient step. Take the reward-1 trajectories, score each one under both the raw verifier and the ProofSet-hardened verifier, and report the fraction the raw verifier would have admitted as training data but the hardened one rejects. This quantifies the contamination that SWE-ABS and the Reward Hacking Benchmark describe qualitatively, using artifacts the core build already produces.</p></li>
-          <li><h3>Poisoned-successful-data contrast <span class="tag stretch">RESEARCH</span></h3><p>Separate the admitted-but-hacked set from the genuinely-solved set and characterize it: which exploit clusters it contains, how concentrated they are, and what a model would have learned from them. The Exploit Witnesses give the labels for free.</p></li>
-          <li><h3>Optional Fireworks RFT experiment <span class="tag stretch">RESEARCH</span></h3><p>SFT or <a href="https://fireworks.ai/blog/reinforcement-fine-tuning" target="_blank" rel="noopener">Fireworks RFT</a> a small open model on raw-filtered versus hardened-filtered data. Pre-baked, never run live. The hypothesis is that the raw-filtered model learns shortcuts while the hardened-filtered model learns the task.</p></li>
-          <li><h3>Held-out true-performance hypothesis <span class="tag stretch">RESEARCH</span></h3><p>Evaluate both models on a held-out suite the training verifier never touched. The prediction is that held-out true performance diverges in favor of the hardened-trained model. This is a hypothesis to be measured, not a reported result.</p></li>
+          <li><h3>Receive export <span class="tag stretch">CORE</span></h3><p>Place at <code>artifacts/sft/forkproof_export.jsonl</code>. Minimum: all Exploit Witnesses, legitimate controls, and reward-1 source traces from ReleaseProof.</p></li>
+          <li><h3>Re-run pipeline <span class="tag done">SAME CLI</span></h3><p>Swap <code>--input</code> path and <code>--output artifacts/sft/real_run</code>. Update slide numbers from <code>contamination_table.md</code>.</p></li>
+          <li><h3>Record provenance <span class="tag done">MANIFEST</span></h3><p>Write <code>release_proof_id</code>, row count, and timestamp to <code>run_manifest.json</code>. Footer slides: &ldquo;Measured on ReleaseProof X&rdquo; — not &ldquo;illustrative mock.&rdquo;</p></li>
         </ol>
-        <p style="font-size:.93rem;margin-top:18px">Fireworks is an appendix-level research extension only. It is deliberately excluded from the hero, the sponsor framing, the HUD&times;Modal architecture, the 24-hour must-ship build, and the live demo. Putting a monitor inside a gradient-bearing reward is explicitly out of scope, since that is the regime where reward hacking gets <a href="https://arxiv.org/abs/2503.11926" target="_blank" rel="noopener">obfuscated</a> rather than removed.</p>
+
+        <h3>Phase 5 — optional two-model experiment</h3>
+        <p style="font-size:.94rem">Only proceed with real data (or explicitly label mock as a dry run). Same base model and hyperparameters; only the training JSONL differs.</p>
+        <table class="matrix">
+          <thead><tr><th>Model</th><th>Training data</th><th>Hypothesis</th></tr></thead>
+          <tbody>
+            <tr><td>Model A</td><td><code>raw_verifier_sft.jsonl</code></td><td>May imitate exploit patterns present in hacked reward-1 positives</td></tr>
+            <tr><td>Model B</td><td><code>hardened_verifier_sft.jsonl</code></td><td>Should prefer real task-solving; lower hack rate on held-out eval</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.94rem;margin-top:12px"><strong>Fireworks path (smoke-tested):</strong> upload dataset &rarr; <code>firectl sftj create</code> with base model <code>accounts/fireworks/models/qwen2p5-7b-instruct</code> (or <code>qwen2p5-1p5b-instruct</code> for cheaper runs) &rarr; <code>firectl deployment create</code> &rarr; inference via deployment ID (<code>accounts/&lt;account&gt;/deployments/&lt;id&gt;</code>, not the bare model path). Record dataset, job, and deployment IDs in the manifest.</p>
+        <p style="font-size:.94rem"><strong>Held-out eval (unlocks the &ldquo;better model&rdquo; claim):</strong> ~10 HUD rollouts per held-out task per model, scored with the <em>patched</em> verifier. Compare legitimate pass rate and hack rate. Tasks must not appear in either training export. Without this step, the completed artifact is the data-quality analysis plus proof that Fireworks accepts the export — not a behavioral improvement claim.</p>
+
+        <h3>Claims discipline</h3>
+        <table class="matrix">
+          <thead><tr><th>Claim</th><th>When allowed</th></tr></thead>
+          <tbody>
+            <tr><td>Hardened verifier removes hacked positives from SFT data</td><td>After Phase 1+2 on mock or real data</td></tr>
+            <tr><td>Contamination was X% under raw vs Y% hardened</td><td>After metrics computed; label mock vs measured</td></tr>
+            <tr><td>Fireworks can train on this export</td><td>After Phase 3; smoke-tested on mock (June 2026)</td></tr>
+            <tr><td>Model trained on hardened data behaves better</td><td>Only after Phase 5 held-out eval with numbers</td></tr>
+          </tbody>
+        </table>
+
+        <div class="eg" style="margin-top:24px">
+          <span class="egk">Boundary</span>
+          <p>This extension does <strong>not</strong> replace the core ForkProof demo (Witness &rarr; patch &rarr; ReleaseProof). It does <strong>not</strong> run live on stage. It does <strong>not</strong> claim SFT alone eliminates reward hacking. Putting a monitor inside a gradient-bearing reward is explicitly out of scope — that is the regime where reward hacking gets <a href="https://arxiv.org/abs/2503.11926" target="_blank" rel="noopener">obfuscated</a> rather than removed. Fireworks RFT remains a future extension if an evaluator and held-out taskset are ready.</p>
+        </div>
       </div>
     </details>
   </div>
@@ -1350,7 +1436,7 @@
 
 <footer>
   <div class="wrap">
-    <p>Project <b>Hack2Fix2Hack</b> · powered by ForkProof · internal handoff · prepared for the HUD Frontier / RSI hackathon · facts verified June 2026 · figures illustrative, metrics TBD until measured.</p>
+    <p>Project <b>Hack2Fix2Hack</b> · powered by ForkProof · internal handoff · prepared for the HUD Frontier / RSI hackathon · facts verified June 2026 · SFT appendix updated June 2026 · mock metrics illustrative until Phase 4 real export.</p>
   </div>
 </footer>
 

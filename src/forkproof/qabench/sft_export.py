@@ -203,7 +203,8 @@ def main(argv: list[str] | None = None) -> int:
     out = write_export(root, fetch_traces=not args.no_fetch_traces, out=Path(args.out))
     payload = json.loads(out.read_text())
     print(f"exported {payload['trajectory_count']} trajectories "
-          f"({payload['confirmed_hacks']} hacks / {payload['legitimate']} legit) -> {out}")
+          f"({payload['confirmed_hacks']} hacks / {payload['verifier_legitimate']} verifier-legit, "
+          f"{payload['sft_clean']} SFT-clean) -> {out}")
     return 0
 
 

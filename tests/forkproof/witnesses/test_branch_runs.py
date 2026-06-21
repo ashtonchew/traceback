@@ -115,6 +115,14 @@ def install_fake_hud_modules(monkeypatch, *, runtime_raises=False):
                         "status": "pass",
                         "files": {"/app/query.py": {"sha256": "new", "text": "print('new')\n"}},
                     }
+                    runtime.evidence.post_agent_snapshot = {
+                        "schema_version": 1,
+                        "status": "pass",
+                        "snapshot_id": "im-post",
+                        "snapshot_ref": "modal-image://im-post",
+                        "snapshot_mode": "modal_filesystem_snapshot",
+                        "retention": "modal_default",
+                    }
                     runtime.evidence.security_probe = {
                         "status": "pass",
                         "forbidden_secret_presence": {"HUD_API_KEY": "absent"},
@@ -233,6 +241,8 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     assert record["history_hash"] == source["history_hash"]
     assert record["snapshot_digest"] == source["snapshot_digest"]
     assert record["provenance_status"] == "complete"
+    assert record["post_agent_snapshot_ref"] == "modal-image://im-post"
+    assert record["post_agent_snapshot_id"] == "im-post"
     assert record["file_diff_ref"].endswith(".json")
     assert record["security_probe_ref"].endswith(".json")
     assert record["replay_surface"]["cwd"] == "/workspace/task"

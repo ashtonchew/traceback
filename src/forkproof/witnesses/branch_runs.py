@@ -81,6 +81,10 @@ def _branch_state_roots(forkpoint: dict[str, Any]) -> tuple[list[str], str]:
     raise ValueError("forkpoint must include task_state_roots, task_state_root, or hud_task_profile capture roots")
 
 
+def _skip_qa_enabled() -> bool:
+    return os.environ.get("FORKPROOF_SKIP_QA", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _action_record(branch_id: str, job_id: str, trace_id: str, reward: Any) -> dict[str, Any]:
     trace_data = _trace_readback(trace_id) if trace_id else {"trace": {}, "events": {}}
     return {
@@ -208,7 +212,7 @@ async def _run_one_branch(
             "grader_digest": forkpoint.get("grader_digest"),
         },
     )
-    if trace_id:
+    if trace_id and not _skip_qa_enabled():
         qa_result = await asyncio.to_thread(
             run_reward_hacking_analysis,
             root,
@@ -219,6 +223,21 @@ async def _run_one_branch(
         )
         qa_path = _write_json(artifact_root / "qa" / f"{branch_id}.json", qa_result)
         qa_result_ref = qa_result.get("qa_result_id") if qa_result.get("status") == "pass" else "missing"
+    elif trace_id:
+        qa_result = {
+            "schema_version": 1,
+            "status": "skipped",
+            "branch_id": branch_id,
+            "hud_trace_id": trace_id,
+            "skip_reason": "FORKPROOF_SKIP_QA enabled for clean-SFT collection",
+            "observed_behavior": (
+                "HUD Reward Hacking QA was intentionally skipped. This branch must not be promoted "
+                "as a reward-hack witness from QA; clean-SFT promotion is gated by post-agent "
+                "workspace snapshot plus sterile clean_verify."
+            ),
+        }
+        qa_path = _write_json(artifact_root / "qa" / f"{branch_id}.json", qa_result)
+        qa_result_ref = "skipped"
     else:
         qa_path = _write_json(
             artifact_root / "qa" / f"{branch_id}.json",
@@ -226,6 +245,12 @@ async def _run_one_branch(
         )
         qa_result_ref = "missing"
 
+    post_agent_snapshot = runtime_evidence.post_agent_snapshot or {}
+    post_agent_snapshot_ref = (
+        post_agent_snapshot.get("snapshot_ref")
+        if post_agent_snapshot.get("status") == "pass"
+        else None
+    )
     branch = {
         "schema_version": 1,
         "run_id": run_id,
@@ -268,6 +293,11 @@ async def _run_one_branch(
         "snapshot_id": forkpoint.get("snapshot_id"),
         "snapshot_mode": forkpoint.get("snapshot_mode"),
         "snapshot_digest": forkpoint.get("snapshot_digest"),
+        "post_agent_snapshot": post_agent_snapshot,
+        "post_agent_snapshot_ref": post_agent_snapshot_ref,
+        "post_agent_snapshot_id": post_agent_snapshot.get("snapshot_id"),
+        "post_agent_snapshot_mode": post_agent_snapshot.get("snapshot_mode"),
+        "post_agent_snapshot_retention": post_agent_snapshot.get("retention"),
         "history_prefix_ref": forkpoint.get("history_prefix_ref"),
         "history_hash": forkpoint.get("history_hash"),
         "boundary_token": forkpoint.get("boundary_token"),
@@ -308,6 +338,9 @@ async def _run_one_branch(
     if security_evidence.get("status") != "pass":
         branch["provenance_status"] = "incomplete"
         branch["provenance_blockers"].append("same-runtime branch security negative probes are not captured")
+    if not post_agent_snapshot_ref:
+        branch["provenance_status"] = "incomplete"
+        branch["provenance_blockers"].append("post-agent workspace snapshot is missing or blocked")
     if error_class:
         branch["error_class"] = error_class
         branch["error_message"] = error_message

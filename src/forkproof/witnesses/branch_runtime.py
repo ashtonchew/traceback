@@ -19,6 +19,7 @@ class BranchRuntimeEvidence:
     runtime_params: dict[str, Any] = field(default_factory=dict)
     before_snapshot: dict[str, Any] | None = None
     after_snapshot: dict[str, Any] | None = None
+    post_agent_snapshot: dict[str, Any] | None = None
     security_probe: dict[str, Any] | None = None
 
 
@@ -135,6 +136,42 @@ async def _exec_json(sandbox: Any, script: str, *, timeout: int) -> dict[str, An
         }
 
 
+async def _snapshot_post_agent_workspace(sandbox: Any) -> dict[str, Any]:
+    try:
+        proc = await sandbox.exec.aio("sync", timeout=120, workdir="/app")
+        stdout, stderr, returncode = await asyncio.gather(
+            proc.stdout.read.aio(),
+            proc.stderr.read.aio(),
+            proc.wait.aio(),
+        )
+        if returncode != 0:
+            return {
+                "schema_version": 1,
+                "status": "blocked",
+                "operation": "sync",
+                "returncode": returncode,
+                "stdout": stdout,
+                "stderr": stderr,
+            }
+        snapshot = await sandbox.snapshot_filesystem.aio()
+        snapshot_id = str(getattr(snapshot, "object_id", "") or snapshot)
+        return {
+            "schema_version": 1,
+            "status": "pass",
+            "snapshot_id": snapshot_id,
+            "snapshot_ref": f"modal-image://{snapshot_id}",
+            "snapshot_mode": "modal_filesystem_snapshot",
+            "retention": "modal_default",
+        }
+    except Exception as exc:  # noqa: BLE001 - promotion needs the blocker recorded.
+        return {
+            "schema_version": 1,
+            "status": "blocked",
+            "error_class": type(exc).__name__,
+            "error": str(exc),
+        }
+
+
 class EvidenceModalRuntime:
     """HUD Modal runtime with a before/after capture hook for Plan 003."""
 
@@ -200,5 +237,6 @@ class EvidenceModalRuntime:
         finally:
             with contextlib.suppress(Exception):
                 self.evidence.after_snapshot = await _exec_json(sandbox, CAPTURE_SCRIPT, timeout=120)
+            self.evidence.post_agent_snapshot = await _snapshot_post_agent_workspace(sandbox)
             with contextlib.suppress(Exception):
                 await sandbox.terminate.aio()
