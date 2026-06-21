@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "complete",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T16:05:00Z",
+  "updated_at": "2026-06-21T16:40:00Z",
   "completed_at": "2026-06-21T14:34:43Z",
   "commit": "6c33ae7f4b4ca374adf3b551733ca3607b594020",
   "commands": [
@@ -292,8 +292,8 @@
       ],
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Built the actual deployable v2 image (env.py hardened grader + Dockerfile baking the trusted suite read-only at /tests) and ran env.py's served grader: witness exploit reward 0.0 (killed), three controls reward 1.0 (preserved), root test-replacement reward 0.0 (integrity gate). DEPLOY_FORM_PASS=true. No upload.",
-      "recorded_at": "2026-06-21T16:05:00Z"
+      "observed_behavior": "Built the actual deployable v2 image and ran env.py's served grader (loaded verbatim from env.py): witness exploit 0.0 (killed), three controls 1.0 (preserved), and all three root /tests subversions \u2014 overwrite test_outputs.py, plant conftest.py, plant sitecustomize.py \u2014 blocked 0.0. DEPLOY_FORM_PASS=true. No upload.",
+      "recorded_at": "2026-06-21T16:40:00Z"
     },
     {
       "key": "hud-deploy-execution",
@@ -305,8 +305,8 @@
       ],
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "hud deploy published the hardened env as mongodb-sales-aggregation-engine version 3 (registry b3409057, build 3bc11838, status SUCCEEDED, team hud-hacks). Server-side AWS CodeBuild + ECR push. Non-destructive: builds total 3 (v3 new, v2/v1 retained). Verified via read-only GET /v2/registry. See docs/plans/evidence/006/publish-receipt.json.",
-      "recorded_at": "2026-06-21T16:05:00Z"
+      "observed_behavior": "hud deploy published the hardened env as mongodb-sales-aggregation-engine version 3, then (after a post-publish bug hunt fixed a grader bypass) version 4 (registry b3409057, build d7b8043a SUCCEEDED, team hud-hacks). Server-side AWS CodeBuild + ECR push. Non-destructive: builds total 4 (v4 latest; v1-v3 retained). Verified via read-only GET /v2/registry. See docs/plans/evidence/006/publish-receipt.json.",
+      "recorded_at": "2026-06-21T16:40:00Z"
     },
     {
       "key": "publish-record",
@@ -427,12 +427,17 @@
     {
       "name": "Hardened v2 kill proven (grader + deployed env.py form)",
       "status": "pass",
-      "evidence": "Two real-container proofs. (1) v2-runtime-kill-proof.json: the Plan 005 _DockerVerifierRunner harness on the regenerated hardened v2 (grader form) -> witness reward 0.0, controls 1.0, grader_v2_digest matches the sealed ReleaseProof. (2) v2-deploy-proof.json: the ACTUAL deployable image's env.py served grader -> witness exploit 0.0 (killed), three controls 1.0 (preserved), and a root /tests test-replacement blocked 0.0 via a baked-in digest integrity gate. Both in real mongo:7.0 containers."
+      "evidence": "Two real-container proofs. (1) v2-runtime-kill-proof.json: the Plan 005 _DockerVerifierRunner harness on the regenerated hardened v2 (grader form) -> witness reward 0.0, controls 1.0, grader_v2_digest matches the sealed ReleaseProof. (2) v2-deploy-proof.json: the ACTUAL deployable image's env.py served grader -> witness exploit 0.0 (killed), three controls 1.0 (preserved), and ALL root /tests subversions blocked 0.0 (overwrite, planted conftest, planted sitecustomize) via a /tests tree allow-list + --noconftest in the deployed grader. Both in real mongo:7.0 containers."
     },
     {
-      "name": "Publication: bound, prepared, and PUBLISHED v3",
+      "name": "Publication: bound, prepared, and PUBLISHED v4",
       "status": "pass",
-      "evidence": "hud deploy published the hardened env as mongodb-sales-aggregation-engine version 3 (registry b3409057, build 3bc11838 SUCCEEDED, team hud-hacks; docs/plans/evidence/006/publish-receipt.json), verified via read-only GET /v2/registry. Non-destructive: v3 is the new latest_build, v2/v1 retained (total 3), existing v2 runs not invalidated. publish-record wrote a validated 'published' PublicationAttempt (published_environment_ref hud:registry/b3409057@v3, trusted publication evidence ref, passing ReleaseProof gate, no error class). INTERFACES.md row 17 = published v3; COMMANDS.json:hud-deploy stays not-applicable so CI cannot re-deploy. Authorized target discovered via read-only probe (hud-target.json). No secrets recorded."
+      "evidence": "hud deploy published the hardened env as mongodb-sales-aggregation-engine version 4 (registry b3409057, build d7b8043a SUCCEEDED, team hud-hacks; docs/plans/evidence/006/publish-receipt.json), verified via read-only GET /v2/registry. Non-destructive: v4 latest, v1-v3 retained (total 4). publish-record wrote a validated 'published' PublicationAttempt (published_environment_ref hud:registry/b3409057@v4, trusted publication evidence ref, passing ReleaseProof gate, no error class). INTERFACES.md row 17 = verified (published v4). COMMANDS.json:hud-deploy stays not-applicable so CI cannot re-deploy."
+    },
+    {
+      "name": "Post-publish bug hunt: v3 grader bypass found and fixed (v4)",
+      "status": "pass",
+      "evidence": "A parallel subagent bug-hunt found a GENUINE bypass in the published v3 grader: because the agent runs as root, a force-pass conftest.py planted directly in /tests/task_assets defeated it (PYTEST_DISABLE_PLUGIN_AUTOLOAD does not disable conftest discovery; the v3 digest gate only covered test_outputs.py). Verified with a real-container repro. Fixed in env.py (--noconftest, -p no:cacheprovider, PYTHONDONTWRITEBYTECODE, and a full /tests tree allow-list); the deploy-proof now loads GRADE_CMD verbatim from env.py and tests the conftest-in-/tests and sitecustomize variants. Re-proven (v2-deploy-proof.json) and re-deployed as v4."
     }
   ],
   "artifacts": [
@@ -532,6 +537,7 @@
     "2026-06-21T14:50:00Z \u2014 Refreshed docs/plans/repo-map/REPOSITORY.md (Plan 001-owned) at user direction within PR #29: Status blocked -> accepted, pointing to STATUS.json as the canonical gate state and removing the stale 'Gate 1 remains blocked / do not start Plans 002-007' prose that had drifted 134 commits behind HEAD. This reconciles the repo-map source-of-truth inconsistency; the corresponding manifest check is now pass.",
     "2026-06-21T15:20:00Z \u2014 At maintainer direction (full permission, do everything except the registry upload), bound and prepared the real HUD publish path. Discovered the authorized target via a read-only GET /v2/registry probe (account's 'mongodb-sales-aggregation-engine' registry; ReleaseProof environment_v1 = the -v1 registry UUID). Regenerated the hardened v2 grader from committed sources via the Plan 005 materializer and verified grader_v2_digest == sealed ReleaseProof c0d86ae. Added a 'prepared' publication outcome (publication.py + 4 tests), a publish-prepare CLI, a bound COMMANDS.json:hud-deploy row (not-applicable so it cannot accidentally deploy), and bound INTERFACES.md row 17 (bound; upload-deferred). publish-prepare emits a validated prepared PublicationAttempt. The acceptance demo report's step 13 remains blocked-with-proof (honest run-time state before the binding existed); the prepared outcome is additive binding evidence dated after the run. No environment was uploaded. NOTE: INTERFACES.md/COMMANDS.json/REPOSITORY.md are Plan 001-owned; these repo-map edits are bundled into PR #29 at maintainer direction.",
     "2026-06-21T15:35:00Z \u2014 Killed the 'served-runtime kill-parity unproven' gap with a real proof. scripts/forkproof-demo-v2-kill-proof.py regenerates the hardened v2 and runs the Plan 005 _DockerVerifierRunner harness in real mongo:7.0 containers: witness exploit reward 0.0, all three controls reward 1.0, grader_v2_digest matches the sealed ReleaseProof. The prepared PublicationAttempt now cites this proof. The actual hud deploy upload (and the env.py-serve packaging) await an explicit go-ahead; nothing was uploaded.",
-    "2026-06-21T16:05:00Z \u2014 PUBLISHED. At maintainer go-ahead, rewired env.py to serve the hardened /tests grader read-only (digest-gated), proved the deployed-image served grader kills the witness (0.0), preserves controls (1.0), and blocks a root test-replacement (0.0), then ran hud deploy: mongodb-sales-aggregation-engine version 3 published (registry b3409057, build 3bc11838 SUCCEEDED, team hud-hacks). Non-destructive (v2/v1 retained). publish-record wrote a validated 'published' PublicationAttempt; INTERFACES.md row 17 and the manifest now record published v3. 77 behavior tests pass; --require-complete exits 0. Repo-map edits are Plan 001-owned, bundled at maintainer direction."
+    "2026-06-21T16:05:00Z \u2014 PUBLISHED. At maintainer go-ahead, rewired env.py to serve the hardened /tests grader read-only (digest-gated), proved the deployed-image served grader kills the witness (0.0), preserves controls (1.0), and blocks a root test-replacement (0.0), then ran hud deploy: mongodb-sales-aggregation-engine version 3 published (registry b3409057, build 3bc11838 SUCCEEDED, team hud-hacks). Non-destructive (v2/v1 retained). publish-record wrote a validated 'published' PublicationAttempt; INTERFACES.md row 17 and the manifest now record published v3. 77 behavior tests pass; --require-complete exits 0. Repo-map edits are Plan 001-owned, bundled at maintainer direction.",
+    "2026-06-21T16:40:00Z \u2014 Post-publish bug hunt + fix + v4. A parallel-subagent review found the published v3 grader still bypassable (root conftest planted in /tests, not /app). Fixed env.py (--noconftest + /tests tree allow-list), made the deploy-proof load GRADE_CMD verbatim from env.py and cover the new attack variants, re-proved in real containers (witness 0.0, controls 1.0, all root /tests subversions 0.0), and re-deployed as version 4 (build d7b8043a). v3 retained but superseded. Also applied the doc audit: REFERENCE publication outcomes/PublicationAttempt schema now include prepared/published fields; Plan 006 frontmatter + 000-index now declare the hud-deploy COMMANDS key and the maintainer-directed repo-map exception; INTERFACES row 17 fixed (verified, not located-owned); added artifacts/forkproof/demo/publish/README.md."
   ]
 }

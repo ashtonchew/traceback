@@ -28,18 +28,27 @@ ws = env.workspace(APP, guest_path="/app", network=True)
 # change what this grader checks, so overwriting /tests fails the integrity gate.
 TRUSTED_TEST_DIGEST = "ad132b324e84c2ab09460b73f4a74284bbe28b4e5c34fde80a22e0015e10c7f1"
 
-# Hardened grader: tests served read-only at /tests (outside /app), pytest run
-# from `/` with plugin auto-load disabled and import shadowing blocked, after a
-# trusted-suite integrity check. Reward is the grader command's exit code.
-GRADE_CMD = (
-    "pgrep -x mongod >/dev/null 2>&1 || "
-    "{ mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db >/tmp/mongod-start.log 2>&1; sleep 2; }\n"
-    f"printf '%s  /tests/task_assets/test_outputs.py\\n' {TRUSTED_TEST_DIGEST} | sha256sum -c - >/dev/null 2>&1 "
-    "|| { echo 'TRUSTED_SUITE_TAMPERED'; exit 1; }\n"
-    "cd /\n"
-    "unset PYTHONPATH PYTHONHOME\n"
-    "export PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1\n"
-    "python3 -m pytest /tests/task_assets/test_outputs.py -rA -q"
+# Hardened grader. The trusted suite is served at /tests (outside the agent's
+# writable /app). Because the runtime can leave the agent as root, /tests is not
+# relied on as read-only; instead the grader (a) pins the suite digest, (b)
+# allow-lists the entire /tests tree so a *new* planted file (e.g. a conftest.py
+# next to the suite) is rejected, and (c) runs pytest from `/` with conftest
+# discovery off, plugin auto-load off, the cache plugin off, and import shadowing
+# blocked. Reward is the grader command's exit code.
+GRADE_CMD = "\n".join(
+    [
+        "pgrep -x mongod >/dev/null 2>&1 || "
+        "{ mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db >/tmp/mongod-start.log 2>&1; sleep 2; }",
+        f"printf '%s  /tests/task_assets/test_outputs.py\\n' {TRUSTED_TEST_DIGEST} | sha256sum -c - >/dev/null 2>&1 "
+        "|| { echo TRUSTED_SUITE_TAMPERED; exit 1; }",
+        "if [ -n \"$(find /tests -type f -not -path /tests/test.sh "
+        "-not -path /tests/task_assets/test_outputs.py -not -name '*.pyc' -not -path '*/__pycache__/*')\" ]; "
+        "then echo TESTS_TREE_TAMPERED; exit 1; fi",
+        "cd /",
+        "unset PYTHONPATH PYTHONHOME",
+        "export PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+        "python3 -m pytest /tests/task_assets/test_outputs.py -rA -q -p no:cacheprovider --noconftest",
+    ]
 )
 
 _QUERY_STUB = '''\
