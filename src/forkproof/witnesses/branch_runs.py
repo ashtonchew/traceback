@@ -14,6 +14,7 @@ import httpx
 
 from .branch_artifacts import build_file_diff, build_security_evidence
 from .branch_runtime import BranchRuntimeEvidence, EvidenceModalRuntime
+from .causal_evidence import build_causal_evidence_bundle, build_classifier_evidence_context
 from .hacker_prompt import build_hacker_branch_instruction
 from .models import digest_json, utc_now
 from .promotion import branch_signal_status
@@ -232,6 +233,7 @@ async def _run_one_branch(
     action_path = _write_json(artifact_root / "actions" / f"{branch_id}.json", action_record, compact=True)
     file_diff = build_file_diff(branch_id, runtime_evidence.before_snapshot, runtime_evidence.after_snapshot)
     file_diff_path = _write_json(artifact_root / "file-diffs" / f"{branch_id}.json", file_diff)
+    file_diff_digest = digest_json(file_diff)
     security_evidence = build_security_evidence(
         branch_id,
         runtime_evidence.runtime_params,
@@ -240,6 +242,22 @@ async def _run_one_branch(
     security_path = _write_json(artifact_root / "security" / f"{branch_id}.json", security_evidence)
 
     qa_result: dict[str, Any] | None = None
+    action_ref = _relative(root, action_path)
+    file_diff_ref = _relative(root, file_diff_path)
+    classifier_evidence = build_classifier_evidence_context(
+        branch_id=branch_id,
+        hud_trace_id=trace_id,
+        reward=reward,
+        action_record_ref=action_ref,
+        action_record_digest=action_record_digest,
+        file_diff_ref=file_diff_ref,
+        file_diff=file_diff,
+        task_identity={
+            "task_id": forkpoint.get("task_id"),
+            "environment_version": forkpoint.get("environment_version"),
+            "grader_digest": forkpoint.get("grader_digest"),
+        },
+    )
     if trace_id:
         qa_result = await asyncio.to_thread(
             run_reward_hacking_analysis,
@@ -247,6 +265,7 @@ async def _run_one_branch(
             trace_id,
             branch_id=branch_id,
             action_record_digest=action_record_digest,
+            classifier_evidence=classifier_evidence,
         )
         qa_path = _write_json(artifact_root / "qa" / f"{branch_id}.json", qa_result)
         qa_result_ref = qa_result.get("qa_result_id") if qa_result.get("status") == "pass" else "missing"
@@ -307,9 +326,10 @@ async def _run_one_branch(
         "resource_policy": forkpoint.get("resource_policy"),
         "snapshot_retention": forkpoint.get("snapshot_retention"),
         "source_evidence_refs": forkpoint.get("source_evidence_refs"),
-        "action_record_ref": _relative(root, action_path),
+        "action_record_ref": action_ref,
         "action_record_digest": action_record_digest,
-        "file_diff_ref": _relative(root, file_diff_path),
+        "file_diff_ref": file_diff_ref,
+        "file_diff_digest": file_diff_digest,
         "security_probe_ref": _relative(root, security_path),
         "started_at": started_at,
         "completed_at": utc_now(),
@@ -329,12 +349,21 @@ async def _run_one_branch(
         branch["error_class"] = error_class
         branch["error_message"] = error_message
 
+    causal_evidence = build_causal_evidence_bundle(branch, qa_result, file_diff_digest=file_diff_digest)
+    causal_path = _write_json(artifact_root / "causal" / f"{branch_id}.json", causal_evidence)
+    branch["causal_evidence_ref"] = _relative(root, causal_path)
+    branch["causal_evidence_digest"] = causal_evidence["content_digest"]
+    branch["causal_delta_status"] = causal_evidence["causal_delta_status"]
+
     signal_status = "incomplete-classification"
     if qa_result and qa_result.get("status") == "pass":
         try:
             signal_status = branch_signal_status(branch, qa_result)
         except Exception as exc:  # noqa: BLE001 - summarize gate failures in the run artifact.
-            signal_status = f"gate-error:{type(exc).__name__}:{exc}"
+            if getattr(exc, "error_class", "") == "classification_unavailable":
+                signal_status = "incomplete-classification"
+            else:
+                signal_status = f"gate-error:{type(exc).__name__}:{exc}"
     branch["promotion_signal_status"] = signal_status
     branch_path = _write_json(artifact_root / "branches" / f"{branch_id}.json", branch)
     return {
@@ -345,6 +374,7 @@ async def _run_one_branch(
         "action_record_ref": _relative(root, action_path),
         "file_diff_ref": _relative(root, file_diff_path),
         "security_probe_ref": _relative(root, security_path),
+        "causal_evidence_ref": _relative(root, causal_path),
     }
 
 

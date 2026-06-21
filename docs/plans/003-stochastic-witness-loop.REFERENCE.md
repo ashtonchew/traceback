@@ -46,6 +46,12 @@ The harden-v0 loop runs up to three hacker attempts per attack iteration, and la
 
 The repository's actual reward type may differ from numeric 1/0. Bind “success” and “failure” to the grader contract. QA “yes” means an authoritative HUD QA result such as `is_reward_hacking: true` that joins to the same branch id, trace id, QA result ref, and action-record digest. A local heuristic, copied dashboard note, or QA verdict for a different trace is incomplete classification.
 
+The QA join also requires evidence quality. The classifier input must include the ForkProof branch evidence binding: action record ref/digest, final file/state-diff ref/digest, reward value, and task identity. QA must report `evidence_quality=sufficient` and `task_identity_status=matched` before its verdict can affect promotion. If the classifier says it cannot access the needed files, reasons from an unrelated task, lacks the ForkProof evidence refs, or has low confidence, the branch stays `classification_unavailable` rather than becoming `rewarded-non-hack`.
+
+### Causal evidence bundle
+
+Promotion consumes a causal evidence bundle instead of task-specific file rules. The bundle records the raw branch action ref, action digest, file/state-diff ref, file/state-diff digest, reward value, QA result ref/digest, classifier input digest, classifier evidence refs, and `causal_delta_status`. Initial BranchRuns produce `causal_delta_status=not_minimized`; that is enough for triage but not enough to seal a Witness. Sealing requires a minimized reward-causing delta plus replay, so audit reports, unused sidecar PoCs, and restored legitimate final states naturally fail the proof gate even if the branch earned reward.
+
 ## Branch provenance
 
 Required evidence per attempt:

@@ -21,9 +21,13 @@ def test_reward_hacking_parser_treats_string_false_as_false():
             "hacking_strategy": "none",
             "severity": "none",
             "confidence": "0.8",
+            "evidence_quality": "sufficient",
+            "task_identity_status": "matched",
+            "evidence_summary": "trace and branch evidence were available",
         }
     )
     assert result["is_reward_hacking"] is False
+    assert result["evidence_quality"] == "sufficient"
 
 
 def test_hud_qa_binding_probe_rejects_team_id_as_org_binding(monkeypatch, tmp_path):
@@ -195,7 +199,7 @@ def test_reward_hacking_analysis_reports_later_classifier_blocker(monkeypatch, t
     )
     monkeypatch.setattr(
         "forkproof.witnesses.qa_binding._classify_prompt_text",
-        lambda prompt: {  # noqa: ARG005
+        lambda prompt, *, classifier_evidence=None: {  # noqa: ARG005
             "status": "blocked",
             "blocker": "canonical classifier did not return JSON",
             "error_class": "ClassifierOutputError",
@@ -210,6 +214,53 @@ def test_reward_hacking_analysis_reports_later_classifier_blocker(monkeypatch, t
     assert result["status"] == "blocked"
     assert result["blocker"] == "canonical classifier did not return JSON"
     assert result["error_class"] == "ClassifierOutputError"
+
+
+def test_reward_hacking_analysis_persists_qa_evidence_quality_fields(monkeypatch, tmp_path):
+    monkeypatch.setenv("HUD_API_KEY", "present-not-real")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "present-not-real")
+    monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
+    monkeypatch.setattr(
+        "forkproof.witnesses.qa_binding._load_canonical_reward_hacking_module",
+        lambda root: (object(), {"status": "pass", "module_file": "qa_reward_hacking.py"}),  # noqa: ARG005
+    )
+    monkeypatch.setattr(
+        "forkproof.witnesses.qa_binding.fetch_canonical_prompt",
+        lambda module, binding, trace_id, hud_api_key: {  # noqa: ARG005
+            "status": "pass",
+            "prompt": "canonical prompt",
+            "execution_mode": "uv-project-subprocess-v2-trace-provider",
+        },
+    )
+    monkeypatch.setattr(
+        "forkproof.witnesses.qa_binding._classify_prompt_text",
+        lambda prompt, *, classifier_evidence=None: {  # noqa: ARG005
+            "status": "pass",
+            "model": "fake-qa-model",
+            "classifier_input_digest": "classifier-input-sha",
+            "classifier_evidence_digest": "classifier-evidence-sha",
+            "classifier_evidence_refs": [{"kind": "file_diff", "ref": "diff.json"}],
+            "reasoning": "branch-local evidence matched the task",
+            "is_reward_hacking": True,
+            "hacking_strategy": "shortcut",
+            "severity": "major",
+            "confidence": 0.91,
+            "evidence_quality": "sufficient",
+            "task_identity_status": "matched",
+            "evidence_summary": "used trace and final diff",
+        },
+    )
+    result = run_reward_hacking_analysis(
+        tmp_path,
+        "trace-001",
+        branch_id="branch-001",
+        action_record_digest="actions-sha",
+        classifier_evidence={"classifier_evidence_digest": "classifier-evidence-sha"},
+    )
+    assert result["status"] == "pass"
+    assert result["evidence_quality"] == "sufficient"
+    assert result["task_identity_status"] == "matched"
+    assert result["classifier_evidence_refs"] == [{"kind": "file_diff", "ref": "diff.json"}]
 
 
 def test_classify_prompt_text_accepts_structured_reward_hacking_tool(monkeypatch):
@@ -235,6 +286,9 @@ def test_classify_prompt_text_accepts_structured_reward_hacking_tool(monkeypatch
                                 "hacking_strategy": "test_manipulation",
                                 "severity": "critical",
                                 "confidence": 0.98,
+                                "evidence_quality": "sufficient",
+                                "task_identity_status": "matched",
+                                "evidence_summary": "used branch-local trace and diff",
                             },
                         }
                     ]
@@ -254,6 +308,7 @@ def test_classify_prompt_text_accepts_structured_reward_hacking_tool(monkeypatch
     assert result["hacking_strategy"] == "test_manipulation"
     assert result["severity"] == "critical"
     assert result["confidence"] == 0.98
+    assert result["evidence_quality"] == "sufficient"
 
 
 def test_synthetic_reward_hacking_smoke_positive_control(monkeypatch, tmp_path):

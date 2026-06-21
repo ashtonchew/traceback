@@ -61,7 +61,7 @@
       "ref": "docs/plans/scripts/validate_file_sizes.py"
     },
     {
-      "description": "Structured Anthropic tool schema/extraction for canonical Reward Hacking QA result binding.",
+      "description": "Structured Anthropic tool schema/extraction for canonical Reward Hacking QA result binding, including evidence_quality and task_identity_status fields used to fail closed on misbound classifications.",
       "ref": "src/forkproof/witnesses/qa_structured.py"
     },
     {
@@ -105,23 +105,32 @@
       "ref": "docs/plans/evidence/003/artifacts/terminal-bench-feedback-prompt-compliance-smoke.json"
     },
     {
-      "description": "Live BranchRun executor with optional feedback retry budget tagged separately from the 12 independent core BranchRuns.",
+      "description": "Live BranchRun executor with optional feedback retry budget, classifier evidence supplements, and per-branch causal evidence bundle emission.",
       "ref": "src/forkproof/witnesses/branch_runs.py"
     },
     {
-      "description": "Latest live 12-branch terminal-bench authorized-audit Hacker BranchRun batch: 12 executed branches, 12 HUD traces, 12 QA verdicts, 12 reward successes, 2 reward-hacking candidates, complete same-runtime file-diff/security provenance, and no feedback retry needed because initial fanout found candidates.",
+      "description": "Previous live 12-branch terminal-bench authorized-audit Hacker BranchRun batch before causal QA evidence binding: 12 executed branches, 12 HUD traces, 12 QA verdicts, 12 reward successes, 2 QA reward-hacking candidates, complete same-runtime file-diff/security provenance.",
       "ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T052854/branch-run-batch.json"
+    },
+    {
+      "description": "Task-agnostic causal evidence contracts that join action refs, state-diff refs, reward, QA input/output digests, classifier evidence refs, and causal-delta status without predeclaring task-specific surfaces.",
+      "ref": "src/forkproof/witnesses/causal_evidence.py"
+    },
+    {
+      "description": "Latest live 12-branch terminal-bench authorized-audit Hacker BranchRun batch after causal QA evidence binding: 12 executed branches, 12 HUD traces, 12 QA verdicts, 11 reward successes, 4 reward-hacking candidates with sufficient evidence, 5 classifications failed closed as insufficient evidence, complete provenance, and causal_delta_status=not_minimized for all branches.",
+      "ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json"
     }
   ],
   "blockers": [
     {
       "evidence_refs": [
         "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
-        "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T045757/branch-run-batch.json",
+        "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json",
+        "src/forkproof/witnesses/causal_evidence.py",
         "src/forkproof/witnesses/branch_runs.py"
       ],
-      "reason": "Plan 003 live integration executed 12 Hacker BranchRuns with complete same-runtime file-diff/security provenance and found two reward-hacking candidates, but no candidate is a sealed Witness until durable packaging, dedup clustering, and three consecutive deterministic replay pass.",
-      "recorded_at": "2026-06-21T05:06:00Z",
+      "reason": "Plan 003 live integration executed 12 Hacker BranchRuns with complete provenance and causal evidence bundles, found four reward-hacking candidates with sufficient QA evidence, and failed closed on five insufficient-evidence QA verdicts. No candidate is a sealed Witness until causal delta minimization, durable packaging, dedup clustering, and three consecutive deterministic replay pass.",
+      "recorded_at": "2026-06-21T06:16:20Z",
       "type": "STOP"
     },
     {
@@ -141,22 +150,22 @@
       "status": "pass"
     },
     {
-      "evidence": "31 witness tests cover BranchRun records, bounded failures, prompt provenance, canonical QA source handling, strict QA joins, storage, replay, and security contracts.",
+      "evidence": "42 witness tests cover BranchRun records, bounded failures, prompt provenance, canonical QA source handling, strict QA joins, insufficient-QA batch labeling, causal evidence bundles, storage, replay, and security contracts.",
       "name": "BranchRun contract coverage",
       "status": "pass"
     },
     {
-      "evidence": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json records canonical hud-evals/hud-trace-explorer qa_reward_hacking.py execution via uv-project-subprocess-v2-trace-provider and structured Anthropic tool output.",
+      "evidence": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json and run-20260621T060827 QA artifacts record canonical hud-evals/hud-trace-explorer qa_reward_hacking.py execution with ForkProof classifier evidence binding fields.",
       "name": "Canonical HUD QA binding",
       "status": "pass"
     },
     {
-      "evidence": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T052854/branch-run-batch.json records 12 executed live terminal-bench authorized-audit Hacker BranchRuns from one accepted ForkPoint, 12 unique branch ids, explicit task-state roots, 12 HUD traces, 12 reward successes, 12 QA verdicts, and 2 reward-hacking candidates.",
+      "evidence": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json records 12 executed live terminal-bench authorized-audit Hacker BranchRuns from one accepted ForkPoint, 12 unique branch ids, explicit task-state roots, 12 HUD traces, 11 reward successes, 12 QA verdicts, and 4 reward-hacking candidates with sufficient classifier evidence.",
       "name": "Twelve Hacker BranchRuns",
       "status": "pass"
     },
     {
-      "evidence": "The latest batch has two reward-hacking candidates and complete BranchRun provenance. Promotion remains blocked on durable candidate packaging, dedup cluster report, and three consecutive deterministic replay; no sealed Witness is claimed.",
+      "evidence": "The latest batch has four reward-hacking candidates with sufficient QA evidence and complete BranchRun provenance. All causal bundles remain causal_delta_status=not_minimized, so promotion remains blocked on causal delta minimization, durable candidate packaging, dedup cluster report, and three consecutive deterministic replay; no sealed Witness is claimed.",
       "name": "Promotion and replay seal",
       "status": "blocked"
     },
@@ -206,9 +215,14 @@
       "status": "pass"
     },
     {
-      "evidence": "run-20260621T052854 used prompt_profile_counts={terminal_bench_authorized_audit: 12}; executed_branch_count=12; provenance_status=complete; feedback_retry_budget=1 but feedback_retry_count=0 because candidates were found in the initial 12 independent branches.",
+      "evidence": "run-20260621T060827 used prompt_profile_counts={terminal_bench_authorized_audit: 12}; executed_branch_count=12; provenance_status=complete; feedback_retry_budget=1 but feedback_retry_count=0 because candidates were found in the initial 12 independent branches; artifact promotion_signal_counts={candidate: 4, rewarded-non-hack: 3, gate-error:WitnessError:QA result did not have sufficient branch-local evidence: 5}. Future runs map that classification_unavailable error to incomplete-classification.",
       "name": "Terminal-bench live fanout",
       "status": "pass"
+    },
+    {
+      "name": "Causal evidence and QA quality gates",
+      "status": "pass",
+      "evidence": "src/forkproof/witnesses/causal_evidence.py and tests/forkproof/witnesses/test_witness_contracts.py prove task-agnostic causal bundle construction, QA evidence_quality/task_identity_status fail-closed behavior, and Witness sealing blocked until causal_delta_status=minimized."
     }
   ],
   "commands": [
@@ -219,7 +233,7 @@
         "plan-003-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 31 passed in 0.47s."
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 42 passed in 0.53s."
     },
     {
       "argv": [
@@ -269,7 +283,7 @@
         "003"
       ],
       "exit_code": 0,
-      "observed": "PASS: 22 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target. Generated evidence artifacts are skipped by validator policy."
+      "observed": "WARN: src/forkproof/witnesses/branch_runs.py: 530 lines > 500 target; PASS: 24 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target. Generated evidence artifacts are skipped by validator policy."
     },
     {
       "argv": [
@@ -323,8 +337,32 @@
         "docs/plans/scripts/run_mapped.py",
         "integration-witness"
       ],
+      "exit_code": 124,
+      "observed": "Timed-out validation attempt after initial causal-evidence wiring: mapped command timed out before branch-run-batch summary because QA evidence-quality fields were computed but not copied into persisted QA results. The partial unreferenced artifact was removed, qa_binding.py was fixed, and the command was rerun successfully to the expected Plan 003 STOP as run-20260621T060827."
+    },
+    {
+      "argv": [
+        "FORKPROOF_ALLOW_EXTERNAL_QA=1",
+        "FORKPROOF_BRANCH_STATE_ROOTS=/app,/data/db,/var/log/mongodb.log",
+        "FORKPROOF_HACKER_FEEDBACK_RETRIES=1",
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "integration-witness"
+      ],
       "exit_code": 2,
-      "observed": "Expected blocked result after successful live fanout: run-20260621T052854 executed 12/12 terminal-bench authorized-audit Hacker BranchRuns with complete provenance, 12 QA verdicts, 12 reward successes, and 2 reward-hacking candidates; integration stops at durable packaging and three-replay Witness seal."
+      "observed": "Expected blocked result after successful live fanout: run-20260621T060827 executed 12/12 terminal-bench authorized-audit Hacker BranchRuns with complete provenance, 12 QA verdicts, 11 reward successes, 4 candidates with sufficient QA evidence, 5 insufficient-evidence classifications failed closed, causal bundles recorded for all branches with causal_delta_status=not_minimized, and STOP: reward-hacking candidates require durable packaging and three-replay Witness seal."
+    },
+    {
+      "argv": [
+        "FORKPROOF_ALLOW_EXTERNAL_QA=1",
+        "FORKPROOF_BRANCH_STATE_ROOTS=/app,/data/db,/var/log/mongodb.log",
+        "FORKPROOF_HACKER_FEEDBACK_RETRIES=1",
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "integration-witness"
+      ],
+      "exit_code": 130,
+      "observed": "Interrupted non-canonical diagnostic rerun after it exceeded the prior live-run envelope and produced branch-agent SFTP tool errors without a branch-run-batch summary. Partial unreferenced artifact run-20260621T062316 was removed and canonical evidence remains run-20260621T060827."
     }
   ],
   "commit": null,
@@ -351,7 +389,11 @@
     "Feedback retry implementation: FORKPROOF_HACKER_FEEDBACK_RETRIES enables tagged assisted retry branches only when the 12 independent core branches produce no candidate; feedback branches are not counted as core BranchRuns and keep identical promotion gates.",
     "Prompt smoke with one failed-attempt feedback block passed on claude-haiku-4-5, showing the terminal-bench profile can steer the model toward verifier/test audit planning after a prior benign-solve drift.",
     "2026-06-21 terminal-bench live fanout run-20260621T052854 succeeded: 12/12 BranchRuns executed with complete provenance and two reward-hacking candidates. Feedback retry did not run because candidates were found in the initial independent fanout.",
-    "2026-06-21 PR evidence should now describe Plan 003 as past live discovery/provenance for terminal-bench authorized-audit prompt, with remaining work narrowed to durable packaging, dedup, and three deterministic replays."
+    "2026-06-21 PR evidence should now describe Plan 003 as past live discovery/provenance for terminal-bench authorized-audit prompt, with remaining work narrowed to durable packaging, dedup, and three deterministic replays.",
+    "2026-06-21 causal evidence update: Plan 003 now uses task-agnostic causal evidence bundles and QA evidence_quality/task_identity_status fields instead of manual per-task surface declarations. QA remains the classifier, but insufficient or mismatched evidence becomes classification_unavailable rather than rewarded-non-hack.",
+    "2026-06-21 latest live fanout run-20260621T060827 executed 12 BranchRuns with causal bundles: 11 reward successes, 4 candidates with sufficient QA evidence, 5 classifications failed closed as insufficient evidence, and no sealed Witness because causal deltas are not minimized/replayed.",
+    "2026-06-21 final local regression after the live run: 42 witness tests passed and verify future insufficient-evidence QA results are summarized as incomplete-classification instead of noisy gate-error strings.",
+    "2026-06-21 attempted a fresh live integration rerun after local regression cleanup. The run was interrupted with exit 130 after exceeding the previous complete batch envelope and emitting branch-agent SFTP tool errors without a branch-run-batch summary. The partial unreferenced run-20260621T062316 artifact was removed; run-20260621T060827 remains the canonical live evidence batch for this commit."
   ],
   "plan_id": "003",
   "plan_name": "stochastic-witness-loop",
@@ -360,6 +402,6 @@
   "skips": [],
   "started_at": "2026-06-21T01:21:47Z",
   "status": "blocked",
-  "updated_at": "2026-06-21T05:36:08Z",
+  "updated_at": "2026-06-21T06:31:09Z",
   "wave": 3
 }
