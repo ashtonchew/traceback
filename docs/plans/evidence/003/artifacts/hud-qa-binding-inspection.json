@@ -1,12 +1,17 @@
 {
   "api_base": "https://api.beta.hud.ai",
-  "blocker": "HUD QA API requires X-Organization-ID and no repo-bound HUD organization env/config is present",
-  "checked_at": "2026-06-21T02:16:01Z",
+  "blocker": "HUD QA API requires X-Organization-ID; HUD team_id is discoverable but not accepted as that organization id, and no repo-bound HUD organization env/config is present",
+  "checked_at": "2026-06-21T02:22:15Z",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "HUD_API_KEY": "present",
     "MODAL_TOKEN_ID": "present",
     "MODAL_TOKEN_SECRET": "present"
+  },
+  "discovered_team_binding": {
+    "accepted_as_organization_id": false,
+    "source": "/v2/environments/usage",
+    "status": "present"
   },
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "observed_behavior": "HUD trace readback is available through the authenticated API, and the hidden QA-agent router exists, but Plan 003 still lacks the organization-scoped Reward Hacking Agent run/result binding needed to join an authoritative QA verdict to the BranchRun trace and action digest.",
@@ -41,6 +46,18 @@
     "status": "absent"
   },
   "qa_agents_with_org_probe": null,
+  "qa_agents_with_team_probe": {
+    "path": "/v2/qa-agents",
+    "status_code": 401,
+    "summary": {
+      "keys": [
+        "detail",
+        "error"
+      ],
+      "message": "Invalid token: Not enough segments",
+      "shape": "object"
+    }
+  },
   "qa_agents_without_org_probe": {
     "path": "/v2/qa-agents",
     "status_code": 401,
@@ -56,7 +73,7 @@
   "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "blocked",
   "trace_events_probe": {
-    "path": "/v2/trace/67ef61c7fb00441a897c47933f5a8047/events",
+    "path": "/v2/trace/c7aa74c26ba44ff4b9f9629027aaa9fe/events",
     "status_code": 200,
     "summary": {
       "keys": [

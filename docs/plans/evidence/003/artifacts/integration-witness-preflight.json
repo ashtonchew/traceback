@@ -4,13 +4,13 @@
     "status": "ready"
   },
   "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
-  "checked_at": "2026-06-21T02:16:01Z",
+  "checked_at": "2026-06-21T02:22:15Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "hud_qa_binding_ref": "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
   "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke only; the full 12 BranchRun loop has not started. QA remains a separate post-run classification path required before Witness promotion.",
   "promotion": {
     "blockers": [
-      "HUD QA API requires X-Organization-ID and no repo-bound HUD organization env/config is present"
+      "HUD QA API requires X-Organization-ID; HUD team_id is discoverable but not accepted as that organization id, and no repo-bound HUD organization env/config is present"
     ],
     "status": "blocked"
   },

@@ -9,6 +9,7 @@ from forkproof.witnesses.promotion import (
     dedup_by_target_mechanism,
     promotion_result,
 )
+from forkproof.witnesses.qa_binding import inspect_hud_qa_binding
 from forkproof.witnesses.replay import require_three_replays
 from forkproof.witnesses.security import assert_branch_security, contains_secret_material
 from forkproof.witnesses.store import JsonArtifactStore
@@ -116,6 +117,41 @@ def test_qa_classification_is_separate_and_must_join_to_same_branch():
 
     with pytest.raises(WitnessError, match="not from an authoritative source"):
         branch_signal_status(completed_branch, {**qa(), "authoritative_source": "local_heuristic"})
+
+
+def test_hud_qa_binding_probe_rejects_team_id_as_org_binding(monkeypatch, tmp_path):
+    monkeypatch.setenv("HUD_API_KEY", "present-not-real")
+
+    class Response:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):  # noqa: ARG001
+        if url.endswith("/openapi.json"):
+            return Response(200, {"paths": {"/v2/trace/{trace_id}/events": {}}})
+        if url.endswith("/v2/environments/usage"):
+            return Response(200, {"team_id": "team-uuid"})
+        if url.endswith("/v2/qa-agents") and "X-Organization-ID" in headers:
+            return Response(401, {"error": "unauthorized", "detail": "Invalid token: Not enough segments"})
+        if url.endswith("/v2/qa-agents"):
+            return Response(401, {"error": "unauthorized", "detail": "Missing X-Organization-ID header"})
+        if "/v2/trace/trace-001/events" in url:
+            return Response(200, {"events": [], "reward": 1.0, "status": "completed"})
+        raise AssertionError(url)
+
+    monkeypatch.setattr("forkproof.witnesses.qa_binding.httpx.get", fake_get)
+    result = inspect_hud_qa_binding(tmp_path, "trace-001")
+    assert result["status"] == "blocked"
+    assert result["discovered_team_binding"] == {
+        "status": "present",
+        "source": "/v2/environments/usage",
+        "accepted_as_organization_id": False,
+    }
+    assert "team_id is discoverable but not accepted" in result["blocker"]
 
 
 def test_equivalent_exploit_mechanism_dedups_to_one_cluster():

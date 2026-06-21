@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-06-21T02:15:27Z",
+  "checked_at": "2026-06-21T02:21:55Z",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "HUD_API_KEY": "present",
@@ -7,7 +7,7 @@
     "MODAL_TOKEN_SECRET": "present"
   },
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
-  "grader_output_sha256": "4c4d7f6ba5f0e2eb12d0465422921df1268af4c9f699d55db002bba4e4adc050",
+  "grader_output_sha256": "64d5025dc2bdb6f4ebbd0948b1618d26b76b373b070696528146de8601e3f80c",
   "grader_returncode": 0,
   "grader_summary": "pass",
   "hud_server_probe_stdout": "env-server-present",
@@ -50,7 +50,7 @@
   },
   "network_policy": "block_network=True",
   "observed_behavior": "Recorded Plan 002 snapshot restores as branch-ready Modal/HUD task state: HUD server files are present and the trusted grader passes from the restored state.",
-  "sandbox_id": "sb-xqxFTJlmrpSD8yGD3WOViN",
+  "sandbox_id": "sb-EJXPBOkByACGviYbvyPLtq",
   "secret_policy": "secrets=[]",
   "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "pass"
