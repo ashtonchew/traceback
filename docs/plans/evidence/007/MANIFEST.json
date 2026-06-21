@@ -5,9 +5,9 @@
   "wave": 4,
   "status": "complete",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T15:31:04Z",
+  "updated_at": "2026-06-21T17:32:04Z",
   "completed_at": "2026-06-21T15:31:04Z",
-  "commit": "ffb28b03b81cde58ebf6a03f4860b45199eb5cd3",
+  "commit": "8026d20b7130238e0b8ca07e07a275a24cb1bcc5",
   "commands": [
     {
       "argv": ["scripts/verify_external_deps.sh"],
@@ -62,7 +62,7 @@
     {
       "argv": ["python", "docs/plans/scripts/validate_graph.py"],
       "exit_code": 0,
-      "observed": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic."
+      "observed": "PASS: 8 plans, 10 dependencies, waves [1, 2, 3, 4, 5], acyclic (on origin/main after Plan 008 merged; 008's Plan 005 edge was owner-relaxed)."
     },
     {
       "argv": ["python", "docs/plans/scripts/validate_sections.py"],
@@ -82,7 +82,7 @@
     {
       "argv": ["python", "docs/plans/scripts/validate_file_sizes.py", "--plan", "007"],
       "exit_code": 0,
-      "observed": "PASS: 21 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target. Live depth-two branch sub-artifacts under docs/plans/evidence/007/artifacts/ are generated-evidence and ignored by policy."
+      "observed": "PASS: 22 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target (tests/forkproof/research/test_research_contracts.py at 507 lines, within the 550-line max after the precise-isolation-check edit). Live depth-two branch sub-artifacts under docs/plans/evidence/007/artifacts/ are generated-evidence and ignored by policy."
     },
     {
       "argv": ["python", "docs/plans/scripts/validate_evidence.py", "--plan", "007"],
@@ -241,6 +241,7 @@
     "A post-completion parallel-subagent bug review applied three hardening fixes after the live run: the depth-two executor now fails closed (blocked record) instead of crashing if the HUD task/forkpoint load raises; the scheduler concurrency parameter is honored (real in-flight batching, with concurrency=1 byte-identical to the recorded run); and the resnapshot Modal sandbox cleanup is guarded. The recorded depth-two run executed at concurrency=1, whose happy path is unchanged, so the live evidence (commit ffb28b0) is unaltered. Tests grew 30 -> 33.",
     "A second parallel-subagent review added fail-closed robustness: resnapshot now best-effort-terminates the Modal sandbox (a teardown error no longer masks a successful capture) and converts a missing Modal SDK import into a ResnapshotError; the CLI (resnapshot/depth-two/integration) now degrades to a clean STOP (exit 2) on missing or unreadable evidence JSON instead of crashing (exit 1). These touch only error paths; the recorded live run is unchanged. Tests grew 33 -> 35.",
     "A third parallel-subagent bug hunt (concurrency and spec-conformance angles found zero issues; the depth-two branches were confirmed to reference the CHILD snapshot per the REFERENCE). Applied: the integration verifier now checks that a completed depth-two run's branch artifacts resolve to real files on disk and that the child-snapshot lineage/applied-delta and stop-event structure are well-formed (defense-in-depth, not just presence); run_depth_two fails closed on an invalid scheduler config instead of crashing; reward_success_count reuses the canonical reward_success() helper; DepthTwoRunRecord rejects duplicate branch refs and ResearchScheduler rejects an empty node_id. A reviewer suggestion to call modal.Image.from_id() inside the verifier was rejected: it would force live Modal credentials/cost into a cheap local check; snapshot authenticity is established at capture time by resnapshot provenance. The strengthened verifier still accepts the real committed evidence (cli integration exit 0). Recorded live run unchanged. Tests grew 35 -> 39.",
-    "A fourth parallel-subagent bug hunt (cross-module-contract angle found zero issues; concurrency angle confirmed the wave loop is race-free). Applied: the verifier now blocks a child-snapshot and depth-two run that reference DIFFERENT child images (catches a re-snapshot inconsistency); build_child_forkpoint deep-copies HUD_TASK_PROFILE's nested lists so the module constant cannot be aliased/corrupted across runs; the frozen record to_record() methods defensively copy mutable nested values; and a previously-untested wave-loop executor-error path is now covered (a raising branch is recorded as executor-error and excluded from completed without stalling the scheduler), alongside SchedulerConfig/complete_branch/non-filesystem/included-paths boundary tests. A reviewer suggestion to block resnapshot re-runs was rejected in favor of the verifier consistency check, which catches the hazard without blocking legitimate re-captures. The strengthened verifier still accepts the real committed evidence (cli integration exit 0); recorded live run unchanged. Tests grew 39 -> 49."
+    "A fourth parallel-subagent bug hunt (cross-module-contract angle found zero issues; concurrency angle confirmed the wave loop is race-free). Applied: the verifier now blocks a child-snapshot and depth-two run that reference DIFFERENT child images (catches a re-snapshot inconsistency); build_child_forkpoint deep-copies HUD_TASK_PROFILE's nested lists so the module constant cannot be aliased/corrupted across runs; the frozen record to_record() methods defensively copy mutable nested values; and a previously-untested wave-loop executor-error path is now covered (a raising branch is recorded as executor-error and excluded from completed without stalling the scheduler), alongside SchedulerConfig/complete_branch/non-filesystem/included-paths boundary tests. A reviewer suggestion to block resnapshot re-runs was rejected in favor of the verifier consistency check, which catches the hazard without blocking legitimate re-captures. The strengthened verifier still accepts the real committed evidence (cli integration exit 0); recorded live run unchanged. Tests grew 39 -> 49.",
+    "Rebased onto origin/main after Plan 008 (QA classifier benchmark, PR #31) merged (main 61bc582). The only conflict was a single owner-approved Decision-Log relaxation entry in the 007 plan doc, restored verbatim. Plan 008 added disjoint paths (src/forkproof/qabench/**) and a uuid run_id in run_live_branch_batch that does not touch _run_one_branch, so Plan 007's implementation (src/forkproof/research/**) is byte-identical and all 49 tests pass. One test needed a precise fix: the research-isolation check now matches real `import forkproof.research` statements instead of any substring, because Plan 008's sft_export.py docstring merely names a research symbol without importing it (research stays deletable; invariant intact). validate_graph now reports 10 dependencies (008's Plan 005 edge owner-relaxed) and one Plan-007 test file is 7 lines over the 500 target (within the 550 max). --require-complete still passes."
   ]
 }
