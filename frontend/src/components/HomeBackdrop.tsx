@@ -122,7 +122,7 @@ export function HomeBackdrop() {
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid slice"
-        className="h-full w-full opacity-[0.82] blur-[0.5px]"
+        className="h-full w-full opacity-[0.82] blur-[0.7px]"
         role="presentation"
       >
         <g fill="none" strokeLinecap="round" strokeLinejoin="round">

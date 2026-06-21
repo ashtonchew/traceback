@@ -45,10 +45,22 @@ export function PanelShell({
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l border-hairline bg-background">
       <div className="px-5 pt-5">
-        <div className="flex items-center gap-2">
-          <h2 className="min-w-0 flex-1 truncate font-display text-xl tracking-tight text-ink-primary">{title}</h2>
-          {tag && (
-            <Chip status={tagStatus} className="min-w-0 max-w-28 normal-case">
+        <div className="flex items-start gap-2">
+          <h2 className="min-w-0 flex-1 line-clamp-2 font-display text-xl leading-snug tracking-tight text-ink-primary">{title}</h2>
+          {onClose && (
+            <button
+              type="button"
+              aria-label={`Close ${title}`}
+              onClick={onClose}
+              className="shrink-0 text-ink-tertiary hover:text-ink-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+        {tag && (
+          <div className="mt-2">
+            <Chip status={tagStatus} className="min-w-0 max-w-full normal-case">
               {tagCopyValue ? (
                 <button
                   type="button"
@@ -64,18 +76,8 @@ export function PanelShell({
                 tag
               )}
             </Chip>
-          )}
-          {onClose && (
-            <button
-              type="button"
-              aria-label={`Close ${title}`}
-              onClick={onClose}
-              className="ml-auto text-ink-tertiary hover:text-ink-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X size={18} />
-            </button>
-          )}
-        </div>
+          </div>
+        )}
         {tabs && (
           <div className="mt-4 flex gap-5 border-b border-hairline">
             {tabs.map((t, i) => (

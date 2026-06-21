@@ -41,13 +41,11 @@ export function RunRoot() {
         <div className="min-w-0 flex-1">
           <RunCanvas nodes={rootGraph.nodes} edges={rootGraph.edges} onNodeClick={onNodeClick} fitPadding={0.12} fitMaxZoom={0.85} />
         </div>
-        <div className="w-80 shrink-0">
-          {run.loading ? null : step === 'trace' && run.forkPoint ? (
-            <TracePanel forkPoint={run.forkPoint} onOpenForkPoint={() => setStep('forkpoint')} />
-          ) : (
-            <ForkPointPanel onStart={onStart} />
-          )}
-        </div>
+        {run.loading ? null : step === 'trace' && run.forkPoint ? (
+          <TracePanel forkPoint={run.forkPoint} onOpenForkPoint={() => setStep('forkpoint')} />
+        ) : (
+          <ForkPointPanel onStart={onStart} />
+        )}
       </div>
       <RunSummaryFooter
         stats={[
