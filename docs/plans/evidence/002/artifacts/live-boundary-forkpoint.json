@@ -2,7 +2,7 @@
   "base_image_digest": "sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348",
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
   "environment_image_digest": "forkpoint-image-sha256:dc11b737edf6fe985d7698754a6e218fb39bc383f2bc5edbd3f3a7a51ff295d6",
-  "fork_point_id": "fp-e815b0e5e999c1c4df73611a",
+  "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -68,17 +68,17 @@
     "status": "pass"
   },
   "network_policy": "block_network=True",
-  "query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
+  "query_py_sha256": "de1e37e62188483a86a585c7cc8660b395b84b071c48ac5c1a37e9d6a5ff2100",
   "quiesce": {
-    "mongod_after_quiesce": "running",
+    "mongod_after_quiesce": "stopped",
     "mongod_before_quiesce": "running",
-    "strategy": "trusted orchestrator MongoDB fsync plus filesystem sync before snapshot"
+    "strategy": "trusted orchestrator MongoDB fsync, clean shutdown, and filesystem sync before snapshot"
   },
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "e44b51d4ea8b4ba2798f9c8b384df1d7143e2c2fb49154338083b92be7d1ef9e",
-  "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
+  "restored_grade_output_sha256": "8afba38259d0bb91c28ea30f90c8ca0c16a7adeaa206f302b21e3f2b69a1ff7b",
+  "restored_query_py_sha256": "de1e37e62188483a86a585c7cc8660b395b84b071c48ac5c1a37e9d6a5ff2100",
   "secret_policy": "secrets=[]",
   "security_probe": {
     "docker_sock": "absent",
@@ -86,10 +86,10 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "eb7ec510b77ab5ed7edb864612c2a40a0155a8bd209450842730d8c144c24d26",
-  "snapshot_id": "im-01KVKW8Y36232NWV4ZGDG0S1BM",
+  "snapshot_digest": "79fb6181adb209684af059999f7d886701338955048523632d10b10acd304156",
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKW8Y36232NWV4ZGDG0S1BM",
+  "snapshot_restore_ref": "modal-image://im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",

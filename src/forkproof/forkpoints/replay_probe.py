@@ -10,7 +10,7 @@ from typing import Any
 from .core import digest_json, load_source_trace
 
 ROOT = Path(__file__).resolve().parents[3]
-ASSETS = ROOT / "envs" / "mongodb-sales-aggregation-engine" / "task_assets"
+ENV_DIR = ROOT / "envs" / "mongodb-sales-aggregation-engine"
 EVIDENCE = ROOT / "docs" / "plans" / "evidence" / "002" / "artifacts"
 
 
@@ -22,9 +22,40 @@ class SalesAnalyzer:
     def __init__(self, db_url: str, db_name: str):
         raise NotImplementedError
 
-    def get_top_performing_products(self, start_date: str, end_date: str, limit: int = 3) -> dict:
+    def get_top_performing_products(
+        self, start_date: str, end_date: str, limit: int = 3
+    ) -> dict:
         raise NotImplementedError
 '''
+
+
+def _ensure_mongo_command() -> str:
+    return textwrap.dedent(
+        """
+        if python3 - <<'PY' >/tmp/mongo-ping.log 2>&1
+        from pymongo import MongoClient
+        MongoClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000).admin.command('ping')
+        PY
+        then
+          exit 0
+        fi
+        rm -f /data/db/mongod.lock
+        mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db
+        python3 - <<'PY'
+        import time
+        from pymongo import MongoClient
+        last = None
+        for _ in range(30):
+            try:
+                MongoClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000).admin.command('ping')
+                raise SystemExit(0)
+            except Exception as exc:
+                last = exc
+                time.sleep(1)
+        raise SystemExit(f'mongod did not become ready: {last}')
+        PY
+        """
+    )
 
 
 def _trace_events() -> list[dict[str, Any]]:
@@ -41,31 +72,40 @@ def _trace_events() -> list[dict[str, Any]]:
 def _image():
     import modal
 
-    return (
-        modal.Image.from_registry("mongo:7.0")
-        .apt_install("python3", "python3-pymongo", "python3-pytest", "bash", "coreutils", "procps")
-        .add_local_dir(ASSETS, "/seed/task_assets", copy=True)
-    )
+    return modal.Image.from_dockerfile(ENV_DIR / "Dockerfile.hud", context_dir=ENV_DIR)
 
 
-def _exec(sb: Any, command: str, *, timeout: int = 120) -> str:
+def _exec(sb: Any, command: str, *, timeout: int = 120, check: bool = True) -> str:
     proc = sb.exec("bash", "-lc", command, workdir="/app", timeout=timeout)
     proc.wait()
-    return proc.stdout.read() + proc.stderr.read()
+    output = proc.stdout.read() + proc.stderr.read()
+    if check and proc.returncode != 0:
+        raise RuntimeError(f"sandbox command failed rc={proc.returncode}: {output[-1000:]}")
+    return output
 
 
 def _setup_command() -> str:
-    return textwrap.dedent(
-        f"""
-        set -eu
-        mkdir -p /app/task_assets /data/db /var/log
-        cp -R /seed/task_assets/. /app/task_assets/
-        cat > /app/query.py <<'PY'
-        {QUERY_STUB}
-        PY
-        mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db
-        python3 /app/task_assets/init_data.py
-        """
+    return (
+        textwrap.dedent(
+            """
+            set -eu
+            mkdir -p /app/task_assets /data/db /var/log /protected
+            cp /app/task_assets/orders.json /app/task_assets/products.json /protected/
+            cat > /app/query.py <<'PY'
+            """
+        )
+        + QUERY_STUB
+        + textwrap.dedent(
+            """\
+            PY
+            """
+        )
+        + _ensure_mongo_command()
+        + textwrap.dedent(
+            """\
+            python3 /app/task_assets/init_data.py
+            """
+        )
     )
 
 
@@ -111,7 +151,7 @@ def _replay(events: list[dict[str, Any]], sb: Any) -> dict[str, Any]:
             "expected_error": bool(event.get("error")),
         }
         if tool == "bash":
-            _exec(sb, args["command"], timeout=300)
+            _exec(sb, args["command"], timeout=300, check=not event.get("error"))
             replayed.append(item)
         elif tool == "str_replace_based_edit_tool" and not event.get("error"):
             _apply_edit(sb, args)
@@ -128,6 +168,8 @@ def run_trace_replay_probe() -> dict[str, Any]:
     source = load_source_trace(ROOT / "docs" / "plans" / "repo-map" / "STATUS.json")
     app = modal.App.lookup("forkproof-plan-002", create_if_missing=True)
     sb = modal.Sandbox.create(
+        "sleep",
+        "infinity",
         image=_image(),
         app=app,
         block_network=True,
@@ -152,6 +194,8 @@ def run_trace_replay_probe() -> dict[str, Any]:
         snapshot = sb.snapshot_filesystem()
         sb.terminate()
         restored = modal.Sandbox.create(
+            "sleep",
+            "infinity",
             image=snapshot,
             app=app,
             block_network=True,
@@ -162,6 +206,7 @@ def run_trace_replay_probe() -> dict[str, Any]:
             workdir="/app",
             tags={"forkproof_plan": "002", "purpose": "trace_replay_restore"},
         )
+        _exec(restored, _ensure_mongo_command(), timeout=60)
         restored_query_sha = _exec(restored, "sha256sum /app/query.py | awk '{print $1}'").strip()
         restored_grade = _exec(
             restored,

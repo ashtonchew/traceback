@@ -1,13 +1,12 @@
 {
   "branch_execution": {
     "blockers": [
-      "accepted ForkPoint restore is not branch-ready for live BranchGateway execution",
       "repo-owned live BranchGateway adapter is not bound"
     ],
     "status": "blocked"
   },
-  "checked_at": "2026-06-21T01:42:58Z",
-  "fork_point_id": "fp-e815b0e5e999c1c4df73611a",
+  "checked_at": "2026-06-21T02:00:11Z",
+  "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "observed_behavior": "preflight only; no BranchRun execution started because the repo-owned live BranchGateway is not bound. QA remains a separate post-run classification path required before Witness promotion.",
   "promotion": {
     "blockers": [
@@ -16,6 +15,6 @@
     "status": "blocked"
   },
   "restore_inspection_ref": "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json",
-  "snapshot_id": "im-01KVKW8Y36232NWV4ZGDG0S1BM",
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "blocked"
 }

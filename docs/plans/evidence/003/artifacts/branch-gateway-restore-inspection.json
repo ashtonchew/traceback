@@ -1,16 +1,16 @@
 {
-  "checked_at": "2026-06-21T01:42:58Z",
+  "checked_at": "2026-06-21T02:00:11Z",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "HUD_API_KEY": "present",
     "MODAL_TOKEN_ID": "present",
     "MODAL_TOKEN_SECRET": "present"
   },
-  "fork_point_id": "fp-e815b0e5e999c1c4df73611a",
-  "grader_output_sha256": "0272da51ede448f7aa7c632e060d6c164db4ac354932b53c0541aee8acefb758",
-  "grader_returncode": 1,
-  "grader_summary": "query.py IndentationError",
-  "hud_server_probe_stdout": "env-server-missing",
+  "fork_point_id": "fp-826ba545cf30870e67d42ddb",
+  "grader_output_sha256": "f3a5d8f217a094381f36eb4c1dbfb8d75f94d15f80f1d80df3c0bba59a31da8a",
+  "grader_returncode": 0,
+  "grader_summary": "pass",
+  "hud_server_probe_stdout": "env-server-present",
   "inventory": {
     "/app": {
       "exists": true,
@@ -18,14 +18,14 @@
       "is_file": false
     },
     "/app/env.py": {
-      "exists": false,
+      "exists": true,
       "is_dir": false,
-      "is_file": false
+      "is_file": true
     },
     "/app/pyproject.toml": {
-      "exists": false,
+      "exists": true,
       "is_dir": false,
-      "is_file": false
+      "is_file": true
     },
     "/app/query.py": {
       "exists": true,
@@ -38,9 +38,9 @@
       "is_file": false
     },
     "/app/tasks.py": {
-      "exists": false,
+      "exists": true,
       "is_dir": false,
-      "is_file": false
+      "is_file": true
     },
     "/data/db": {
       "exists": true,
@@ -49,9 +49,9 @@
     }
   },
   "network_policy": "block_network=True",
-  "observed_behavior": "Recorded Plan 002 snapshot restores as Modal task state. It currently lacks HUD server files (`/app/env.py`, `/app/tasks.py`, `/app/pyproject.toml`) and the trusted grader does not pass from the restored state.",
-  "sandbox_id": "sb-vhbhQcec4BfulokZfIBXyt",
+  "observed_behavior": "Recorded Plan 002 snapshot restores as branch-ready Modal/HUD task state: HUD server files are present and the trusted grader passes from the restored state.",
+  "sandbox_id": "sb-ZpzU4QfUZFdz0G8TGqrKQo",
   "secret_policy": "secrets=[]",
-  "snapshot_id": "im-01KVKW8Y36232NWV4ZGDG0S1BM",
-  "status": "blocked"
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "status": "pass"
 }

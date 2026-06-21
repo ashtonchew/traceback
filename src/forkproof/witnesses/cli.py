@@ -116,8 +116,18 @@ def _modal_restore_inspection(forkpoint: dict[str, Any]) -> dict[str, Any]:
         elif grade["returncode"] != 0:
             grade_summary = "grader returned nonzero"
         inventory_data = json.loads(inventory["stdout"])
+        status = "pass" if grade["returncode"] == 0 and hud_server["stdout"].strip() == "env-server-present" else "blocked"
+        observed = (
+            "Recorded Plan 002 snapshot restores as branch-ready Modal/HUD task state: HUD server files are present "
+            "and the trusted grader passes from the restored state."
+            if status == "pass"
+            else (
+                "Recorded Plan 002 snapshot restores as Modal task state, but it is not branch-ready for HUD "
+                "BranchGateway execution or trusted grading."
+            )
+        )
         return {
-            "status": "pass" if grade["returncode"] == 0 and hud_server["stdout"].strip() == "env-server-present" else "blocked",
+            "status": status,
             "credential_presence": presence,
             "sandbox_id": sandbox.object_id,
             "network_policy": "block_network=True",
@@ -127,11 +137,7 @@ def _modal_restore_inspection(forkpoint: dict[str, Any]) -> dict[str, Any]:
             "grader_output_sha256": digest_json(grade_output),
             "grader_summary": grade_summary,
             "hud_server_probe_stdout": hud_server["stdout"].strip(),
-            "observed_behavior": (
-                "Recorded Plan 002 snapshot restores as Modal task state. It currently lacks HUD server files "
-                "(`/app/env.py`, `/app/tasks.py`, `/app/pyproject.toml`) and the trusted grader does not pass "
-                "from the restored state."
-            ),
+            "observed_behavior": observed,
         }
     finally:
         sandbox.terminate()
