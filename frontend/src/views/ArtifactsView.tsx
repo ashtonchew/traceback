@@ -32,7 +32,7 @@ function ArtifactRow({
     <button
       type="button"
       onClick={onOpen}
-      className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-hairline px-4 py-3 text-left transition-[background-color,transform] duration-150 ease-out last:border-b-0 hover:bg-surface active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-hairline px-4 py-3 text-left transition-[background-color,transform] duration-150 ease-out last:border-b-0 hover:bg-accent-wash active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-sunken text-ink-tertiary">
         <Icon size={15} />

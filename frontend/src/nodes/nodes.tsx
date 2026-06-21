@@ -52,7 +52,7 @@ function Frame({
       style={{ width }}
       className={clsx(
         'fp-node-frame relative rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm',
-        'transition-[border-color,box-shadow,transform] duration-150 ease-out',
+        'transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out',
         selected ? 'border-fill-accent ring-2 ring-fill-accent/25 shadow-md' : status && STATUS_RING[status] ? STATUS_RING[status] : 'border-hairline',
         className,
       )}
@@ -187,9 +187,9 @@ export function QANode({ data }: NodeProps) {
       </div>
       <dl className="mt-2 space-y-1 text-xs">
         {d.rows?.map((r) => (
-          <div key={r.label} className="flex justify-between gap-2">
-            <dt className="text-ink-tertiary">{r.label}</dt>
-            <dd className={clsx('font-medium', r.label === 'verdict' || r.label === 'severity' ? 'text-warn-text' : 'text-ink-primary')}>{r.value}</dd>
+          <div key={r.label} className="flex gap-2">
+            <dt className="w-16 shrink-0 text-ink-tertiary">{r.label}</dt>
+            <dd className={clsx('min-w-0 flex-1 font-medium', r.label === 'verdict' || r.label === 'severity' ? 'text-warn-text' : 'text-ink-primary')}>{r.value}</dd>
           </div>
         ))}
       </dl>
