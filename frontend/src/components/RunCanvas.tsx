@@ -106,6 +106,7 @@ function FlowInner({
   fitMaxZoom,
   fitMinZoom,
   initialViewport,
+  interactive,
 }: {
   nodes: Node[]
   edges: Edge[]
@@ -114,6 +115,7 @@ function FlowInner({
   fitMaxZoom: number
   fitMinZoom: number
   initialViewport?: Viewport
+  interactive: boolean
 }) {
   const { getViewport, setViewport } = useReactFlow()
   const [flowReady, setFlowReady] = useState(false)
@@ -456,9 +458,13 @@ function FlowInner({
         minZoom={0.2}
         maxZoom={1.6}
         proOptions={{ hideAttribution: true }}
-        nodesDraggable
+        nodesDraggable={interactive}
+        panOnDrag={interactive}
+        zoomOnScroll={interactive}
+        zoomOnPinch={interactive}
+        zoomOnDoubleClick={interactive}
         nodesConnectable={false}
-        elementsSelectable
+        elementsSelectable={interactive}
       >
         <Background variant={BackgroundVariant.Dots} gap={26} size={1} color="var(--ds-neutral-200)" />
       </ReactFlow>
@@ -473,6 +479,8 @@ export function RunCanvas({
   fitPadding = 0.2,
   fitMaxZoom = DEFAULT_FIT_MAX_ZOOM,
   fitMinZoom = 0,
+  showZoomBar = true,
+  interactive = true,
 }: {
   nodes: Node[]
   edges: Edge[]
@@ -480,6 +488,8 @@ export function RunCanvas({
   fitPadding?: number
   fitMaxZoom?: number
   fitMinZoom?: number
+  showZoomBar?: boolean
+  interactive?: boolean
 }) {
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>()
   const initialViewport = useMemo(() => {
@@ -494,7 +504,7 @@ export function RunCanvas({
   return (
     <ReactFlowProvider>
       <div ref={rootRef} className="relative h-full w-full">
-        <ZoomBar />
+        {showZoomBar && <ZoomBar />}
         <FlowInner
           nodes={nodes}
           edges={edges}
@@ -503,6 +513,7 @@ export function RunCanvas({
           fitMaxZoom={fitMaxZoom}
           fitMinZoom={fitMinZoom}
           initialViewport={initialViewport}
+          interactive={interactive}
         />
       </div>
     </ReactFlowProvider>

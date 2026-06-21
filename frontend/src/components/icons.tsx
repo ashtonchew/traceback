@@ -27,6 +27,7 @@ import GitBranchIcon from '@hugeicons/core-free-icons/GitBranchIcon'
 import GitForkIcon from '@hugeicons/core-free-icons/GitForkIcon'
 import GroupLayersIcon from '@hugeicons/core-free-icons/GroupLayersIcon'
 import HashIcon from '@hugeicons/core-free-icons/HashIcon'
+import Home01Icon from '@hugeicons/core-free-icons/Home01Icon'
 import Loading03Icon from '@hugeicons/core-free-icons/Loading03Icon'
 import LockKeyIcon from '@hugeicons/core-free-icons/LockKeyIcon'
 import Maximize02Icon from '@hugeicons/core-free-icons/Maximize02Icon'
@@ -93,6 +94,7 @@ export const GitBranch = icon(GitBranchIcon)
 export const GitFork = icon(GitForkIcon)
 export const GripVertical = icon(VerticalResizeIcon)
 export const Hash = icon(HashIcon)
+export const Home = icon(Home01Icon)
 export const Layers = icon(GroupLayersIcon)
 export const Loader2 = icon(Loading03Icon)
 export const Lock = icon(LockKeyIcon)

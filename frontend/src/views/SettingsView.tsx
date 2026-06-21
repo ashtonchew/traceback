@@ -27,7 +27,7 @@ export function SettingsView() {
 
   return (
     <>
-      <RunHeader title="Settings" version="v3.2" primaryLabel="Back to run" onPrimary={() => navigate('/')} />
+      <RunHeader title="Settings" version="v3.2" primaryLabel="Back to run" onPrimary={() => navigate('/runs')} />
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-8 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3">

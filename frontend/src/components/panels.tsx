@@ -26,14 +26,16 @@ export function PanelShell({
   title,
   tag,
   tagStatus,
+  tagCopyValue,
   tabs,
   onClose,
   children,
   footer,
 }: {
   title: string
-  tag?: string
+  tag?: ReactNode
   tagStatus?: string
+  tagCopyValue?: string
   tabs?: string[]
   onClose?: () => void
   children: ReactNode
@@ -43,8 +45,25 @@ export function PanelShell({
     <aside className="flex w-80 shrink-0 flex-col border-l border-hairline bg-background">
       <div className="px-5 pt-5">
         <div className="flex items-center gap-2">
-          <h2 className="font-display text-xl tracking-tight text-ink-primary">{title}</h2>
-          {tag && <Chip status={tagStatus}>{tag}</Chip>}
+          <h2 className="min-w-0 flex-1 truncate font-display text-xl tracking-tight text-ink-primary">{title}</h2>
+          {tag && (
+            <Chip status={tagStatus} className="min-w-0 max-w-28 normal-case">
+              {tagCopyValue ? (
+                <button
+                  type="button"
+                  aria-label="Copy HUD trace ID"
+                  title={tagCopyValue}
+                  onClick={() => navigator.clipboard?.writeText(tagCopyValue)}
+                  className="inline-flex min-w-0 items-center gap-1 normal-case focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="min-w-0 truncate">{tag}</span>
+                  <Copy size={10} className="shrink-0" />
+                </button>
+              ) : (
+                tag
+              )}
+            </Chip>
+          )}
           {onClose && (
             <button onClick={onClose} className="ml-auto text-ink-tertiary hover:text-ink-primary">
               <X size={18} />
@@ -298,6 +317,7 @@ export function TracePanel({ forkPoint, onOpenForkPoint }: { forkPoint: ForkPoin
       title="Suspicious HUD Trace"
       tag={`#${forkPoint.hudTraceId}`}
       tagStatus="qa-review"
+      tagCopyValue={`#${forkPoint.hudTraceId}`}
       footer={
         <div className="space-y-1.5 text-2xs text-ink-tertiary">
           <div className="flex justify-between">

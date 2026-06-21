@@ -80,7 +80,7 @@ export function ArtifactsView() {
 
   return (
     <>
-      <RunHeader title="Artifacts" version="v3.2" primaryLabel="Back to run" onPrimary={() => navigate('/')} />
+      <RunHeader title="Artifacts" version="v3.2" primaryLabel="Back to run" onPrimary={() => navigate('/runs')} />
       <div className="flex min-h-0 flex-1">
         <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto px-8 py-8">
           <div className="mx-auto max-w-4xl">

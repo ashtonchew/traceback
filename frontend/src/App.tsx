@@ -1,5 +1,6 @@
 import { Routes, Route, Outlet } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
+import { HomeView } from './views/HomeView'
 import { RunRoot } from './views/RunRoot'
 import { RunWitness } from './views/RunWitness'
 import { PatchView } from './views/PatchView'
@@ -25,7 +26,8 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<RunRoot />} />
+        <Route path="/" element={<HomeView />} />
+        <Route path="/runs" element={<RunRoot />} />
         <Route path="/witness" element={<RunWitness mode="branch" />} />
         <Route path="/proofset" element={<RunWitness mode="proofset" />} />
         <Route path="/patch" element={<PatchView />} />
