@@ -17,6 +17,7 @@ import {
 import type { ReactNode } from 'react'
 import { Button, Chip, Divider } from './primitives'
 import type { BranchRun, ForkPoint, LegitimateControl, ProofSet } from '../domain/types'
+import { copyText } from '../lib/copy'
 
 /* ------------------------------------------------------------------ */
 /* Shell + building blocks                                             */
@@ -26,14 +27,16 @@ export function PanelShell({
   title,
   tag,
   tagStatus,
+  tagCopyValue,
   tabs,
   onClose,
   children,
   footer,
 }: {
   title: string
-  tag?: string
+  tag?: ReactNode
   tagStatus?: string
+  tagCopyValue?: string
   tabs?: string[]
   onClose?: () => void
   children: ReactNode
@@ -42,15 +45,39 @@ export function PanelShell({
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l border-hairline bg-background">
       <div className="px-5 pt-5">
-        <div className="flex items-center gap-2">
-          <h2 className="font-display text-xl tracking-tight text-ink-primary">{title}</h2>
-          {tag && <Chip status={tagStatus}>{tag}</Chip>}
+        <div className="flex items-start gap-2">
+          <h2 className="min-w-0 flex-1 line-clamp-2 font-display text-xl leading-snug tracking-tight text-ink-primary">{title}</h2>
           {onClose && (
-            <button onClick={onClose} className="ml-auto text-ink-tertiary hover:text-ink-primary">
+            <button
+              type="button"
+              aria-label={`Close ${title}`}
+              onClick={onClose}
+              className="shrink-0 text-ink-tertiary hover:text-ink-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <X size={18} />
             </button>
           )}
         </div>
+        {tag && (
+          <div className="mt-2">
+            <Chip status={tagStatus} className="min-w-0 max-w-full normal-case">
+              {tagCopyValue ? (
+                <button
+                  type="button"
+                  aria-label="Copy HUD trace ID"
+                  title={tagCopyValue}
+                  onClick={() => copyText(tagCopyValue)}
+                  className="inline-flex min-w-0 items-center gap-1 normal-case focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="min-w-0 truncate">{tag}</span>
+                  <Copy size={10} className="shrink-0" />
+                </button>
+              ) : (
+                tag
+              )}
+            </Chip>
+          </div>
+        )}
         {tabs && (
           <div className="mt-4 flex gap-5 border-b border-hairline">
             {tabs.map((t, i) => (
@@ -85,11 +112,11 @@ export function Section({ icon, title, children }: { icon: ReactNode; title: str
   )
 }
 
-export function KV({ label, children, valueClass }: { label: string; children: ReactNode; valueClass?: string }) {
+export function KV({ label, children, valueClass, title }: { label: string; children: ReactNode; valueClass?: string; title?: string }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1">
-      <span className="text-sm text-ink-secondary">{label}</span>
-      <span className={clsx('text-sm font-medium text-ink-primary', valueClass)}>{children}</span>
+      <span className="shrink-0 text-sm text-ink-secondary">{label}</span>
+      <span title={title} className={clsx('min-w-0 break-all text-right text-sm font-medium text-ink-primary', valueClass)}>{children}</span>
     </div>
   )
 }
@@ -182,8 +209,8 @@ export function BranchPanel({
   onViewPreAttackState?: () => void
 }) {
   const sd = STATUS_DISPLAY[branch.status] ?? STATUS_DISPLAY.promising
-  const rows: { label: string; value: ReactNode; valueClass?: string; copy?: boolean }[] = [
-    { label: 'Branch ID', value: branch.branchId, valueClass: 'font-mono text-xs' },
+  const rows: { label: string; value: ReactNode; valueClass?: string; copy?: boolean; copyValue?: string; title?: string }[] = [
+    { label: 'Branch ID', value: branch.branchId, valueClass: 'font-mono text-xs', title: branch.branchId },
     { label: 'Status', value: sd.label, valueClass: sd.class },
     ...(branch.qa
       ? [{ label: 'QA classification', value: branch.qa.classification, valueClass: branch.qa.isRewardHacking ? 'text-warn-text' : 'text-ink-secondary-strong' }]
@@ -196,17 +223,26 @@ export function BranchPanel({
     { label: 'Sampling config', value: `temp=${branch.samplingConfig.temperature.toFixed(1)}, top_p=${branch.samplingConfig.topP.toFixed(1)}`, valueClass: 'font-mono text-xs' },
     { label: 'Parent snapshot', value: branch.parentSnapshot ?? 'S0' },
     { label: 'Snapshot mode', value: cap(branch.snapshotMode) },
-    { label: 'Environment', value: branch.environmentVersion },
-    { label: 'Grader digest', value: branch.graderDigest, valueClass: 'font-mono text-xs', copy: true },
+    { label: 'Environment', value: branch.environmentVersion, title: branch.environmentVersion },
+    { label: 'Grader digest', value: branch.graderDigest, valueClass: 'font-mono text-xs', copy: true, copyValue: branch.graderDigest, title: branch.graderDigest },
   ]
   return (
     <PanelShell title={branch.title} tag={sd.tag} tagStatus={sd.tagStatus} onClose={onClose}>
       <div className="divide-y divide-hairline">
         {rows.map((r) => (
-          <KV key={r.label} label={r.label} valueClass={r.valueClass}>
-            <span className="inline-flex items-center gap-1">
-              {r.value}
-              {r.copy && <Copy size={11} className="text-ink-tertiary" />}
+          <KV key={r.label} label={r.label} valueClass={r.valueClass} title={r.title}>
+            <span className="inline-flex min-w-0 items-start gap-1">
+              <span className="min-w-0 break-all">{r.value}</span>
+              {r.copy && (
+                <button
+                  type="button"
+                  aria-label={`Copy ${r.label}`}
+                  onClick={() => copyText(r.copyValue ?? String(r.value))}
+                  className="mt-0.5 shrink-0 text-ink-tertiary transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Copy size={11} />
+                </button>
+              )}
             </span>
           </KV>
         ))}
@@ -289,6 +325,7 @@ export function TracePanel({ forkPoint, onOpenForkPoint }: { forkPoint: ForkPoin
       title="Suspicious HUD Trace"
       tag={`#${forkPoint.hudTraceId}`}
       tagStatus="qa-review"
+      tagCopyValue={`#${forkPoint.hudTraceId}`}
       footer={
         <div className="space-y-1.5 text-2xs text-ink-tertiary">
           <div className="flex justify-between">

@@ -8,6 +8,7 @@ import { MiniThumb } from '../components/MiniThumb'
 import { KV } from '../components/panels'
 import { Button, Chip } from '../components/primitives'
 import { getRunTreeCounts } from '../lib/runFooter'
+import { copyText } from '../lib/copy'
 import { useRun } from '../store/RunProvider'
 
 function BigStat({ value, label }: { value: string; label: string }) {
@@ -134,7 +135,7 @@ export function ReleaseProof() {
               <KV label="Environment" valueClass="text-xs">{env}</KV>
               <KV label="Published version">v2</KV>
               <KV label="Commit ID" valueClass="font-mono text-xs">
-                <button type="button" onClick={() => navigator.clipboard?.writeText(commitId)} className="inline-flex min-w-0 items-center gap-1 rounded-sm transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" onClick={() => copyText(commitId)} className="inline-flex min-w-0 items-center gap-1 rounded-sm transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="truncate">{commitId}</span> <Copy size={11} className="shrink-0 text-ink-tertiary" />
                 </button>
               </KV>

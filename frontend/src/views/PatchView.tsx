@@ -63,7 +63,7 @@ export function PatchView() {
   return (
     <>
       <RunHeader title="Exploit Witness" version="v3.2" primaryLabel="Resume run" />
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto px-8 py-6">
           <button onClick={() => navigate('/proofset')} className="mb-5 flex items-center gap-1.5 rounded-md text-sm text-ink-secondary transition-[color,transform] duration-150 ease-out hover:text-ink-primary active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ArrowLeft size={15} /> Back to run
@@ -118,7 +118,7 @@ export function PatchView() {
         </div>
 
         {/* right panel */}
-        <aside className="flex w-80 shrink-0 flex-col border-l border-hairline bg-background px-5 py-5">
+        <aside className="scrollbar-thin flex min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-l border-hairline bg-background px-5 py-5">
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} className="text-accent-text" />
             <h3 className="font-display text-lg tracking-tight text-ink-primary">Selected for proof</h3>
@@ -147,7 +147,15 @@ export function PatchView() {
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 space-y-2">
+            <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Next step</div>
+            <div className="mb-2 text-sm text-ink-secondary-strong">{patch.label}</div>
+            <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={() => navigate('/gate')}>
+              Run proof set
+            </Button>
+          </div>
+
+          <div className="mt-5">
             <div className="mb-2 text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Why this patch</div>
             <ul className="space-y-2 text-sm text-ink-secondary-strong">
               {patch.rationale.map((t) => (
@@ -159,13 +167,6 @@ export function PatchView() {
             </ul>
           </div>
 
-          <div className="mt-auto space-y-2 pt-5">
-            <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Next step</div>
-            <div className="mb-2 text-sm text-ink-secondary-strong">{patch.label}</div>
-            <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={() => navigate('/gate')}>
-              Run proof set
-            </Button>
-          </div>
         </aside>
       </div>
       <RunSummaryFooter

@@ -90,8 +90,8 @@ export function Button({ children, variant = 'secondary', size = 'md', className
   const variants: Record<string, string> = {
     primary: 'bg-fill-accent text-ink-inverse hover:bg-fill-accent-hover',
     dark: 'bg-fill-primary text-ink-inverse hover:bg-fill-primary-hover',
-    secondary: 'bg-surface-raised text-ink-primary border border-stroke hover:bg-surface',
-    ghost: 'text-ink-secondary hover:text-ink-primary hover:bg-surface',
+    secondary: 'bg-surface-raised text-ink-primary border border-stroke hover:bg-tint-green',
+    ghost: 'text-ink-secondary hover:text-ink-primary hover:bg-tint-green',
     danger: 'bg-fill-danger text-ink-inverse hover:opacity-90',
   }
   const sizes: Record<string, string> = {

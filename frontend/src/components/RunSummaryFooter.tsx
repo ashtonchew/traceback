@@ -45,7 +45,7 @@ function Card({ icon, label, value, onClick }: FooterCard) {
   const baseClassName =
     'grid min-h-16 min-w-0 grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] items-center gap-x-2 gap-y-1 rounded-lg border border-hairline bg-surface-raised px-3 py-2 text-left'
   const interactiveClassName =
-    'transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+    'transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-tint-green active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
   const content = (
     <>
       <Icon size={15} className="col-start-1 row-start-1 shrink-0 text-ink-tertiary" />
@@ -81,7 +81,7 @@ export function RunSummaryFooter({
   minimap?: ReactNode
 }) {
   return (
-    <div className="grid min-h-24 grid-cols-[minmax(0,1fr)_minmax(132px,176px)] items-center gap-4 border-t border-hairline bg-background px-8 py-4 2xl:grid-cols-[minmax(360px,520px)_minmax(0,1fr)_minmax(132px,176px)] 2xl:gap-6">
+    <div className="grid min-h-24 grid-cols-1 items-center gap-4 border-t border-hairline bg-background px-8 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(132px,176px)] 2xl:grid-cols-[minmax(360px,520px)_minmax(0,1fr)_minmax(132px,176px)] 2xl:gap-6">
       <div className="hidden min-w-0 grid-cols-4 gap-4 2xl:grid">
           {stats.map((s) => (
             <Stat key={s.label} {...s} />
@@ -94,7 +94,7 @@ export function RunSummaryFooter({
           )}
       </div>
 
-      <div className="grid w-full max-w-[960px] grid-cols-4 gap-3 justify-self-center">
+      <div className="grid w-full max-w-[960px] grid-cols-2 gap-3 justify-self-center sm:grid-cols-4">
         {cards.map((c) => (
           <Card key={c.label} {...c} />
         ))}

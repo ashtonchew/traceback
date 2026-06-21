@@ -36,9 +36,11 @@ export function RunHeader({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant={primaryTone} size="sm" icon={<Play size={14} />} onClick={onPrimary}>
-          {primaryLabel}
-        </Button>
+        {onPrimary && (
+          <Button variant={primaryTone} size="sm" icon={<Play size={14} />} onClick={onPrimary}>
+            {primaryLabel}
+          </Button>
+        )}
         {onClose && (
           <IconButton label="Close" onClick={onClose} className="ml-1">
             <X size={18} />

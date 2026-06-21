@@ -276,6 +276,12 @@ export interface ReleaseProof {
   similarity: number
   createdAt: string
   status: 'evaluating' | 'failed' | 'committed'
+  // Optional Plan 005 blocker metadata for runs that have not produced a
+  // validated ReleaseProof yet.
+  blocked?: boolean
+  blockReason?: string
+  missingEvidence?: string[]
+  hardenStatus?: string
 }
 
 /** High-level run lifecycle the store tracks. */
@@ -288,3 +294,43 @@ export type RunPhase =
   | 'gating' // release gate replays running
   | 'gate_failed' // a witness survived or a control regressed
   | 'released' // ReleaseProof committed
+
+/* ------------------------------------------------------------------ */
+/* Plan 008 QA-classifier benchmark (cross-task; orthogonal to a run)   */
+/* ------------------------------------------------------------------ */
+
+/** One Terminal-Wrench task's discovery/QA tally in the benchmark. */
+export interface BenchmarkTask {
+  taskId: string
+  rewardedBranches: number
+  hacks: number
+  legit: number
+  qaCaughtOfHacks: number
+}
+
+/**
+ * The Plan 008 QA-classifier benchmark headline, exported from the committed
+ * `artifacts/forkproof/qabench/benchmark-report.json`. Proactive discovery /
+ * red-teaming evidence — NOT a classifier-accuracy claim.
+ */
+export interface Benchmark {
+  planId: string
+  scope: string
+  rewardedBranches: number
+  discoveryHacks: number
+  discoveryHacksNote: string
+  tasksWithHacks: number
+  tasksMeasured: number
+  qaInProductionHacks: number
+  qaCaughtOfDiscovered: number
+  sftPartition: {
+    confirmedHacks: number
+    verifierLegit: number
+    sftClean: number
+    quarantined: number
+  }
+  perTask: BenchmarkTask[]
+  referee: string
+  framing: string
+  sourcePath: string
+}
