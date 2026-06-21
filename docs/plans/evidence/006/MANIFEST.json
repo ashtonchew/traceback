@@ -3,22 +3,228 @@
   "plan_id": "006",
   "plan_name": "demo-observability-and-publication",
   "wave": 5,
-  "status": "not-started",
-  "started_at": null,
-  "updated_at": "2026-06-21T00:00:00-07:00",
+  "status": "blocked",
+  "started_at": "2026-06-21T09:34:39Z",
+  "updated_at": "2026-06-21T09:36:16Z",
   "completed_at": null,
   "commit": null,
-  "commands": [],
-  "checks": [],
-  "artifacts": [],
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "fetch",
+        "origin",
+        "main",
+        "pull/27/head:refs/remotes/origin/pr-27",
+        "codex/plan-005-release-proof"
+      ],
+      "exit_code": 0,
+      "observed": "Fetched main, PR #27 into origin/pr-27, and origin/codex/plan-005-release-proof before creating the stacked worktree."
+    },
+    {
+      "argv": [
+        "git",
+        "worktree",
+        "add",
+        "-b",
+        "codex/plan-006-demo-stack",
+        ".worktrees/plan-006-demo-stack",
+        "origin/codex/plan-005-release-proof"
+      ],
+      "exit_code": 0,
+      "observed": "Created fresh worktree on codex/plan-006-demo-stack at commit 2def782, stacked over origin/codex/plan-005-release-proof."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_graph.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_sections.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 8 plans have valid frontmatter, sections, packets, and goal blocks."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_ownership.py",
+        "--repo-bound"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: repo-bound ownership is collision-free for 8 plans."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_traceability.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 47 requirements map to all 8 plans."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "plan-006-tests"
+      ],
+      "exit_code": 0,
+      "observed": "SKIP: plan-006-tests: Blocked until demo source/test paths exist after release proof artifacts. This is recorded as a blocker, not passing completion evidence."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "lint"
+      ],
+      "exit_code": 2,
+      "observed": "Sandboxed attempt failed before lint because uv could not open /Users/ashtonchew/.cache/uv/sdists-v9/.git: Operation not permitted."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "lint"
+      ],
+      "exit_code": 0,
+      "observed": "Escalated rerun: RUN lint via uv run ruff check docs/plans/scripts; All checks passed."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "build"
+      ],
+      "exit_code": 2,
+      "observed": "Sandboxed attempt failed before build because uv could not open /Users/ashtonchew/.cache/uv/sdists-v9/.git: Operation not permitted."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "build"
+      ],
+      "exit_code": 0,
+      "observed": "Escalated rerun: RUN build via uv lock --check; Resolved 155 packages in 4ms."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "006"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 3 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "006"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 1 evidence manifest(s) are present/structured."
+    }
+  ],
+  "checks": [
+    {
+      "name": "Plan 006 ownership",
+      "status": "pass",
+      "evidence": "Plan 006 owns src/forkproof/demo/**, tests/forkproof/demo/**, scripts/forkproof-demo*, artifacts/forkproof/demo/**, docs/plans/006-demo-observability-and-publication.*, docs/plans/evidence/006/**, and only the declared Plan 006 COMMANDS.json keys. No source implementation edits were made because a governance STOP was found before implementation."
+    },
+    {
+      "name": "Stack base",
+      "status": "pass",
+      "evidence": "Worktree branch codex/plan-006-demo-stack tracks origin/codex/plan-005-release-proof and is intended to target the draft PR at codex/plan-005-release-proof, not canonical main."
+    },
+    {
+      "name": "Gate 4 / Plan 005 dependency",
+      "status": "blocked",
+      "evidence": "Plan 005 evidence in this stack is blocked: no validated v2 patch, no real per-case v1/v2 release-results artifact, no mandatory subversion regression evidence, no release candidate ref, no sealed ReleaseProof, and docs/plans/evidence/005/MANIFEST.json is not complete."
+    },
+    {
+      "name": "Repo-map source-of-truth consistency",
+      "status": "blocked",
+      "evidence": "docs/plans/repo-map/STATUS.json says accepted, while docs/plans/repo-map/REPOSITORY.md still says Status: blocked and states Gate 1 remains blocked. AGENTS.md requires stopping before implementation when repo-map files disagree."
+    },
+    {
+      "name": "Publication binding",
+      "status": "blocked",
+      "evidence": "docs/plans/repo-map/INTERFACES.md records HUD environment version publish/compare as not present/located-owned:006. No repository-bound publish primitive, authorized target, passing ReleaseProof, or sealed candidate is available, so Plan 006 cannot publish or claim blocked-with-proof."
+    },
+    {
+      "name": "Feasible validators",
+      "status": "pass",
+      "evidence": "Graph, sections, repo-bound ownership, traceability, lint, build, Plan 006 file-size, and structured evidence validation passed. lint/build required escalation after sandboxed uv cache access was denied."
+    },
+    {
+      "name": "Plan 006 mapped tests",
+      "status": "blocked",
+      "evidence": "run_mapped.py plan-006-tests returned SKIP because Plan 006 source/test paths are not wired yet. Per Plan 006, SKIP cannot complete validation."
+    }
+  ],
+  "artifacts": [
+    {
+      "ref": "docs/plans/evidence/006/MANIFEST.json",
+      "description": "Blocked Plan 006 evidence manifest recording stack setup, start blockers, and the legal implementation boundary before source edits."
+    },
+    {
+      "ref": "docs/plans/006-demo-observability-and-publication.md",
+      "description": "Living-doc log updated with the Plan 006 stack preflight, blockers, feasible implementation plan, and canonicalization plan."
+    }
+  ],
   "screenshots": [],
-  "skips": [],
+  "skips": [
+    {
+      "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
+      "reason": "COMMANDS.json still maps plan-006-tests to not-applicable with empty argv until demo source/test paths exist after release proof artifacts.",
+      "completion_impact": "Blocks Plan 006 completion; recorded only as expected stack-state evidence."
+    }
+  ],
   "blockers": [
-    "Plan 006 implementation remains blocked until repo-map/STATUS.json is accepted, Gate 4 has merged, and Plan 006 mapped commands are verified with non-empty argv.",
-    "Wave 1 must bind the real publish primitive and authorized target before the thin trusted publisher wrapper can publish; absence must be recorded as blocked-with-proof."
+    {
+      "type": "REPO_MAP_CONFLICT",
+      "recorded_at": "2026-06-21T09:34:39Z",
+      "reason": "Repo-map files disagree in the Plan 006 stack: STATUS.json says accepted, while REPOSITORY.md says Status: blocked and states Gate 1 remains blocked. Per AGENTS.md, source implementation must stop before edits and the inconsistency must be recorded in the active plan log or evidence manifest.",
+      "evidence_refs": [
+        "docs/plans/repo-map/STATUS.json",
+        "docs/plans/repo-map/REPOSITORY.md",
+        "AGENTS.md"
+      ],
+      "next_owner": "Repo-map custodian must reconcile REPOSITORY.md with STATUS.json/accepted Gate 1 state or explicitly record why the apparent conflict is not authoritative."
+    },
+    {
+      "type": "DEPENDENCY_GATE",
+      "recorded_at": "2026-06-21T09:34:39Z",
+      "reason": "Plan 006 depends on Gate 4. PR #27 / Plan 005 is expectedly blocked: there is no v2 patch, sealed ReleaseProof, real per-case v1/v2 release result set, release candidate ref, or complete Done-when evidence.",
+      "evidence_refs": [
+        "docs/plans/000-index.md",
+        "docs/plans/evidence/005/MANIFEST.json",
+        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
+      ],
+      "next_owner": "Plan 005 owner must resolve harden-v0/Harbor artifact-layout drift, produce a validated patch, run exact v1/v2 release evaluation over the ProofSet, and seal a passing ReleaseProof before Plan 006 can complete."
+    },
+    {
+      "type": "PUBLISH_BINDING",
+      "recorded_at": "2026-06-21T09:34:39Z",
+      "reason": "No Wave-1-bound publish primitive, authorized target, passing ReleaseProof, or sealed candidate is available. Plan 006 may later implement preflight and blocker semantics, but cannot invoke or invent a HUD/environment publish API.",
+      "evidence_refs": [
+        "docs/plans/repo-map/INTERFACES.md",
+        "docs/plans/006-demo-observability-and-publication.md"
+      ],
+      "next_owner": "After Plan 005 produces a sealed candidate and ReleaseProof, bind the publish primitive/authorized target or record the missing authority as blocked-with-proof only if proof and candidate are present."
+    }
   ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed.",
+    "2026-06-21T09:34:39Z — Stacked worktree codex/plan-006-demo-stack created over origin/codex/plan-005-release-proof. Source implementation stopped before edits because repo-map files disagree and Plan 005/Gate 4 remains incomplete.",
+    "Planning template plus blocked stack preflight only; no implementation evidence is claimed.",
     "2026-06-20 planning hardening pass added deterministic self-validation, machine-readable report requirements, thin trusted publisher ownership, and publication-specific negative checks.",
     "2026-06-20 planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and audit-only Demo Report Replay semantics.",
     "2026-06-21 grill-with-docs decision limited blocked-with-proof to valid proof plus missing publish binding/authority; proof mismatch, unauthorized target, mixed identity, missing artifacts, and unavailable trusted context are failures.",
