@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -107,6 +107,7 @@ function FlowInner({
   fitMinZoom,
   initialViewport,
   interactive,
+  children,
 }: {
   nodes: Node[]
   edges: Edge[]
@@ -116,6 +117,7 @@ function FlowInner({
   fitMinZoom: number
   initialViewport?: Viewport
   interactive: boolean
+  children?: ReactNode
 }) {
   const { getViewport, setViewport } = useReactFlow()
   const [flowReady, setFlowReady] = useState(false)
@@ -467,6 +469,7 @@ function FlowInner({
         elementsSelectable={interactive}
       >
         <Background variant={BackgroundVariant.Dots} gap={26} size={1} color="var(--ds-neutral-200)" />
+        {children}
       </ReactFlow>
     </div>
   )
@@ -481,6 +484,7 @@ export function RunCanvas({
   fitMinZoom = 0,
   showZoomBar = true,
   interactive = true,
+  children,
 }: {
   nodes: Node[]
   edges: Edge[]
@@ -490,6 +494,7 @@ export function RunCanvas({
   fitMinZoom?: number
   showZoomBar?: boolean
   interactive?: boolean
+  children?: ReactNode
 }) {
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>()
   const initialViewport = useMemo(() => {
@@ -514,7 +519,9 @@ export function RunCanvas({
           fitMinZoom={fitMinZoom}
           initialViewport={initialViewport}
           interactive={interactive}
-        />
+        >
+          {children}
+        </FlowInner>
       </div>
     </ReactFlowProvider>
   )
