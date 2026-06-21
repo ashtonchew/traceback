@@ -21,7 +21,7 @@ This folder is intentionally decoupled from the rest of the repo (no numbered pl
 ## Quick start (for an agent)
 1. Read [`AGENTS.md`](./AGENTS.md).
 2. Add `tailwind-preset.js` to `presets` in your `tailwind.config.js`.
-3. Load `tokens.css` and the fonts (free fallbacks Fraunces + Hanken Grotesk are pre-wired).
+3. Load `tokens.css` and the fonts — **Inria Serif** + **Geist** + **Geist Mono**, self-hosted under `examples/fonts/` (see [`FONTS.md`](./FONTS.md)).
 4. Build UI from preset utilities only — never hardcode hex/px.
 
 ## Preview the examples

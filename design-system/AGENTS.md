@@ -5,7 +5,7 @@ When you implement any UI in a project that adopts this design system, follow th
 ## Setup (once per project)
 1. Add `tailwind-preset.js` to `presets` in `tailwind.config.js` (see `tailwind.config.example.js`).
 2. Load `tokens.css` once globally (gives CSS-var access + font fallbacks).
-3. Load the fonts (see `DESIGN.md` → Fonts). If the licensed Granola fonts are unavailable, the free fallbacks (Fraunces, Hanken Grotesk) are already in the stacks — do nothing extra.
+3. Load the fonts (see `DESIGN.md` → Fonts): **Inria Serif** (display), **Geist** (body), **Geist Mono** (code) — self-hosted, OFL 1.1, wired via `examples/fonts/fonts.css`. No CDN.
 
 ## The rules
 1. **Never hardcode values.** No raw hex, rgb, or px for color, spacing, radius, type, or shadow in markup or styles. Use preset utilities (`bg-surface`, `text-ink-secondary`, `rounded-lg`, `p-4`, `text-base`) or `var(--ds-*)`. If a value you need isn't a token, stop and add it to the tokens — don't inline it.

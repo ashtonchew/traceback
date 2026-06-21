@@ -13,7 +13,7 @@ The **token layer is pixel-faithful** to granola.ai — color, typography, spaci
 - Notes (intentional, not violations): `ring` maps to Granola's `--oats-border-focus`; the dark Enterprise card's "Talk to sales" uses bright `accent` as an inverse-context button while the primary action fill remains `#5b6f00`.
 
 ## Auditor 2 — Typography / spacing / radius / shadow → 1 fixed
-- PASS: font stacks (display→Quadrant Notepad/Fraunces, sans→Melange/Hanken Grotesk), full type scale + confirmed line-heights/letter-spacings, `book 430` weight applied to the primary pill CTA, 4px spacing scale, radius (pill marketing CTAs vs `rounded-lg` in-app), restrained shadows.
+- PASS: font stacks (serif display + grotesque-sans body roles), full type scale + confirmed line-heights/letter-spacings, `book 430` weight applied to the primary pill CTA, 4px spacing scale, radius (pill marketing CTAs vs `rounded-lg` in-app), restrained shadows.
 - **FIXED [low]:** `text-7xl` line-height was `0.95`; extraction confirms `--text-7xl--line-height: 1`. → set to `1.0` in `tailwind-preset.js` and the gallery's inline mirror.
 
 ## Auditor 3 — Motion / interaction → values PASS; a11y fixed
@@ -37,3 +37,6 @@ The **token layer is pixel-faithful** to granola.ai — color, typography, spaci
 
 ## Standing note
 `lint-design.sh` catches token-bypass (arbitrary values, raw hex) but **not** contrast or focus — those require the manual/audit pass above. Re-run the parallel audit after substantial UI changes.
+
+## Addendum — typography updated post-audit
+Typography was subsequently changed to **self-hosted** OFL fonts — **Inria Serif** (display), **Geist** (body), **Geist Mono** (code) — replacing the original Granola brand-font leads + free fallbacks. Color, spacing, radius, and motion tokens are unchanged. Contrast/focus findings above are unaffected (text colors unchanged). See [`FONTS.md`](./FONTS.md).

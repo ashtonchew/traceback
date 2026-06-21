@@ -25,7 +25,6 @@ module.exports = {
         green: {
           50: '#f2f6e1', 100: '#e5eacd', 200: '#d1e043', 300: '#b2c248',
           400: '#788c15', 500: '#5b6f00', 600: '#434625',
-          bright: '#94f27f', 'bright-strong': '#79d65e',
         },
         red: {
           50: '#ffe7e2', 100: '#f8cec5', 200: '#f29e8b', 300: '#e95d3d', 400: '#bd4a30',
@@ -53,10 +52,10 @@ module.exports = {
         stroke: '#d5d5d2',
         border: '#e3e3e3',
         accent: {
-          DEFAULT: '#94f27f',
-          strong: '#79d65e',
+          DEFAULT: '#d1e043',      // green-200 — Granola's rendered bright accent
+          strong: '#b2c248',       // green-300 — most-used accent / hover
           text: '#0d7916',
-          wash: '#93f27d33',
+          wash: '#d1e04333',
         },
         fill: {
           accent: '#5b6f00',
@@ -71,9 +70,9 @@ module.exports = {
       },
 
       fontFamily: {
-        display: ['"Quadrant Notepad"', '"Fraunces"', '"Newsreader"', 'Georgia', '"Times New Roman"', 'serif'],
-        sans: ['"KMR Melange Grotesk"', '"Hanken Grotesk"', '"Inter"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        display: ['"Inria Serif"', 'Georgia', '"Times New Roman"', 'serif'],
+        sans: ['"Geist"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
 
       // [size, { lineHeight, letterSpacing }] — confirmed from granola.ai

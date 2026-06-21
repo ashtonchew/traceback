@@ -14,7 +14,7 @@ This file is the source of truth the compliance audit checks `design-system/` ag
 | Body / UI | **KMR Melange Grotesk** | `--font-sans`, `--default-font-family` | Neo-grotesque sans. Body at 14–16px, weights 400–600, slight positive tracking. |
 | Mono | **JetBrains Mono** | `--font-mono` | Monospace (code). |
 
-Both Quadrant Notepad and Melange Grotesk are proprietary/licensed — we replicate the **exact family names** in the stack (so a licensed install "just works") and pair them with free fallbacks (see `DESIGN.md`). Granola's [brand post](https://www.granola.ai/blog/a-new-look-for-granola) names the pair publicly as **Quadrant** (a *slightly mechanical slab serif*, by Matter of Sorts — bespoke) and **Melange** (KMR Melange Grotesk, by Kimera — paid retail); "Quadrant Notepad" is the internal cut name read from their CSS. Full licensing + free alternatives: see [`FONTS.md`](./FONTS.md).
+The table above records **Granola's own** fonts (provenance). They are proprietary/licensed — Granola's [brand post](https://www.granola.ai/blog/a-new-look-for-granola) names the pair as **Quadrant** (a *slightly mechanical slab serif*, by Matter of Sorts — bespoke) and **Melange** (KMR Melange Grotesk, by Kimera — paid retail); "Quadrant Notepad" is the internal cut name read from their CSS. **This design system does not use them.** It keeps the same *roles* (serif display + grotesque sans) but ships self-hosted OFL fonts: **Inria Serif** (display) + **Geist** (body) + **Geist Mono** (code). Full licensing + self-host steps: see [`FONTS.md`](./FONTS.md).
 
 Weights shipped: light 300, normal 400, **book 430**, medium 500, semibold 600, bold 700.
 
@@ -60,10 +60,12 @@ Weights shipped: light 300, normal 400, **book 430**, medium 500, semibold 600, 
 | fill-accent | `#5b6f00` | **Primary green button** (dark olive). |
 | fill-accent-hover | `#4c5616` | |
 | ink-accent | `#788c15` | Green text/icon. |
-| accent | `#94f27f` | Bright lime highlight. |
-| accent-strong | `#79d65e` | |
-| accent-text | `#0d7916` | |
-| accent-wash | `#93f27d33` | Translucent highlight wash. |
+| accent | `#94f27f` | Defined as `--color-accent` but **rendered 0×** — see note. |
+| accent-strong | `#79d65e` | Defined as `--color-accent-strong` but **rendered 0×**. |
+| accent-text | `#0d7916` | Green text. |
+| accent-wash | `#93f27d33` | Translucent (#94f27f-based) — also unused. |
+
+> **Empirical accent check (re-verified live, 1604 elements):** `--color-accent` `#94f27f` and `--color-accent-strong` `#79d65e` are defined in Granola's CSS but **never actually rendered** on the homepage. The bright accents they *do* render are **green-300 `#b2c248` (4×)** and **green-200 `#d1e043` (1×)** — and the olive `#5b6f00` (1×) for the CTA. This design system therefore maps its `accent` token to `#d1e043` and `accent-strong` to `#b2c248` (the real, visible limes), and drops the unused `#94f27f`/`#79d65e`.
 
 Green ramp: 50 `#f2f6e1` · 100 `#e5eacd` · 200 `#d1e043` · 300 `#b2c248` · 400 `#788c15` · 500 `#5b6f00` · 600 `#434625`.
 
@@ -130,4 +132,4 @@ Live read of the hero CTA "Download for free": background `rgb(91,111,0)` = **#5
 So Granola uses **two button shapes**: marketing/primary CTAs are **pills** (`rounded-full`); in-app/utility buttons (e.g. dark "Generate notes") use **`rounded-lg` (8px)**. Hover fills: `fill-accent-hover #4c5616`, `fill-primary-hover #4e4d4b`, `fill-soft-hover #56512e1f`. Links hover from `ink-secondary #72726e` → `ink-primary #292929`. Default hover transition is 150ms `cubic-bezier(.4,0,.2,1)`.
 
 ## Aesthetic summary (for the audit)
-White page → warm off-white (`#f7f7f2`) panels with warm translucent hairlines → near-black ink (`#292929`) → **olive-green** primary action (`#5b6f00`) with white text → lime (`#94f27f`/`#d1e043`) decorative accents. Serif display headings, grotesque-sans body. Generous whitespace, 8px radius, flat/bordered (not shadow-heavy). Editorial, warm, minimal.
+White page → warm off-white (`#f7f7f2`) panels with warm translucent hairlines → near-black ink (`#292929`) → **olive-green** primary action (`#5b6f00`) with white text → lime (`#d1e043`/`#b2c248`) decorative accents. Serif display headings, grotesque-sans body. Generous whitespace, 8px radius, flat/bordered (not shadow-heavy). Editorial, warm, minimal.

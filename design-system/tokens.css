@@ -39,8 +39,6 @@
   --ds-green-400: #788c15;
   --ds-green-500: #5b6f00;
   --ds-green-600: #434625;
-  --ds-green-bright: #94f27f;
-  --ds-green-bright-strong: #79d65e;
 
   /* Red ramp (danger) */
   --ds-red-50:  #ffe7e2;
@@ -78,10 +76,10 @@
   --ds-border: #e3e3e3;
 
   /* Accent (green) */
-  --ds-accent: var(--ds-green-bright);          /* #94f27f highlight */
-  --ds-accent-strong: var(--ds-green-bright-strong);
+  --ds-accent: var(--ds-green-200);             /* #d1e043 bright lime — Granola's rendered accent */
+  --ds-accent-strong: var(--ds-green-300);      /* #b2c248 — most-used accent / hover */
   --ds-accent-text: #0d7916;
-  --ds-accent-wash: #93f27d33;
+  --ds-accent-wash: #d1e04333;
   --ds-fill-accent: var(--ds-green-500);        /* #5b6f00 primary green button */
   --ds-fill-accent-hover: #4c5616;
   --ds-ink-accent: var(--ds-green-400);         /* #788c15 */
@@ -100,9 +98,9 @@
   /* ============================================================
    * TYPOGRAPHY
    * ============================================================ */
-  --ds-font-display: "Quadrant Notepad", "Fraunces", "Newsreader", Georgia, "Times New Roman", serif;
-  --ds-font-sans: "KMR Melange Grotesk", "Hanken Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --ds-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ds-font-display: "Inria Serif", Georgia, "Times New Roman", serif;
+  --ds-font-sans: "Geist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ds-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --ds-text-2xs: 11px;
   --ds-text-xs:  12px;

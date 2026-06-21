@@ -12,7 +12,7 @@ Every choice below traces to a value observed on granola.ai — there are no inv
 ### Color — *why these*
 - **White page, warm off-white surfaces.** The page is pure `#ffffff`; content panels use `surface` `#f7f7f2`. The warmth is subtle and comes mostly from the **hairline** border `#47432a33` (a warm brown-tinted translucent), not from a cream page. This keeps text crisp while feeling soft.
 - **Warm-gray ink ramp.** Text is `#292929` (not pure black) on a warm neutral ramp — softer, more editorial than cold grays.
-- **One signature green.** Olive `#5b6f00` is the primary action; `#788c15` for green text/icons; bright lime `#94f27f` / `#d1e043` strictly as decorative highlights. Restraint is the point — green means "do this."
+- **One signature green.** Olive `#5b6f00` is the primary action; `#788c15` for green text/icons; bright lime `#d1e043` / `#b2c248` strictly as decorative highlights. Restraint is the point — green means "do this." (Granola's `--color-accent` `#94f27f` is defined but never rendered, so we don't use it — `accent` maps to the lime they actually show.)
 
 | Use | Token / utility | Hex |
 | --- | --- | --- |
@@ -28,19 +28,16 @@ Every choice below traces to a value observed on granola.ai — there are no inv
 | Primary action (green) | `bg-fill-accent` | `#5b6f00` |
 | Primary action (dark) | `bg-fill-primary` | `#292929` |
 | Green text | `text-accent-text` | `#0d7916` |
-| Decorative highlight | `bg-accent` / `bg-green-200` | `#94f27f` / `#d1e043` |
+| Decorative highlight | `bg-accent` / `bg-green-300` | `#d1e043` / `#b2c248` |
 | Danger | `bg-fill-danger` / `text-ink-danger` | `#e95d3d` / `#bd4a30` |
 
 ### Fonts — *the voice*
-- **Display / headings → `font-display`** = **Quadrant Notepad** (serif). Free fallback: **Fraunces** (a soft, warm serif), then Newsreader/Georgia. Set headings large with tight tracking (`tracking-tight`, ≈ −0.02em).
-- **Body / UI → `font-sans`** = **KMR Melange Grotesk** (neo-grotesque). Free fallback: **Hanken Grotesk**, then Inter/system. Body runs small (14px) at weight 400–500 with slight positive tracking.
-- **Code → `font-mono`** = JetBrains Mono.
+Same role pairing as Granola (serif display + grotesque sans), realized with self-hosted OFL fonts — **no licensed/proprietary fonts, no CDN**.
+- **Display / headings → `font-display`** = **Inria Serif** (a warm, slightly editorial serif; weights 300/400/700). Set headings large with tight tracking (`tracking-tight`, ≈ −0.02em).
+- **Body / UI → `font-sans`** = **Geist** (clean neo-grotesque, weights 400–700). Body runs small (14px) at weight 400–500 with slight positive tracking.
+- **Code → `font-mono`** = **Geist Mono** (weights 400/500).
 
-> Quadrant Notepad and KMR Melange Grotesk are licensed; their exact names lead the stacks so a licensed install renders identically, with free substitutes behind them. To load fallbacks:
-> ```html
-> <link rel="preconnect" href="https://fonts.googleapis.com">
-> <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-> ```
+> All three are SIL Open Font License 1.1 and **self-hosted** — the `.woff2` files and `OFL-*.txt` licenses live in [`examples/fonts/`](./examples/fonts/), declared via [`examples/fonts/fonts.css`](./examples/fonts/fonts.css). No external font request. Full licensing + download/self-host steps: see [`FONTS.md`](./FONTS.md).
 
 ### Type scale (confirmed)
 Body default is **`text-base` = 14px**. Each size carries its line-height (and tracking) in the preset.

@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Granola-style design system — component gallery</title>
 
-  <!-- Free fallbacks for the licensed Granola fonts: Fraunces (≈ Quadrant Notepad), Hanken Grotesk (≈ KMR Melange Grotesk) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Self-hosted fonts (no CDN): Inria Serif (display), Geist (body), Geist Mono (code).
+       OFL 1.1 — see fonts/OFL-*.txt -->
+  <link rel="stylesheet" href="fonts/fonts.css" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -18,21 +17,21 @@
         extend: {
           colors: {
             neutral: { 50:'#fcfcf8',100:'#f7f7f2',150:'#f2f2ec',200:'#eaebe5',300:'#d5d5d2',400:'#acada8',450:'#9e9e99',500:'#818179',600:'#72726e',700:'#4e4d4b',750:'#363635',800:'#292929',900:'#212121',950:'#1e1e1e' },
-            green: { 50:'#f2f6e1',100:'#e5eacd',200:'#d1e043',300:'#b2c248',400:'#788c15',500:'#5b6f00',600:'#434625',bright:'#94f27f','bright-strong':'#79d65e' },
+            green: { 50:'#f2f6e1',100:'#e5eacd',200:'#d1e043',300:'#b2c248',400:'#788c15',500:'#5b6f00',600:'#434625' },
             red: { 50:'#ffe7e2',100:'#f8cec5',200:'#f29e8b',300:'#e95d3d',400:'#bd4a30' },
             background: '#ffffff',
             surface: { DEFAULT:'#f7f7f2', sunken:'#f2f2ec', raised:'#ffffff', elevated:'#ffffff' },
             ink: { DEFAULT:'#292929', primary:'#292929', secondary:'#72726e', 'secondary-strong':'#4e4d4b', tertiary:'#acada8', inverse:'#fcfcf8', accent:'#788c15', danger:'#bd4a30' },
             hairline: '#47432a33', stroke: '#d5d5d2', border: '#e3e3e3',
-            accent: { DEFAULT:'#94f27f', strong:'#79d65e', text:'#0d7916', wash:'#93f27d33' },
+            accent: { DEFAULT:'#d1e043', strong:'#b2c248', text:'#0d7916', wash:'#d1e04333' },
             fill: { accent:'#5b6f00','accent-hover':'#4c5616', primary:'#292929','primary-hover':'#4e4d4b', danger:'#e95d3d' },
             tint: { green:'#f2f6e1', blue:'#eaf4fe', purple:'#f3f0fa' },
             ring: '#b2c24899',
           },
           fontFamily: {
-            display: ['"Quadrant Notepad"','"Fraunces"','"Newsreader"','Georgia','serif'],
-            sans: ['"KMR Melange Grotesk"','"Hanken Grotesk"','"Inter"','-apple-system','sans-serif'],
-            mono: ['"JetBrains Mono"','ui-monospace','Menlo','monospace'],
+            display: ['"Inria Serif"','Georgia','serif'],
+            sans: ['"Geist"','system-ui','-apple-system','sans-serif'],
+            mono: ['"Geist Mono"','ui-monospace','Menlo','monospace'],
           },
           fontSize: {
             '2xs':['11px',{lineHeight:'14px',letterSpacing:'0.02em'}],
@@ -175,7 +174,7 @@
         <div><div class="h-16 rounded-lg bg-ink-secondary"></div><p class="mt-2 text-xs text-ink-primary">ink-secondary</p><p class="font-mono text-2xs text-ink-secondary">#72726e</p></div>
         <div><div class="h-16 rounded-lg bg-fill-accent"></div><p class="mt-2 text-xs text-ink-primary">fill-accent</p><p class="font-mono text-2xs text-ink-secondary">#5b6f00</p></div>
         <div><div class="h-16 rounded-lg bg-green-200"></div><p class="mt-2 text-xs text-ink-primary">green-200</p><p class="font-mono text-2xs text-ink-secondary">#d1e043</p></div>
-        <div><div class="h-16 rounded-lg bg-accent"></div><p class="mt-2 text-xs text-ink-primary">accent</p><p class="font-mono text-2xs text-ink-secondary">#94f27f</p></div>
+        <div><div class="h-16 rounded-lg bg-green-300"></div><p class="mt-2 text-xs text-ink-primary">green-300 (accent-strong)</p><p class="font-mono text-2xs text-ink-secondary">#b2c248</p></div>
         <div><div class="h-16 rounded-lg bg-tint-green"></div><p class="mt-2 text-xs text-ink-primary">tint-green</p><p class="font-mono text-2xs text-ink-secondary">#f2f6e1</p></div>
         <div><div class="h-16 rounded-lg bg-tint-blue"></div><p class="mt-2 text-xs text-ink-primary">tint-blue</p><p class="font-mono text-2xs text-ink-secondary">#eaf4fe</p></div>
         <div><div class="h-16 rounded-lg bg-tint-purple"></div><p class="mt-2 text-xs text-ink-primary">tint-purple</p><p class="font-mono text-2xs text-ink-secondary">#f3f0fa</p></div>
@@ -280,7 +279,7 @@
 
     <!-- ============================== FOOTER ============================== -->
     <footer class="border-t border-hairline py-10 text-sm text-ink-secondary">
-      <p>Pixel-faithful to <a href="https://www.granola.ai/" class="rounded-sm text-ink-accent transition hover:text-accent-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">granola.ai</a> · built from <code class="font-mono text-xs">tailwind-preset.js</code>. Rendered with free fallback fonts (Fraunces · Hanken Grotesk).</p>
+      <p>Pixel-faithful to <a href="https://www.granola.ai/" class="rounded-sm text-ink-accent transition hover:text-accent-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">granola.ai</a> · built from <code class="font-mono text-xs">tailwind-preset.js</code>. Self-hosted fonts: Inria Serif · Geist · Geist Mono.</p>
     </footer>
   </main>
 
