@@ -133,14 +133,15 @@ def extract_fixer_artifacts(
 
     apply_fixer_artifacts(task_dir, fixer_trial_dir)
 
-    check_name = "eval_kernel.py" if kernelbench_mode else "test_outputs.py"
-    check_file = task_dir / "tests" / check_name
-    if check_file.exists():
-        err = validate_python(check_file.read_text(encoding="utf-8"), check_name)
-        if err is not None:
-            raise ValueError(
-                f"Extracted {check_name} has syntax errors ({check_file}): {err}"
-            )
+    tests_dir = task_dir / "tests"
+    check_files = [tests_dir / "eval_kernel.py"] if kernelbench_mode else sorted(tests_dir.rglob("*.py"))
+    for check_file in check_files:
+        if check_file.exists():
+            err = validate_python(check_file.read_text(encoding="utf-8"), check_file.name)
+            if err is not None:
+                raise ValueError(
+                    f"Extracted Python test has syntax errors ({check_file}): {err}"
+                )
 
     return "applied"
 

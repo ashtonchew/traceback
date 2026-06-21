@@ -16,6 +16,7 @@ from forkproof.releases.harden_adapter import (
     require_selected_model_credentials,
     select_harden_models,
 )
+from forkproof.releases.harden_task_materializer import materialize_harden_task_source
 
 
 def witness():
@@ -310,6 +311,93 @@ def test_harden_task_source_rejects_detached_grader_command(tmp_path):
 
     with pytest.raises(ReleaseError, match="grader_command_argv"):
         validate_harden_task_source_surface(proof_set=ps, task_source=task_source)
+
+
+def test_materialize_harden_task_source_from_explicit_assets(tmp_path):
+    assets = tmp_path / "assets"
+    task_assets = assets / "task_assets"
+    task_assets.mkdir(parents=True)
+    (task_assets / "instruction.md").write_text("Implement the task.\n", encoding="utf-8")
+    (task_assets / "test_outputs.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+    (assets / "Dockerfile.hud").write_text("FROM python:3.12-slim\nWORKDIR /app\nCOPY . /app/\n", encoding="utf-8")
+    (assets / "env.py").write_text("# env runtime\n", encoding="utf-8")
+
+    ps = proofset()
+    ps["v1_replay_surfaces"][0]["grader_command_argv"] = [
+        "bash",
+        "-lc",
+        "python3 -m pytest task_assets/test_outputs.py -q; rc=$?; exit $rc",
+    ]
+    ps["v1_replay_surfaces"][0]["pre_grader_command_argv"] = ["bash", "-lc", "service start"]
+    record = materialize_harden_task_source(
+        proof_set=ps,
+        task_id="task",
+        task_assets_source=assets,
+        output_root=tmp_path / "materialized",
+    )
+
+    task_source = tmp_path / "materialized" / ps["proof_set_id"] / "task"
+    assert record["task_source"] == str(task_source)
+    assert (task_source / "instruction.md").read_text(encoding="utf-8") == "Implement the task.\n"
+    assert record["verifier_files"] == ["task_assets/test_outputs.py"]
+    assert (task_source / "tests/task_assets/test_outputs.py").is_file()
+    assert (task_source / "tests/test.sh").is_file()
+    test_sh = (task_source / "tests/test.sh").read_text(encoding="utf-8")
+    assert "bash -lc" in test_sh
+    assert "service start" in test_sh
+    assert "echo 1 > /logs/verifier/reward.txt" in test_sh
+    assert (task_source / "environment/Dockerfile").is_file()
+    dockerfile = (task_source / "environment/Dockerfile").read_text(encoding="utf-8")
+    assert "service start" in dockerfile
+    assert "tail -f /dev/null" in dockerfile
+    assert (task_source / "environment/task_assets/test_outputs.py").is_file()
+    validate_harden_task_source_surface(proof_set=ps, task_source=task_source)
+
+
+def test_materialize_harden_task_source_derives_non_pytest_verifier_asset(tmp_path):
+    assets = tmp_path / "assets"
+    verifier = assets / "grader" / "run_verifier.sh"
+    verifier.parent.mkdir(parents=True)
+    (assets / "instruction.md").write_text("Implement the task.\n", encoding="utf-8")
+    verifier.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    (assets / "Dockerfile").write_text("FROM debian:bookworm-slim\nWORKDIR /app\nCOPY . /app/\n", encoding="utf-8")
+
+    ps = proofset()
+    ps["v1_replay_surfaces"][0]["grader_command_argv"] = ["bash", "-lc", "./grader/run_verifier.sh"]
+    record = materialize_harden_task_source(
+        proof_set=ps,
+        task_id="task",
+        task_assets_source=assets,
+        output_root=tmp_path / "materialized",
+    )
+
+    task_source = tmp_path / "materialized" / ps["proof_set_id"] / "task"
+    assert record["verifier_files"] == ["grader/run_verifier.sh"]
+    assert (task_source / "tests/grader/run_verifier.sh").read_text(encoding="utf-8").startswith("#!/usr/bin/env bash")
+    assert "./grader/run_verifier.sh" in (task_source / "tests/test.sh").read_text(encoding="utf-8")
+
+
+def test_materialize_harden_task_source_rejects_mixed_grader_commands(tmp_path):
+    assets = tmp_path / "assets"
+    task_assets = assets / "task_assets"
+    task_assets.mkdir(parents=True)
+    (task_assets / "instruction.md").write_text("Implement the task.\n", encoding="utf-8")
+    (task_assets / "test_outputs.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+    (assets / "Dockerfile").write_text("FROM python:3.12-slim\n", encoding="utf-8")
+    ps = proofset()
+    second = dict(ps["v1_replay_surfaces"][0])
+    second["witness_id"] = "wit-002"
+    second["replay_surface_id"] = "surface-002"
+    second["grader_command_argv"] = ["python", "-m", "pytest", "other_tests.py"]
+    ps["v1_replay_surfaces"] = [ps["v1_replay_surfaces"][0], second]
+
+    with pytest.raises(ReleaseError, match="mixed grader commands"):
+        materialize_harden_task_source(
+            proof_set=ps,
+            task_id="task",
+            task_assets_source=assets,
+            output_root=tmp_path / "materialized",
+        )
 
 
 def test_harden_model_selection_uses_anthropic_fallback_not_gemini(monkeypatch):

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .harden_adapter import inspect_harden_config
+from .harden_task_materializer import materialize_harden_task_source
 from .models import ReleaseError
 from .proofset import build_proofset, load_controls_manifest
 from .release_evaluation import run_release_evaluation
@@ -38,6 +39,7 @@ def integration(
     taskset_or_suite_ref: str,
     selection_query_ref: str,
     harden_task_source: Path | None = None,
+    harden_task_assets_source: Path | None = None,
     harden_task_id: str | None = None,
     release_results_ref: Path | None = None,
     harden_max_iterations: int = 1,
@@ -73,40 +75,61 @@ def integration(
         except ReleaseError as exc:
             blockers.append(str(exc))
     release_evaluation = None
+    harden_task_materialization = None
     if proofset is not None:
-        try:
-            release_evaluation = run_release_evaluation(
-                repo_root=ROOT,
-                proof_set=proofset,
-                harden_task_source=harden_task_source,
-                harden_task_id=harden_task_id,
-                release_results_ref=release_results_ref,
-                artifact_root=ROOT / "artifacts/forkproof/releases",
-                harden_max_iterations=harden_max_iterations,
-                harden_timeout_seconds=harden_timeout_seconds,
-                harden_hacker_retries=harden_hacker_retries,
-                harden_solver_precheck_retries=harden_solver_precheck_retries,
-                harden_replay_retries=harden_replay_retries,
-                harden_hacker_max_turns=harden_hacker_max_turns,
-                harden_hacker_model=harden_hacker_model,
-                harden_fixer_model=harden_fixer_model,
-                harden_solver_model=harden_solver_model,
-            )
-            if release_evaluation["status"] != "pass":
-                blockers.append(f"release gate did not pass: {release_evaluation['status']}")
-        except ReleaseError as exc:
+        if harden_task_assets_source is not None:
+            if harden_task_id is None:
+                blockers.append("harden task id is required when materializing task assets")
+            else:
+                try:
+                    harden_task_materialization = materialize_harden_task_source(
+                        proof_set=proofset,
+                        task_id=harden_task_id,
+                        task_assets_source=harden_task_assets_source,
+                        output_root=ROOT / "artifacts/forkproof/releases/materialized-harden-tasks",
+                    )
+                    harden_task_source = Path(harden_task_materialization["task_source"])
+                except ReleaseError as exc:
+                    blockers.append(str(exc))
+        if blockers:
             release_evaluation = {
                 "status": "blocked",
-                "error_class": exc.error_class,
-                "observed_behavior": str(exc),
+                "observed_behavior": "release evaluation skipped because preflight blockers were already present",
             }
-            blocker_path = ROOT / "artifacts/forkproof/releases/release-blockers" / f"{proofset['proof_set_id']}.json"
-            if blocker_path.exists():
-                blocker_record = _load_json(blocker_path)
-                release_evaluation["blocker_ref"] = blocker_path.as_posix()
-                if blocker_record.get("harden_blocker"):
-                    release_evaluation["harden_blocker"] = blocker_record["harden_blocker"]
-            blockers.append(str(exc))
+        else:
+            try:
+                release_evaluation = run_release_evaluation(
+                    repo_root=ROOT,
+                    proof_set=proofset,
+                    harden_task_source=harden_task_source,
+                    harden_task_id=harden_task_id,
+                    release_results_ref=release_results_ref,
+                    artifact_root=ROOT / "artifacts/forkproof/releases",
+                    harden_max_iterations=harden_max_iterations,
+                    harden_timeout_seconds=harden_timeout_seconds,
+                    harden_hacker_retries=harden_hacker_retries,
+                    harden_solver_precheck_retries=harden_solver_precheck_retries,
+                    harden_replay_retries=harden_replay_retries,
+                    harden_hacker_max_turns=harden_hacker_max_turns,
+                    harden_hacker_model=harden_hacker_model,
+                    harden_fixer_model=harden_fixer_model,
+                    harden_solver_model=harden_solver_model,
+                )
+                if release_evaluation["status"] != "pass":
+                    blockers.append(f"release gate did not pass: {release_evaluation['status']}")
+            except ReleaseError as exc:
+                release_evaluation = {
+                    "status": "blocked",
+                    "error_class": exc.error_class,
+                    "observed_behavior": str(exc),
+                }
+                blocker_path = ROOT / "artifacts/forkproof/releases/release-blockers" / f"{proofset['proof_set_id']}.json"
+                if blocker_path.exists():
+                    blocker_record = _load_json(blocker_path)
+                    release_evaluation["blocker_ref"] = blocker_path.as_posix()
+                    if blocker_record.get("harden_blocker"):
+                        release_evaluation["harden_blocker"] = blocker_record["harden_blocker"]
+                blockers.append(str(exc))
 
     artifact = {
         "schema_version": 1,
@@ -118,6 +141,7 @@ def integration(
         "taskset_or_suite_ref": taskset_or_suite_ref,
         "selection_query_ref": selection_query_ref,
         "proofset": proofset,
+        "harden_task_materialization": harden_task_materialization,
         "release_evaluation": release_evaluation,
         "blockers": blockers,
         "observed_behavior": (
@@ -145,6 +169,7 @@ def main() -> int:
     integration_parser.add_argument("--taskset-or-suite-ref", required=True)
     integration_parser.add_argument("--selection-query-ref", required=True)
     integration_parser.add_argument("--harden-task-source", type=Path)
+    integration_parser.add_argument("--harden-task-assets-source", type=Path)
     integration_parser.add_argument("--harden-task-id")
     integration_parser.add_argument("--release-results-ref", type=Path)
     integration_parser.add_argument("--harden-max-iterations", type=int, default=1)
@@ -163,6 +188,7 @@ def main() -> int:
             taskset_or_suite_ref=args.taskset_or_suite_ref,
             selection_query_ref=args.selection_query_ref,
             harden_task_source=args.harden_task_source,
+            harden_task_assets_source=args.harden_task_assets_source,
             harden_task_id=args.harden_task_id,
             release_results_ref=args.release_results_ref,
             harden_max_iterations=args.harden_max_iterations,

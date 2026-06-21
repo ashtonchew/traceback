@@ -1,8 +1,8 @@
 {
-  "content_digest": "bf26b960d1651443ef65076c85addc12d808f392add3fab49d3a0793ee4a7e19",
-  "harden_returncode": null,
-  "harden_run_ref": null,
-  "harden_status": null,
+  "content_digest": "f1f95aa0a044a381ec5506a134a83ffa3078a9e08d35afea9da78fa1186f4e7d",
+  "harden_returncode": 0,
+  "harden_run_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T112057Z/harden-output/mongodb-sales-aggregation-engine/result.json",
+  "harden_status": "max_iterations",
   "mandatory_subversion_case_ids": [
     "conftest.py",
     "cwd/import shadowing",
@@ -19,8 +19,8 @@
     "release_candidate_ref"
   ],
   "proof_set_id": "proofset-e497370b2c3d2a69",
-  "reason": "harden task source does not declare forkproof-replay-surface.json; detached harden-v0 task layouts cannot prove the sealed Witness replay surface",
-  "recorded_at": "2026-06-21T10:58:00Z",
+  "reason": "No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof.",
+  "recorded_at": "2026-06-21T11:45:32Z",
   "release_results_ref": null,
   "schema_version": 1,
   "status": "blocked"

@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T10:58:18Z",
+  "updated_at": "2026-06-21T11:58:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 32 passed in 0.29s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 35 passed in 0.34s."
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-release"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-release now fails fast before harden-v0 execution with harden_surface_mismatch. The configured harden task source lacks forkproof-replay-surface.json, while ProofSet proofset-e497370b2c3d2a69 records the sealed v1 replay surface for wit-run-20260621T075711-branch-08: cwd=/app, trusted_entrypoint_ref=env:env, grader_digest=ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f, and grader_command_argv=[bash, -lc, python3 -m pytest task_assets/test_outputs.py -rA -q > .grade.log 2>&1; rc=$?; cat .grade.log; exit $rc]. Detached harden-v0 task layouts cannot prove the sealed Witness replay surface."
+      "observed": "RUN: integration-release: wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json. harden-v0 ran against a materialized task source carrying the sealed replay surface, using Anthropic claude-haiku-4-5, one total hacker/precheck/replay attempt per stage, hacker max_turns 80, and max_iterations=2. Precheck passed; iteration 0 found a rewarded attack, fixer applied a patch, solver validation passed, replay reward=0.00; iteration 1 found a second rewarded attack, fixer applied a patch, solver validation passed, replay reward=0.00. harden-v0 returned 0 with status=max_iterations and both iteration outcomes fixed. Release evaluation still exits 2 because harden-v0 result.json is candidate-fixer evidence only, not ReleaseProof: missing independent v1_results, v2_results for every Witness/control, evaluator_context_refs, mandatory pytest subversion results, and release_candidate_ref."
     },
     {
       "argv": [
@@ -75,7 +75,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 126ms."
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
         "005"
       ],
       "exit_code": 0,
-      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 25 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 41 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -106,7 +106,7 @@
         "--require-complete"
       ],
       "exit_code": 1,
-      "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release command rows did not exit 0, one check remains blocked, and this require-complete command did not exit 0."
+      "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release did not exit 0, and Integration release gate remains blocked."
     },
     {
       "argv": [
@@ -122,12 +122,12 @@
     {
       "name": "Release contract coverage",
       "status": "pass",
-      "evidence": "plan-005-tests passes with ProofSet membership, sealed replay-surface propagation, BranchRun rejection, binary gate, mixed digest, v1 failure, immutable v1/v2 case identity, evaluator-context execution-surface checks, profile-driven mandatory subversion checks, pytest profile inference from replay surface, Anthropic harden model fallback, selected-provider credential preflight, harden-v0 zero-attempt guard, authorized-audit prompt default, detached harden surface rejection, release-results fail-closed behavior, candidate patch rejection history, bounded failure, append-only ReleaseProof sealing, and harden-v0 config/result.json schema inspection."
+      "evidence": "Mapped plan-005-tests passes with 35 tests covering ProofSet membership/replay-surface closure, fail-closed release-results loading, harden-v0 adapter/runtime patching, task-agnostic harden materialization from sealed grader argv, Anthropic model fallback, zero-attempt rejection, authorized-audit prompt default, and harden-v0 config/result schema inspection."
     },
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release remains blocked. Plan 005 now fails closed before harden-v0 execution when the configured task source does not declare a forkproof-replay-surface.json matching every sealed ProofSet Witness replay surface. This prevents treating the current terminal-wrench /solution and ../tests layout as proof for the sealed /app/task_assets pytest replay surface."
+      "evidence": "integration-release remains blocked after a real harden-v0 run. The materialized harden task source now declares the sealed replay surface and harden-v0 fixed two discovered attacks with solver validation and replay reward=0.00 for each, but ReleaseProof is not sealed because no independent per-case v1/v2 evaluator-results artifact exists for every sealed Witness/control, mandatory pytest subversion checks, evaluator context, and release candidate ref."
     }
   ],
   "artifacts": [
@@ -202,6 +202,14 @@
     {
       "ref": "tests/forkproof/releases/test_release_evaluation.py",
       "description": "Release evaluation tests now cover ProofSet replay-surface propagation and harden task-source acceptance/rejection for matching, missing, and detached grader command surfaces."
+    },
+    {
+      "ref": "src/forkproof/releases/harden_task_materializer.py",
+      "description": "Task-agnostic harden-v0 materializer for explicit operator-provided task assets plus sealed ProofSet replay surfaces. It derives verifier assets from grader_command_argv, writes forkproof-replay-surface.json, generates the exact test.sh reward wrapper, preserves solution/ when present, and starts pre-grader services from the sealed replay surface."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
+      "description": "Durable compact harden-v0 run record for the latest integration-release run: precheck passed; two iterations found rewarded attacks; both fixer patches passed solver validation and replayed to reward=0.00; harden-v0 ended status=max_iterations because the command was bounded to two iterations. The raw harden workdir is intentionally uncommitted and is not ReleaseProof."
     }
   ],
   "screenshots": [],
@@ -319,6 +327,17 @@
         "docs/plans/repo-map/COMMANDS.json"
       ],
       "next_owner": "Use a prompt/model path that reliably complies with the authorized harden-v0 hacker role, or rerun integration-release with the new --harden-hacker-max-turns cap and inspect the recorded harden_hacker_model_refusal_loop blocker if it fails closed. Keep hacker_retries >= 1 because harden-v0 uses range(hacker_retries); zero would run no hacker attempt and could falsely report robustness."
+    },
+    {
+      "type": "RELEASE_RESULTS_MISSING",
+      "recorded_at": "2026-06-21T11:58:00Z",
+      "reason": "harden-v0 produced a bounded candidate hardened task and killed two discovered attacks in replay, but Plan 005 cannot seal ReleaseProof until an independent evaluator-results artifact records v1 success and v2 results for every sealed Witness/control, mandatory pytest subversion checks, immutable evaluator context, and release_candidate_ref.",
+      "evidence_refs": [
+        "docs/plans/evidence/005/integration-release-preflight.json",
+        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
+        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json"
+      ],
+      "next_owner": "Plan 005 release evaluator must execute the hardened candidate against the exact grader surface for all ProofSet cases and mandatory pytest-subversion probes, then provide release-results to the existing binary gate."
     }
   ],
   "notes": [
