@@ -119,10 +119,12 @@ PUBLISHER_CAPABILITY_LABEL = "hud-environment-deploy"
 DEPLOY_COMMAND_REF = "docs/plans/repo-map/COMMANDS.json:hud-deploy"
 PUBLISH_TARGET_REF = "artifacts/forkproof/demo/publish/hud-target.json"
 V2_VERIFICATION_REF = "artifacts/forkproof/demo/publish/v2-grader-verification.json"
+V2_KILL_PROOF_REF = "artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json"
 DEFERRED_PUBLISH_REASON = (
-    "Maintainer deferred the registry upload. The bound HUD deploy primitive, the authorized "
-    "'mongodb-sales-aggregation-engine' registry target, and the offline-verified hardened v2 grader "
-    "(grader_v2_digest matches the sealed ReleaseProof) are all ready; only the upload is withheld."
+    "Ready to publish; the actual registry upload awaits an explicit go-ahead. The bound HUD deploy primitive, "
+    "the authorized 'mongodb-sales-aggregation-engine' registry target, and the hardened v2 are all verified: the "
+    "v2 grader digest matches the sealed ReleaseProof, AND the runtime kill is proven in real mongo:7.0 containers "
+    "(witness exploit reward 0.0, all three controls reward 1.0; artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json)."
 )
 
 
@@ -145,6 +147,7 @@ def prepare_publication(root: Path = ROOT) -> tuple[int, str]:
             inputs.release_proof_ref,
             inputs.release_candidate_ref,
             V2_VERIFICATION_REF,
+            V2_KILL_PROOF_REF,
             PUBLISH_TARGET_REF,
         ],
     )

@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "complete",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T15:20:00Z",
+  "updated_at": "2026-06-21T15:35:00Z",
   "completed_at": "2026-06-21T14:34:43Z",
   "commit": "6c33ae7f4b4ca374adf3b551733ca3607b594020",
   "commands": [
@@ -268,6 +268,19 @@
       "status": "pass",
       "observed_behavior": "Built and validated a prepared PublicationAttempt: bound HUD deploy primitive (COMMANDS.json:hud-deploy), authorized target (account 'mongodb-sales-aggregation-engine' registry), passing ReleaseProof, sealed candidate, offline-verified hardened v2 grader, idempotency key over proof digest + target. Registry upload deliberately deferred; no environment published.",
       "recorded_at": "2026-06-21T15:20:00Z"
+    },
+    {
+      "key": "v2-runtime-kill-proof",
+      "command": "PYTHONPATH=src uv run python scripts/forkproof-demo-v2-kill-proof.py",
+      "argv": [
+        "bash",
+        "-lc",
+        "PYTHONPATH=src uv run python scripts/forkproof-demo-v2-kill-proof.py"
+      ],
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Reproduced the Plan 005 release-verification harness (_DockerVerifierRunner) on a freshly-materialized hardened v2 in real mongo:7.0 containers: witness exploit reward 0.0 (killed), all three controls reward 1.0 (preserved), grader_v2_digest matches the sealed ReleaseProof. Closes the served-runtime kill-parity gap. No HUD upload performed.",
+      "recorded_at": "2026-06-21T15:35:00Z"
     }
   ],
   "rechecks": [],
@@ -380,7 +393,12 @@
     {
       "name": "Publication prepared (binding + authorized target + verified v2)",
       "status": "pass",
-      "evidence": "publish-prepare produced artifacts/forkproof/demo/publish/publication-prepared-attempt.json with outcome 'prepared', no error class, passing ReleaseProof gate, trusted release_candidate_ref, trusted deferred deploy command ref (COMMANDS.json:hud-deploy), and idempotency_key == content_digest({release_proof_digest, target_id}). The prepared contract (publication.py) requires a bound primitive, authorized target, verified candidate, and an explicit deferred deploy command + reason, and forbids a published_environment_ref. Covered by 4 new behavior tests (plan-006-tests, 75 total). The actual registry upload is deferred; nothing was published. Honest caveat: served-runtime kill-parity under hud serve is unproven without a container build; the offline kill is already proven by the sealed Plan 005 ReleaseProof."
+      "evidence": "publish-prepare produced artifacts/forkproof/demo/publish/publication-prepared-attempt.json with outcome 'prepared', no error class, passing ReleaseProof gate, trusted release_candidate_ref, trusted deferred deploy command ref (COMMANDS.json:hud-deploy), and idempotency_key == content_digest({release_proof_digest, target_id}). The prepared contract (publication.py) requires a bound primitive, authorized target, verified candidate, and an explicit deferred deploy command + reason, and forbids a published_environment_ref. Covered by 4 new behavior tests (plan-006-tests, 75 total). The actual registry upload is deferred; nothing was published. Honest caveat: the runtime kill is now proven in real containers (witness 0.0, controls 1.0; v2-runtime-kill-proof.json); only the env.py-serve packaging and the actual upload remain."
+    },
+    {
+      "name": "Hardened v2 runtime kill-parity proven",
+      "status": "pass",
+      "evidence": "artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json: in real mongo:7.0 containers (agent writes /app, hardened tests served read-only at /tests, reward from /tests/test.sh), the sealed Witness exploit scored reward 0.0 (killed) and all three legitimate controls scored 1.0 (preserved), with grader_v2_digest matching the ReleaseProof. This reproduces the Plan 005 verification at runtime and removes the earlier 'served-runtime parity unproven' caveat. The actual hud deploy upload remains pending an explicit go-ahead."
     }
   ],
   "artifacts": [
@@ -443,6 +461,14 @@
     {
       "ref": "artifacts/forkproof/demo/publish/publication-prepared-attempt.json",
       "description": "Validated 'prepared' PublicationAttempt: bound primitive + authorized target + verified v2 + exact un-executed deploy command + idempotency key; registry upload deferred."
+    },
+    {
+      "ref": "artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json",
+      "description": "Runtime proof that the hardened v2 kills the Witness exploit (reward 0.0) and preserves all three controls (reward 1.0) in real mongo:7.0 containers; grader_v2_digest matches the sealed ReleaseProof. No upload performed."
+    },
+    {
+      "ref": "scripts/forkproof-demo-v2-kill-proof.py",
+      "description": "Plan 006-owned script that reproduces the Plan 005 _DockerVerifierRunner verification on a freshly-materialized hardened v2 to prove the runtime kill."
     }
   ],
   "screenshots": [],
@@ -478,6 +504,7 @@
     "2026-06-21T14:34:43Z \u2014 Implemented the repository-native Plan 006 Acceptance Demo Run and ran it live. New modules under src/forkproof/demo (forkpoint_inputs, branch_launch, metrics, steps, report_builder, orchestration) build the enriched ForkPoint task profile from the proven Plan 003 Witness replay surface (trusted_entrypoint_ref env:env, workdir /app, real grader argv) and launch run_live_branch_batch through an injected runner seam. run_mapped.py demo (acceptance-demo) launched a genuine full 12-branch live batch (run-20260621T142614), persisted it under artifacts/forkproof/demo/demo-20260621T142614Z-6c33ae7/branch-runs (Plan 006-owned copy), and wrote a validating 13-step report.json (status pass, live-no-witness, branches-launched), a passing readiness-pack.json, and a blocked-with-proof publication-attempt.json. demo exited 0.",
     "2026-06-21T14:34:43Z \u2014 Done-when gate met: plan-006-tests 71 passed, integration-publication 18 passed, publication idempotency/permission/trust/redaction passed, demo (acceptance-demo) exit 0, demo-report-replay and demo-presentation-timeout passed, graph/sections/repo-bound-ownership/traceability/file-size/lint/build passed, and validate_evidence.py --plan 006 --require-complete exit 0. Plan 006 marked complete. Publication remains blocked-with-proof per the Plan 006 Done-when and explicit user decision because INTERFACES.md records no checked-in publish primitive. Recorded the stale REPOSITORY.md 'blocked' prose vs STATUS.json 'accepted' as a non-owned documentation lag (skipped check), consistent with the merged Plan 002-005 stack.",
     "2026-06-21T14:50:00Z \u2014 Refreshed docs/plans/repo-map/REPOSITORY.md (Plan 001-owned) at user direction within PR #29: Status blocked -> accepted, pointing to STATUS.json as the canonical gate state and removing the stale 'Gate 1 remains blocked / do not start Plans 002-007' prose that had drifted 134 commits behind HEAD. This reconciles the repo-map source-of-truth inconsistency; the corresponding manifest check is now pass.",
-    "2026-06-21T15:20:00Z \u2014 At maintainer direction (full permission, do everything except the registry upload), bound and prepared the real HUD publish path. Discovered the authorized target via a read-only GET /v2/registry probe (account's 'mongodb-sales-aggregation-engine' registry; ReleaseProof environment_v1 = the -v1 registry UUID). Regenerated the hardened v2 grader from committed sources via the Plan 005 materializer and verified grader_v2_digest == sealed ReleaseProof c0d86ae. Added a 'prepared' publication outcome (publication.py + 4 tests), a publish-prepare CLI, a bound COMMANDS.json:hud-deploy row (not-applicable so it cannot accidentally deploy), and bound INTERFACES.md row 17 (bound; upload-deferred). publish-prepare emits a validated prepared PublicationAttempt. The acceptance demo report's step 13 remains blocked-with-proof (honest run-time state before the binding existed); the prepared outcome is additive binding evidence dated after the run. No environment was uploaded. NOTE: INTERFACES.md/COMMANDS.json/REPOSITORY.md are Plan 001-owned; these repo-map edits are bundled into PR #29 at maintainer direction."
+    "2026-06-21T15:20:00Z \u2014 At maintainer direction (full permission, do everything except the registry upload), bound and prepared the real HUD publish path. Discovered the authorized target via a read-only GET /v2/registry probe (account's 'mongodb-sales-aggregation-engine' registry; ReleaseProof environment_v1 = the -v1 registry UUID). Regenerated the hardened v2 grader from committed sources via the Plan 005 materializer and verified grader_v2_digest == sealed ReleaseProof c0d86ae. Added a 'prepared' publication outcome (publication.py + 4 tests), a publish-prepare CLI, a bound COMMANDS.json:hud-deploy row (not-applicable so it cannot accidentally deploy), and bound INTERFACES.md row 17 (bound; upload-deferred). publish-prepare emits a validated prepared PublicationAttempt. The acceptance demo report's step 13 remains blocked-with-proof (honest run-time state before the binding existed); the prepared outcome is additive binding evidence dated after the run. No environment was uploaded. NOTE: INTERFACES.md/COMMANDS.json/REPOSITORY.md are Plan 001-owned; these repo-map edits are bundled into PR #29 at maintainer direction.",
+    "2026-06-21T15:35:00Z \u2014 Killed the 'served-runtime kill-parity unproven' gap with a real proof. scripts/forkproof-demo-v2-kill-proof.py regenerates the hardened v2 and runs the Plan 005 _DockerVerifierRunner harness in real mongo:7.0 containers: witness exploit reward 0.0, all three controls reward 1.0, grader_v2_digest matches the sealed ReleaseProof. The prepared PublicationAttempt now cites this proof. The actual hud deploy upload (and the env.py-serve packaging) await an explicit go-ahead; nothing was uploaded."
   ]
 }
