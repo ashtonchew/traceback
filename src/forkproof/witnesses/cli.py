@@ -31,36 +31,49 @@ def integration_witness() -> int:
     plan004 = _load_json(ROOT / "docs" / "plans" / "evidence" / "004" / "MANIFEST.json")
     forkpoint = _load_json(ROOT / "docs" / "plans" / "evidence" / "002" / "artifacts" / "forkpoint-record.json")
     commands = _load_json(ROOT / "docs" / "plans" / "repo-map" / "COMMANDS.json")
-    blockers: list[str] = []
+    branch_execution_blockers: list[str] = []
+    promotion_blockers: list[str] = []
     if plan002.get("status") != "complete":
-        blockers.append("Plan 002 manifest is not complete")
+        branch_execution_blockers.append("Plan 002 manifest is not complete")
     if plan004.get("status") != "complete":
-        blockers.append("Plan 004 manifest is not complete")
+        branch_execution_blockers.append("Plan 004 manifest is not complete")
     if forkpoint.get("snapshot_mode") not in {"filesystem", "directory"}:
-        blockers.append("ForkPoint snapshot is not filesystem-class")
+        branch_execution_blockers.append("ForkPoint snapshot is not filesystem-class")
     if not shutil.which("hud"):
-        blockers.append("HUD CLI not found on PATH")
+        branch_execution_blockers.append("HUD CLI not found on PATH")
     harden = ROOT / ".external" / "harden-v0" / "dedup_hacks.py"
     if not harden.exists():
-        blockers.append("pinned harden-v0 dedup_hacks.py is unavailable")
+        promotion_blockers.append("pinned harden-v0 dedup_hacks.py is unavailable")
     command_status = commands["commands"]["integration-witness"]["status"]
     if command_status != "verified":
-        blockers.append("integration-witness command is not yet verified in COMMANDS.json")
+        branch_execution_blockers.append("integration-witness command is not yet verified in COMMANDS.json")
 
-    # The installed HUD 0.6.4 CLI exposes eval/jobs/trace but no authoritative
-    # QA reward-hacking classification command. Do not substitute local labels.
-    blockers.append("authoritative HUD QA reward-hacking classification API is not bound")
+    # These are distinct Plan 003 seams. Branch execution produces a completed
+    # BranchRun; QA classification is a later same-branch promotion signal.
+    branch_execution_blockers.append("repo-owned live BranchGateway adapter is not bound")
+    promotion_blockers.append("authoritative HUD QA reward-hacking classification API is not bound")
 
     artifact = {
         "checked_at": utc_now(),
-        "status": "blocked" if blockers else "ready",
+        "status": "blocked" if branch_execution_blockers or promotion_blockers else "ready",
         "fork_point_id": forkpoint.get("fork_point_id"),
         "snapshot_id": forkpoint.get("snapshot_id"),
-        "blockers": blockers,
-        "observed_behavior": "preflight only; no BranchRun execution started when QA binding was missing",
+        "branch_execution": {
+            "status": "blocked" if branch_execution_blockers else "ready",
+            "blockers": branch_execution_blockers,
+        },
+        "promotion": {
+            "status": "blocked" if promotion_blockers else "ready",
+            "blockers": promotion_blockers,
+        },
+        "observed_behavior": (
+            "preflight only; no BranchRun execution started because the repo-owned live BranchGateway is not "
+            "bound. QA remains a separate post-run classification path required before Witness promotion."
+        ),
     }
     path = _write_artifact("integration-witness-preflight.json", artifact)
     print(f"WROTE {path}")
+    blockers = branch_execution_blockers + promotion_blockers
     if blockers:
         for blocker in blockers:
             print(f"STOP: {blocker}")

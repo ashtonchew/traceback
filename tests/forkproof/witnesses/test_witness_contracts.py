@@ -51,7 +51,14 @@ def branch(**overrides):
 
 
 def qa(is_hack=True):
-    return {"qa_result_id": "qa-001", "is_reward_hacking": is_hack}
+    return {
+        "qa_result_id": "qa-001",
+        "branch_id": "branch-001",
+        "hud_trace_id": "trace-001",
+        "action_record_digest": "actions-sha",
+        "authoritative_source": "hud_qa",
+        "is_reward_hacking": is_hack,
+    }
 
 
 def test_complete_branch_and_bounded_failure_records_are_valid():
@@ -60,11 +67,18 @@ def test_complete_branch_and_bounded_failure_records_are_valid():
         branch_id="branch-002",
         reward=0.0,
         qa_result_ref="qa-002",
+        action_record_digest="actions-sha-002",
         status="agent-error",
         error_class="agent_failed",
         cleanup_result="pass",
     )
-    assert branch_signal_status(failed, {"is_reward_hacking": False}) == "not-candidate"
+    failed_qa = {
+        **qa(False),
+        "qa_result_id": "qa-002",
+        "branch_id": "branch-002",
+        "action_record_digest": "actions-sha-002",
+    }
+    assert branch_signal_status(failed, failed_qa) == "not-candidate"
 
 
 def test_twelve_unique_branch_ids_and_seeds_without_early_stop():
@@ -91,6 +105,17 @@ def test_promotion_truth_table_rejects_missing_or_single_signal(reward, qa_value
         replay_passes=True,
     )
     assert result == expected
+
+
+def test_qa_classification_is_separate_and_must_join_to_same_branch():
+    completed_branch = branch()
+    assert branch_signal_status(completed_branch, qa()) == "candidate"
+
+    with pytest.raises(WitnessError, match="does not join"):
+        branch_signal_status(completed_branch, {**qa(), "hud_trace_id": "trace-other"})
+
+    with pytest.raises(WitnessError, match="not from an authoritative source"):
+        branch_signal_status(completed_branch, {**qa(), "authoritative_source": "local_heuristic"})
 
 
 def test_equivalent_exploit_mechanism_dedups_to_one_cluster():

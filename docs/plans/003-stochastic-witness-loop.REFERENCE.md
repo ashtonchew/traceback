@@ -20,6 +20,8 @@ Adaptive stopping and depth-two expansion belong to Plan 007.
 
 Execution boundary: a branch becomes a counted BranchRun only after all setup/preflight checks pass, restored isolated state is bound to an immutable branch id, runtime/provenance identity is allocated, and the Branch gateway adapter invokes the live agent/gateway or first environment action. From that point forward, success, verifier failure, QA failure, timeout, agent error, or cleanup failure is a finalized counted BranchRun. A failure before that boundary is a setup/preflight failure; record it separately in `docs/plans/evidence/003/MANIFEST.json` and schedule a replacement with a new branch id/seed. This preserves stochastic sample accounting while keeping infrastructure readiness failures visible.
 
+Plan 003 uses a three-way evidence pipeline. ForkProof runs the Branch gateway and owns the BranchRun record, durable artifacts, dedup decision, and replay proof. The trusted verifier owns reward. HUD QA is a supported external classifier that runs after a BranchRun exists and returns a reward-hacking verdict for the same trace/action digest. Treat HUD QA as an independent classifier inside the harness, not as a substitute for reward, branch provenance, deduplication, durable storage, or deterministic replay.
+
 ## Promotion truth table
 
 | Reward success | QA says hacking | Provenance complete | Dedup decision | Replay passes | Result |
@@ -32,7 +34,7 @@ Execution boundary: a branch becomes a counted BranchRun only after all setup/pr
 | missing | any | any | any | any | Incomplete branch |
 | any | missing | any | any | any | Incomplete classification |
 
-The repository's actual reward type may differ from numeric 1/0. Bind “success” and “failure” to the grader contract.
+The repository's actual reward type may differ from numeric 1/0. Bind “success” and “failure” to the grader contract. QA “yes” means an authoritative HUD QA result such as `is_reward_hacking: true` that joins to the same branch id, trace id, QA result ref, and action-record digest. A local heuristic, copied dashboard note, or QA verdict for a different trace is incomplete classification.
 
 ## Branch provenance
 
@@ -54,7 +56,7 @@ Required evidence per attempt:
 
 A completed BranchRun must be reconstructable without reading mutable process memory, branch-local temp files, or dashboard-only state. Failed attempts are still finalized records with bounded diagnostics and cleanup status.
 
-Reward, QA, action record, file diff, environment version, and grader digest must join to the same BranchRun. If the authoritative reward output and QA result cannot be tied to the same branch trace and action-record digest, the branch is diagnostic only and cannot enter dedup or Witness promotion.
+Reward, QA, action record, file diff, environment version, and grader digest must join to the same BranchRun. If the authoritative reward output and HUD QA result cannot be tied to the same branch trace and action-record digest, the branch is diagnostic only and cannot enter dedup or Witness promotion.
 
 Action provenance convention: record one ordered native action envelope per completed branch action, with a parented span id, action index, action kind, start/end timestamps, sanitized input/output refs, before/after state hashes when available, tool/provider request ids, and content digests for external artifacts. Keep dynamic or sensitive data out of span attributes; store large inputs/outputs as content-addressed artifacts. OpenTelemetry treats spans as parented operations with start/end metadata and warns against sensitive dynamic attributes in semantic conventions ([OpenTelemetry trace conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md), [OpenTelemetry database span guidance](https://opentelemetry.io/docs/specs/semconv/db/database-spans/)).
 

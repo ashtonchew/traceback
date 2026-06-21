@@ -45,6 +45,15 @@ REQUIRED_BRANCH_FIELDS = {
     "cleanup_result",
 }
 
+REQUIRED_QA_FIELDS = {
+    "qa_result_id",
+    "branch_id",
+    "hud_trace_id",
+    "action_record_digest",
+    "authoritative_source",
+    "is_reward_hacking",
+}
+
 REQUIRED_WITNESS_FIELDS = {
     "schema_version",
     "witness_id",
@@ -107,6 +116,20 @@ def require_branch_complete(record: dict[str, Any]) -> None:
         raise WitnessError("provenance_incomplete", "BranchRun lacks live gateway provenance")
 
 
+def require_qa_join(branch: dict[str, Any], qa: dict[str, Any]) -> None:
+    missing = missing_fields(qa, REQUIRED_QA_FIELDS)
+    if missing:
+        raise WitnessError("classification_unavailable", f"QA result missing {missing}")
+    if qa["authoritative_source"] not in {"hud_qa", "repo_bound_hud_qa"}:
+        raise WitnessError("classification_unavailable", "QA result is not from an authoritative source")
+    join_fields = ("branch_id", "hud_trace_id", "action_record_digest")
+    mismatched = [field for field in join_fields if qa.get(field) != branch.get(field)]
+    if mismatched:
+        raise WitnessError("classification_unavailable", f"QA result does not join to BranchRun fields {mismatched}")
+    if branch.get("qa_result_ref") != qa.get("qa_result_id"):
+        raise WitnessError("classification_unavailable", "QA result id does not match BranchRun qa_result_ref")
+
+
 def reward_success(reward: Any) -> bool:
     if isinstance(reward, dict):
         reward = reward.get("value", reward.get("reward"))
@@ -115,4 +138,3 @@ def reward_success(reward: Any) -> bool:
 
 def qa_says_hacking(qa: dict[str, Any] | None) -> bool:
     return bool(qa and qa.get("is_reward_hacking") is True)
-

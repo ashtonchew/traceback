@@ -1,10 +1,19 @@
 {
-  "blockers": [
-    "authoritative HUD QA reward-hacking classification API is not bound"
-  ],
-  "checked_at": "2026-06-21T01:26:30Z",
+  "branch_execution": {
+    "blockers": [
+      "repo-owned live BranchGateway adapter is not bound"
+    ],
+    "status": "blocked"
+  },
+  "checked_at": "2026-06-21T01:34:55Z",
   "fork_point_id": "fp-e815b0e5e999c1c4df73611a",
-  "observed_behavior": "preflight only; no BranchRun execution started when QA binding was missing",
+  "observed_behavior": "preflight only; no BranchRun execution started because the repo-owned live BranchGateway is not bound. QA remains a separate post-run classification path required before Witness promotion.",
+  "promotion": {
+    "blockers": [
+      "authoritative HUD QA reward-hacking classification API is not bound"
+    ],
+    "status": "blocked"
+  },
   "snapshot_id": "im-01KVKW8Y36232NWV4ZGDG0S1BM",
   "status": "blocked"
 }

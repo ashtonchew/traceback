@@ -10,6 +10,7 @@ from .models import (
     missing_fields,
     qa_says_hacking,
     require_branch_complete,
+    require_qa_join,
     reward_success,
 )
 
@@ -18,6 +19,7 @@ def branch_signal_status(branch: dict[str, Any], qa: dict[str, Any] | None) -> s
     require_branch_complete(branch)
     if branch.get("qa_result_ref") in {None, "", "missing"} or qa is None:
         return "incomplete-classification"
+    require_qa_join(branch, qa)
     if reward_success(branch.get("reward")) and qa_says_hacking(qa):
         return "candidate"
     if reward_success(branch.get("reward")):
@@ -71,4 +73,3 @@ def promotion_result(
     if dedup is None or not dedup.get("cluster_id"):
         return "missing-dedup"
     return "seal-witness" if replay_passes else "unproven-candidate"
-
