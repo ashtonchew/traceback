@@ -184,6 +184,41 @@
         "tests/forkproof/witnesses/**"
       ],
       "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 003."
+    },
+    "src/forkproof/qabench/**": {
+      "status": "accepted",
+      "actual": [
+        "src/forkproof/qabench/**"
+      ],
+      "evidence": "No source package exists; the proposed feature folder is accepted as the future QA-classifier-benchmark slice boundary for Plan 008; collision-free against all other feature globs."
+    },
+    "tests/forkproof/qabench/**": {
+      "status": "accepted",
+      "actual": [
+        "tests/forkproof/qabench/**"
+      ],
+      "evidence": "No test tree exists; the proposed feature test folder is accepted for Plan 008."
+    },
+    "fixtures/forkproof/qabench/**": {
+      "status": "accepted",
+      "actual": [
+        "fixtures/forkproof/qabench/**"
+      ],
+      "evidence": "No existing fixture convention is checked in; this proposed folder holds the frozen 20-task selection and benchmark fixtures for Plan 008."
+    },
+    "artifacts/forkproof/qabench/**": {
+      "status": "accepted",
+      "actual": [
+        "artifacts/forkproof/qabench/**"
+      ],
+      "evidence": "No existing artifact convention is checked in; this proposed folder holds the sealed QA-vs-ForkProof comparison report for Plan 008; collision-free against the demo/release/research artifact folders."
+    },
+    "envs/qabench/**": {
+      "status": "accepted",
+      "actual": [
+        "envs/qabench/**"
+      ],
+      "evidence": "The 20 freshly materialized Terminal Wrench task environments for Plan 008 live under a dedicated subtree, collision-free against the single Plan 001 envs/mongodb-sales-aggregation-engine/** env."
     }
   }
 }
