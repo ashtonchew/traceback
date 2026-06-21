@@ -1,0 +1,47 @@
+{
+  "action_record_digest": "909e1776b949307f41644b4e7f78dbcbd94791f79138be2f3500a791f2ba739a",
+  "action_record_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T024920/actions/run-20260621T024920-branch-02.json",
+  "branch_id": "run-20260621T024920-branch-02",
+  "cleanup_result": "runtime-owned-cleanup",
+  "completed_at": "2026-06-21T02:51:21Z",
+  "environment_image_digest": "modal-image:im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "environment_version": "mongodb_sales_aggregation_engine_v1",
+  "execution_boundary_crossed": true,
+  "file_diff_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T024920/file-diffs/run-20260621T024920-branch-02.json",
+  "gateway_request_ids": [
+    "hud-job:7628d6cde8e141bcbe9f9c40ac69eaef"
+  ],
+  "grader_digest": "trusted-pytest-task_assets/test_outputs.py",
+  "grader_digest_source": "envs/mongodb-sales-aggregation-engine/env.py::GRADE_CMD",
+  "history_hash": "c1ea02e630fa9890dc30dc6be218fafaa896793b8c3b70ee25ad4953b98f78f8",
+  "hud_trace_id": "d40a92baec014d02a0abf0f31607e137",
+  "lineage": {
+    "branch_index": 2,
+    "fork_point_id": "fp-826ba545cf30870e67d42ddb",
+    "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR"
+  },
+  "model": "claude-haiku-4-5",
+  "model_response_refs": [
+    "hud-trace:d40a92baec014d02a0abf0f31607e137"
+  ],
+  "parent_fork_point_id": "fp-826ba545cf30870e67d42ddb",
+  "parent_node_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
+  "promotion_signal_status": "not-candidate",
+  "qa_result_ref": "qa-dd0b1b6bc36f8bbd",
+  "reward": 0.0,
+  "run_id": "run-20260621T024920",
+  "sampling_config": {
+    "max_steps": 8,
+    "max_tokens": 4096,
+    "parallelism": "12-concurrent-branches",
+    "provider_seed_support": "not-supported-by-ClaudeConfig",
+    "requested_seed": 7302
+  },
+  "schema_version": 1,
+  "seed": 7302,
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "snapshot_mode": "filesystem",
+  "snapshot_restore_ref": "modal-image://im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "started_at": "2026-06-21T02:49:20Z",
+  "status": "success"
+}

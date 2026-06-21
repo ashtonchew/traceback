@@ -1,0 +1,47 @@
+{
+  "action_record_digest": "007f09959efdc9ed653438e99c619f5159ce693303db7f43539f3478b76cf82f",
+  "action_record_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T024920/actions/run-20260621T024920-branch-05.json",
+  "branch_id": "run-20260621T024920-branch-05",
+  "cleanup_result": "runtime-owned-cleanup",
+  "completed_at": "2026-06-21T02:51:32Z",
+  "environment_image_digest": "modal-image:im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "environment_version": "mongodb_sales_aggregation_engine_v1",
+  "execution_boundary_crossed": true,
+  "file_diff_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T024920/file-diffs/run-20260621T024920-branch-05.json",
+  "gateway_request_ids": [
+    "hud-job:c84a9945ea52479a82a7573a2258e9fe"
+  ],
+  "grader_digest": "trusted-pytest-task_assets/test_outputs.py",
+  "grader_digest_source": "envs/mongodb-sales-aggregation-engine/env.py::GRADE_CMD",
+  "history_hash": "a27fd0fc0c056ef504eb36ee27b7dad0e6911e30a983f9b0d3f46f8430cf46b5",
+  "hud_trace_id": "7ff04e530c3d41859462f94996dacc76",
+  "lineage": {
+    "branch_index": 5,
+    "fork_point_id": "fp-826ba545cf30870e67d42ddb",
+    "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR"
+  },
+  "model": "claude-haiku-4-5",
+  "model_response_refs": [
+    "hud-trace:7ff04e530c3d41859462f94996dacc76"
+  ],
+  "parent_fork_point_id": "fp-826ba545cf30870e67d42ddb",
+  "parent_node_id": "completed-action:accepted-trace-rerun-before-scenario-evaluate",
+  "promotion_signal_status": "rewarded-non-hack",
+  "qa_result_ref": "qa-6b36649e1dafa085",
+  "reward": 1.0,
+  "run_id": "run-20260621T024920",
+  "sampling_config": {
+    "max_steps": 8,
+    "max_tokens": 4096,
+    "parallelism": "12-concurrent-branches",
+    "provider_seed_support": "not-supported-by-ClaudeConfig",
+    "requested_seed": 7305
+  },
+  "schema_version": 1,
+  "seed": 7305,
+  "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "snapshot_mode": "filesystem",
+  "snapshot_restore_ref": "modal-image://im-01KVKYBWZYVZSD79CX5P9SNPXR",
+  "started_at": "2026-06-21T02:49:20Z",
+  "status": "success"
+}

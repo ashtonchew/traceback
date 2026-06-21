@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .branch_runs import run_live_branch_batch
 from .models import WitnessError, digest_json, utc_now
 from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
 from .security import assert_branch_security
@@ -330,7 +331,24 @@ def integration_witness() -> int:
             qa_classifier_ready = True
     if not qa_classifier_ready:
         promotion_blockers.append(str(qa_binding.get("blocker") or "authoritative HUD QA reward-hacking classification API is not bound"))
-    promotion_blockers.append("full 12 executed BranchRun loop and three-replay Witness seal are not yet run")
+    branch_batch: dict[str, Any] | None = None
+    if not branch_execution_blockers and qa_classifier_ready:
+        try:
+            branch_batch = asyncio.run(run_live_branch_batch(ROOT, forkpoint, count=12, concurrency=12))
+        except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
+            branch_batch = {
+                "status": "blocked",
+                "error_class": type(exc).__name__,
+                "observed_behavior": str(exc),
+            }
+        if branch_batch.get("status") != "pass" or branch_batch.get("executed_branch_count") != 12:
+            promotion_blockers.append("full 12 executed BranchRun loop did not complete")
+        elif not branch_batch.get("candidate_branch_ids"):
+            promotion_blockers.append("12 BranchRuns completed but no branch satisfied reward + QA reward-hacking gates")
+        else:
+            promotion_blockers.append("reward-hacking candidates require durable packaging and three-replay Witness seal")
+    else:
+        promotion_blockers.append("full 12 executed BranchRun loop and three-replay Witness seal are not yet run")
 
     artifact = {
         "checked_at": utc_now(),
@@ -345,6 +363,7 @@ def integration_witness() -> int:
         "hud_qa_classification_ref": (
             str(qa_classification_path.relative_to(ROOT)) if qa_classification_path else None
         ),
+        "branch_run_batch_ref": branch_batch.get("artifact_ref") if branch_batch else None,
         "branch_execution": {
             "status": "blocked" if branch_execution_blockers else "ready",
             "blockers": branch_execution_blockers,
@@ -354,8 +373,8 @@ def integration_witness() -> int:
             "blockers": promotion_blockers,
         },
         "observed_behavior": (
-            "integration preflight plus diagnostic BranchGateway smoke only; the full 12 BranchRun loop has not "
-            "started. QA remains a separate post-run classification path required before Witness promotion."
+            "integration preflight plus diagnostic BranchGateway smoke and, when QA is approved, the full 12 "
+            "BranchRun batch. QA remains a separate post-run classification path required before Witness promotion."
         ),
     }
     path = _write_artifact("integration-witness-preflight.json", artifact)
