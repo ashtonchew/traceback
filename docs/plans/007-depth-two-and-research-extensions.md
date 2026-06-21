@@ -140,6 +140,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T14:12:00Z — Tightened the Plan 007 scheduler so it only expands a completed depth-one child into depth-two branch IDs; attempts to schedule from root or an already-depth-two node now fail before branch scheduling. Focused research tests now pass at 21 tests.
 - 2026-06-21T14:18:00Z — Tightened depth-two run records so completed branch refs must be a subset of scheduled branch refs, preventing a report from claiming completions the scheduler never launched. Focused research tests still pass at 21 tests.
 - 2026-06-21T14:24:00Z — Tightened completed depth-two run records to require measured values instead of allowing a measurement-free completion claim. Focused research tests still pass at 21 tests.
+- 2026-06-21T14:30:00Z — Fetched remote branches and rebased `codex/plan-007-research-stack` onto the updated Plan 005 stack tip `9c9a60f`. Focused research tests, research lint, mapped skips, mapped lint/build, graph, sections, ownership, traceability, file-size, and evidence validation still pass; `--require-complete` still fails only because depth-two execution is blocked.
 
 ### Surprises & Discoveries
 

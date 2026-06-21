@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T14:24:00Z",
+  "updated_at": "2026-06-21T14:30:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -25,7 +25,7 @@
         "-q"
       ],
       "exit_code": 0,
-      "observed": "21 passed in 0.05s. Tests cover scheduler policy, depth-one-only scheduler expansion, child selection, lineage, depth-two run records, capability gates, reports, skips, committed child-selection artifact validation, exact artifact reproduction from sealed Witness inputs, fail-closed integration preflight output, conditional research report reproduction, and research package isolation from core feature folders."
+      "observed": "21 passed in 0.08s on the stack rebased to Plan 005 tip 9c9a60f. Tests cover scheduler policy, depth-one-only scheduler expansion, child selection, lineage, depth-two run records, capability gates, reports, skips, committed child-selection artifact validation, exact artifact reproduction from sealed Witness inputs, fail-closed integration preflight output, conditional research report reproduction, and research package isolation from core feature folders."
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 6ms."
     },
     {
       "argv": [
@@ -155,7 +155,7 @@
     {
       "name": "Plan 003 sealed Witness gate",
       "status": "pass",
-      "evidence": "After restacking on origin/codex/plan-005-release-proof, docs/plans/evidence/003/MANIFEST.json records Promotion and replay seal=pass. The sealed Witness is docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json with reward=1, qa_is_reward_hacking=true, cluster-001, durable_snapshot_mode=filesystem, and three semantic_success=true replay checks."
+      "evidence": "After restacking on origin/codex/plan-005-release-proof and rebasing to tip 9c9a60f, docs/plans/evidence/003/MANIFEST.json records Promotion and replay seal=pass. The sealed Witness is docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json with reward=1, qa_is_reward_hacking=true, cluster-001, durable_snapshot_mode=filesystem, and three semantic_success=true replay checks."
     },
     {
       "name": "Plan 007 ownership",
@@ -290,6 +290,7 @@
   ],
   "notes": [
     "Partial implementation only. Plan 003 sealed Witness evidence exists on the Plan 005 stack, and Plan 007 has a selected promising child artifact, but Plan 007 is not complete until an independent child re-snapshot, real depth-two run, and Plan 007 Done-when pass.",
+    "Rebased onto updated origin/codex/plan-005-release-proof tip 9c9a60f on 2026-06-21T14:30:00Z; Plan 007 blocker status is unchanged.",
     "Command history was compacted on 2026-06-21T12:58:00Z after superseded pre-restack entries pushed the manifest over the file-size validator ceiling; current command evidence remains recorded above."
   ]
 }
