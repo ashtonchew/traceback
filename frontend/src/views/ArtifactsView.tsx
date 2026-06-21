@@ -19,15 +19,21 @@ function ArtifactRow({
   title,
   detail,
   status,
+  onOpen,
 }: {
   kind: keyof typeof KIND_ICON
   title: string
   detail: string
   status: string
+  onOpen: () => void
 }) {
   const Icon = KIND_ICON[kind]
   return (
-    <button type="button" className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-hairline px-4 py-3 text-left transition-[background-color,transform] duration-150 ease-out last:border-b-0 hover:bg-surface active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <button
+      type="button"
+      onClick={onOpen}
+      className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-hairline px-4 py-3 text-left transition-[background-color,transform] duration-150 ease-out last:border-b-0 hover:bg-surface active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-sunken text-ink-tertiary">
         <Icon size={15} />
       </span>
@@ -53,6 +59,7 @@ export function ArtifactsView() {
       title: branch.title,
       detail: `${branch.branchId} · reward ${branch.reward.toFixed(2)} · ${branch.environmentVersion}`,
       status: branch.status.replace('_', ' '),
+      route: `/witness`,
     })),
     ...(run.proofSet
       ? [
@@ -61,6 +68,7 @@ export function ArtifactsView() {
             title: 'Proof set manifest',
             detail: `${run.proofSet.exploitWitnessIds.length} witnesses · ${run.proofSet.legitimateControlIds.length} controls · ${run.proofSet.exploitFamilyVariantIds.length} variants`,
             status: 'ready',
+            route: '/proofset',
           },
         ]
       : []),
@@ -69,12 +77,14 @@ export function ArtifactsView() {
       title: 'Release proof',
       detail: run.releaseProof?.commitId ?? 'No committed release proof yet',
       status: run.releaseProof?.status ?? 'pending',
+      route: '/releaseproof',
     },
     {
       kind: 'evidence' as const,
       title: 'Trace and replay evidence',
       detail: run.forkPoint ? `${run.forkPoint.hudTraceId} · ${run.forkPoint.snapshotId}` : 'Loading evidence',
       status: run.forkPoint ? 'ready' : 'pending',
+      route: '/runs',
     },
   ]
 
@@ -96,7 +106,7 @@ export function ArtifactsView() {
 
             <div className="mt-6 rounded-lg border border-hairline bg-surface-raised">
               {rows.map((row) => (
-                <ArtifactRow key={`${row.kind}-${row.title}`} {...row} />
+                <ArtifactRow key={`${row.kind}-${row.title}`} {...row} onOpen={() => navigate(row.route)} />
               ))}
             </div>
           </div>

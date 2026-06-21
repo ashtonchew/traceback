@@ -17,6 +17,7 @@ import {
 import type { ReactNode } from 'react'
 import { Button, Chip, Divider } from './primitives'
 import type { BranchRun, ForkPoint, LegitimateControl, ProofSet } from '../domain/types'
+import { copyText } from '../lib/copy'
 
 /* ------------------------------------------------------------------ */
 /* Shell + building blocks                                             */
@@ -53,7 +54,7 @@ export function PanelShell({
                   type="button"
                   aria-label="Copy HUD trace ID"
                   title={tagCopyValue}
-                  onClick={() => navigator.clipboard?.writeText(tagCopyValue)}
+                  onClick={() => copyText(tagCopyValue)}
                   className="inline-flex min-w-0 items-center gap-1 normal-case focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className="min-w-0 truncate">{tag}</span>
@@ -65,7 +66,12 @@ export function PanelShell({
             </Chip>
           )}
           {onClose && (
-            <button onClick={onClose} className="ml-auto text-ink-tertiary hover:text-ink-primary">
+            <button
+              type="button"
+              aria-label={`Close ${title}`}
+              onClick={onClose}
+              className="ml-auto text-ink-tertiary hover:text-ink-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <X size={18} />
             </button>
           )}
@@ -229,7 +235,7 @@ export function BranchPanel({
                 <button
                   type="button"
                   aria-label={`Copy ${r.label}`}
-                  onClick={() => navigator.clipboard?.writeText(r.copyValue ?? String(r.value))}
+                  onClick={() => copyText(r.copyValue ?? String(r.value))}
                   className="mt-0.5 shrink-0 text-ink-tertiary transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Copy size={11} />

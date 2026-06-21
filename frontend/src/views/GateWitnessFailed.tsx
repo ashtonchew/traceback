@@ -9,10 +9,10 @@ import { useRun } from '../store/RunProvider'
 import { Button } from '../components/primitives'
 import type { GateMemberResult } from '../domain/types'
 
-function WitnessRow({ name, state, reward }: { name: string; state: 'KILLED' | 'SURVIVED'; reward: string }) {
+function WitnessRow({ name, state, reward, onOpen }: { name: string; state: 'KILLED' | 'SURVIVED'; reward: string; onOpen: () => void }) {
   const survived = state === 'SURVIVED'
   return (
-    <button type="button" className={clsx('flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', survived ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
+    <button type="button" onClick={onOpen} className={clsx('flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', survived ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
       <GitFork size={15} className="text-ink-tertiary" />
       <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-primary">{name}</span>
       <span className={clsx('flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-2xs font-semibold', survived ? 'bg-fill-danger text-ink-inverse' : 'bg-green-50 text-accent-text')}>
@@ -126,7 +126,7 @@ export function GateWitnessFailed() {
 
           <div className="mt-3 space-y-2">
             {witnessResults.map((w) => (
-              <WitnessRow key={w.memberId} name={w.name} state={w.v2 === 0 ? 'KILLED' : 'SURVIVED'} reward={w.reward.toFixed(1)} />
+              <WitnessRow key={w.memberId} name={w.name} state={w.v2 === 0 ? 'KILLED' : 'SURVIVED'} reward={w.reward.toFixed(1)} onOpen={() => navigate('/artifacts')} />
             ))}
           </div>
 
@@ -136,7 +136,7 @@ export function GateWitnessFailed() {
               {controlResults.map((c) => {
                 const broken = c.v2 === 0
                 return (
-                  <button key={c.memberId} type="button" className={clsx('flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', broken ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
+                  <button key={c.memberId} type="button" onClick={() => navigate('/artifacts')} className={clsx('flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-surface active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring', broken ? 'border-red-200 bg-state-red-soft' : 'border-hairline bg-surface-raised')}>
                     <span className={clsx('flex h-5 w-5 items-center justify-center rounded-full text-ink-inverse', broken ? 'bg-fill-danger' : 'bg-fill-accent')}>
                       {broken ? <ShieldAlert size={11} /> : <Check size={12} strokeWidth={3} />}
                     </span>
