@@ -46,7 +46,7 @@ def materialize_harden_task_source(
     copied_tests = _copy_tests(task_assets_source, destination / "tests", surfaces)
     _copy_solution(task_assets_source, destination / "solution")
     shutil.copy2(instruction, destination / "instruction.md")
-    _write_test_sh(destination / "tests" / "test.sh", surfaces)
+    _write_test_sh(destination / "tests" / "test.sh", surfaces, copied_tests)
     _write_task_toml(destination / "task.toml")
     _write_surface_manifest(
         destination / "forkproof-replay-surface.json",
@@ -217,16 +217,18 @@ def _tests_destination_path(rel_path: Path) -> Path:
     return rel_path
 
 
-def _write_test_sh(path: Path, surfaces: list[dict[str, Any]]) -> None:
+def _write_test_sh(path: Path, surfaces: list[dict[str, Any]], verifier_files: set[str]) -> None:
     pre_grader_argv = _single_pre_grader_argv(surfaces)
     grader_argv = _single_grader_argv(surfaces)
     pre_command = _shell_command_from_argv(pre_grader_argv) if pre_grader_argv else None
-    command = _shell_command_from_argv(grader_argv)
+    command = _shell_command_from_argv(_rewrite_grader_argv_for_harden_tests(grader_argv, verifier_files))
     prelude = f"{pre_command}\n" if pre_command else ""
     path.write_text(
         "#!/usr/bin/env bash\n"
         "set +e\n"
         f"{prelude}"
+        "cd /app\n"
+        "export PYTHONPATH=\"/app:${PYTHONPATH:-}\"\n"
         f"{command}\n"
         "rc=$?\n"
         "mkdir -p /logs/verifier\n"
@@ -284,6 +286,44 @@ def _append_pre_grader_startup(dockerfile: Path, surfaces: list[dict[str, Any]])
 
 def _shell_command_from_argv(argv: list[str]) -> str:
     return " ".join(_quote_shell_arg(part) for part in argv)
+
+
+def _rewrite_grader_argv_for_harden_tests(argv: list[str], verifier_files: set[str]) -> list[str]:
+    verifier_assets = set(verifier_files)
+    if not verifier_assets:
+        return list(argv)
+    rewritten: list[str] = []
+    for index, raw in enumerate(argv):
+        if index > 0 and argv[index - 1] in {"-c", "-lc"}:
+            rewritten.append(_rewrite_shell_command_for_harden_tests(raw, verifier_assets))
+        else:
+            rewritten.append(_rewrite_token_for_harden_tests(raw, verifier_assets))
+    return rewritten
+
+
+def _rewrite_shell_command_for_harden_tests(command: str, verifier_assets: set[str]) -> str:
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return command
+    if not tokens:
+        return command
+    rewritten = command
+    for token in tokens:
+        replacement = _rewrite_token_for_harden_tests(token, verifier_assets)
+        if replacement != token:
+            rewritten = rewritten.replace(token, replacement)
+    return rewritten
+
+
+def _rewrite_token_for_harden_tests(token: str, verifier_assets: set[str]) -> str:
+    rel = _normalize_command_path(token)
+    if rel is None:
+        return token
+    dest = _tests_destination_path(rel).as_posix()
+    if dest not in verifier_assets:
+        return token
+    return f"/tests/{dest}"
 
 
 def _quote_shell_arg(value: str) -> str:

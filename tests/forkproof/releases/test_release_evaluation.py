@@ -326,7 +326,7 @@ def test_materialize_harden_task_source_from_explicit_assets(tmp_path):
     ps["v1_replay_surfaces"][0]["grader_command_argv"] = [
         "bash",
         "-lc",
-        "python3 -m pytest task_assets/test_outputs.py -q; rc=$?; exit $rc",
+        "python3 -m pytest task_assets/test_outputs.py -q > .grade.log 2>&1; rc=$?; exit $rc",
     ]
     ps["v1_replay_surfaces"][0]["pre_grader_command_argv"] = ["bash", "-lc", "service start"]
     record = materialize_harden_task_source(
@@ -345,6 +345,11 @@ def test_materialize_harden_task_source_from_explicit_assets(tmp_path):
     test_sh = (task_source / "tests/test.sh").read_text(encoding="utf-8")
     assert "bash -lc" in test_sh
     assert "service start" in test_sh
+    assert "cd /app" in test_sh
+    assert "/tests/task_assets/test_outputs.py" in test_sh
+    assert "python3 -m pytest task_assets/test_outputs.py" not in test_sh
+    assert "> .grade.log 2>&1; rc=$?; exit $rc" in test_sh
+    assert "/tests/.grade.log" not in test_sh
     assert "echo 1 > /logs/verifier/reward.txt" in test_sh
     assert (task_source / "environment/Dockerfile").is_file()
     dockerfile = (task_source / "environment/Dockerfile").read_text(encoding="utf-8")
@@ -374,7 +379,7 @@ def test_materialize_harden_task_source_derives_non_pytest_verifier_asset(tmp_pa
     task_source = tmp_path / "materialized" / ps["proof_set_id"] / "task"
     assert record["verifier_files"] == ["grader/run_verifier.sh"]
     assert (task_source / "tests/grader/run_verifier.sh").read_text(encoding="utf-8").startswith("#!/usr/bin/env bash")
-    assert "./grader/run_verifier.sh" in (task_source / "tests/test.sh").read_text(encoding="utf-8")
+    assert "/tests/grader/run_verifier.sh" in (task_source / "tests/test.sh").read_text(encoding="utf-8")
 
 
 def test_materialize_harden_task_source_rejects_mixed_grader_commands(tmp_path):

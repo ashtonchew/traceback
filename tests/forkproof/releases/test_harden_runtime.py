@@ -156,6 +156,18 @@ def test_harden_adapter_reports_nested_fixer_artifact_layout(tmp_path):
         {"iteration": 1, "outcome": "replay_broke_fix", "replay_reward": 1.0}
     ]
 
+    blocker = harden_result_blocker(
+        {
+            "iterations": [
+                {"iteration": 0, "outcome": "replay_broke_fix", "replay_reward": 1.0},
+                {"iteration": 1, "outcome": "fixed", "replay_reward": 0.0},
+            ]
+        },
+        layouts,
+        [{"reward": 1.0, "trial_dir": "latest-solver-trial"}],
+    )
+    assert blocker is None
+
 
 def test_harden_adapter_reports_hacker_refusal_loop(tmp_path):
     trajectory_path = (

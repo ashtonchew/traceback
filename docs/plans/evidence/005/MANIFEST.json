@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T11:58:00Z",
+  "updated_at": "2026-06-21T12:20:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 35 passed in 0.34s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 35 passed in 0.29s."
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-release"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-release: wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json. harden-v0 ran against a materialized task source carrying the sealed replay surface, using Anthropic claude-haiku-4-5, one total hacker/precheck/replay attempt per stage, hacker max_turns 80, and max_iterations=2. Precheck passed; iteration 0 found a rewarded attack, fixer applied a patch, solver validation passed, replay reward=0.00; iteration 1 found a second rewarded attack, fixer applied a patch, solver validation passed, replay reward=0.00. harden-v0 returned 0 with status=max_iterations and both iteration outcomes fixed. Release evaluation still exits 2 because harden-v0 result.json is candidate-fixer evidence only, not ReleaseProof: missing independent v1_results, v2_results for every Witness/control, evaluator_context_refs, mandatory pytest subversion results, and release_candidate_ref."
+      "observed": "RUN: integration-release: wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json. harden-v0 ran against a materialized task source carrying the sealed replay surface, using Anthropic claude-haiku-4-5, one total hacker/precheck/replay attempt per stage, hacker max_turns 80, and max_iterations=2. Precheck passed; iteration 0 found a rewarded attack, fixer applied a patch and solver validation passed, but replay reward remained 1.00 so the candidate was rejected. Iteration 1 found a second rewarded attack, fixer applied a patch, solver validation passed, and replay reward dropped to 0.00 with outcome fixed. harden-v0 returned 0 with status=max_iterations because the run was intentionally bounded at two iterations. Release evaluation still exits 2 because harden-v0 result.json is candidate-fixer evidence only, not ReleaseProof: missing independent v1_results, v2_results for every Witness/control, evaluator_context_refs, mandatory pytest subversion results, and release_candidate_ref."
     },
     {
       "argv": [
@@ -127,7 +127,7 @@
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release remains blocked after a real harden-v0 run. The materialized harden task source now declares the sealed replay surface and harden-v0 fixed two discovered attacks with solver validation and replay reward=0.00 for each, but ReleaseProof is not sealed because no independent per-case v1/v2 evaluator-results artifact exists for every sealed Witness/control, mandatory pytest subversion checks, evaluator context, and release candidate ref."
+      "evidence": "integration-release remains blocked after a real harden-v0 run. The materialized harden task source now declares the sealed replay surface; harden-v0 rejected the first replay-broken candidate, then produced a second candidate that replayed to reward=0.00 with solver validation. ReleaseProof is not sealed because no independent per-case v1/v2 evaluator-results artifact exists for every sealed Witness/control, mandatory pytest subversion checks, evaluator context, and release candidate ref."
     }
   ],
   "artifacts": [
@@ -161,11 +161,11 @@
     },
     {
       "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-      "description": "harden-v0 adapter run record with command argv, credential-presence flags only, result.json status, output digests, task source copy, fixer artifact layout diagnostics, harden_fixer_artifact_layout_drift blocker, and content digest."
+      "description": "harden-v0 adapter run record with command argv, credential-presence flags only, result.json status, output digests, task source copy, fixer artifact layout diagnostics, and content digest. Earlier replay-broken candidates remain iteration history; only the terminal harden candidate is classified as a harden blocker."
     },
     {
       "ref": "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
-      "description": "Fail-closed release blocker: harden-v0 result.json alone is not ReleaseProof; latest harden blocker records fixer artifact layout drift; missing real v1/v2 case results, evaluator context, mandatory pytest subversion results, and release candidate ref."
+      "description": "Fail-closed release blocker: harden-v0 result.json alone is not ReleaseProof; missing real v1/v2 case results, evaluator context, mandatory pytest subversion results, and release candidate ref."
     },
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
@@ -209,7 +209,7 @@
     },
     {
       "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-      "description": "Durable compact harden-v0 run record for the latest integration-release run: precheck passed; two iterations found rewarded attacks; both fixer patches passed solver validation and replayed to reward=0.00; harden-v0 ended status=max_iterations because the command was bounded to two iterations. The raw harden workdir is intentionally uncommitted and is not ReleaseProof."
+      "description": "Durable compact harden-v0 run record for the latest integration-release run: precheck passed; iteration 0 found a rewarded attack but replay still returned reward=1.00 so the candidate was rejected; iteration 1 found another rewarded attack and fixed it with solver validation plus replay reward=0.00. harden-v0 ended status=max_iterations because the command was bounded to two iterations. The raw harden workdir is intentionally uncommitted and is not ReleaseProof."
     }
   ],
   "screenshots": [],
@@ -330,8 +330,8 @@
     },
     {
       "type": "RELEASE_RESULTS_MISSING",
-      "recorded_at": "2026-06-21T11:58:00Z",
-      "reason": "harden-v0 produced a bounded candidate hardened task and killed two discovered attacks in replay, but Plan 005 cannot seal ReleaseProof until an independent evaluator-results artifact records v1 success and v2 results for every sealed Witness/control, mandatory pytest subversion checks, immutable evaluator context, and release_candidate_ref.",
+      "recorded_at": "2026-06-21T12:20:00Z",
+      "reason": "harden-v0 produced a bounded candidate hardened task. The first candidate was correctly rejected when replay still reproduced reward=1.00; the terminal candidate replayed to reward=0.00 with solver validation. Plan 005 still cannot seal ReleaseProof until an independent evaluator-results artifact records v1 success and v2 results for every sealed Witness/control, mandatory pytest subversion checks, immutable evaluator context, and release_candidate_ref.",
       "evidence_refs": [
         "docs/plans/evidence/005/integration-release-preflight.json",
         "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
@@ -361,6 +361,7 @@
     "2026-06-21T09:13:48Z reran integration-release with the same explicit Anthropic model path and a larger bounded harden timeout. harden-v0 returned 0/status max_iterations, found a rewarded hack, attempted the fixer, and recorded iteration outcome fix_failed with fix_applied false. The release gate still exits 2 because harden-v0 did not produce a successful candidate patch or real per-case v1/v2 release-results artifact.",
     "2026-06-21T09:28:04Z adapter diagnostics now record the concrete fixer failure: harden-v0 expected the committed fixer artifact repo at trial_dir/artifacts, but Harbor exported /logs/artifacts under trial_dir/artifacts/logs/artifacts. The nested diff includes fixer patch material, but it is diagnostic only because harden-v0 did not apply it or validate it through solver/replay.",
     "2026-06-21T10:35:01Z stopped a live mapped integration-release run after verifying it was semantically stalled. The process and files were active, but the single hacker_h0_a0 trial was in a refusal loop: trajectory step_count=530, model=claude-haiku-4-5-20251001, last message='Analysis: Declined / Plan: Cannot proceed', final_metrics total_prompt_tokens=17509755 and total_cost_usd=2.2138652000000008. This proves retry=0 is not the right Plan 005 speed lever: harden-v0 implements hacker_retries as range(hacker_retries), so zero would run no hacker attempt; fastest trustworthy setting is one hacker attempt plus fail-fast on refusal/step budget or a more compliant model/prompt path.",
-    "2026-06-21T10:45:00Z added a canonical harden-v0 refusal-loop guard and turn cap: integration-release now passes --harden-hacker-max-turns 80, the adapter records generic hacker_refusal_loops from Harbor trajectory files, and harden_result_blocker reports harden_hacker_model_refusal_loop before release evidence can be mistaken for a gate attempt. Split harden output inspection into src/forkproof/releases/harden_inspection.py to satisfy the Plan 005 file-size gate."
+    "2026-06-21T10:45:00Z added a canonical harden-v0 refusal-loop guard and turn cap: integration-release now passes --harden-hacker-max-turns 80, the adapter records generic hacker_refusal_loops from Harbor trajectory files, and harden_result_blocker reports harden_hacker_model_refusal_loop before release evidence can be mistaken for a gate attempt. Split harden output inspection into src/forkproof/releases/harden_inspection.py to satisfy the Plan 005 file-size gate.",
+    "2026-06-21T12:20:00Z fixed harden_result_blocker classification so rejected replay-broken candidates are preserved as iteration history when a later terminal harden iteration is fixed. The latest compact harden run now records iteration 0 as rejected replay_broke_fix and iteration 1 as fixed; release-blockers/proofset-e497370b2c3d2a69.json blocks only on missing independent release-results evidence."
   ]
 }

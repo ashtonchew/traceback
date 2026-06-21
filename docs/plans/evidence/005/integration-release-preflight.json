@@ -114,20 +114,24 @@
     "schema_version": 1
   },
   "harden_task_materialization": {
-    "content_digest": "3381b913080ad89254f2bb750b7eb9bf393707806ade207b9c1164274756d8e2",
-    "created_at": "2026-06-21T11:20:57Z",
+    "content_digest": "7ad890ef499f818803204d1a853b5636d8de0bfe90191c4edf322bf197bffd27",
+    "created_at": "2026-06-21T11:56:46Z",
     "proof_set_id": "proofset-e497370b2c3d2a69",
     "schema_version": 1,
+    "solution_present": false,
     "status": "materialized",
     "task_assets_source": "envs/mongodb-sales-aggregation-engine",
     "task_id": "mongodb-sales-aggregation-engine",
     "task_source": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/materialized-harden-tasks/proofset-e497370b2c3d2a69/mongodb-sales-aggregation-engine",
-    "v1_replay_surface_count": 1
+    "v1_replay_surface_count": 1,
+    "verifier_files": [
+      "task_assets/test_outputs.py"
+    ]
   },
   "observed_behavior": "Plan 005 integration binds harden-v0 schema, closes ProofSet membership, then seals ReleaseProof only from real per-case v1/v2 evaluator results.",
   "proofset": {
-    "content_digest": "38a45b508e6922244b63fbc2717bac2b8c37d552c2edbcaf083931436f60f5c6",
-    "created_at": "2026-06-21T11:20:57Z",
+    "content_digest": "dd425c50efcf5e050bdefadeee03e3aea4b47dbd214b24427ba6e2e5c4a91c0f",
+    "created_at": "2026-06-21T11:56:46Z",
     "environment_v1": "57cb7f09-89c1-487b-8463-b525edf01153",
     "evaluator_profiles": [
       "pytest"

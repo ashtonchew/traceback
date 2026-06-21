@@ -268,6 +268,10 @@ def harden_result_blocker(
     if not isinstance(iterations, list):
         return None
     has_fix_failed = any(isinstance(item, dict) and item.get("outcome") == "fix_failed" for item in iterations)
+    terminal_iteration = next(
+        (item for item in reversed(iterations) if isinstance(item, dict) and item.get("outcome")),
+        None,
+    )
     replay_failures = [
         {
             "iteration": item.get("iteration"),
@@ -280,14 +284,16 @@ def harden_result_blocker(
         and isinstance(item.get("replay_reward"), (int, float))
         and item.get("replay_reward") >= 1.0
     ]
-    if replay_failures:
+    if terminal_iteration and terminal_iteration.get("outcome") == "fixed":
+        return None
+    if replay_failures and terminal_iteration and terminal_iteration.get("outcome") == "replay_broke_fix":
         return {
             "code": "harden_replay_broke_candidate_fix",
             "status": "blocked",
             "reason": (
-                "harden-v0 applied a candidate patch and reached targeted replay, but the "
-                "recorded replay still reproduced the exploit reward, so the candidate was "
-                "rejected before ReleaseProof."
+                "harden-v0's terminal candidate patch reached targeted replay, but the recorded "
+                "replay still reproduced the exploit reward, so the candidate was rejected "
+                "before ReleaseProof."
             ),
             "replay_failures": replay_failures,
         }
