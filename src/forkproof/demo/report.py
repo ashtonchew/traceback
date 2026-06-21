@@ -246,10 +246,12 @@ def _validate_report_replay(record: dict[str, Any]) -> None:
 
 
 def _validate_presentation(record: dict[str, Any]) -> None:
-    if not record.get("presentation_budget_seconds"):
+    if not isinstance(record.get("presentation_budget_seconds"), int) or record["presentation_budget_seconds"] <= 0:
         raise DemoError("presentation_incomplete", "presentation mode needs a bounded budget")
     if not record.get("live_attempt_id"):
         raise DemoError("presentation_incomplete", "presentation mode must launch a live attempt")
+    if record["live_attempt_result"] == "timeout" and record["discovery_source"] != "prior-run-replay":
+        raise DemoError("fallback_unlabeled", "presentation timeout must switch to Prior-Run Witness Replay")
     if record["discovery_source"] == "prior-run-replay" and not record.get("fallback_reason"):
         raise DemoError("fallback_unlabeled", "presentation fallback needs fallback_reason")
 

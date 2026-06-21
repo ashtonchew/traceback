@@ -214,6 +214,19 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
     with pytest.raises(DemoError, match="bounded budget"):
         validate_demo_report(report(demo_mode="presentation"))
 
+    with pytest.raises(DemoError, match="bounded budget"):
+        validate_demo_report(report(demo_mode="presentation", presentation_budget_seconds="30"))
+
+    with pytest.raises(DemoError, match="Prior-Run Witness Replay"):
+        validate_demo_report(
+            report(
+                demo_mode="presentation",
+                discovery_source="live-no-witness",
+                live_attempt_result="timeout",
+                presentation_budget_seconds=30,
+            )
+        )
+
     steps = [step(i) for i in range(1, 14)]
     steps[5] = step(6, status="fallback")
     validate_demo_report(

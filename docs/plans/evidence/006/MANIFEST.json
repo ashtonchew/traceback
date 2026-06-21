@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T13:25:00Z",
+  "updated_at": "2026-06-21T13:45:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -40,7 +40,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "validate-sections",
@@ -48,7 +48,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 8 plans have valid frontmatter, sections, packets, and goal blocks.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "validate-ownership-repo-bound",
@@ -64,15 +64,15 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 47 requirements map to all 8 plans.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "plan-006-tests",
       "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after claim-shape overclaim hardening: 49 passed.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "observed_behavior": "Mapped Plan 006 tests passed after presentation timeout hardening: 49 passed.",
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "integration-publication",
@@ -128,15 +128,15 @@
       "exit_code": 2,
       "status": "blocked",
       "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and refused to claim an Acceptance Demo Run before ReleaseProof/publish binding exist.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "ruff-plan-006-demo",
       "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after claim-shape overclaim hardening.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after presentation timeout hardening.",
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "lint",
@@ -144,7 +144,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped lint passed: ruff check docs/plans/scripts.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "build",
@@ -152,7 +152,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped build passed: uv lock --check resolved 155 packages.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "file-size-006",
@@ -160,15 +160,15 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 16 text files are within file-size limits.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "evidence-006",
       "command": "python docs/plans/scripts/validate_evidence.py --plan 006",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured after claim-shape overclaim hardening.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured after presentation timeout hardening.",
+      "recorded_at": "2026-06-21T13:45:00Z"
     },
     {
       "key": "rebase-plan-006-over-plan-005",
@@ -184,7 +184,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: proposed ownership is collision-free for 8 plans.",
-      "recorded_at": "2026-06-21T13:25:00Z"
+      "recorded_at": "2026-06-21T13:45:00Z"
     }
   ],
   "rechecks": [
@@ -243,7 +243,7 @@
     {
       "name": "Plan 006 mapped tests",
       "status": "pass",
-      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 49 tests after claim-shape overclaim hardening."
+      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 49 tests after presentation timeout hardening."
     },
     {
       "name": "Repeated blocker recheck",
@@ -334,6 +334,11 @@
       "name": "Claim-shape overclaim hardening",
       "status": "pass",
       "evidence": "Report claims must be a list of non-empty strings and are normalized before single-run overclaim rejection, so hyphenated/case variants such as cost-savings cannot bypass the Plan 006 reference contract."
+    },
+    {
+      "name": "Presentation timeout hardening",
+      "status": "pass",
+      "evidence": "Presentation reports now require a positive integer presentation budget, and a timeout result must switch to Prior-Run Witness Replay rather than validating as live-no-witness."
     }
   ],
   "artifacts": [
