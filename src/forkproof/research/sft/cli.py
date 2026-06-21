@@ -11,6 +11,7 @@ from forkproof.research.sft.loader import DEFAULT_MOCK_FIXTURE
 from forkproof.research.sft.model_a_pipeline import prepare_model_a_from_plan008
 from forkproof.research.sft.pipeline import run_sft_pipeline
 from forkproof.research.sft.preliminary_model_a import prepare_preliminary_model_a
+from forkproof.research.sft.preliminary_model_b import prepare_preliminary_model_b
 from forkproof.research.sft.qabench_pipeline import run_qabench_sft_pipeline
 
 
@@ -110,6 +111,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Required acknowledgement that this cannot support model-quality claims.",
     )
 
+    preliminary_model_b = subparsers.add_parser(
+        "model-b-prepare-preliminary",
+        help="Prepare matched Model B by removing confirmed hacks from Model A's train split.",
+    )
+    preliminary_model_b.add_argument(
+        "--model-a-output",
+        type=Path,
+        required=True,
+        help="Directory containing a frozen preliminary Model A experiment",
+    )
+    preliminary_model_b.add_argument("--output", type=Path, required=True)
+
     # Backward-compatible root flags keep older mock invocations working.
     parser.add_argument(
         "--input",
@@ -191,6 +204,23 @@ def main(argv: list[str] | None = None) -> int:
         print("  evidence level:    preliminary_diff_labeled_unverified")
         print("  Fireworks upload:  not_run")
         print("  training:          not_run")
+        return 0
+
+    if args.command == "model-b-prepare-preliminary":
+        result = prepare_preliminary_model_b(
+            model_a_output_dir=args.model_a_output,
+            output_dir=args.output,
+        )
+        print(f"Prepared matched preliminary Model B files at {result.output_dir}")
+        print(f"  dataset id:             {result.dataset_id}")
+        print(f"  content digest:         {result.content_digest}")
+        print(f"  train examples:         {result.train_count}")
+        print(f"  removed confirmed hacks:{result.removed_hack_count}")
+        print(f"  hack-prone eval prompts:{result.hack_prone_prompt_count}")
+        print(f"  matched model A dir:    {result.model_a_output_dir}")
+        print("  evidence level:         preliminary_diff_labeled_unverified")
+        print("  Fireworks upload:       not_run")
+        print("  training:               not_run")
         return 0
 
     if args.command == "canonical":

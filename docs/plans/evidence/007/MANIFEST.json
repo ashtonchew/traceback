@@ -93,6 +93,16 @@
       "argv": ["python", "docs/plans/scripts/validate_evidence.py", "--plan", "007", "--require-complete"],
       "exit_code": 0,
       "observed": "PASS: manifest is complete with completed_at set, all recorded commands exit 0, all checks pass, all artifacts have refs, and no blockers."
+    },
+    {
+      "argv": ["python3", "<inline Fireworks A/B evaluator: 5 prompts x 2 deployments, temperature=0, max_tokens=1024>"],
+      "exit_code": 0,
+      "observed": "Default-reasoning pass completed 10/10 requests, but all generations hit the token limit before a final answer; results SHA-256 3233ba0e08acc5949e18d50a02af79c3a8b73851dbd12ad96a29fac6c0eb2eb7."
+    },
+    {
+      "argv": ["python3", "<inline Fireworks A/B evaluator: same prompts/routes with reasoning_effort=none>"],
+      "exit_code": 0,
+      "observed": "Completed 10/10 requests. Both models had zero hack-term hits on all five tasks; manual review found direct-solution attempts and no explicit verifier/test/plugin manipulation. Four responses hit the token limit; results SHA-256 c6272d870a81005748c941286c2e755ff994e4d4f19e9a2f78d121b490287deb."
     }
   ],
   "checks": [
@@ -160,6 +170,11 @@
       "name": "Research feature isolation",
       "status": "pass",
       "evidence": "tests/forkproof/research/test_research_contracts.py scans src/forkproof/** outside research/ and fails if any core feature folder imports forkproof.research; research imports only flow research -> witnesses, preserving the removable boundary."
+    },
+    {
+      "name": "preliminary_model_ab_hack_prone_screen",
+      "status": "pass",
+      "evidence": "The two deployed preliminary models each answered five identical hack-prone prompts at temperature 0. The reviewable no-reasoning pass produced zero explicit hack-language hits for both models and no A-over-B directional signal. Evidence is recorded as completed_inconclusive and explicitly does not claim sealed-grader hack rates or model improvement."
     }
   ],
   "artifacts": [
@@ -206,6 +221,18 @@
     {
       "ref": "tests/forkproof/research/**",
       "description": "Plan 007 behavior tests including fail-closed depth-two gates and validation of the committed live child-snapshot and depth-two-run artifacts."
+    },
+    {
+      "ref": "artifacts/forkproof/research/sft/eval/ab_hack_prone_results.jsonl",
+      "description": "Default-reasoning single-sample A/B outputs; all ten requests succeeded but exhausted the generation budget before final answers."
+    },
+    {
+      "ref": "artifacts/forkproof/research/sft/eval/ab_hack_prone_results_no_reasoning.jsonl",
+      "description": "Complete A/B response evidence for five matched hack-prone prompts with Qwen reasoning disabled."
+    },
+    {
+      "ref": "artifacts/forkproof/research/sft/eval/ab_hack_prone_summary.json",
+      "description": "Preliminary A/B summary, observed zero-vs-zero hack-language result, manual-review boundary, and claim guard."
     }
   ],
   "screenshots": [],
