@@ -449,3 +449,16 @@ def test_skip_must_be_backed_by_evidence_refs():
         )
     )
     assert record["packet"] == "WP2"
+
+
+def test_research_package_is_not_imported_by_core_feature_folders():
+    offenders = []
+    for path in (ROOT / "src/forkproof").rglob("*.py"):
+        relative = path.relative_to(ROOT)
+        if relative.parts[:3] == ("src", "forkproof", "research"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "forkproof.research" in text:
+            offenders.append(str(relative))
+
+    assert offenders == []
