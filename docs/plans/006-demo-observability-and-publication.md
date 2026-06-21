@@ -174,12 +174,15 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T09:34:39Z — Plan for legal continuation after the repo-map conflict is resolved: implement only Plan 006 owned paths (`src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, this plan/reference, `evidence/006/**`, and the declared Plan 006 `COMMANDS.json` keys). Start with pure contracts for the 13-step report, demo modes, prior-run fallback labels, report-replay audit-only semantics, metrics provenance, fake-live and statistical-overclaim rejection, `PublicationAttempt`, redaction, trusted publisher preflight, idempotency, permission/blocker semantics, and command wiring. Do not mutate Plan 003/004/005 artifacts. Full completion remains blocked until Gate 4 and publish binding/authority are evidence-backed.
 - 2026-06-21T09:38:07Z — Rechecked current external state after fetching `main`, PR #27, `codex/plan-005-release-proof`, and `codex/plan-006-demo-stack`. `origin/pr-27` and `origin/codex/plan-005-release-proof` still resolve to `2def782`, Plan 005 evidence remains `blocked` without ReleaseProof or v1/v2 release results, the repo-map conflict remains, and Plan 006 mapped commands remain `SKIP`/missing. No source implementation was performed.
 - 2026-06-21T09:40:02Z — Third consecutive blocker audit after refetch found the same state: repo-map source files disagree, Plan 005/Gate 4 remains blocked without ReleaseProof or v1/v2 release results, and Plan 006 command rows remain `SKIP`/missing. No Plan 006 source implementation is legal until external state changes.
+- 2026-06-21T09:47:08Z — At user direction, continued with Plan 006-owned pre-Gate-4 implementation while preserving the remaining blockers. Added `src/forkproof/demo/**` contracts for `report.json`, metrics, demo modes, `PublicationAttempt`, trusted publisher preflight policy, idempotency, and redaction. Added behavior tests under `tests/forkproof/demo/**`, wired all Plan 006 command rows in `COMMANDS.json`, and added a `demo-preflight` CLI that writes a Plan 006 blocker artifact instead of claiming an Acceptance Demo before ReleaseProof/publish binding exist.
 - [ ] Demo command/orchestration complete.
 - [ ] Live discovery surface complete.
-- [ ] Honest fallback complete.
+- [x] Report/demo mode contract validation complete.
+- [x] Honest fallback contract validation complete.
 - [ ] Proof/control walkthrough complete.
-- [ ] Metrics and claims complete.
-- [ ] Publish/display outcome complete.
+- [x] Metrics and claims contract validation complete.
+- [x] Publish/display preflight contract complete.
+- [ ] Real publish/display outcome complete.
 
 ### Surprises & Discoveries
 
@@ -196,9 +199,11 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21 — Planning decision: `blocked-with-proof` is limited to a valid passing ReleaseProof plus sealed candidate when publication binding or authority is missing. Proof mismatch, unauthorized target, mixed identities, missing artifacts, or unavailable trusted context are failures.
 - 2026-06-21 — Planning decision: demo reliability is implemented as graceful degradation. A fresh live attempt is always shown, while proof and completion rely on validated traces, replays, reports, and digests.
 - 2026-06-21T09:34:39Z — Stack decision: keep `codex/plan-006-demo-stack` based on `codex/plan-005-release-proof` and target any draft PR to `codex/plan-005-release-proof`, not `main`. After PR #27 merges, rebase Plan 006 onto `main`, rerun the full Plan 006 Done-when including slow demo/publication gates, and retarget to `main` only if all evidence passes.
+- 2026-06-21T09:47:08Z — Implementation decision: pre-Gate-4 Plan 006 command rows may run local semantic contract checks, but `demo` remains a blocker-producing preflight until a passing ReleaseProof, release candidate, live evidence, and publish binding exist. This avoids both `SKIP` and false completion.
 
 ### Outcomes & Retrospective
 
 - 2026-06-21T09:34:39Z — Blocked before source implementation. The current branch records stack setup and blockers only; no Plan 006 demo contracts, command rows, publication wrapper, or behavior tests are claimed. Next owners: repo-map custodian reconciles `REPOSITORY.md` with accepted Gate 1 state; Plan 005 owner completes Gate 4 with a sealed ReleaseProof; publication owner binds the real trusted publish primitive/target or records missing authority once proof and candidate exist.
 - 2026-06-21T09:38:07Z — Still blocked after second goal-turn recheck. The next legal implementation step remains unchanged: resolve repo-map source-of-truth conflict, complete Plan 005/Gate 4, then implement Plan 006-owned report/publication contracts and command rows.
 - 2026-06-21T09:40:02Z — Still blocked after third consecutive goal-turn audit. This Plan 006 stack is at an implementation impasse under `AGENTS.md`; resume only after repo-map reconciliation and Plan 005/Gate 4 evidence changes.
+- 2026-06-21T09:47:08Z — Pre-Gate-4 contract layer shipped locally, not complete. `plan-006-tests`, publication contract commands, report replay, presentation timeout, lint, build, file-size, and structured evidence validation pass. `demo` exits 2 with `artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json` because ReleaseProof and publish binding are still missing.

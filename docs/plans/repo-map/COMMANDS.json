@@ -201,20 +201,149 @@
       "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, treats artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json as the immutable harden-v0 candidate producer, generates real per-case v1/v2 release-results through Docker-backed verifier executions, checks the sealed Witness plus all three controls per case, runs the mandatory pytest-subversion probes, and seals ReleaseProof only if the binary gate passes."
     },
     "plan-006-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo",
+        "-q"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until demo source/test paths exist after release proof artifacts."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Runs Plan 006 demo/report contract tests for 13-step validation, demo modes, report replay, publication preflight semantics, idempotency, permission/blocker handling, and redaction."
+    },
+    "integration-publication": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_publication_contracts.py",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Pre-Gate-4 local publication contract check. It validates trusted preflight semantics without invoking or inventing a HUD publish API."
+    },
+    "publication-idempotency": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_publication_contracts.py::test_preflight_records_permission_blocked_with_stable_idempotency",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks Plan 006 idempotency key stability for repeated publication/display attempts."
+    },
+    "publication-permission-denied": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_publication_contracts.py::test_preflight_records_permission_blocked_with_stable_idempotency",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks permission-blocked publication semantics using a local trusted-preflight contract."
+    },
+    "publication-trust-boundary": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_publication_contracts.py::test_preflight_failure_semantics",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks missing trusted context, branch-writable evidence, missing artifacts, mixed identity, and unauthorized target fail closed."
+    },
+    "publication-redaction": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_redaction.py",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks Plan 006 redaction for tokens, Authorization headers, cookies, signed URLs, and secret environment keys."
     },
     "demo": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.demo.cli",
+        "demo-preflight"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until the 13-step demo report and underlying live/prior-run artifacts exist."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Runs the Plan 006 demo preflight. Until Gate 4 and publish binding exist, it records blockers and exits nonzero rather than claiming an Acceptance Demo Run."
+    },
+    "demo-report-replay": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_report_contracts.py::test_report_replay_is_audit_only",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks Demo Report Replay audit-only semantics."
+    },
+    "demo-presentation-timeout": {
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/demo/test_report_contracts.py::test_presentation_mode_requires_bounded_live_attempt_before_fallback",
+        "-q"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Checks Presentation Demo timeout fallback semantics with a bounded live attempt and labeled Prior-Run Witness Replay."
     },
     "plan-007-tests": {
       "status": "not-applicable",

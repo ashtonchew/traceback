@@ -1,0 +1,22 @@
+{
+  "blockers": [
+    {
+      "evidence_refs": [
+        "docs/plans/evidence/005/MANIFEST.json"
+      ],
+      "reason": "Plan 005/Gate 4 is incomplete; no sealed ReleaseProof or real v1/v2 release results exist.",
+      "type": "DEPENDENCY_GATE"
+    },
+    {
+      "evidence_refs": [
+        "docs/plans/repo-map/INTERFACES.md"
+      ],
+      "reason": "No repository-bound publish primitive and authorized target are available for Plan 006.",
+      "type": "PUBLISH_BINDING"
+    }
+  ],
+  "content_digest": "34f42b0cbb5f0553dfaac2c4b43638b8ba0b9ba7e050a596e78a0b96f8e25f08",
+  "observed_behavior": "Demo preflight refuses to claim an Acceptance Demo Run before ReleaseProof and publish binding exist.",
+  "schema_version": 1,
+  "status": "blocked"
+}
