@@ -32,7 +32,7 @@
       "iteration": 1,
       "label": "Release candidate v2",
       "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
-      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
+      "patchRef": "artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
         "Mandatory subversion case blocked: conftest.py",
         "Mandatory subversion case blocked: cwd/import shadowing",
@@ -70,7 +70,7 @@
       "iteration": 2,
       "label": "Release candidate v2",
       "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
-      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
+      "patchRef": "artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
         "Mandatory subversion case blocked: conftest.py",
         "Mandatory subversion case blocked: cwd/import shadowing",
@@ -108,7 +108,7 @@
       "iteration": 3,
       "label": "Release candidate v2",
       "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
-      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
+      "patchRef": "artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
         "Mandatory subversion case blocked: conftest.py",
         "Mandatory subversion case blocked: cwd/import shadowing",
