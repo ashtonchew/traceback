@@ -141,6 +141,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T14:18:00Z — Tightened depth-two run records so completed branch refs must be a subset of scheduled branch refs, preventing a report from claiming completions the scheduler never launched. Focused research tests still pass at 21 tests.
 - 2026-06-21T14:24:00Z — Tightened completed depth-two run records to require measured values instead of allowing a measurement-free completion claim. Focused research tests still pass at 21 tests.
 - 2026-06-21T14:30:00Z — Fetched remote branches and rebased `codex/plan-007-research-stack` onto the updated Plan 005 stack tip `9c9a60f`. Focused research tests, research lint, mapped skips, mapped lint/build, graph, sections, ownership, traceability, file-size, and evidence validation still pass; `--require-complete` still fails only because depth-two execution is blocked.
+- 2026-06-21T14:45:00Z — Fetched after Plan 005 merged to `main` and rebased `codex/plan-007-research-stack` onto `origin/main` merge `1619823`. Re-ran focused research tests, research lint, mapped skips, mapped lint/build, graph, sections, ownership, traceability, file-size, evidence validation, and fail-closed integration preflight; status remains blocked only on independent child re-snapshot and real depth-two BranchRun evidence.
 
 ### Surprises & Discoveries
 
@@ -152,6 +153,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T12:32:00Z — The first WP1 sentence is now partially grounded: a promising child is selected from observable sealed-Witness evidence. The WP1 pass condition is still not met because the selected child has not been re-snapshotted independently under Plan 007.
 - 2026-06-21T13:43:00Z — The integration STOP now has durable Plan 007-owned evidence. The preflight artifact proves the blocked state without turning the mapped `integration-research` skip into a success claim.
 - 2026-06-21T13:57:00Z — Conditional research packet evidence is stronger as a generated artifact, but still not measured. The sealed Witness does not establish process-resident or kernel-level task need, and no comparable flat-restart budget exists before a real depth-two run.
+- 2026-06-21T14:45:00Z — Plan 005 is now merged into `main`, so Plan 007 no longer needs a Plan 005 branch base. The canonical base is `origin/main`; this changes PR topology but does not satisfy WP1/WP2.
 
 ### Decision Log
 
@@ -166,3 +168,4 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T11:19:15Z — Partial implementation only. Local contracts and skips are evidenced in `artifacts/forkproof/research/blocked-research-report.json`; live depth-two execution, flat comparison, Memory/VM integration, transfer, and training remain blocked or not measured until real sealed Plan 003 artifacts exist.
 - 2026-06-21T12:03:00Z — Partial implementation remains. The stack now includes real sealed Plan 003 Witness evidence through Plan 005, but Plan 007 has only contracts and skip/report evidence. Live depth-two execution, flat comparison, Memory/VM integration, transfer, and training remain unproved.
 - 2026-06-21T12:32:00Z — Partial implementation now includes a selected promising child and lineage artifact. Plan 007 still has no completed WP1 re-snapshot, no WP2 BranchRun, and no complete Done-when evidence.
+- 2026-06-21T14:45:00Z — Partial implementation remains on canonical `main` after the Plan 005 merge. The sealed Witness is now available through `main`, but Plan 007 still lacks independent child re-snapshot, depth-two BranchRun, and complete Done-when evidence.
