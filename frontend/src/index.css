@@ -108,10 +108,16 @@
 
 @media (hover: hover) and (pointer: fine) {
   /* Hover keeps the existing outline (so a selected node never loses its accent
-   * border) and tints the surface with the accent wash instead of lifting. */
+   * border) and tints the surface with the green wash instead of lifting. */
   .fp-node-frame:hover {
     background-color: var(--ds-tint-green);
     box-shadow: var(--ds-shadow);
+  }
+
+  /* Snapshot cards are blue — deepen their own blue on hover rather than
+   * swapping to the green wash, so the hover reads as the blue darkening. */
+  .fp-node-frame.fp-snapshot-card:hover {
+    background-color: color-mix(in srgb, var(--fp-snapshot-border) 50%, var(--ds-tint-blue));
   }
 }
 
