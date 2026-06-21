@@ -5,8 +5,10 @@ import pytest
 from forkproof.research.capability import CapabilityGateError, classify_capability_gate
 from forkproof.research.models import (
     ChildCandidate,
+    DepthTwoRunRecord,
     FlatComparisonReport,
     ResearchSkip,
+    ResearchLineage,
     SchedulerConfig,
     TransferTrainingReport,
 )
@@ -126,6 +128,67 @@ def test_promising_child_records_observable_fork_reason_and_alternatives():
     assert record["observable_signal_count"] == 1
     assert "file_change" in str(record["fork_reason"])
     assert record["alternatives_considered"] == ["node-other"]
+
+
+def test_research_lineage_requires_depth_one_child_and_snapshot_refs():
+    lineage = ResearchLineage(
+        root_fork_point_id="fp-001",
+        parent_node_id="fp-001",
+        child_node_id="node-child",
+        child_depth=1,
+        parent_snapshot_ref="modal-image://root",
+        child_snapshot_ref="modal-image://child",
+        source_branch_ref="branch.json",
+        source_witness_ref="witness.json",
+    )
+
+    record = lineage.to_record()
+    assert record["child_depth"] == 1
+    assert record["source_witness_ref"] == "witness.json"
+
+    with pytest.raises(ValueError):
+        ResearchLineage(
+            root_fork_point_id="fp-001",
+            parent_node_id="fp-001",
+            child_node_id="node-too-deep",
+            child_depth=2,
+            parent_snapshot_ref="modal-image://root",
+            child_snapshot_ref="modal-image://child",
+            source_branch_ref="branch.json",
+        )
+
+
+def test_depth_two_run_record_distinguishes_blocked_from_completed_runs():
+    blocked = DepthTwoRunRecord(
+        run_id="research-run-001",
+        child_node_id="node-child",
+        status="blocked",
+        branch_budget=8,
+        blocker="no mapped live executor",
+    ).to_record()
+
+    assert blocked["status"] == "blocked"
+    assert blocked["completed_branch_refs"] == []
+    assert blocked["content_digest"]
+
+    completed = DepthTwoRunRecord(
+        run_id="research-run-002",
+        child_node_id="node-child",
+        status="completed",
+        branch_budget=8,
+        scheduled_branch_refs=("branch-00.json",),
+        completed_branch_refs=("branch-00.json",),
+        measured_values={"completed_depth_two_branch_count": 1},
+    ).to_record()
+    assert completed["measured_values"]["completed_depth_two_branch_count"] == 1
+
+    with pytest.raises(ValueError):
+        DepthTwoRunRecord(
+            run_id="research-run-003",
+            child_node_id="node-child",
+            status="completed",
+            branch_budget=8,
+        )
 
 
 def test_capability_gate_returns_exact_unavailable_outcome_without_scaffold_refs():

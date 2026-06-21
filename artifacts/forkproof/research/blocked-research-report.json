@@ -37,6 +37,15 @@
         "tests/forkproof/research/test_research_contracts.py"
       ],
       "observed": "Memory/VM gates return exactly unavailable, available-unneeded, or available-needed. Memory available-needed requires durable filesystem-class conversion evidence."
+    },
+    {
+      "name": "lineage and depth-two run records",
+      "refs": [
+        "src/forkproof/research/models.py",
+        "tests/forkproof/research/test_research_contracts.py",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+      ],
+      "observed": "Plan 007 now records a selected promising child from the sealed Witness with explicit root-to-child lineage and a blocked depth-two run record. The artifact does not claim child re-snapshot or completed depth-two BranchRun evidence."
     }
   ],
   "skips": [
@@ -47,6 +56,7 @@
       "evidence_refs": [
         "docs/plans/evidence/003/MANIFEST.json",
         "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
         "docs/plans/repo-map/COMMANDS.json"
       ]
     },
@@ -86,7 +96,7 @@
     }
   ],
   "unresolved_risks": [
-    "The Plan 007 branch is stacked on Plan 005 and contains sealed Witness evidence, but no real Plan 007 depth-two re-snapshot or depth-two BranchRun evidence has been produced.",
+    "The Plan 007 branch is stacked on Plan 005 and contains sealed Witness evidence plus a Plan 007 child-selection artifact, but no real Plan 007 depth-two re-snapshot or depth-two BranchRun evidence has been produced.",
     "Plan 007 mapped commands remain not-applicable in docs/plans/repo-map/COMMANDS.json, which Plan 007 does not own.",
     "hud-environment-builder and modal skill files were not present at the advertised local skill cache paths in this environment."
   ],

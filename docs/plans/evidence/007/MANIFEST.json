@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T12:03:00Z",
+  "updated_at": "2026-06-21T12:40:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -196,7 +196,7 @@
         "-q"
       ],
       "exit_code": 0,
-      "observed": "11 passed in 0.02s after restacking onto Plan 005."
+      "observed": "11 passed in 0.02s after restacking onto Plan 005. Superseded by later 13-test run after lineage/depth-two run record coverage was added."
     },
     {
       "argv": [
@@ -320,6 +320,103 @@
       ],
       "exit_code": 1,
       "observed": "Expected blocked result after restack: manifest is not complete and includes blockers/STOP commands because no Plan 007 depth-two BranchRun has been produced."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/research",
+        "-q"
+      ],
+      "exit_code": 0,
+      "observed": "13 passed in 0.02s after adding Plan 007 lineage and depth-two run record contracts."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "check",
+        "src/forkproof/research",
+        "tests/forkproof/research"
+      ],
+      "exit_code": 0,
+      "observed": "All checks passed after adding Plan 007 lineage and depth-two run record contracts."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "007"
+      ],
+      "exit_code": 0,
+      "observed": "WARN: docs/plans/evidence/007/MANIFEST.json: 534 lines > 500 target; PASS: 13 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "007"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 1 evidence manifest(s) are present/structured."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "lint"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "build"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
+    },
+    {
+      "argv": [
+        "scripts/verify_external_deps.sh"
+      ],
+      "exit_code": 0,
+      "observed": "External dependency check passed."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "plan-007-tests"
+      ],
+      "exit_code": 0,
+      "observed": "SKIP: plan-007-tests remains not-applicable in COMMANDS.json after child-selection artifact work."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "integration-research"
+      ],
+      "exit_code": 0,
+      "observed": "SKIP: integration-research remains not-applicable in COMMANDS.json after child-selection artifact work."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "007",
+        "--require-complete"
+      ],
+      "exit_code": 1,
+      "observed": "Expected blocked result: manifest is not complete, contains blockers/STOP commands, and has Depth-two execution blocked because no completed depth-two BranchRun artifact exists."
     }
   ],
   "checks": [
@@ -347,6 +444,16 @@
       "name": "Capability gates",
       "status": "pass",
       "evidence": "src/forkproof/research/capability.py returns exactly unavailable, available-unneeded, or available-needed; Memory available-needed requires durable conversion evidence."
+    },
+    {
+      "name": "Child selection and lineage artifact",
+      "status": "pass",
+      "evidence": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json selects sealed Witness branch run-20260621T075711-branch-08 as a promising child using observable file_change, cluster_precursor, and grader_visible_state signals. It records root-to-child lineage and explicitly blocks the depth-two run because no child re-snapshot or completed depth-two BranchRun exists."
+    },
+    {
+      "name": "Depth-two execution",
+      "status": "blocked",
+      "evidence": "No Plan 007 live depth-two executor is mapped and no completed depth-two BranchRun artifact exists. The Plan 007-owned child-selection artifact is not a depth-two run."
     }
   ],
   "artifacts": [
@@ -361,6 +468,10 @@
     {
       "ref": "tests/forkproof/research/**",
       "description": "Plan 007 behavior tests."
+    },
+    {
+      "ref": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
+      "description": "Plan 007 child-selection and lineage artifact derived from the sealed Plan 003 Witness on the Plan 005 stack; explicitly blocked before depth-two execution."
     }
   ],
   "screenshots": [],
@@ -403,6 +514,7 @@
       "evidence_refs": [
         "docs/plans/evidence/003/MANIFEST.json",
         "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
         "docs/plans/repo-map/COMMANDS.json"
       ],
       "recorded_at": "2026-06-21T12:03:00Z"

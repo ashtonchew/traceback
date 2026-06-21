@@ -9,6 +9,7 @@ from forkproof.witnesses.models import digest_json, utc_now
 
 
 CapabilityOutcome = Literal["unavailable", "available-unneeded", "available-needed"]
+DepthTwoRunStatus = Literal["blocked", "completed"]
 MeasurementStatus = Literal["measured", "not-measured"]
 
 
@@ -143,6 +144,93 @@ class StopEvent:
             "decision_refs": list(self.decision_refs),
             "recorded_at": self.recorded_at,
         }
+
+
+@dataclass(frozen=True)
+class ResearchLineage:
+    """Lineage from the root ForkPoint to a selected depth-one child."""
+
+    root_fork_point_id: str
+    parent_node_id: str
+    child_node_id: str
+    child_depth: int
+    parent_snapshot_ref: str
+    child_snapshot_ref: str
+    source_branch_ref: str
+    source_witness_ref: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.child_depth != 1:
+            raise ValueError("Plan 007 child lineage must start from a completed depth-one child")
+        required = {
+            "root_fork_point_id": self.root_fork_point_id,
+            "parent_node_id": self.parent_node_id,
+            "child_node_id": self.child_node_id,
+            "parent_snapshot_ref": self.parent_snapshot_ref,
+            "child_snapshot_ref": self.child_snapshot_ref,
+            "source_branch_ref": self.source_branch_ref,
+        }
+        missing = [key for key, value in required.items() if not value]
+        if missing:
+            raise ValueError(f"research lineage missing {missing}")
+
+    def to_record(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "root_fork_point_id": self.root_fork_point_id,
+            "parent_node_id": self.parent_node_id,
+            "child_node_id": self.child_node_id,
+            "child_depth": self.child_depth,
+            "parent_snapshot_ref": self.parent_snapshot_ref,
+            "child_snapshot_ref": self.child_snapshot_ref,
+            "source_branch_ref": self.source_branch_ref,
+            "source_witness_ref": self.source_witness_ref,
+        }
+
+
+@dataclass(frozen=True)
+class DepthTwoRunRecord:
+    """Plan 007 depth-two execution summary."""
+
+    run_id: str
+    child_node_id: str
+    status: DepthTwoRunStatus
+    branch_budget: int
+    scheduled_branch_refs: tuple[str, ...] = ()
+    completed_branch_refs: tuple[str, ...] = ()
+    stop_event_ref: str | None = None
+    blocker: str | None = None
+    measured_values: dict[str, Any] | None = None
+    recorded_at: str = field(default_factory=utc_now)
+
+    def __post_init__(self) -> None:
+        if not self.run_id or not self.child_node_id:
+            raise ValueError("depth-two run requires run_id and child_node_id")
+        if not 1 <= self.branch_budget <= 8:
+            raise ValueError("Plan 007 depth-two branch budget must be between 1 and 8")
+        if len(self.scheduled_branch_refs) > self.branch_budget:
+            raise ValueError("scheduled branch refs exceed branch budget")
+        if self.status == "completed" and not self.completed_branch_refs:
+            raise ValueError("completed depth-two run requires completed branch refs")
+        if self.status == "blocked" and not self.blocker:
+            raise ValueError("blocked depth-two run requires blocker text")
+
+    def to_record(self) -> dict[str, Any]:
+        record = {
+            "schema_version": 1,
+            "run_id": self.run_id,
+            "child_node_id": self.child_node_id,
+            "status": self.status,
+            "branch_budget": self.branch_budget,
+            "scheduled_branch_refs": list(self.scheduled_branch_refs),
+            "completed_branch_refs": list(self.completed_branch_refs),
+            "stop_event_ref": self.stop_event_ref,
+            "blocker": self.blocker,
+            "measured_values": self.measured_values,
+            "recorded_at": self.recorded_at,
+        }
+        record["content_digest"] = digest_json(record)
+        return record
 
 
 @dataclass(frozen=True)
