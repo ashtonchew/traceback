@@ -157,20 +157,55 @@
       "reason": "Materializes pinned task digests, verifies three sealed controls, runs nine HUD Docker baselines, and confirms the corrupt-control negative check."
     },
     "plan-005-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/releases",
+        "-q"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until release source/test paths exist after prior waves."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Rescue exception 2026-06-21: runs Plan 005 release contract tests for ProofSet membership, release gate decisions, artifact immutability, and harden-v0 config inspection."
     },
     "integration-release": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.releases.cli",
+        "integration",
+        "--controls-manifest",
+        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
+        "--taskset-or-suite-ref",
+        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
+        "--selection-query-ref",
+        "docs/plans/evidence/003/artifacts/sealed",
+        "--harden-task-source",
+        ".external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/gemini-3.1-pro/original_task",
+        "--harden-task-id",
+        "mongodb-sales-aggregation-engine",
+        "--harden-max-iterations",
+        "1",
+        "--harden-hacker-model",
+        "anthropic/claude-haiku-4-5",
+        "--harden-fixer-model",
+        "anthropic/claude-haiku-4-5",
+        "--harden-solver-model",
+        "anthropic/claude-haiku-4-5"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because harden-v0 is fetched and executable, but there is no v1/v2 grader, ProofSet runner, adapter, or publication target."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 1800,
+      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, runs the upstream harden-v0 adapter over an explicit task source using the available Anthropic credential path rather than Gemini/Google defaults, and fails closed until real per-case v1/v2 release results can seal a ReleaseProof."
     },
     "plan-006-tests": {
       "status": "not-applicable",

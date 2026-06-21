@@ -4,8 +4,8 @@
     "status": "ready"
   },
   "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
-  "branch_run_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json",
-  "checked_at": "2026-06-21T06:16:20Z",
+  "branch_run_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T075711/branch-run-batch.json",
+  "checked_at": "2026-06-21T08:03:59Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "hud_qa_binding_ref": "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
   "hud_qa_classification_ref": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json",

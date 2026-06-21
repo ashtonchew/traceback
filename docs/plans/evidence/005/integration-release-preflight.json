@@ -1,0 +1,149 @@
+{
+  "blockers": [
+    "release evaluation blocked; wrote /Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
+  ],
+  "control_count": 3,
+  "controls_manifest": "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
+  "harden_schema": {
+    "config_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/.external/harden-v0/harden/config.py",
+    "harden_config_fields": {
+      "fixer_max_turns": "int | None",
+      "fixer_model": "str",
+      "fixer_prompt_after_iter": "int",
+      "fixer_prompt_file": "Path | None",
+      "fixer_timeout_multiplier": "float",
+      "force_build": "bool",
+      "hack_threshold": "float",
+      "hacker_feedback": "bool",
+      "hacker_max_turns": "int | None",
+      "hacker_model": "str",
+      "hacker_privileged": "bool",
+      "hacker_privileged_disable_iteration": "int",
+      "hacker_privileged_enable_iteration": "int | None",
+      "hacker_retries": "int",
+      "hacker_timeout_multiplier": "float",
+      "harbor_config": "Path | None",
+      "image_name": "str | None",
+      "journal_compact_max_iters": "int",
+      "journal_enabled": "bool",
+      "kernelbench_mode": "bool",
+      "legitimate_marker": "bool",
+      "legitimate_threshold": "int",
+      "max_iterations": "int",
+      "max_tokens": "int | None",
+      "oracle": "bool",
+      "output_dir": "Path",
+      "pool_bootstrap_dir": "Path | None",
+      "pool_enabled": "bool",
+      "pool_integrate_bootstrap": "bool",
+      "pool_max_consecutive_syncs": "int",
+      "pool_port": "int",
+      "reasoning_effort": "str | None",
+      "replay_enabled": "bool",
+      "replay_retries": "int",
+      "resume": "bool",
+      "retry_failed_prechecks": "bool",
+      "solver_max_turns": "int | None",
+      "solver_model": "str",
+      "solver_precheck_retries": "int",
+      "solver_privileged": "bool",
+      "solver_threshold": "float",
+      "solver_timeout_multiplier": "float",
+      "summary_model": "str | None",
+      "task_id": "str",
+      "tasks_dir": "Path",
+      "temperature": "float | None"
+    },
+    "iteration_bounds": {
+      "hacker_retries": 3,
+      "legitimate_threshold": 3,
+      "max_iterations": 10,
+      "replay_enabled": false,
+      "replay_retries": 1
+    },
+    "result_json_schema": {
+      "docs_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/.external/harden-v0/CLAUDE.md",
+      "documented_fields": [
+        "fix_applied",
+        "hack_reward",
+        "hardened_dir",
+        "iteration",
+        "iterations",
+        "kernelbench_mode",
+        "oracle",
+        "outcome",
+        "pool_advanced",
+        "pool_enabled",
+        "pool_own_commit",
+        "pool_sha_start",
+        "replay_attempted",
+        "replay_reward",
+        "status",
+        "task_id"
+      ],
+      "implementation_fields": [
+        "iterations",
+        "kernelbench_mode",
+        "oracle",
+        "pool_enabled",
+        "precheck_stats",
+        "status",
+        "task_id",
+        "totals"
+      ],
+      "loop_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/.external/harden-v0/harden/loop.py",
+      "output_paths": [
+        "<output_dir>/<task_id>/jobs/",
+        "<output_dir>/<task_id>/result.json",
+        "<output_dir>/<task_id>/task_config.json",
+        "<output_dir>/batch_config.json",
+        "<output_dir>/batch_summary.json",
+        "<output_dir>/hardened/<task_id>/",
+        "<output_dir>/pool.git",
+        "<output_dir>/pool.git/"
+      ],
+      "schema_version": 1,
+      "status_values": [
+        "interrupted",
+        "max_iterations",
+        "robust",
+        "solver_failed_precheck",
+        "unknown"
+      ]
+    },
+    "schema_version": 1
+  },
+  "observed_behavior": "Plan 005 integration binds harden-v0 schema, closes ProofSet membership, then seals ReleaseProof only from real per-case v1/v2 evaluator results.",
+  "proofset": {
+    "content_digest": "16148315484ca3a0e89d4707a2094a83b2b651c36d851332aa582b4c9b99df8e",
+    "created_at": "2026-06-21T09:09:50Z",
+    "environment_v1": "57cb7f09-89c1-487b-8463-b525edf01153",
+    "evaluator_profiles": [
+      "pytest"
+    ],
+    "exploit_family_variant_ids": [],
+    "exploit_witness_ids": [
+      "wit-run-20260621T075711-branch-08"
+    ],
+    "grader_v1_digest": "ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f",
+    "legitimate_control_ids": [
+      "mongodb-sales-aggregation-engine-path-a",
+      "mongodb-sales-aggregation-engine-path-b",
+      "mongodb-sales-aggregation-engine-path-c"
+    ],
+    "proof_set_id": "proofset-e497370b2c3d2a69",
+    "schema_version": 1,
+    "selection_query_ref": "docs/plans/evidence/003/artifacts/sealed",
+    "taskset_or_suite_ref": "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json"
+  },
+  "release_evaluation": {
+    "error_class": "release_results_missing",
+    "observed_behavior": "release evaluation blocked; wrote /Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
+    "status": "blocked"
+  },
+  "schema_version": 1,
+  "sealed_witness_count": 1,
+  "selection_query_ref": "docs/plans/evidence/003/artifacts/sealed",
+  "status": "blocked",
+  "taskset_or_suite_ref": "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json"
+}

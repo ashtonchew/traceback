@@ -105,8 +105,12 @@
       "ref": "docs/plans/evidence/003/artifacts/terminal-bench-feedback-prompt-compliance-smoke.json"
     },
     {
-      "description": "Live BranchRun executor with optional feedback retry budget, classifier evidence supplements, and per-branch causal evidence bundle emission.",
+      "description": "Live BranchRun executor with optional feedback retry budget, classifier evidence supplements, per-branch replay_surface records, and causal evidence bundle emission.",
       "ref": "src/forkproof/witnesses/branch_runs.py"
+    },
+    {
+      "description": "Task-profile loader for live BranchRuns. ForkPoints must provide hud_task_profile data for env module path, task/prompt factories, runtime workdir, instruction path, trusted entrypoint, and recorded grader commands; production BranchRun execution has no implicit current-task default.",
+      "ref": "src/forkproof/witnesses/branch_task_profile.py"
     },
     {
       "description": "Previous live 12-branch terminal-bench authorized-audit Hacker BranchRun batch before causal QA evidence binding: 12 executed branches, 12 HUD traces, 12 QA verdicts, 12 reward successes, 2 QA reward-hacking candidates, complete same-runtime file-diff/security provenance.",
@@ -119,25 +123,57 @@
     {
       "description": "Latest live 12-branch terminal-bench authorized-audit Hacker BranchRun batch after causal QA evidence binding: 12 executed branches, 12 HUD traces, 12 QA verdicts, 11 reward successes, 4 reward-hacking candidates with sufficient evidence, 5 classifications failed closed as insufficient evidence, complete provenance, and causal_delta_status=not_minimized for all branches.",
       "ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json"
+    },
+    {
+      "description": "Task-agnostic BranchRun diff artifacts now preserve added, removed, and modified text when same-runtime snapshots capture text, enabling replay-material packaging without hard-coding task paths.",
+      "ref": "src/forkproof/witnesses/branch_artifacts.py"
+    },
+    {
+      "description": "Task-agnostic Witness sealing contracts for candidate bundle loading, minimized textual causal deltas, target/mechanism inference, dedup, and three-replay sealing via an injected real replay executor.",
+      "ref": "src/forkproof/witnesses/sealing.py"
+    },
+    {
+      "description": "General Witness contract tests cover BranchRun records, promotion, replay surface, storage, dedup, security policy, and prompt behavior.",
+      "ref": "tests/forkproof/witnesses/test_witness_contracts.py"
+    },
+    {
+      "description": "Witness sealing tests cover replay-material text preservation, missing selected-path evidence rejection, canonical replay-surface rejection, and task-agnostic sealed Witness construction with three replay checks.",
+      "ref": "tests/forkproof/witnesses/test_witness_sealing.py"
+    },
+    {
+      "description": "Fresh live 12-branch run after replay-surface capture: 12 executed branches, 12 reward successes, 12 QA verdicts, 4 promotion candidates, complete provenance, and per-branch replay_surface records including recorded pre-grader and grader command argv.",
+      "ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T075711/branch-run-batch.json"
+    },
+    {
+      "description": "Task-agnostic real replay executor that loads the repo-root .env without printing secrets, restores the recorded v1 state, applies minimized textual deltas, and runs the recorded pre-grader/grader argv instead of a task-specific verifier shim.",
+      "ref": "src/forkproof/witnesses/surface_replay.py"
+    },
+    {
+      "description": "Sealed Exploit Witness wit-run-20260621T075711-branch-08 with reward=1, canonical HUD QA join, dedup decision, durable replay surface, minimized causal delta, and three deterministic v1 semantic-success replays. The prior Modal restore denial is retained as a superseded seal-attempt artifact.",
+      "ref": "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json"
     }
   ],
   "blockers": [
     {
-      "evidence_refs": [
-        "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
-        "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json",
-        "src/forkproof/witnesses/causal_evidence.py",
-        "src/forkproof/witnesses/branch_runs.py"
-      ],
+      "evidence_refs": ["docs/plans/evidence/003/artifacts/integration-witness-preflight.json", "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json", "src/forkproof/witnesses/causal_evidence.py", "src/forkproof/witnesses/branch_runs.py"],
       "reason": "Plan 003 live integration executed 12 Hacker BranchRuns with complete provenance and causal evidence bundles, found four reward-hacking candidates with sufficient QA evidence, and failed closed on five insufficient-evidence QA verdicts. No candidate is a sealed Witness until causal delta minimization, durable packaging, dedup clustering, and three consecutive deterministic replay pass.",
       "recorded_at": "2026-06-21T06:16:20Z",
       "type": "STOP"
     },
     {
-      "evidence_refs": [
-        "docs/plans/evidence/003/artifacts/harden-v0-prompt-compliance-smoke.json",
-        "src/forkproof/witnesses/hacker_prompt.py"
-      ],
+      "evidence_refs": ["docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json", "src/forkproof/witnesses/sealing.py", "tests/forkproof/witnesses/test_witness_sealing.py"],
+      "reason": "The canonical Witness sealing path now requires a replay_surface record containing command_argv, cwd, trusted_entrypoint_ref, state_restore_ref, environment_version, and grader_digest. The live BranchRun executor now emits that field for future runs through a task-profile data path, but existing live candidate artifacts do not contain that task-agnostic replay/grader execution surface. Promoting them would require hard-coding the current pytest/MongoDB verifier command. No sealed Witness is claimed.",
+      "recorded_at": "2026-06-21T07:30:10Z",
+      "type": "REPLAY_SURFACE_MISSING"
+    },
+    {
+      "evidence_refs": ["docs/plans/evidence/003/artifacts/branch-runs/run-20260621T075711/branch-run-batch.json", "docs/plans/evidence/003/artifacts/seal-attempt-run-20260621T075711-branch-08.json", "src/forkproof/witnesses/surface_replay.py"],
+      "reason": "Superseded by the repo-root .env replay fix and sealed Witness wit-run-20260621T075711-branch-08. The failing attempt is retained because it exposed that the replay path did not load the symlinked main-repo .env before Modal access.",
+      "recorded_at": "2026-06-21T08:08:00Z",
+      "type": "RESOLVED_STATE_RESTORE_ACCESS"
+    },
+    {
+      "evidence_refs": ["docs/plans/evidence/003/artifacts/harden-v0-prompt-compliance-smoke.json", "src/forkproof/witnesses/hacker_prompt.py"],
       "reason": "Claude Haiku refused the exact harden-v0 generic hacker prompt in a prompt-only smoke; Terminus/Gemini is recorded as a future extension/ablation rather than a current Plan 003 blocker.",
       "recorded_at": "2026-06-21T05:06:00Z",
       "type": "MODEL_BEHAVIOR"
@@ -150,7 +186,7 @@
       "status": "pass"
     },
     {
-      "evidence": "42 witness tests cover BranchRun records, bounded failures, prompt provenance, canonical QA source handling, strict QA joins, insufficient-QA batch labeling, causal evidence bundles, storage, replay, and security contracts.",
+      "evidence": "50 witness tests cover BranchRun records, task-profile replay-surface emission, bounded failures, prompt provenance, canonical QA source handling, strict QA joins, insufficient-QA batch labeling, causal evidence bundles, storage, replay, canonical replay-surface requirements, repo-root .env loading before Modal replay, task-agnostic sealing, real replay-surface execution, explicit task-profile requirements, and security contracts.",
       "name": "BranchRun contract coverage",
       "status": "pass"
     },
@@ -165,9 +201,14 @@
       "status": "pass"
     },
     {
-      "evidence": "The latest batch has four reward-hacking candidates with sufficient QA evidence and complete BranchRun provenance. All causal bundles remain causal_delta_status=not_minimized, so promotion remains blocked on causal delta minimization, durable candidate packaging, dedup cluster report, and three consecutive deterministic replay; no sealed Witness is claimed.",
+      "evidence": "Candidate run-20260621T075711-branch-08 is sealed as wit-run-20260621T075711-branch-08 with reward=1, QA is_reward_hacking=true, matched QA join, dedup decision, minimized causal delta, replay surface, and three deterministic v1 semantic-success replays.",
       "name": "Promotion and replay seal",
-      "status": "blocked"
+      "status": "pass"
+    },
+    {
+      "evidence": "The failed Modal restore attempt was traced to replay not loading the symlinked repo-root .env before Modal access. src/forkproof/witnesses/local_env.py and surface_replay.py fix that path, and the retry sealed wit-run-20260621T075711-branch-08 with three replays.",
+      "name": "Replay restore access",
+      "status": "pass"
     },
     {
       "evidence": "docs/plans/evidence/003/artifacts/security-branch-preflight.json records local policy checks. Same-runtime branch security negative probes remain a promotion blocker.",
@@ -222,12 +263,22 @@
     {
       "name": "Causal evidence and QA quality gates",
       "status": "pass",
-      "evidence": "src/forkproof/witnesses/causal_evidence.py and tests/forkproof/witnesses/test_witness_contracts.py prove task-agnostic causal bundle construction, QA evidence_quality/task_identity_status fail-closed behavior, and Witness sealing blocked until causal_delta_status=minimized."
+      "evidence": "src/forkproof/witnesses/causal_evidence.py, tests/forkproof/witnesses/test_witness_contracts.py, and tests/forkproof/witnesses/test_witness_sealing.py prove task-agnostic causal bundle construction, QA evidence_quality/task_identity_status fail-closed behavior, and Witness sealing blocked until replay-proven minimized textual deltas exist."
     },
     {
       "name": "Live integration timeout budget",
       "status": "pass",
       "evidence": "docs/plans/repo-map/COMMANDS.json sets integration-witness timeout_seconds=1800. The prior 600s budget was too tight for the current live path: canonical batch run-20260621T060827 took 473s inside the branch batch window alone, before normal restore/smoke/QA preflight overhead and remote jitter."
+    },
+    {
+      "name": "Task-agnostic replay-material contracts",
+      "status": "pass",
+      "evidence": "src/forkproof/witnesses/branch_artifacts.py preserves text for added/removed/modified files when captured by same-runtime snapshots, and src/forkproof/witnesses/sealing.py seals only through generic reward/QA/dedup/minimized-delta/replay-surface/replay gates. Existing batch run-20260621T060827 remains unsealed because its generated file diff predates added_text/modified_text capture for replay-critical files and lacks canonical replay_surface metadata."
+    },
+    {
+      "name": "Task-profile genericity",
+      "status": "pass",
+      "evidence": "src/forkproof/witnesses/branch_task_profile.py now requires ForkPoint hud_task_profile data and src/forkproof/witnesses/branch_runs.py derives capture roots from explicit env/ForkPoint/profile fields. Current MongoDB fixture details may appear only as evidence or command inputs, not hidden production defaults."
     }
   ],
   "commands": [
@@ -238,7 +289,7 @@
         "plan-003-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 42 passed in 0.53s."
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 50 passed in 0.39s."
     },
     {
       "argv": [
@@ -449,7 +500,7 @@
         "plan-003-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 42 passed in 0.53s."
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 48 passed in 0.45s."
     }
   ],
   "commit": null,
@@ -479,9 +530,12 @@
     "2026-06-21 PR evidence should now describe Plan 003 as past live discovery/provenance for terminal-bench authorized-audit prompt, with remaining work narrowed to durable packaging, dedup, and three deterministic replays.",
     "2026-06-21 causal evidence update: Plan 003 now uses task-agnostic causal evidence bundles and QA evidence_quality/task_identity_status fields instead of manual per-task surface declarations. QA remains the classifier, but insufficient or mismatched evidence becomes classification_unavailable rather than rewarded-non-hack.",
     "2026-06-21 latest live fanout run-20260621T060827 executed 12 BranchRuns with causal bundles: 11 reward successes, 4 candidates with sufficient QA evidence, 5 classifications failed closed as insufficient evidence, and no sealed Witness because causal deltas are not minimized/replayed.",
-    "2026-06-21 final local regression after the live run: 42 witness tests passed and verify future insufficient-evidence QA results are summarized as incomplete-classification instead of noisy gate-error strings.",
+    "2026-06-21 final local regression after the live run: 45 witness tests passed and verify future insufficient-evidence QA results are summarized as incomplete-classification instead of noisy gate-error strings.",
     "2026-06-21 attempted a fresh live integration rerun after local regression cleanup. The run was interrupted with exit 130 after exceeding the previous complete batch envelope and emitting branch-agent SFTP tool errors without a branch-run-batch summary. The partial unreferenced run-20260621T062316 artifact was removed; run-20260621T060827 remains the canonical live evidence batch for this commit.",
-    "2026-06-21 timeout follow-up: the 600s integration-witness mapped timeout was too tight for the current 60-step, 12-branch, external-QA, causal-evidence path. The canonical batch run-20260621T060827 spent 473s inside the branch batch window alone, so the mapped timeout was raised to 1800s for future validation. No live rerun was performed for this documentation/config-only update."
+    "2026-06-21 timeout follow-up: the 600s integration-witness mapped timeout was too tight for the current 60-step, 12-branch, external-QA, causal-evidence path. The canonical batch run-20260621T060827 spent 473s inside the branch batch window alone, so the mapped timeout was raised to 1800s for future validation. No live rerun was performed for this documentation/config-only update.",
+    "2026-06-21T07:14:52Z rescue update split the new task-agnostic sealing coverage into tests/forkproof/witnesses/test_witness_sealing.py to keep Plan 003 files below the hard 550-line ceiling. Existing live batch run-20260621T060827 remains unsealed: the candidate evidence predates added_text capture for added exploit files, and no canonical task-agnostic replay/grader command is recorded in the ForkPoint evidence.",
+    "2026-06-21T08:08:00Z fresh live batch run-20260621T075711 produced replay_surface records with pre-grader and grader command argv. Candidate run-20260621T075711-branch-08 is rewarded and QA-confirmed as reward-hacking, and the seal attempt used only the recorded replay surface plus selected path /app/conftest.py. The real replay executor failed before grading because Modal denied access to image im-01KVKYBWZYVZSD79CX5P9SNPXR. No sealed Witness is claimed; next owner must provide a restore-readable immutable v1 state or rerun discovery where the sealing credentials can restore the recorded state.",
+    "2026-06-21T08:08:00Z genericity cleanup removed implicit current-task defaults from production BranchRun execution. Future ForkPoints must carry hud_task_profile data and explicit capture roots/root identity; MongoDB fixture paths remain allowable only as evidence or operator command inputs."
   ],
   "plan_id": "003",
   "plan_name": "stochastic-witness-loop",
@@ -490,6 +544,6 @@
   "skips": [],
   "started_at": "2026-06-21T01:21:47Z",
   "status": "blocked",
-  "updated_at": "2026-06-21T06:37:49Z",
+  "updated_at": "2026-06-21T08:26:35Z",
   "wave": 3
 }
