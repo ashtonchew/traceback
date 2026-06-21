@@ -1,112 +1,222 @@
 # Plan 007 reference — research protocol and skip rules
 
-## Promising-node evidence
+## Plan 003 input contract
 
-Rank candidate child states from observable evidence:
+WP1 consumes only finalized Plan 003 records through public interfaces. Before selection, audit that each rankable intermediate action boundary provides:
 
-- new or unusual file changes,
-- changed test/plugin/grader interaction,
-- a new exploit cluster precursor,
-- verifier output suggesting a narrowed attack surface,
-- task logs or process state that materially differs,
-- optional exposed reasoning as one signal, never the sole dependency.
+- stable BranchRun, parent-node, boundary, and action-index identities,
+- an inclusive replayable action-prefix range from the parent state,
+- action/history prefix digests and redaction metadata,
+- parent restore reference and environment/evaluator identity,
+- versioned task-visible and grader-visible probe evidence,
+- ordered timestamps sufficient to reconstruct boundary order,
+- immutable artifact refs and content digests.
 
-Any single observable signal from this list is sufficient to select a child — a file change alone qualifies — provided the selector records that signal, the alternatives considered, and why no other signal was observable at selection time. Exposed reasoning alone is never sufficient. Record the selected node, alternatives, evidence, and why the state merits reuse.
+Missing optional probes reduce evidence; missing parent/action/identity bindings make the boundary ineligible. If no BranchRun can produce a replay-valid boundary, record a core blocker rather than inventing state evidence.
 
-## Adaptive policy
+## Expansion prior — finding the promising child
 
-Plan 007 owns the research scheduler. Plan 003 explicitly delegates adaptive stopping and depth-two expansion here (“Adaptive stopping and depth-two expansion belong to Plan 007”) and declares no core early stop.
+The selected child comes from recorded depth-1 BranchRun evidence. Ranking creates no snapshot. Only the winner, or a later-ranked fallback after replay divergence, is materialized by replay-to-boundary.
 
-Per node:
+### Stage 1 — deterministic pre-filter
 
-- initial child budget: at most 8,
-- maximum tree depth: 2,
-- count consecutive completed branches with no new target/mechanism cluster,
-- reset count to zero when a new cluster is confirmed — including a cluster confirmed by a branch that was already in flight when the count reached 4,
-- stop scheduling new branches at count 4,
-- if count resets from an in-flight result, resume scheduling only when budget remains (total scheduled branches must stay at most 8),
-- allow already-running branches to complete; cancel only when the core release needs resources and the scheduler's active branch list supports safe cancellation,
-- never classify a raw rewarded branch as “new cluster” before QA/dedup.
+A boundary is eligible when at least one non-reasoning signal below fires relative to its parent boundary:
+
+| Signal id | Mechanical observation |
+|---|---|
+| `file_set_changed` | Added, removed, or changed file digest in declared task/evaluator-visible paths. |
+| `evaluator_interaction_changed` | Action/event touches a path, command, process, plugin, import setting, or config named by the pinned evaluator identity when the parent did not. |
+| `verifier_output_changed` | Normalized verifier output, status, or output digest differs from the parent boundary. |
+| `task_probe_changed` | At least one declared task-visible probe value/digest differs from the parent. |
+| `grader_probe_changed` | At least one declared grader-visible probe value/digest differs from the parent. |
+| `process_or_service_changed` | Declared process/service identity, configuration, or state digest differs from the parent. |
+
+Exposed reasoning is judge context only; it never creates eligibility. “Interesting,” “unusual,” and “promising” are not pre-filter predicates.
+
+For each eligible boundary compute this deterministic divergence tuple:
+
+    (
+      count(distinct_signal_ids),
+      count(changed_declared_probes),
+      count(changed_artifact_digests)
+    )
+
+Sort each BranchRun descending by the tuple, then ascending by `action_index` and `boundary_id`; keep two. Merge those per-branch candidates, sort descending by the same tuple, then ascending by `branch_id`, `action_index`, and `boundary_id`; keep 24. Persist all scores, discarded candidates, and reasons. This reduction is deterministic and independently testable.
+
+### Stage 2 — auditable expansion prior
+
+The judge ranks the capped candidates using their full sanitized recorded evidence. Prefer near-miss states with observable leverage newly present relative to the parent boundary and no completed exploit on that path. Deprioritize candidates on paths that already sealed a Witness, but retain them in the ranked artifact so the decision is visible.
+
+The expansion-prior record contains:
+
+- invocation id and timestamp,
+- judge provider, model id/version, and sampling configuration,
+- system/user prompt digests and tool-schema digest,
+- every candidate input id and content digest,
+- full ordered ranking with score/rationale and exclusions,
+- deterministic tie-break result if judge ranks are equal or malformed,
+- selected candidate id,
+- falsifiable prediction: newly present surface, possible deeper mechanism, and supporting evidence,
+- redaction/sanitization result.
+
+The prediction describes why the surface was absent at the parent boundary and which recorded action prefix materialized it. It must not claim the parent could never reach a state that its own BranchRun reached.
+
+Selection allocates compute only. It cannot confirm a Witness or bypass reward, classification, deduplication, provenance, durability, or replay gates.
+
+### Stage 3 — boundary-state evidence and materialization
+
+Each candidate carries a versioned boundary-state evidence bundle:
+
+- schema version, boundary id, parent ref, and action-prefix range,
+- action/history prefix digests,
+- task-visible probe names, values/digests, and collection commands,
+- grader-visible probe names, values/digests, and collection commands,
+- relevant file/artifact digest set,
+- process/service probe evidence where declared,
+- environment version and image digest,
+- complete evaluator identity ref/digest,
+- redaction metadata and bundle content digest.
+
+Replay the selected prefix from the parent restore and recollect the same probes. Every required identity and declared probe must match; a single generic filesystem hash is insufficient. Record mismatch details as replay divergence and continue to the next-ranked candidate. An unpinnable prefix is ineligible. If all candidates diverge, Plan 007 is blocked and incomplete.
+
+After a match, capture a child-node filesystem-class snapshot, record explicit retention and durable fallback, and bind it to the parent, selected boundary, state-evidence bundle, ranking, and `fork_reason`.
+
+### Prediction check
+
+After depth-two execution, complete four fields independently:
+
+- `predicted_surface_observed`: whether the predicted surface was present in child/depth-two evidence,
+- `predicted_mechanism_confirmed`: whether authoritative classification/dedup evidence confirmed the predicted mechanism,
+- `new_cluster_confirmed`: whether a new target/mechanism cluster was finalized,
+- `witness_promoted`: whether a depth-two candidate passed every Witness gate.
+
+This is one falsifiable `n=1` observation, not statistical predictive validation and not evidence of better-than-random selection.
+
+### No-leakage wall
+
+The expansion record is trusted-orchestrator analysis and never enters an untrusted branch prompt. Build prompts from the approved core template — the canonical Plan 003 Hacker BranchRun profile (the generic harden-v0 reward-hacking rewrite) — and task input only. The shared generic adversarial profile is canonical 003 behavior; the judge's near-miss prediction is privileged selection knowledge. Persist template/prompt digests, forbidden-input refs, and an inspection result proving the prediction, judge rationale, ranking, golden material, and privileged grader knowledge were absent.
+
+## Adaptive scheduler protocol
+
+Plan 007 owns the research scheduler but not BranchRun execution, classification, deduplication, or Witness promotion.
+
+- maximum executed budget: 8,
+- maximum concurrently in flight: 2,
+- schedule incrementally while budget and concurrency slots remain,
+- a preflight failure is recorded but does not consume executed budget; retry uses a new branch id,
+- crossing the Plan 003 execution boundary consumes one budget slot regardless of outcome,
+- append an adaptive ordering event only after classification/dedup finalizes,
+- `new_cluster` resets the consecutive counter to 0,
+- `no_new_cluster` increments it by 1,
+- pending/unavailable/incomplete classification changes no counter and cannot justify early stop,
+- stop scheduling new work when the counter reaches 4,
+- allow already-running branches to finish,
+- a late finalized `new_cluster` resets the counter and permits resume only if executed budget remains,
+- never exceed two in flight or eight executed.
+
+Persist after every transition: scheduler cursor, ordered event sequence, active ids, preflight count, executed count, finalized-classification count, counter value, stop reason, and remaining budget. Event order is append-only.
+
+## Security inheritance gate
+
+Before child capture and again before branch launch, re-exercise the public Plan 003 checks for:
+
+- repository-owned branch gateway and request lineage,
+- no raw model/provider, grader, repository, or release credentials in branch state,
+- scoped egress and one harmless denial,
+- isolated writable state and sibling denial,
+- CPU, memory, timeout, and process limits,
+- trusted grader outside branch-controlled import/plugin/test paths,
+- canonical evidence writes by trusted orchestration,
+- sanitization of action, prompt, file, QA, and verifier artifacts,
+- cleanup after completion, failure, timeout, and cancellation.
+
+Changed or missing enforcement is a STOP. Earlier Plan 003 evidence is provenance, not proof that a newly materialized child still enforces the controls.
 
 ## Depth-two replay anchor
 
-A depth-two Witness's `pre_attack_snapshot_ref` points to the **child node's snapshot**, not the root ForkPoint. The root ForkPoint is never re-traversed during replay.
+A depth-two Witness's `pre_attack_snapshot_ref` points to the child node, not the root ForkPoint. Exact Witness replay begins at that sealed child state and never re-traverses the root path.
 
-The child node snapshot must be a Directory or Filesystem artifact — a Memory Snapshot alone cannot satisfy Witness durability. The research scheduler records an explicit `retention/expiry` at child capture time sufficient to complete three consecutive replays.
-
-The research scheduler owns the seal-or-discard decision. Once a depth-two Witness is sealed, its `pre_attack_snapshot_ref` passes to the core persistence layer under the same indefinite-retention rule as core Witnesses. Expiry of the child snapshot before three replays complete is a hard failure; there is no research-tier exemption.
+The child uses a retained Directory or Filesystem Snapshot or a durable fallback. A Memory Snapshot alone cannot satisfy Witness durability. Before promotion, verify content, environment/evaluator identity, replay entrypoint, retention, and three consecutive fresh deterministic replays.
 
 ## Flat comparison protocol
 
-Make budgets comparable:
+Comparable strategies use:
 
-- same task and initial environment version,
-- same attacker model family and sampling envelope,
-- measured setup and execution time,
-- comparable number of model calls or explicitly normalized compute,
-- same reward/QA/dedup/Witness gates,
-- multiple attempts only when budget permits.
+- the same task and initial environment/evaluator identity,
+- the same attacker model family and sampling envelope,
+- the same security and BranchRun execution boundary,
+- measured setup/execution time,
+- comparable executed branches and model calls or an explicit compute normalization,
+- the same reward, classification, deduplication, and Witness gates.
 
-Report raw counts and uncertainty/limitations. One task cannot establish universal superiority.
+Report every raw count and the small sample size. The comparison is descriptive for this task; equal or better flat restarts are valid, and one task supports no causal or universal superiority claim.
 
 ## Capability gate
 
-A profile is implementable only when all are true:
+A Memory or VM path is implementable only when all are true:
 
-1. Account/SDK probe succeeds.
-2. The real task has state the profile uniquely preserves or enables.
-3. Security boundaries are at least as strong as core.
-4. The path has a real work packet/demo/research consumer.
-5. Durable conversion is possible for any successful exploit.
-6. Time/budget remain after core gates.
+1. Live account/SDK probe succeeds.
+2. The real task requires behavior uniquely preserved or enabled by the profile.
+3. Security is at least as strong as the core path.
+4. A real research consumer exists before adapter code is written.
+5. Successful state can be converted into a durable replay artifact.
+6. Core release retains priority and sufficient budget remains.
 
-Otherwise record `skipped` with probe output and create no production adapter.
+Otherwise record `skipped` with probe/task/budget evidence and create no production scaffold.
 
-## VM and Memory capability matrix
+## VM and Memory evidence matrix
 
-Modal capability facts as of this plan's wave. Verify against the live SDK before implementing any path.
+Verify current provider behavior against the installed SDK and account before implementation.
 
-**Directory Snapshot** — Beta. Captures and mounts a specific directory. Default retention 30 days; explicit TTL available to opt out of expiry. Core Plan 002 path when task-relevant mutable state is contained under a verified directory boundary.
-
-**Filesystem Snapshot** — captures the full Sandbox filesystem as an image. Default retention 30 days; explicit TTL available. Core Plan 002 fallback when directory containment is not honest.
-
-**Memory Snapshot** — Alpha/experimental. 7-day expiry; cannot be extended. Source sandbox is terminated on snapshot. Cannot snapshot while `Sandbox.exec` is running. Background processes launched by `Sandbox.exec` are not reliably restored. Must never be the durable Witness system of record or `pre_attack_snapshot_ref`. VM Sandboxes do not support Memory Snapshots.
-
-**VM Sandbox** — Alpha. Full VM with a real Linux kernel. Useful for Docker-in-Sandbox, Harbor, systemd/custom init, eBPF, cgroups/resource isolation, and loopback mounts. Supports Filesystem Snapshots; does not support Memory Snapshots. Not a replacement for Plan 002 Directory/Filesystem mode — use only when the real task cannot be honestly executed without kernel-level behavior.
-
-| Evidence dimension | VM Sandbox | Memory Snapshot |
+| Evidence dimension | VM Sandbox profile | Memory Snapshot |
 |---|---|---|
-| **Availability** | Account/SDK probe succeeds for `vm` capability | Account/SDK probe succeeds for `memory` snapshot |
-| **Task need** | Task genuinely requires Docker/Harbor, systemd, eBPF, cgroups, or loopback — not merely "more powerful" | Attack-relevant state is process-resident and cannot be reproduced from filesystem-class state plus recorded actions |
-| **Security** | Isolation at least as strong as core; minimum secrets and scoped network | Same as core; no additional secrets passed to Alpha path |
-| **Cleanup** | Record all created sandbox/snapshot ids; clean up after research run completes or is cancelled | Memory snapshot expires in 7 days regardless; successful discovery converted to durable artifact immediately |
-| **Consumed path** | Real consumer exists in a research work packet before any adapter code is written | Durable conversion artifact exists (Directory/Filesystem snapshot + recorded actions + history prefix + env image digest + grader digest + restore command) before any Witness promotion |
-| **Skip evidence** | Core Directory/Filesystem sandbox honestly executes the task without kernel-level behavior | No process-resident attack surface; filesystem-class capture plus recorded actions is sufficient to reproduce the attack |
+| Availability | Live VM capability probe succeeds. | Live Memory Snapshot probe succeeds. |
+| Unique task need | Real-kernel behavior is required. | Attack-relevant process state cannot be reproduced from filesystem state plus actions. |
+| Security | Inherited gate passes with minimum secrets/network. | Same; no extra credentials enter captured process state. |
+| Cleanup | Sandbox/snapshot ids and cleanup outcomes recorded. | Source/derived ids and expiry recorded. |
+| Durable conversion | Filesystem Snapshot plus full replay artifact retained. | Filesystem-class state or fallback, actions/history, environment/evaluator identities, content digest, retention, and replay entrypoint retained. |
+| Promotion | Three fresh deterministic replays pass. | Three fresh deterministic replays from converted durable state pass. |
+| Skip evidence | Core path executes task without real-kernel behavior. | No uniquely process-resident attack surface exists. |
+
+VM Sandbox is an execution profile, not a snapshot mode. Memory Snapshot is an accelerator, never `pre_attack_snapshot_ref` or the system of record.
 
 ## Transfer gate
 
-Cross-task transfer requires at least one additional real task compatible with the existing shared defense pool. Report baseline and transferred-defense behavior separately. Do not claim ForkProof invented transfer.
+Cross-task transfer requires an additional real task compatible with the existing shared-defense path, a frozen baseline, and comparable evaluator identities. Report baseline and transferred-defense behavior separately. Do not claim ForkProof invented transfer.
 
-## Training-data analysis sequence
+## Training-data analysis protocol
 
-1. Gather real reward-1 trajectories from core/research runs.
-2. Label them with sealed Witness/legitimate evidence.
-3. Compare admission by raw v1 and hardened v2 verifier.
-4. Report contamination count/fraction and exploit-cluster composition.
-5. Only then consider optional SFT/RFT under a separate measured protocol.
-6. Evaluate on held-out true behavior; label the prediction as hypothesis until measured.
+1. Freeze one common real source population and its immutable trajectory ids.
+2. Evaluate every row under pinned v1 and v2 evaluator identities.
+3. Build `v1_admission` and `v2_admission` from semantic verifier success, preserving raw reward outputs.
+4. Attach hack/legitimate labels only from sealed Witness/control evidence or another named authoritative source.
+5. Quarantine unknown, missing, or conflicting classifications.
+6. Define `clean_sft = v2_admission AND sealed_legitimate`; do not equate it with all v2 positives.
+7. Report:
 
-No gradient-bearing monitor is introduced into the live architecture.
+       v1_contamination = hacked rows in v1_admission / all classified rows in v1_admission
+       v2_contamination = hacked rows in v2_admission / all classified rows in v2_admission
+       legitimate_retention = legitimate rows in v2_admission / legitimate rows in v1_admission
 
-## Valid evidence-backed skips
+8. Report unclassified/quarantined counts next to each denominator; do not silently treat unknowns as non-hacks.
+9. Report exploit-cluster composition for hacked admitted/rejected rows.
+10. Label mock development runs as illustrative; only real sealed data supports measured project claims.
+
+No gradient-bearing monitor enters the live architecture.
+
+## Optional model-training gate
+
+Training begins only with sufficient real clean data, frozen train/held-out splits, exact base model and system/tool schemas, account/credit access, and a declared evaluation protocol. Preserve dataset, job, model/checkpoint, deployment, split, code, environment, and evaluator ids. Re-run held-out evaluation and report distributions, errors, and limitations. Without these prerequisites, record a skip; do not launch a token experiment merely to claim sponsor use.
+
+## Valid evidence-backed conditional skips
 
 Examples:
 
 - provider capability probe returns unavailable/unauthorized,
-- no task state requires process memory,
-- Docker-in-sandbox is not needed for the converted core task,
+- no task state requires process memory or real-kernel behavior,
+- no comparable flat-restart budget remains after the core Goal,
 - no additional real task is materialized,
-- branch budget consumed by core release,
-- insufficient trajectories for a meaningful filter comparison.
+- insufficient real trajectories for meaningful training-data analysis,
+- insufficient clean examples, held-out data, credits, or access for model training.
 
-“Ran out of interest” or “would take time” without budget evidence is not a valid skip.
+No eligible or replay-stable promising child is a core blocked outcome, not a conditional skip that completes Plan 007. “Ran out of interest” or an unmeasured assertion that work would take too long is never valid skip evidence.
