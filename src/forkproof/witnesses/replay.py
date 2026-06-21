@@ -17,6 +17,7 @@ def require_three_replays(candidate: dict[str, Any], replay_fn: ReplayFn) -> lis
     expected_actions = candidate["action_record_digest"]
     expected_grader = candidate["grader_digest"]
     checks: list[dict[str, Any]] = []
+    restore_refs: set[str] = set()
     for attempt in range(1, 4):
         result = replay_fn(candidate, attempt)
         if result.get("model_gateway_request_ids"):
@@ -27,10 +28,14 @@ def require_three_replays(candidate: dict[str, Any], replay_fn: ReplayFn) -> lis
             raise WitnessError("replay_diverged", "recorded action order diverged")
         if not reward_success(result.get("reward")):
             raise WitnessError("replay_diverged", "replay did not reproduce reward success")
+        restore_ref = result.get("restore_ref")
+        if not restore_ref or restore_ref in restore_refs:
+            raise WitnessError("replay_diverged", "replay did not use three fresh restores")
+        restore_refs.add(restore_ref)
         checks.append(
             {
                 "attempt": attempt,
-                "restore_ref": result["restore_ref"],
+                "restore_ref": restore_ref,
                 "verifier_output_digest": result["verifier_output_digest"],
                 "file_diff_digest": result["file_diff_digest"],
                 "semantic_success": True,
@@ -38,4 +43,3 @@ def require_three_replays(candidate: dict[str, Any], replay_fn: ReplayFn) -> lis
             }
         )
     return checks
-

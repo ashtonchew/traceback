@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+import forkproof.witnesses.qa_binding as qa_binding
 from forkproof.witnesses.models import WitnessError, digest_json, utc_now
 from forkproof.witnesses.promotion import (
     assert_witness_fields,
@@ -81,7 +82,6 @@ def test_complete_branch_and_bounded_failure_records_are_valid():
     }
     assert branch_signal_status(failed, failed_qa) == "not-candidate"
 
-
 def test_twelve_unique_branch_ids_and_seeds_without_early_stop():
     branches = [branch(branch_id=f"branch-{i:03d}", seed=1000 + i) for i in range(12)]
     assert len({item["branch_id"] for item in branches}) == 12
@@ -117,6 +117,19 @@ def test_qa_classification_is_separate_and_must_join_to_same_branch():
 
     with pytest.raises(WitnessError, match="not from an authoritative source"):
         branch_signal_status(completed_branch, {**qa(), "authoritative_source": "local_heuristic"})
+
+
+def test_reward_hacking_parser_treats_string_false_as_false():
+    result = qa_binding._validate_reward_hacking_result(
+        {
+            "reasoning": "not hacking",
+            "is_reward_hacking": "false",
+            "hacking_strategy": "none",
+            "severity": "none",
+            "confidence": "0.8",
+        }
+    )
+    assert result["is_reward_hacking"] is False
 
 
 def test_hud_qa_binding_probe_rejects_team_id_as_org_binding(monkeypatch, tmp_path):
@@ -245,6 +258,24 @@ def test_replay_divergence_blocks_promotion():
 
     with pytest.raises(WitnessError, match="action order diverged"):
         require_three_replays(candidate, diverged)
+
+
+def test_replay_requires_three_fresh_restores():
+    candidate = branch(action_record_digest="actions-sha", grader_digest="grader-sha")
+
+    def stale_restore(item, attempt):  # noqa: ARG001
+        return {
+            "restore_ref": "same-restore",
+            "grader_digest": item["grader_digest"],
+            "action_record_digest": item["action_record_digest"],
+            "reward": 1.0,
+            "model_gateway_request_ids": [],
+            "verifier_output_digest": f"verifier-{attempt}",
+            "file_diff_digest": f"diff-{attempt}",
+        }
+
+    with pytest.raises(WitnessError, match="fresh restores"):
+        require_three_replays(candidate, stale_restore)
 
 
 def test_security_policy_negative_checks():

@@ -117,6 +117,7 @@ async def _run_one_branch(
     trace_id = ""
     reward: Any = None
     status = "success"
+    execution_boundary_crossed = False
     error_class: str | None = None
     error_message: str | None = None
     try:
@@ -142,6 +143,7 @@ async def _run_one_branch(
         trace_id = trace_id or str(getattr(job, "trace_id", "") or "")
         job_id = str(getattr(job, "id", "") or "")
         reward = getattr(job, "reward", None)
+        execution_boundary_crossed = bool(job_id and trace_id)
         if not job_id or not trace_id:
             status = "agent-error"
             error_class = "missing_hud_provenance"
@@ -197,13 +199,13 @@ async def _run_one_branch(
         "seed": seed,
         "model": model,
         "sampling_config": sampling_config,
-        "gateway_request_ids": [f"hud-job:{job_id}"] if job_id else [f"branch-boundary:{branch_id}"],
+        "gateway_request_ids": [f"hud-job:{job_id}"] if job_id else [],
         "model_response_refs": [f"hud-trace:{trace_id}"] if trace_id else [],
         "hud_trace_id": trace_id,
-        "environment_version": "mongodb_sales_aggregation_engine_v1",
-        "environment_image_digest": f"modal-image:{forkpoint.get('snapshot_id')}",
-        "grader_digest": "trusted-pytest-task_assets/test_outputs.py",
-        "grader_digest_source": "envs/mongodb-sales-aggregation-engine/env.py::GRADE_CMD",
+        "environment_version": forkpoint.get("environment_version"),
+        "environment_image_digest": forkpoint.get("environment_image_digest"),
+        "grader_digest": forkpoint.get("grader_digest"),
+        "grader_digest_source": forkpoint.get("grader_digest_source"),
         "reward": reward,
         "qa_result_ref": qa_result_ref,
         "lineage": {
@@ -211,10 +213,18 @@ async def _run_one_branch(
             "snapshot_id": forkpoint.get("snapshot_id"),
             "branch_index": branch_index,
         },
-        "snapshot_restore_ref": f"modal-image://{forkpoint.get('snapshot_id')}",
+        "snapshot_restore_ref": forkpoint.get("snapshot_restore_ref") or f"modal-image://{forkpoint.get('snapshot_id')}",
         "snapshot_id": forkpoint.get("snapshot_id"),
         "snapshot_mode": forkpoint.get("snapshot_mode"),
-        "history_hash": digest_json({"fork_point_id": forkpoint.get("fork_point_id"), "branch_id": branch_id}),
+        "snapshot_digest": forkpoint.get("snapshot_digest"),
+        "history_prefix_ref": forkpoint.get("history_prefix_ref"),
+        "history_hash": forkpoint.get("history_hash"),
+        "boundary_token": forkpoint.get("boundary_token"),
+        "network_policy": forkpoint.get("network_policy"),
+        "secret_policy": forkpoint.get("secret_policy"),
+        "resource_policy": forkpoint.get("resource_policy"),
+        "snapshot_retention": forkpoint.get("snapshot_retention"),
+        "source_evidence_refs": forkpoint.get("source_evidence_refs"),
         "action_record_ref": _relative(root, action_path),
         "action_record_digest": action_record_digest,
         "file_diff_ref": _relative(root, file_diff_path),
@@ -222,7 +232,12 @@ async def _run_one_branch(
         "completed_at": utc_now(),
         "status": status,
         "cleanup_result": "runtime-owned-cleanup",
-        "execution_boundary_crossed": True,
+        "execution_boundary_crossed": execution_boundary_crossed,
+        "provenance_status": "incomplete",
+        "provenance_blockers": [
+            "filesystem diff capture remains a promotion gate",
+            "same-runtime branch security negative probes are not captured",
+        ],
     }
     if error_class:
         branch["error_class"] = error_class
@@ -289,22 +304,35 @@ async def run_live_branch_batch(
     branches = [item["branch"] for item in results]
     qa_results = [item["qa"] for item in results if item["qa"]]
     candidates = [branch for branch in branches if branch.get("promotion_signal_status") == "candidate"]
+    executed_branch_count = sum(1 for branch in branches if branch.get("execution_boundary_crossed") is True)
+    provenance_blockers = sorted(
+        {
+            blocker
+            for branch in branches
+            for blocker in branch.get("provenance_blockers", [])
+        }
+    )
     summary = {
         "schema_version": 1,
         "run_id": run_id,
-        "status": "pass" if len(branches) == count else "blocked",
+        "status": "blocked" if executed_branch_count != count or provenance_blockers else "pass",
+        "live_execution_status": "pass" if executed_branch_count == count else "blocked",
+        "provenance_status": "incomplete" if provenance_blockers else "complete",
+        "provenance_blockers": provenance_blockers,
         "started_at": started_at,
         "completed_at": utc_now(),
         "fork_point_id": forkpoint.get("fork_point_id"),
         "snapshot_id": forkpoint.get("snapshot_id"),
         "requested_branch_count": count,
-        "executed_branch_count": len(branches),
+        "completed_record_count": len(branches),
+        "executed_branch_count": executed_branch_count,
         "concurrency": concurrency,
         "credential_presence": presence,
         "branch_refs": [item["branch_ref"] for item in results],
         "qa_refs": [item["qa_ref"] for item in results],
         "unique_branch_ids": len({branch["branch_id"] for branch in branches}),
-        "unique_seeds": len({branch["seed"] for branch in branches}),
+        "unique_requested_seed_labels": len({branch["seed"] for branch in branches}),
+        "provider_seed_support": "not-supported-by-ClaudeConfig",
         "hud_trace_count": sum(1 for branch in branches if branch.get("hud_trace_id")),
         "reward_success_count": sum(1 for branch in branches if branch.get("reward") in (1, 1.0, True)),
         "qa_pass_count": sum(1 for qa in qa_results if qa.get("status") == "pass"),

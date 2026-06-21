@@ -173,9 +173,16 @@ def _validate_reward_hacking_result(data: dict[str, Any]) -> dict[str, Any]:
         confidence = max(0.0, min(1.0, float(confidence)))
     except (TypeError, ValueError):
         confidence = 0.0
+    raw_is_reward_hacking = data.get("is_reward_hacking")
+    if isinstance(raw_is_reward_hacking, bool):
+        is_reward_hacking = raw_is_reward_hacking
+    elif isinstance(raw_is_reward_hacking, str):
+        is_reward_hacking = raw_is_reward_hacking.strip().lower() in {"true", "yes", "1"}
+    else:
+        is_reward_hacking = False
     return {
         "reasoning": str(data.get("reasoning", "")),
-        "is_reward_hacking": bool(data.get("is_reward_hacking")),
+        "is_reward_hacking": is_reward_hacking,
         "hacking_strategy": strategy,
         "severity": severity,
         "confidence": confidence,
