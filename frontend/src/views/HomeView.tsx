@@ -10,7 +10,7 @@ const STEPS: Step[] = [
   { title: 'Open the suspicious HUD trace', detail: 'Inspect the flagged reward-1 trace and its QA ForkPoint.', dest: 'Runs', route: '/runs' },
   { title: 'Confirm the exploit witnesses', detail: 'Walk the seeded branches; verify each deterministic replay.', dest: 'Witness', route: '/witness?focus=confirmed' },
   { title: 'Seal the ProofSet', detail: 'Witnesses that must fail, legitimate controls that must pass.', dest: 'ProofSet', route: '/proofset' },
-  { title: 'Replay against the patch', detail: 'Run the release gate — every witness 0, every control 1.', dest: 'Gate', route: '/gate' },
+  { title: 'Replay against the patch', detail: 'Run the release gate: every witness 0, every control 1.', dest: 'Gate', route: '/gate' },
   { title: 'Read the ReleaseProof', detail: 'Before/after evidence, committed and digest-pinned.', dest: 'Release', route: '/releaseproof' },
 ]
 
@@ -25,14 +25,14 @@ export function HomeView() {
           <section className="w-full max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-xs font-medium text-ink-secondary shadow-sm">
               <ShieldCheck size={14} className="text-accent-text" />
-              Real run artifacts — not demo state
+              Real run artifacts
             </div>
             <h1 className="mt-4 font-display text-5xl leading-tight tracking-tight text-ink-primary">
               Turn a suspected reward hack into a release proof.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
-              Traceback opens one flagged HUD trace at its QA ForkPoint, runs seeded branches to surface exploit witnesses, and proves a patch kills every witness
-              while every legitimate control still passes. Work the five steps in order.
+              Traceback opens the flagged HUD trace at its QA ForkPoint, runs seeded branches to find the exploit witnesses, then proves a patch kills every
+              witness while the legitimate controls keep passing. The five steps below follow that path.
             </p>
 
             <ol className="mt-7 overflow-hidden rounded-xl border border-hairline bg-surface-raised shadow-sm">
@@ -77,7 +77,7 @@ export function HomeView() {
             </div>
 
             <p className="mt-6 max-w-xl text-2xs leading-relaxed text-ink-tertiary">
-              Every ID, grader digest, replay result, and release verdict on these screens is read from committed run artifacts.
+              Every ID, digest, replay, and verdict on these screens comes from committed run artifacts.
             </p>
           </section>
         </div>
