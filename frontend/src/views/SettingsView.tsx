@@ -36,15 +36,15 @@ export function SettingsView() {
             </span>
             <div className="min-w-0">
               <h2 className="font-display text-2xl tracking-tight text-ink-primary">Run settings</h2>
-              <p className="text-sm text-ink-secondary">Read-only configuration for the current ForkProof run.</p>
+              <p className="text-sm text-ink-secondary">Read-only configuration for the current Traceback run.</p>
             </div>
           </div>
 
           <div className="mt-6 overflow-hidden rounded-lg border border-hairline bg-surface-raised">
             <SettingRow icon={<Database size={15} />} title="Environment" detail="mongodb-sales-aggregation-engine" status="locked" />
             <SettingRow icon={<GitFork size={15} />} title="ForkPoint mode" detail="Deterministic replay from confirmed trace boundary" status="locked" />
-            <SettingRow icon={<FileCheck2 size={15} />} title="ProofSet policy" detail="Witnesses must fail; legitimate controls must pass" status="locked" />
-            <SettingRow icon={<ShieldCheck size={15} />} title="Release gate" detail="Publish only after committed ReleaseProof" status="locked" />
+            <SettingRow icon={<FileCheck2 size={15} />} title="Proof set policy" detail="Witnesses must fail; legitimate controls must pass" status="locked" />
+            <SettingRow icon={<ShieldCheck size={15} />} title="Release gate" detail="Publish only after committed release proof" status="locked" />
           </div>
         </div>
       </div>
@@ -57,8 +57,8 @@ export function SettingsView() {
         total={counts.branches}
         cards={[
           { icon: 'witness', label: 'Confirmed witnesses', value: counts.witnesses, onClick: () => navigate('/witness?focus=confirmed') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'releaseproof', label: 'Release proof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
           { icon: 'artifacts', label: 'View all artifacts', value: counts.branches, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" branches={run.branches} selectedId={run.selectedBranchId} />}

@@ -90,7 +90,7 @@ function ConfirmedWitnessesPanel({
               onClick={inProofSet ? undefined : onAddToProofSet}
               disabled={inProofSet}
             >
-              {inProofSet ? 'Already in ProofSet' : 'Add selected to ProofSet'}
+              {inProofSet ? 'Already in proof set' : 'Add selected to proof set'}
             </Button>
           </div>
         </>
@@ -173,8 +173,9 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
             nodes={nodes}
             edges={edges}
             onNodeClick={onNodeClick}
-            fitPadding={0.04}
-            fitMaxZoom={0.7}
+            fitPadding={0.02}
+            fitMaxZoom={0.86}
+            fitMinZoom={0.86}
           />
           {pop && popBranch && (
             <div className="pointer-events-none fixed inset-0 z-20">
@@ -271,10 +272,10 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
         total={counts.branches}
         cards={[
           { icon: 'witness', label: 'Confirmed witnesses', value: counts.witnesses, onClick: () => navigate('/witness?focus=confirmed') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
           {
             icon: 'releaseproof',
-            label: 'ReleaseProof',
+            label: 'Release proof',
             value: counts.releaseProofs,
             onClick: () => navigate('/releaseproof'),
           },

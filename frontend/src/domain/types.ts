@@ -1,5 +1,5 @@
 /**
- * Domain model for the ForkProof UI.
+ * Domain model for the Traceback UI.
  *
  * These types mirror the logical record contracts in
  * `docs/plans/specs/03-interfaces.md` (ForkPoint, BranchRun, Exploit Witness,

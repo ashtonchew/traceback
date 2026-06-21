@@ -45,6 +45,7 @@ import ShieldEnergyIcon from '@hugeicons/core-free-icons/ShieldEnergyIcon'
 import ShuffleIcon from '@hugeicons/core-free-icons/ShuffleIcon'
 import SparklesIcon from '@hugeicons/core-free-icons/SparklesIcon'
 import TriangleIcon from '@hugeicons/core-free-icons/TriangleIcon'
+import Tree02Icon from '@hugeicons/core-free-icons/Tree02Icon'
 import VerticalResizeIcon from '@hugeicons/core-free-icons/VerticalResizeIcon'
 import type { ComponentProps, ComponentType, SVGProps } from 'react'
 
@@ -111,4 +112,5 @@ export const ShieldCheck = icon(Shield01Icon)
 export const ShieldX = icon(ShieldBanIcon)
 export const Shuffle = icon(ShuffleIcon)
 export const Sparkles = icon(SparklesIcon)
+export const Tree02 = icon(Tree02Icon)
 export const X = icon(Cancel01Icon)

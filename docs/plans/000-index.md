@@ -1,13 +1,13 @@
 ---
 name: index
 description: >
-  Routes ForkProof implementation work through an acyclic, collision-free dependency graph and evidence-based merge gates. Use when assigning plans, opening parallel worktrees, checking ownership, or deciding whether a later wave may begin.
+  Routes Traceback implementation work through an acyclic, collision-free dependency graph and evidence-based merge gates. Use when assigning plans, opening parallel worktrees, checking ownership, or deciding whether a later wave may begin.
 owns: ["docs/plans/000-index.md"]
 depends_on: []
 wave: 0
 ---
 
-# ForkProof plan index
+# Traceback plan index
 
 ## Execution rule
 

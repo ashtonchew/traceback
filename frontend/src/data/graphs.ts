@@ -71,7 +71,7 @@ export const rootGraph: { nodes: N[]; edges: Edge[] } = {
 }
 
 /* ====================================================================
- * Scene 2 — ForkProof Run expanded tree  [screenshot 2]
+ * Scene 2 — Traceback Run expanded tree  [screenshot 2]
  * ==================================================================== */
 
 export const forkproofTree: { nodes: N[]; edges: Edge[] } = {

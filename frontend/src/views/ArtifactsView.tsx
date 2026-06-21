@@ -58,7 +58,7 @@ export function ArtifactsView() {
       ? [
           {
             kind: 'proofset' as const,
-            title: 'ProofSet manifest',
+            title: 'Proof set manifest',
             detail: `${run.proofSet.exploitWitnessIds.length} witnesses · ${run.proofSet.legitimateControlIds.length} controls · ${run.proofSet.exploitFamilyVariantIds.length} variants`,
             status: 'ready',
           },
@@ -66,8 +66,8 @@ export function ArtifactsView() {
       : []),
     {
       kind: 'release' as const,
-      title: 'ReleaseProof',
-      detail: run.releaseProof?.commitId ?? 'No committed ReleaseProof yet',
+      title: 'Release proof',
+      detail: run.releaseProof?.commitId ?? 'No committed release proof yet',
       status: run.releaseProof?.status ?? 'pending',
     },
     {
@@ -90,7 +90,7 @@ export function ArtifactsView() {
               </span>
               <div>
                 <h2 className="font-display text-2xl tracking-tight text-ink-primary">Evidence artifacts</h2>
-                <p className="text-sm text-ink-secondary">Run outputs, ProofSet material, and release evidence.</p>
+                <p className="text-sm text-ink-secondary">Run outputs, proof set material, and release evidence.</p>
               </div>
             </div>
 
@@ -108,8 +108,8 @@ export function ArtifactsView() {
           </div>
           <div className="mt-4 divide-y divide-hairline text-sm">
             <div className="flex justify-between py-2"><span className="text-ink-secondary">Branches</span><span className="font-medium text-ink-primary">{counts.branches}</span></div>
-            <div className="flex justify-between py-2"><span className="text-ink-secondary">ProofSet members</span><span className="font-medium text-ink-primary">{counts.proofSetMembers}</span></div>
-            <div className="flex justify-between py-2"><span className="text-ink-secondary">ReleaseProofs</span><span className="font-medium text-ink-primary">{counts.releaseProofs}</span></div>
+            <div className="flex justify-between py-2"><span className="text-ink-secondary">Proof set members</span><span className="font-medium text-ink-primary">{counts.proofSetMembers}</span></div>
+            <div className="flex justify-between py-2"><span className="text-ink-secondary">Release proofs</span><span className="font-medium text-ink-primary">{counts.releaseProofs}</span></div>
             <div className="flex justify-between py-2"><span className="text-ink-secondary">Total artifacts</span><span className="font-medium text-ink-primary">{rows.length}</span></div>
           </div>
         </aside>
@@ -123,8 +123,8 @@ export function ArtifactsView() {
         total={counts.branches}
         cards={[
           { icon: 'witness', label: 'Confirmed witnesses', value: counts.witnesses, onClick: () => navigate('/witness') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'releaseproof', label: 'Release proof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
           { icon: 'artifacts', label: 'View all artifacts', value: rows.length, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" branches={run.branches} selectedId={run.selectedBranchId} />}

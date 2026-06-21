@@ -2,7 +2,7 @@
 
 ## Source priority
 
-Treat the checked-in repository, this bundle, and the supplied Hack2Fix2Hack handoff as the only project sources of truth. Do not infer an API signature, existing file path, runtime behavior, or command from familiarity with HUD, Modal, harden-v0, or another repository. Read `docs/plans/ASSUMPTIONS.md` before implementation. Anything tagged `verify-against-repo` remains unverified until Wave 1 records evidence.
+Treat the checked-in repository, this bundle, and the supplied Traceback handoff as the only project sources of truth. Do not infer an API signature, existing file path, runtime behavior, or command from familiarity with HUD, Modal, harden-v0, or another repository. Read `docs/plans/ASSUMPTIONS.md` before implementation. Anything tagged `verify-against-repo` remains unverified until Wave 1 records evidence.
 
 If `AGENTS.md`, plan frontmatter, repo-map files, evidence manifests, or status files disagree, stop before implementation and record the inconsistency in the active plan's living-doc log or evidence manifest.
 

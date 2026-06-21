@@ -50,7 +50,7 @@ function discoveryBatches(source: BranchRun[]): BranchRun[][] {
 }
 
 /**
- * In-memory ForkProof backend. Holds mutable run state (proofset, fix
+ * In-memory Traceback backend. Holds mutable run state (proofset, fix
  * iteration, releaseproof) for the session. Swap for an HTTP-backed
  * implementation of the same interface to talk to the real services.
  */

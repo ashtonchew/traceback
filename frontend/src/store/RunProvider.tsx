@@ -121,6 +121,7 @@ const RunContext = createContext<(RunState & RunActions) | null>(null)
 export function RunProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initial)
   const discoveryToken = useRef(0)
+  const discoveryInFlight = useRef(false)
   const confirmationTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
 
   useEffect(() => {
@@ -143,25 +144,31 @@ export function RunProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const startDiscovery = useCallback(async () => {
+    if (discoveryInFlight.current) return
+    discoveryInFlight.current = true
     discoveryToken.current += 1
     const token = discoveryToken.current
     confirmationTimers.current.forEach((timer) => clearTimeout(timer))
     confirmationTimers.current.clear()
     dispatch({ type: 'RESET_BRANCHES' })
-    await api.runDiscovery((branch) => {
-      if (branch.status !== 'witness') {
-        dispatch({ type: 'ADD_BRANCH', branch })
-        return
-      }
+    try {
+      await api.runDiscovery((branch) => {
+        if (branch.status !== 'witness') {
+          dispatch({ type: 'ADD_BRANCH', branch })
+          return
+        }
 
-      dispatch({ type: 'ADD_BRANCH', branch: { ...branch, status: 'verifying' } })
-      const timer = setTimeout(() => {
-        confirmationTimers.current.delete(timer)
-        if (discoveryToken.current === token) dispatch({ type: 'CONFIRM_BRANCH', branch })
-      }, confirmationDelay(branch))
-      confirmationTimers.current.add(timer)
-    })
-    dispatch({ type: 'PHASE', phase: 'discovered' })
+        dispatch({ type: 'ADD_BRANCH', branch: { ...branch, status: 'verifying' } })
+        const timer = setTimeout(() => {
+          confirmationTimers.current.delete(timer)
+          if (discoveryToken.current === token) dispatch({ type: 'CONFIRM_BRANCH', branch })
+        }, confirmationDelay(branch))
+        confirmationTimers.current.add(timer)
+      })
+      if (discoveryToken.current === token) dispatch({ type: 'PHASE', phase: 'discovered' })
+    } finally {
+      if (discoveryToken.current === token) discoveryInFlight.current = false
+    }
   }, [])
 
   const select = useCallback((id?: string) => dispatch({ type: 'SELECT', id }), [])

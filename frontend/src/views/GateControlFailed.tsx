@@ -169,10 +169,10 @@ export function GateControlFailed() {
         total={gateCounts.total}
         cards={[
           { icon: 'witness', label: 'Witness', value: counts.witnesses, onClick: () => navigate('/witness') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
           {
             icon: 'releaseproof',
-            label: 'ReleaseProof',
+            label: 'Release proof',
             value: counts.releaseProofs,
             onClick: () => navigate('/releaseproof'),
           },

@@ -1,6 +1,6 @@
-# ForkProof UI
+# Traceback UI
 
-React + React Flow implementation of the ForkProof / Exploit Witness run-graph designs.
+React + React Flow implementation of the Traceback / Exploit Witness run-graph designs.
 
 Built with Vite + React + TypeScript + Tailwind, consuming the repo's Granola-style
 design system (`../design-system/tailwind-preset.js` + `tokens.css`, self-hosted fonts).
@@ -25,14 +25,14 @@ Use the dropdown next to **Resume run** (top-right) to jump directly to any scre
 | Route | Screen |
 | --- | --- |
 | `/` | QA ForkPoint root (horizontal) |
-| `/tree` | ForkProof Run — expanded branch tree |
+| `/tree` | Traceback Run — expanded branch tree |
 | `/witness` | Exploit Witness tree + branch detail panel |
-| `/proofset` | Exploit Witness + ProofSet panel |
+| `/proofset` | Exploit Witness + proof set panel |
 | `/patch` | Verifier Patch v2 (code diff) |
 | `/gate` | Release Gate — running |
 | `/gate/witness-failed` | Release Gate — exploit survived |
 | `/gate/control-failed` | Release Gate — control broken |
-| `/releaseproof` | ReleaseProof committed |
+| `/releaseproof` | Release proof committed |
 
 ## Structure
 

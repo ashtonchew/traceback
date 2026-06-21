@@ -125,7 +125,7 @@ export function PatchView() {
           </div>
           <div className="mt-4 rounded-lg border border-hairline bg-surface-raised p-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-ink-primary">ProofSet {witnessCount + controlCount}</span>
+              <span className="font-medium text-ink-primary">Proof set {witnessCount + controlCount}</span>
               <span className="text-ink-tertiary">Total {witnessCount + controlCount + (run.proofSet?.exploitFamilyVariantIds.length ?? 0)}</span>
             </div>
             <p className="mt-0.5 text-xs text-ink-secondary">Assembled from confirmed witnesses</p>
@@ -163,7 +163,7 @@ export function PatchView() {
             <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Next step</div>
             <div className="mb-2 text-sm text-ink-secondary-strong">{patch.label}</div>
             <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={() => navigate('/gate')}>
-              Run ProofSet
+              Run proof set
             </Button>
           </div>
         </aside>
@@ -177,10 +177,10 @@ export function PatchView() {
         total={counts.proofSetMembers || witnessCount + counts.candidates + controlCount}
         cards={[
           { icon: 'witness', label: 'Witness', value: witnessCount, onClick: () => navigate('/witness') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
           {
             icon: 'releaseproof',
-            label: 'ReleaseProof',
+            label: 'Release proof',
             value: counts.releaseProofs,
             onClick: () => navigate('/releaseproof'),
           },

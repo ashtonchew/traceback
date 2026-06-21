@@ -75,7 +75,7 @@ export function ReleaseProof() {
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-accent-text">
                 <ShieldCheck size={24} />
               </span>
-              <h2 className="mt-3 font-display text-3xl tracking-tight text-ink-primary">ReleaseProof committed</h2>
+              <h2 className="mt-3 font-display text-3xl tracking-tight text-ink-primary">Release proof committed</h2>
               <p className="mt-1 text-base text-accent-text">Published {publishedRef}</p>
               <p className="mt-1 text-sm text-ink-secondary">All witnesses were successfully killed and controls were preserved.</p>
             </div>
@@ -93,7 +93,7 @@ export function ReleaseProof() {
                 rows={[
                   ['Witnesses rewarded', `${wk[1]} / ${wk[1]}`, null],
                   ['Controls rewarded', `${cp[1]} / ${cp[1]}`, null],
-                  ['ReleaseProof', 'Not committed', null],
+                  ['Release proof', 'Not committed', null],
                 ]}
               />
               <ArrowRight size={20} className="hidden text-ink-tertiary xl:block" />
@@ -105,7 +105,7 @@ export function ReleaseProof() {
                 rows={[
                   ['Witnesses blocked', `${wk[0]} / ${wk[1]}`, true],
                   ['Controls preserved', `${cp[0]} / ${cp[1]}`, true],
-                  ['ReleaseProof', 'Committed', true],
+                  ['Release proof', 'Committed', true],
                 ]}
               />
             </div>
@@ -126,7 +126,7 @@ export function ReleaseProof() {
         <aside className="flex w-80 shrink-0 flex-col border-l border-hairline bg-background">
           <div className="flex items-center gap-2 px-5 pt-5">
             <ShieldCheck size={16} className="text-accent-text" />
-            <h2 className="font-display text-xl tracking-tight text-ink-primary">ReleaseProof</h2>
+            <h2 className="font-display text-xl tracking-tight text-ink-primary">Release proof</h2>
             <Chip status="witness">COMMITTED</Chip>
           </div>
           <div className="flex-1 px-5 py-4">
@@ -148,7 +148,7 @@ export function ReleaseProof() {
             </div>
             <div className="mt-5 space-y-2">
               <div className="text-2xs font-semibold uppercase tracking-wide text-ink-tertiary">Actions</div>
-              <Button variant="primary" size="md" className="w-full" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View ReleaseProof</Button>
+              <Button variant="primary" size="md" className="w-full" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View release proof</Button>
               <Button variant="secondary" size="md" className="w-full" icon={<FileDiff size={14} />} onClick={() => navigate('/artifacts')}>View state diff</Button>
               <Button variant="secondary" size="md" className="w-full" icon={<Download size={14} />} onClick={() => navigate('/artifacts')}>Download evidence</Button>
             </div>
@@ -163,8 +163,8 @@ export function ReleaseProof() {
         total={witnessTotal + controlTotal}
         cards={[
           { icon: 'witness', label: 'Witness', value: counts.witnesses, onClick: () => navigate('/witness') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'releaseproof', label: 'Release proof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
           { icon: 'artifacts', label: 'Evidence artifacts', value: witnessTotal + controlTotal, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="tree" />}

@@ -1,4 +1,4 @@
-# ForkProof execution-plan template
+# Traceback execution-plan template
 
 An ExecPlan is a living, self-contained implementation document for one collision-free vertical slice. A fresh repository-connected agent must be able to open one numbered plan, follow its dependency and repo-grounding preconditions, implement the behavior, and prove it with observable evidence.
 

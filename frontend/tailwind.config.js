@@ -3,7 +3,7 @@ import preset from '../design-system/tailwind-preset.js'
 /**
  * Local project config. Consumes the Granola design-system preset verbatim and
  * adds a small set of *semantic state* tokens (warn/amber + soft tints) required
- * by the ForkProof run-graph states (promising / qa-review / running). These are
+ * by the Traceback run-graph states (promising / qa-review / running). These are
  * added as named tokens here — never inlined as arbitrary values in markup — per
  * design-system/AGENTS.md rule 1.
  */
@@ -13,6 +13,9 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['"Libre Baskerville"', 'Georgia', '"Times New Roman"', 'serif'],
+      },
       spacing: {
         18: '72px',
       },

@@ -227,7 +227,7 @@ export function BranchPanel({
         </Button>
         {inProofSet ? (
           <Button variant="secondary" size="md" className="w-full" icon={<CircleSlash size={14} />} onClick={onRemoveFromProofSet}>
-            Remove from ProofSet
+            Remove from proof set
           </Button>
         ) : (
           <Button
@@ -238,7 +238,7 @@ export function BranchPanel({
             onClick={branch.status === 'witness' ? onAddToProofSet : undefined}
             disabled={branch.status !== 'witness'}
           >
-            {branch.status === 'witness' ? 'Add confirmed witness to ProofSet' : 'Await confirmation'}
+            {branch.status === 'witness' ? 'Add confirmed witness to proof set' : 'Await confirmation'}
           </Button>
         )}
       </div>
@@ -350,12 +350,12 @@ export function ProofSetPanel({
   const headlineTotal = proofSet.exploitWitnessIds.length + proofSet.legitimateControlIds.length
   return (
     <PanelShell
-      title="ProofSet"
+      title="Proof set"
       onClose={onClose}
       footer={
         <div className="space-y-3">
           <Button variant="primary" size="md" className="w-full" icon={<Play size={14} />} onClick={onRun}>
-            Run ProofSet
+            Run proof set
           </Button>
           <div className="flex justify-between text-2xs text-ink-tertiary">
             <span>Created</span>

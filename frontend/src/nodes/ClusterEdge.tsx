@@ -1,4 +1,5 @@
 import { BaseEdge, type EdgeProps } from '@xyflow/react'
+import type { CSSProperties } from 'react'
 
 const COLORS: Record<string, string> = {
   witness: 'var(--fp-edge-witness)',
@@ -32,8 +33,9 @@ export function ClusterEdge({ sourceX, sourceY, targetX, targetY, data }: EdgePr
   const { path, sourceDot, targetDot } = getClusterEdgePath(sourceX, sourceY, targetX, targetY)
   const color = COLORS[(data?.cluster as string) ?? 'default']
   const className = ['fp-cluster-edge', data?.entering ? 'fp-enter' : undefined, data?.revealed ? 'fp-enter-revealed' : undefined].filter(Boolean).join(' ')
+  const style = data?.enterDelay ? ({ '--fp-enter-delay': data.enterDelay as string } as CSSProperties) : undefined
   return (
-    <g className={className}>
+    <g className={className} style={style}>
       <BaseEdge path={path} style={{ stroke: color, strokeWidth: 1.5 }} />
       <circle cx={sourceDot.cx} cy={sourceDot.cy} r={3} fill={color} />
       <circle cx={targetDot.cx} cy={targetDot.cy} r={3} fill={color} />

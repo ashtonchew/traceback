@@ -12,7 +12,7 @@ import type {
 } from '../domain/types'
 
 /**
- * The single seam between the UI and a ForkProof backend.
+ * The single seam between the UI and a Traceback backend.
  *
  * Methods mirror the "Logical operations" in
  * `docs/plans/specs/03-interfaces.md`. The current implementation

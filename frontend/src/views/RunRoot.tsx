@@ -31,7 +31,7 @@ export function RunRoot() {
   return (
     <>
       <RunHeader
-        title="ForkProof Run"
+        title="Traceback Run"
         version="v3.2"
         subtitle="mongodb-sales-aggregation-engine"
         primaryLabel={step === 'trace' ? 'Open as ForkPoint' : 'Start candidate paths'}
@@ -56,8 +56,8 @@ export function RunRoot() {
         total={counts.branches}
         cards={[
           { icon: 'witness', label: 'Confirmed witnesses', value: counts.witnesses, onClick: () => navigate('/witness?focus=confirmed') },
-          { icon: 'proofset', label: 'ProofSet', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
-          { icon: 'releaseproof', label: 'ReleaseProof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
+          { icon: 'proofset', label: 'Proof set', value: counts.proofSetMembers, onClick: () => navigate('/proofset') },
+          { icon: 'releaseproof', label: 'Release proof', value: counts.releaseProofs, onClick: () => navigate('/releaseproof') },
           { icon: 'artifacts', label: 'View all artifacts', value: counts.branches + counts.proofSetMembers, onClick: () => navigate('/artifacts') },
         ]}
         minimap={<MiniThumb variant="row" />}
