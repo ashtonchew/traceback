@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -488,13 +489,19 @@ def test_skip_must_be_backed_by_evidence_refs():
 
 
 def test_research_package_is_not_imported_by_core_feature_folders():
+    # The invariant is that no other feature folder *imports* forkproof.research,
+    # so research/** stays deletable. Match real import statements only — a bare
+    # substring check also flags docstring/comment mentions (e.g. another plan's
+    # module that merely names a research symbol in its docs), which do not create
+    # an import dependency.
+    import_re = re.compile(r"^\s*(?:from|import)\s+forkproof\.research\b", re.MULTILINE)
     offenders = []
     for path in (ROOT / "src/forkproof").rglob("*.py"):
         relative = path.relative_to(ROOT)
         if relative.parts[:3] == ("src", "forkproof", "research"):
             continue
         text = path.read_text(encoding="utf-8")
-        if "forkproof.research" in text:
+        if import_re.search(text):
             offenders.append(str(relative))
 
     assert offenders == []
