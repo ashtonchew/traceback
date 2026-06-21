@@ -9,6 +9,7 @@ import { GateWitnessFailed } from './views/GateWitnessFailed'
 import { GateControlFailed } from './views/GateControlFailed'
 import { ReleaseProof } from './views/ReleaseProof'
 import { ArtifactsView } from './views/ArtifactsView'
+import { BenchmarkView } from './views/BenchmarkView'
 import { SettingsView } from './views/SettingsView'
 
 function AppLayout() {
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/gate/control-failed" element={<GateControlFailed />} />
         <Route path="/releaseproof" element={<ReleaseProof />} />
         <Route path="/artifacts" element={<ArtifactsView />} />
+        <Route path="/benchmark" element={<BenchmarkView />} />
         <Route path="/settings" element={<SettingsView />} />
       </Route>
     </Routes>

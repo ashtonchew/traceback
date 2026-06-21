@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { FileCheck2, FolderOpen, GitFork, Home, Play, Settings, ShieldCheck, Tree02 } from './icons'
+import { Activity, FileCheck2, FolderOpen, GitFork, Home, Play, Settings, ShieldCheck, Tree02 } from './icons'
 import type { ComponentType, ReactNode } from 'react'
 import type { IconProps } from './icons'
 
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/proofset', label: 'Proofset', icon: FileCheck2 },
   { to: '/releaseproof', label: 'Release', icon: ShieldCheck },
   { to: '/artifacts', label: 'Artifacts', icon: FolderOpen },
+  { to: '/benchmark', label: 'Benchmark', icon: Activity },
 ]
 
 const UTILITY_NAV = [
