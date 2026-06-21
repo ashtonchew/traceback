@@ -98,6 +98,54 @@ Cross-task transfer requires at least one additional real task compatible with t
 
 No gradient-bearing monitor is introduced into the live architecture.
 
+## Managed LoRA SFT launch policy
+
+For a hackathon model-training artifact, prefer the smallest Fireworks managed-SFT
+base model that supports LoRA and remains strong enough for the held-out eval.
+Do not default to the Qwen3 8B Training API shape from `HUDDOC.MD`; that shape
+previously rejected LoRA. If Fireworks confirms Qwen 3.5 4B is available as a
+managed fine-tuning base with LoRA support, use it as the first candidate because
+smaller models should train faster and cheaper for the raw-vs-Traceback-fixed
+comparison.
+
+Before launch, record a provider capability check with:
+
+- supported base model id,
+- training shape or managed SFT mode,
+- LoRA rank accepted,
+- dry-run or UI/CLI validation,
+- expected cost/time,
+- dataset row counts and tokenization pass.
+
+Only claim "we did LoRA SFT on Qwen 3.5 4B" after `sft_job_request.json` and
+`sft_job_result.json` prove the actual base model and LoRA config. Until then,
+the model id, cost, time, and lift remain `TBD`.
+
+## Managed RFT launch-readiness policy
+
+RFT is supported as a secondary path after the SFT data-quality path, not as the
+first hackathon bet. The RFT path consumes the same completed Plan 008 qabench
+report and Plan 005 ReleaseProof, but emits launch-readiness artifacts rather
+than starting a provider job.
+
+Use managed Fireworks RFT only when:
+
+- the SFT canonical export path is available,
+- the ReleaseProof gate has passed,
+- the evaluator scores against the hardened verifier / ReleaseProof contract,
+- confirmed hacks are adversarial eval cases, not positive optimization targets,
+- Fireworks provider capability, evaluator registration, dataset registration,
+  expected cost/time, and dry-run or UI/CLI validation are recorded.
+
+For coding-agent or tool-using tasks, managed RFT is not a tiny local-only path
+unless a supported remote environment already exists. Remote RFT requires a
+reachable HTTPS service, request authentication, reset/isolation semantics,
+Fireworks tracing/correlation, and local evaluator tests. Without that evidence,
+record `not_run` / `TBD` launch artifacts and do not claim RFT training.
+
+Do not treat `HUDDOC.MD`'s low-level Training API loop as evidence of a managed
+RFT job. It is a separate custom-training path.
+
 ## Valid evidence-backed skips
 
 Examples:

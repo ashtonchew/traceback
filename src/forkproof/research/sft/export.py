@@ -32,7 +32,7 @@ def trace_to_fireworks_example(trace: TraceRecord, *, system_prompt: str = DEFAU
 
 def trace_to_metadata_record(trace: TraceRecord, *, source_filter: SourceFilter) -> dict[str, object]:
     """Provenance sidecar row for one exported or analyzed trace."""
-    return {
+    record = {
         "trace_id": trace.trace_id,
         "task_id": trace.task_id,
         "source_filter": source_filter,
@@ -44,6 +44,24 @@ def trace_to_metadata_record(trace: TraceRecord, *, source_filter: SourceFilter)
         "needs_review": trace.needs_review,
         "source": trace.source,
     }
+    for field in (
+        "trajectory_id",
+        "qabench_report_ref",
+        "release_proof_ref",
+        "proofset_case_id",
+        "origin",
+        "referee_verdict",
+        "qa_verdict",
+        "cluster_id",
+        "environment_v1",
+        "environment_v2",
+        "grader_v1_digest",
+        "grader_v2_digest",
+    ):
+        value = getattr(trace, field)
+        if value is not None:
+            record[field] = value
+    return record
 
 
 def validate_fireworks_example(example: dict[str, object]) -> None:

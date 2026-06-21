@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from forkproof.research.canonical.types import RecordOrigin, RefereeVerdict
+
 TraceSource = Literal["mock", "forkproof_export"]
 
 REQUIRED_FIELDS = (
@@ -38,6 +40,18 @@ class TraceRecord:
     hud_trace_url: str | None = None
     witness_id: str | None = None
     release_proof_id: str | None = None
+    trajectory_id: str | None = None
+    qabench_report_ref: str | None = None
+    release_proof_ref: str | None = None
+    proofset_case_id: str | None = None
+    origin: RecordOrigin | None = None
+    referee_verdict: RefereeVerdict | None = None
+    qa_verdict: str | None = None
+    cluster_id: str | None = None
+    environment_v1: str | None = None
+    environment_v2: str | None = None
+    grader_v1_digest: str | None = None
+    grader_v2_digest: str | None = None
     needs_review: bool = False
     source: TraceSource = "forkproof_export"
 
@@ -58,6 +72,18 @@ class TraceRecord:
             "hud_trace_url": self.hud_trace_url,
             "witness_id": self.witness_id,
             "release_proof_id": self.release_proof_id,
+            "trajectory_id": self.trajectory_id,
+            "qabench_report_ref": self.qabench_report_ref,
+            "release_proof_ref": self.release_proof_ref,
+            "proofset_case_id": self.proofset_case_id,
+            "origin": self.origin,
+            "referee_verdict": self.referee_verdict,
+            "qa_verdict": self.qa_verdict,
+            "cluster_id": self.cluster_id,
+            "environment_v1": self.environment_v1,
+            "environment_v2": self.environment_v2,
+            "grader_v1_digest": self.grader_v1_digest,
+            "grader_v2_digest": self.grader_v2_digest,
             "needs_review": self.needs_review,
             "source": self.source,
         }

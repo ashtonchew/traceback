@@ -1,5 +1,9 @@
 """Errors raised while loading ForkProof trace exports."""
 
+from forkproof.research.canonical.errors import CanonicalInputError
+
+__all__ = ["CanonicalInputError", "TraceLoadError", "TraceValidationError"]
+
 
 class TraceLoadError(Exception):
     """Base error for trace loading failures."""

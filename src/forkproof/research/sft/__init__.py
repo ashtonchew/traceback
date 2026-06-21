@@ -1,6 +1,7 @@
 """SFT / training-data filtering extension."""
 
 from forkproof.research.sft.errors import TraceLoadError, TraceValidationError
+from forkproof.research.sft.canonical_pipeline import CanonicalPipelineResult, run_canonical_sft_pipeline
 from forkproof.research.sft.export import DEFAULT_SYSTEM_PROMPT, export_sft_jsonl
 from forkproof.research.sft.filter import FilterResult, filter_traces
 from forkproof.research.sft.loader import DEFAULT_MOCK_FIXTURE, load_traces
@@ -13,6 +14,7 @@ __all__ = [
     "DEFAULT_MOCK_FIXTURE",
     "DEFAULT_SYSTEM_PROMPT",
     "FilterResult",
+    "CanonicalPipelineResult",
     "MetricsSummary",
     "PipelineResult",
     "TraceLoadError",
@@ -24,5 +26,6 @@ __all__ = [
     "load_traces",
     "render_contamination_table",
     "run_sft_pipeline",
+    "run_canonical_sft_pipeline",
     "write_phase2_report",
 ]

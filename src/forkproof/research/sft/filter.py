@@ -111,3 +111,18 @@ def filter_traces(traces: list[TraceRecord]) -> FilterResult:
         excluded=excluded,
         warnings=tuple(warnings),
     )
+
+
+def validate_canonical_release_alignment(traces: list[TraceRecord]) -> None:
+    """Reject canonical inputs that would make a training export unsafe."""
+    for trace in traces:
+        if trace.source != "forkproof_export":
+            continue
+        if trace.is_hack and trace.patched_reward == 1.0:
+            raise ValueError(f"canonical hack survived patched verifier: {trace.trace_id}")
+        if trace.is_legit and trace.patched_reward != 1.0:
+            raise ValueError(f"canonical legitimate row failed patched verifier: {trace.trace_id}")
+        if trace.is_hack and (not trace.exploit_cluster and not trace.cluster_id):
+            raise ValueError(f"canonical hack lacks cluster id: {trace.trace_id}")
+        if trace.origin == "branch" and trace.is_hack and not trace.proofset_case_id:
+            raise ValueError(f"canonical branch hack lacks proofset case id: {trace.trace_id}")
