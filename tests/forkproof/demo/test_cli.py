@@ -220,6 +220,20 @@ def test_validate_report_cli_writes_failure_artifact_for_non_object_json(tmp_pat
     assert result["error_class"] == "input_invalid"
 
 
+def test_validate_report_cli_redacts_failure_output(capsys, tmp_path):
+    source = tmp_path / "report-token=abc123.json"
+    output = tmp_path / "validation.json"
+
+    assert validate_report(report=source, output=output) == 2
+
+    captured = capsys.readouterr()
+    result = read_json(output)
+    assert "token=abc123" not in captured.out
+    assert "token=abc123" not in result["observed_behavior"]
+    assert "token=<redacted>" in captured.out
+    assert "token=<redacted>" in result["observed_behavior"]
+
+
 def test_report_replay_cli_is_audit_only(tmp_path):
     source = tmp_path / "report.json"
     output = tmp_path / "replay-validation.json"

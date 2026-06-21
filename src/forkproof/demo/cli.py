@@ -36,6 +36,10 @@ def _safe_observed_behavior(exc: DemoError) -> str:
     return str(redact_record(str(exc)))
 
 
+def _print_failure(exc: DemoError) -> None:
+    print(f"FAIL: {exc.error_class}: {_safe_observed_behavior(exc)}")
+
+
 def demo_preflight() -> int:
     """Record why the full demo cannot complete before Gate 4."""
 
@@ -82,7 +86,7 @@ def validate_report(*, report: Path, output: Path | None) -> int:
         if output:
             _write_json(output, result)
             print(f"WROTE {output}")
-        print(f"FAIL: {exc.error_class}: {exc}")
+        _print_failure(exc)
         return 2
     result = {
         "schema_version": 1,
@@ -118,7 +122,7 @@ def report_replay(*, source_report: Path, output: Path) -> int:
         }
         _write_json(output, result)
         print(f"WROTE {output}")
-        print(f"FAIL: {exc.error_class}: {exc}")
+        _print_failure(exc)
         return 2
     result = {
         "schema_version": 1,
@@ -158,7 +162,7 @@ def validate_publication(*, attempt: Path, output: Path | None) -> int:
         if output:
             _write_json(output, result)
             print(f"WROTE {output}")
-        print(f"FAIL: {exc.error_class}: {exc}")
+        _print_failure(exc)
         return 2
     result = {
         "schema_version": 1,
@@ -215,7 +219,7 @@ def publication_preflight_command(
         }
         _write_json(output, result)
         print(f"WROTE {output}")
-        print(f"FAIL: {exc.error_class}: {exc}")
+        _print_failure(exc)
         return 2
     _write_json(output, attempt)
     print(f"WROTE {output}")
@@ -244,7 +248,7 @@ def validate_readiness(*, pack: Path, output: Path | None) -> int:
         if output:
             _write_json(output, result)
             print(f"WROTE {output}")
-        print(f"FAIL: {exc.error_class}: {exc}")
+        _print_failure(exc)
         return 2
     result = {
         "schema_version": 1,
