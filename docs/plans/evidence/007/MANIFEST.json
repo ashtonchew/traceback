@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T14:18:00Z",
+  "updated_at": "2026-06-21T14:24:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -25,7 +25,7 @@
         "-q"
       ],
       "exit_code": 0,
-      "observed": "21 passed in 0.06s. Tests cover scheduler policy, depth-one-only scheduler expansion, child selection, lineage, depth-two run records, capability gates, reports, skips, committed child-selection artifact validation, exact artifact reproduction from sealed Witness inputs, fail-closed integration preflight output, conditional research report reproduction, and research package isolation from core feature folders."
+      "observed": "21 passed in 0.05s. Tests cover scheduler policy, depth-one-only scheduler expansion, child selection, lineage, depth-two run records, capability gates, reports, skips, committed child-selection artifact validation, exact artifact reproduction from sealed Witness inputs, fail-closed integration preflight output, conditional research report reproduction, and research package isolation from core feature folders."
     },
     {
       "argv": [
@@ -185,7 +185,7 @@
     {
       "name": "Depth-two run record provenance",
       "status": "pass",
-      "evidence": "src/forkproof/research/models.py rejects completed depth-two branch refs that are not present in scheduled_branch_refs, and tests/forkproof/research/test_research_contracts.py covers that invariant."
+      "evidence": "src/forkproof/research/models.py rejects completed depth-two branch refs that are not present in scheduled_branch_refs and rejects completed runs without measured_values; tests/forkproof/research/test_research_contracts.py covers both invariants."
     },
     {
       "name": "Integration preflight artifact",

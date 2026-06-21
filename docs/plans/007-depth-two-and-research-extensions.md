@@ -139,6 +139,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T14:05:00Z — Added an isolation test proving no non-research `src/forkproof/**` module imports `forkproof.research`, preserving Plan 007's removable feature boundary. Focused research tests now pass at 20 tests.
 - 2026-06-21T14:12:00Z — Tightened the Plan 007 scheduler so it only expands a completed depth-one child into depth-two branch IDs; attempts to schedule from root or an already-depth-two node now fail before branch scheduling. Focused research tests now pass at 21 tests.
 - 2026-06-21T14:18:00Z — Tightened depth-two run records so completed branch refs must be a subset of scheduled branch refs, preventing a report from claiming completions the scheduler never launched. Focused research tests still pass at 21 tests.
+- 2026-06-21T14:24:00Z — Tightened completed depth-two run records to require measured values instead of allowing a measurement-free completion claim. Focused research tests still pass at 21 tests.
 
 ### Surprises & Discoveries
 

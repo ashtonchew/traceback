@@ -215,6 +215,8 @@ class DepthTwoRunRecord:
             raise ValueError("completed depth-two branch refs must have been scheduled")
         if self.status == "completed" and not self.completed_branch_refs:
             raise ValueError("completed depth-two run requires completed branch refs")
+        if self.status == "completed" and not self.measured_values:
+            raise ValueError("completed depth-two run requires measured values")
         if self.status == "blocked" and not self.blocker:
             raise ValueError("blocked depth-two run requires blocker text")
 
