@@ -57,6 +57,14 @@ def test_readiness_pack_rejects_passing_pack_with_expected_blocks():
         validate_readiness_pack(readiness_pack(status="pass"))
 
 
+def test_readiness_pack_rejects_passing_pack_with_not_applicable_checks():
+    checks = [check(name) for name in sorted(REQUIRED_CHECKS)]
+    checks[0] = check(checks[0]["name"], status="not-applicable", reason="not used in this dry run")
+
+    with pytest.raises(DemoError, match="passing readiness"):
+        validate_readiness_pack(readiness_pack(status="pass", checks=checks))
+
+
 def test_readiness_pack_rejects_missing_checks_and_artifact_refs():
     missing_check = readiness_pack(checks=[check("hud_auth")])
     with pytest.raises(DemoError, match="missing checks"):

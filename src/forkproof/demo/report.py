@@ -186,6 +186,8 @@ def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
         if not isinstance(metric, dict):
             raise DemoError("metric_invalid", "each metric must be an object")
         require_fields(metric, {"name"}, error_class="metric_incomplete")
+        if metric["name"] in seen:
+            raise DemoError("metric_invalid", f"metric {metric['name']} is duplicated")
         seen.add(metric["name"])
         present = "value" in metric
         absent = [key for key in METRIC_ABSENT_KEYS if key in metric]

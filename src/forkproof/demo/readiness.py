@@ -92,7 +92,8 @@ def _validate_checks(checks: list[dict[str, Any]], pack_status: str) -> None:
         raise DemoError("readiness_incomplete", f"readiness pack missing checks: {missing}")
     bad = {check["status"] for check in by_name.values()} & {"blocked", "failed"}
     expected_blocks = [check for check in by_name.values() if check["status"] == "expected-block"]
-    if pack_status == "pass" and (bad or expected_blocks):
+    not_applicable = [check for check in by_name.values() if check["status"] == "not-applicable"]
+    if pack_status == "pass" and (bad or expected_blocks or not_applicable):
         raise DemoError("readiness_invalid", "passing readiness pack cannot contain blockers")
     if pack_status == "blocked" and not (bad or expected_blocks):
         raise DemoError("readiness_invalid", "blocked readiness pack needs blocked or expected-block check")

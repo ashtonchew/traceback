@@ -207,3 +207,11 @@ def test_metrics_reject_tbd_and_single_run_statistical_overclaims():
 def test_metrics_require_core_metric_set():
     with pytest.raises(DemoError, match="missing required metric"):
         validate_demo_report(report(metrics=[{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}]))
+
+
+def test_metrics_reject_duplicate_names():
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics.append({"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"})
+
+    with pytest.raises(DemoError, match="duplicated"):
+        validate_demo_report(report(metrics=metrics))
