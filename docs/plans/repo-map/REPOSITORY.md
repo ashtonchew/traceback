@@ -1,9 +1,12 @@
 # Repository orientation
 
-Status: **blocked**
+Status: **accepted**
 
-Verified on 2026-06-20 by Codex against commit
-`99c53d2b3a27a682d67bc61a026cdc2bae16eb4e`.
+Gate 1 was accepted on 2026-06-20T23:55Z by Akhil (Claude Code) against commit
+`e6ea5e3b49286de93a817b1182c5bd3ca74b7a6e`. `STATUS.json` is the canonical gate
+state, repository identity, and verified commit; this orientation was refreshed
+on 2026-06-21 to match it after the prior `blocked` text drifted behind the
+accepted gate.
 
 ## Identity
 
@@ -97,6 +100,10 @@ The future source, test, fixture, script, and artifact boundaries are accepted
 as new repository-native paths in `OWNERSHIP-BINDINGS.json` because no existing
 package layout is available to remap into.
 
-Gate 1 remains blocked. Developers should not start Plans 002-007 until the
-missing real surfaces in `STATUS.json` and `INTERFACES.md` are supplied and
-verified.
+Gate 1 is accepted: each required surface in `STATUS.json` and `INTERFACES.md`
+is either verified-present with evidence or located-and-owned by its later plan,
+per the `000-index.md` acceptance wording. Implementation waves are unblocked,
+and the core stack (Plans 002–005) has merged and consumes the accepted repo
+map. Any surface still marked `Not present` (for example HUD environment version
+publish/compare, located-owned by Plan 006) is a recorded later-wave ownership
+boundary, not a Gate-1 blocker.

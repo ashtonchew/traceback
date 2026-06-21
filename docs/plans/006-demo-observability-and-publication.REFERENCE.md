@@ -16,7 +16,7 @@
 | 10 | Replay Witness against v2 | Trace/result showing failure reward |
 | 11 | Rerun legitimate controls | All control traces/results showing success |
 | 12 | Show ReleaseProof | Passing gate, v1/v2 identities |
-| 13 | Publish/display hardened version | PublicationAttempt plus published id or blocked candidate |
+| 13 | Publish/display hardened version | PublicationAttempt plus published env id, prepared candidate, or blocked candidate |
 
 The report records `passed`, `displayed`, `fallback`, or `blocked-with-proof` as appropriate. It must never call a skipped step passed.
 
@@ -84,6 +84,7 @@ Do not display `TBD` as though it were a result after the run.
 `published` requires a stable HUD environment/version reference.  
 `permission-blocked` requires a sealed candidate, passing ReleaseProof, attempted trusted command, and authorization error.  
 `blocked-with-proof` requires a passing ReleaseProof, sealed candidate, trusted-context preflight, and absent Wave 1 publish binding or missing publish authority. It proves the hardened candidate is ready but cannot be released through an authorized target.
+`prepared` requires a passing ReleaseProof, sealed candidate, trusted-context preflight, a real bound publish primitive plus authorized target, and a `deferred_deploy_command_ref` plus `deferred_reason`. It proves the hardened candidate is verified and ready to upload while the registry upload is deliberately withheld; it carries no error class and must not carry a `published_environment_ref`.
 `failed` covers proof mismatch, unauthorized target, mixed environment/grader identity, missing release artifact, unavailable trusted context, and other publication errors. It is not a completed publication outcome.
 
 ## Machine-readable demo report
@@ -162,8 +163,11 @@ Required fields:
 - `command_argv_ref`
 - `trusted_context_ref`
 - `idempotency_key`
-- `outcome`: `published`, `permission-blocked`, `blocked-with-proof`, or `failed`
+- `outcome`: `published`, `prepared`, `permission-blocked`, `blocked-with-proof`, or `failed`
 - `published_environment_ref` or `release_candidate_ref`
+- `release_proof_gate_status` (`pass`) for any proof-backed non-`failed` outcome
+- `trusted_publication_evidence_ref` when `outcome` is `published` (must also appear in `evidence_refs`)
+- `deferred_deploy_command_ref` and `deferred_reason` when `outcome` is `prepared`
 - `normalized_error_class` when blocked or failed
 - `evidence_refs[]`
 - `redaction_status`
@@ -179,7 +183,7 @@ Publish evidence must use least-privilege, short-lived or federated authority wh
 | Command | Required proof |
 |---|---|
 | `plan-006-tests` | Contract tests reject proof mismatch, unauthorized target, mixed identities, missing artifacts, duplicate retry, fake live branch ids, unlabeled fallback, screenshot-only proof, and invalid report status. |
-| `integration-publication` | Passing ReleaseProof invokes the Wave 1-bound primitive from trusted context and records exactly one publication outcome. |
+| `integration-publication` | Validates trusted publication preflight/outcome contracts locally without invoking a publish API; the real bound primitive is `COMMANDS.json:hud-deploy`, exercised out-of-band and recorded in the publish receipt. |
 | `publication-idempotency` | Duplicate publish/display invocation returns the same published ref or blocked candidate and proves no duplicate version or proof mutation. |
 | `publication-permission-denied` | Missing or denied publish credential records `permission-blocked` with candidate id, attempted trusted action, target, and normalized authorization error. |
 | `publication-trust-boundary` | Untrusted branch, fixer sandbox, and demo UI contexts cannot read publish credentials or invoke the publish primitive. |
