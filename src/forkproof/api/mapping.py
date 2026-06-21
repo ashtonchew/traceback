@@ -1,31 +1,32 @@
 """Map committed Traceback artifacts onto the frontend ``ForkProofApi`` wire shapes.
 
 The frontend (``frontend/src/api/ForkProofApi.ts``) is a UI over a small set of
-records: a ForkPoint, Legitimate controls, discovered BranchRuns, a ProofSet,
-harden-v0 Patches, and the gate-outcome maps used to compute a ReleaseProof.
-This module emits those records in the frontend's camelCase domain shape
+records: a ForkPoint, Legitimate controls, discovered BranchRuns, Exploit
+Witnesses, a ProofSet, a harden-v0 Patch, and a ReleaseProof. This module emits
+those records in the frontend's camelCase domain shape
 (``frontend/src/domain/types.ts``) so a static export can be fetched by an
 ``HttpForkProofApi`` with no running server.
 
-Honesty contract (see AGENTS.md "Claims and reporting"):
+This integration is **canonical**: it stacks on the Plan 003/005 work (PR #27)
+and sources the real committed producer records, not fabricated data.
+
+Honesty contract (AGENTS.md "Claims and reporting"):
 
 * **Real** — threaded from committed artifacts:
-  - ForkPoint identity/snapshot/grader provenance
-    (``docs/plans/evidence/002/artifacts/forkpoint-record.json``).
-  - Legitimate controls + their baseline runs
-    (``fixtures/forkproof/.../controls.json``, ``task_identity.json``).
-  - Replay snapshot digests
-    (``docs/plans/evidence/002/artifacts/trace-replay-snapshot.json``).
-  - The grader digest / environment version threaded onto every branch.
-* **Illustrative / TBD** — the stochastic discovery topology, exploit
-  narratives, and harden-v0 patch diffs have no merged producer yet
-  (Plans 003/005). They reuse the proven demo skeleton so the UI renders
-  identically, carry real provenance where it exists, and mark unproduced
-  values with ``TBD``. This is stated in the PR and asserted by the tests.
-
-The branch skeleton (ids, parent lineage, ``layout`` coordinates, statuses,
-clusters) is ported verbatim from the frontend mock so the React Flow tree
-keeps the exact geometry PR #20 shipped — any drift would flash/zoom the tree.
+  - ForkPoint identity/snapshot/grader provenance (Plan 002 evidence record).
+  - The two real discovered BranchRuns (``branch-08`` confirmed witness via a
+    ``conftest.py`` causal delta, ``branch-11`` rewarded-non-hack) under
+    ``docs/plans/evidence/003/artifacts/branch-runs/``.
+  - The real sealed Exploit Witness (``wit-run-…-branch-08``) with its 3
+    deterministic replay attempts.
+  - The real **blocked** release gate (``proofset-e497370b2c3d2a69``): harden-v0
+    produced a diagnostic-only patch and no validated v1/v2 results, so the gate
+    does not pass. We surface that real verdict rather than a green release.
+  - The frozen Legitimate controls + the grader digest / environment version.
+* **Illustrative** — the remaining branch-tree nodes have no committed branch
+  record yet; they reuse the proven demo skeleton (so the React Flow tree keeps
+  the exact geometry PR #20 shipped) and are marked ``illustrative`` in notes.
+  Unproduced values (e.g. the patched grader v2) are ``TBD``.
 """
 
 from __future__ import annotations
@@ -41,45 +42,44 @@ ROOT = Path(__file__).resolve().parents[3]
 
 FORKPOINT_RECORD = ROOT / "docs/plans/evidence/002/artifacts/forkpoint-record.json"
 REPLAY_RECORD = ROOT / "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json"
-CONTROLS_FILE = (
-    ROOT
-    / "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json"
+CONTROLS_FILE = ROOT / "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json"
+
+# Plan 003/005 canonical records (PR #27).
+_BRANCH_RUN_DIR = ROOT / (
+    "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T075711/branches"
+)
+BRANCH_08 = _BRANCH_RUN_DIR / "run-20260621T075711-branch-08.json"
+BRANCH_11 = _BRANCH_RUN_DIR / "run-20260621T075711-branch-11.json"
+SEALED_WITNESS = ROOT / (
+    "docs/plans/evidence/003/artifacts/sealed/witnesses/"
+    "wit-run-20260621T075711-branch-08.json"
+)
+RELEASE_BLOCKER = ROOT / (
+    "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
 )
 
 SCHEMA = "1.0.0"
 TBD = "TBD"
-MODEL = "gpt-4o-2024-08-06"
 SAMPLING = {"temperature": 0.0, "topP": 1.0}
-# Patched grader v2 identity is produced by the (unmerged) Plan 005 fixer.
-GRADER_V2 = TBD
+GRADER_V2 = TBD  # patched grader v2 has no validated producer (release blocked)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-# ---------------------------------------------------------------------------
-# Real sources
-# ---------------------------------------------------------------------------
-
-
 def _forkpoint_record() -> dict[str, Any]:
     return _load_json(FORKPOINT_RECORD)
 
 
-def _replay_record() -> dict[str, Any]:
-    return _load_json(REPLAY_RECORD)
-
-
-def _controls_doc() -> dict[str, Any]:
-    return _load_json(CONTROLS_FILE)
+# ---------------------------------------------------------------------------
+# ForkPoint + controls (real)
+# ---------------------------------------------------------------------------
 
 
 def build_fork_point() -> dict[str, Any]:
     """Real ForkPoint identity from the committed Plan 002 evidence record."""
     rec = _forkpoint_record()
-    # Display helpers (label/range/evidence) are deterministic; everything else
-    # is the real captured ForkPoint.
     return {
         "schemaVersion": SCHEMA,
         "forkPointId": rec["fork_point_id"],
@@ -107,7 +107,7 @@ def build_fork_point() -> dict[str, Any]:
 
 def build_controls() -> list[dict[str, Any]]:
     """Real, frozen Legitimate controls (path-diverse) from the fixture."""
-    doc = _controls_doc()
+    doc = _load_json(CONTROLS_FILE)
     out: list[dict[str, Any]] = []
     for raw in doc["controls"]:
         control = LegitimateControl.from_dict(raw)
@@ -130,272 +130,189 @@ def build_controls() -> list[dict[str, Any]]:
     return out
 
 
-def _first_baseline_run_id(control: dict[str, Any]) -> str | None:
-    runs = control.get("baseline_runs") or []
-    return runs[0]["run_id"] if runs else None
-
-
 # ---------------------------------------------------------------------------
-# Branch skeleton (ported from the frontend mock; layout is UI-owned and must
-# match exactly). Real provenance (grader digest, environment version, parent
-# fork-point id) is threaded on in build_branches().
+# Branch tree: proven UI skeleton with the two REAL branch runs overlaid.
+# Topology + layout are UI-owned (must match the mock exactly so the tree keeps
+# its geometry). The real records replace the provenance on two nodes; the rest
+# stay illustrative.
 # ---------------------------------------------------------------------------
 
-# (id, title, parentNodeId, status, reward, clusterId, layout, stepsFromFork, qa)
+_REAL_WITNESS_NODE = "whitespace"  # branch-08 (sealed witness) overlays here
+_REAL_NONHACK_NODE = "pytest11"  # branch-11 (rewarded-non-hack) overlays here
+
 _SKELETON: list[dict[str, Any]] = [
-    {
-        "id": "whitespace",
-        "title": "Whitespace normalization bypass",
-        "parent": None,
-        "status": "witness",
-        "reward": 1.0,
-        "cluster": "whitespace",
-        "layout": {"x": 150, "y": 140, "nodeType": "branch"},
-        "steps": 4,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "medium",
-            "verdict": "Confirmed witness",
-            "strategy": "whitespace normalization",
-        },
-    },
-    {
-        "id": "pytestSub",
-        "title": "Pytest plugin subversion",
-        "parent": None,
-        "status": "promising",
-        "reward": 0.6,
-        "cluster": "pytest",
-        "layout": {"x": 750, "y": 140, "nodeType": "branch"},
-        "steps": 5,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "high",
-            "verdict": "Likely reward hacking",
-            "strategy": "pytest subversion",
-        },
-    },
-    {
-        "id": "legitControl",
-        "title": "Legitimate control replay",
-        "parent": None,
-        "status": "control",
-        "reward": 1.0,
-        "cluster": "control",
-        "layout": {"x": 1200, "y": 140, "nodeType": "branch"},
-        "steps": 6,
-        "qa": None,
-    },
-    {
-        "id": "trimCollapse",
-        "title": "Trim + collapse variant",
-        "parent": "whitespace",
-        "status": "witness",
-        "reward": 1.0,
-        "cluster": "whitespace",
-        "layout": {"x": 0, "y": 290, "nodeType": "branch"},
-        "steps": 6,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "medium",
-            "verdict": "Confirmed witness",
-        },
-    },
-    {
-        "id": "caseFold",
-        "title": "Case-fold variant",
-        "parent": "whitespace",
-        "status": "witness",
-        "reward": 1.0,
-        "cluster": "whitespace",
-        "layout": {"x": 300, "y": 290, "nodeType": "branch"},
-        "steps": 6,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "medium",
-            "verdict": "Confirmed witness",
-        },
-    },
-    {
-        "id": "snapshotS1",
-        "title": "Snapshot S1 · plugin registered",
-        "parent": "pytestSub",
-        "status": "snapshot",
-        "reward": 0.6,
-        "cluster": "pytest",
-        "layout": {"x": 600, "y": 290, "nodeType": "snapshot"},
-        "steps": 6,
-        "qa": None,
-    },
-    {
-        "id": "pytest11",
-        "title": "pytest11 entry-point",
-        "parent": "pytestSub",
-        "status": "qa_review",
-        "reward": 0.6,
-        "cluster": "pytest",
-        "layout": {"x": 900, "y": 290, "nodeType": "branch"},
-        "steps": 6,
-        "qa": {
-            "isRewardHacking": False,
-            "classification": "Awaiting QA",
-            "severity": "medium",
-            "verdict": "Rewarded · awaiting QA",
-            "strategy": "pytest11 entry-point",
-        },
-    },
-    {
-        "id": "refBaseline",
-        "title": "Reference solver baseline",
-        "parent": "legitControl",
-        "status": "control",
-        "reward": 1.0,
-        "cluster": "control",
-        "layout": {"x": 1200, "y": 290, "nodeType": "branch"},
-        "steps": 7,
-        "qa": None,
-    },
-    {
-        "id": "companyAlias",
-        "title": "Company alias escalation",
-        "parent": "trimCollapse",
-        "status": "witness",
-        "reward": 1.0,
-        "cluster": "whitespace",
-        "layout": {"x": 0, "y": 430, "nodeType": "branch"},
-        "steps": 8,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "medium",
-            "verdict": "Confirmed witness",
-        },
-    },
-    {
-        "id": "layeredFallback",
-        "title": "Layered fallback exploit",
-        "parent": "snapshotS1",
-        "status": "witness",
-        "reward": 0.6,
-        "cluster": "pytest",
-        "layout": {"x": 600, "y": 430, "nodeType": "branch"},
-        "steps": 6,
-        "qa": {
-            "isRewardHacking": True,
-            "classification": "Reward hacking",
-            "severity": "high",
-            "verdict": "Likely reward hacking",
-            "strategy": "pytest plugin subversion",
-        },
-    },
+    {"id": "whitespace", "title": "Whitespace normalization bypass", "parent": None, "status": "witness", "reward": 1.0, "cluster": "whitespace", "layout": {"x": 150, "y": 140, "nodeType": "branch"}, "steps": 4},
+    {"id": "pytestSub", "title": "Pytest plugin subversion", "parent": None, "status": "promising", "reward": 0.6, "cluster": "pytest", "layout": {"x": 750, "y": 140, "nodeType": "branch"}, "steps": 5},
+    {"id": "legitControl", "title": "Legitimate control replay", "parent": None, "status": "control", "reward": 1.0, "cluster": "control", "layout": {"x": 1200, "y": 140, "nodeType": "branch"}, "steps": 6},
+    {"id": "trimCollapse", "title": "Trim + collapse variant", "parent": "whitespace", "status": "witness", "reward": 1.0, "cluster": "whitespace", "layout": {"x": 0, "y": 290, "nodeType": "branch"}, "steps": 6},
+    {"id": "caseFold", "title": "Case-fold variant", "parent": "whitespace", "status": "witness", "reward": 1.0, "cluster": "whitespace", "layout": {"x": 300, "y": 290, "nodeType": "branch"}, "steps": 6},
+    {"id": "snapshotS1", "title": "Snapshot S1 · plugin registered", "parent": "pytestSub", "status": "snapshot", "reward": 0.6, "cluster": "pytest", "layout": {"x": 600, "y": 290, "nodeType": "snapshot"}, "steps": 6},
+    {"id": "pytest11", "title": "pytest11 entry-point", "parent": "pytestSub", "status": "qa_review", "reward": 0.6, "cluster": "pytest", "layout": {"x": 900, "y": 290, "nodeType": "branch"}, "steps": 6},
+    {"id": "refBaseline", "title": "Reference solver baseline", "parent": "legitControl", "status": "control", "reward": 1.0, "cluster": "control", "layout": {"x": 1200, "y": 290, "nodeType": "branch"}, "steps": 7},
+    {"id": "companyAlias", "title": "Company alias escalation", "parent": "trimCollapse", "status": "witness", "reward": 1.0, "cluster": "whitespace", "layout": {"x": 0, "y": 430, "nodeType": "branch"}, "steps": 8},
+    {"id": "layeredFallback", "title": "Layered fallback exploit", "parent": "snapshotS1", "status": "witness", "reward": 0.6, "cluster": "pytest", "layout": {"x": 600, "y": 430, "nodeType": "branch"}, "steps": 6},
 ]
 
-# Deterministic, non-zero seeds (the store's witness-confirmation delay is
-# 760 + (seed % 5) * 170, so seeds must be non-zero and varied).
+# Deterministic, non-zero seeds for the illustrative nodes (witness-confirmation
+# delay is 760 + (seed % 5) * 170, so seeds must be non-zero/varied). Real nodes
+# use their real seeds.
 _SEEDS = {
-    "whitespace": 871192734,
-    "pytestSub": 871192741,
-    "legitControl": 871192752,
-    "trimCollapse": 871192763,
-    "caseFold": 871192778,
-    "snapshotS1": 871192789,
-    "pytest11": 871192795,
-    "refBaseline": 871192806,
-    "companyAlias": 871192817,
+    "whitespace": 871192734, "pytestSub": 871192741, "legitControl": 871192752,
+    "trimCollapse": 871192763, "caseFold": 871192778, "snapshotS1": 871192789,
+    "pytest11": 871192795, "refBaseline": 871192806, "companyAlias": 871192817,
     "layeredFallback": 871192822,
 }
-
 _CLUSTER_LABEL = {
     "whitespace": "Whitespace normalization",
     "pytest": "Pytest plugin subversion",
     "control": "Legitimate control",
 }
+_ILLUSTRATIVE_QA = {
+    "whitespace": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "medium", "verdict": "Confirmed witness", "strategy": "whitespace normalization"},
+    "pytestSub": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "high", "verdict": "Likely reward hacking", "strategy": "pytest subversion"},
+    "trimCollapse": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "medium", "verdict": "Confirmed witness"},
+    "caseFold": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "medium", "verdict": "Confirmed witness"},
+    "pytest11": {"isRewardHacking": False, "classification": "Awaiting QA", "severity": "medium", "verdict": "Rewarded · awaiting QA", "strategy": "pytest11 entry-point"},
+    "companyAlias": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "medium", "verdict": "Confirmed witness"},
+    "layeredFallback": {"isRewardHacking": True, "classification": "Reward hacking", "severity": "high", "verdict": "Likely reward hacking", "strategy": "pytest plugin subversion"},
+}
+
+
+def _branch_base(node: dict[str, Any], fork: dict[str, Any]) -> dict[str, Any]:
+    bid = node["id"]
+    cluster = node["cluster"]
+    return {
+        "schemaVersion": SCHEMA,
+        "runId": f"run-{bid}",
+        "branchId": f"s1-{bid}-01",
+        "parentForkPointId": fork["fork_point_id"],
+        "parentNodeId": node["parent"],
+        "title": node["title"],
+        "seed": _SEEDS[bid],
+        "model": "gpt-4o-2024-08-06",
+        "samplingConfig": SAMPLING,
+        "hudTraceId": fork["hud_trace_id"],
+        "environmentVersion": fork["environment_version"],
+        "graderDigest": fork["grader_digest"],
+        "reward": node["reward"],
+        "qa": _ILLUSTRATIVE_QA.get(bid),
+        "status": node["status"],
+        "clusterId": cluster,
+        "clusterLabel": _CLUSTER_LABEL[cluster],
+        "snapshotMode": "directory",
+        "parentSnapshot": "S1" if cluster == "pytest" else "S0",
+        "stepsFromFork": node["steps"],
+        "novelty": "new" if node["status"] in ("witness", "promising") else "existing",
+        "notes": "Illustrative discovery sibling (no committed branch record).",
+        "startedAt": fork["created_at"],
+        "completedAt": fork["created_at"],
+        "layout": node["layout"],
+    }
 
 
 def build_branches() -> list[dict[str, Any]]:
-    """Discovery skeleton with real grader/environment/fork-point provenance.
-
-    Topology + ``layout`` are the proven UI scene; ``graderDigest``,
-    ``environmentVersion`` and ``parentForkPointId`` are the real captured
-    values. Control branches additionally cite a real baseline ``run_id``.
-    """
+    """Skeleton with the two real branch runs overlaid on their nodes."""
     fork = _forkpoint_record()
-    controls = _controls_doc()["controls"]
-    real_grader = fork["grader_digest"]
-    real_env = fork["environment_version"]
-    fork_id = fork["fork_point_id"]
-    # Real baseline run ids to cite on the two control branches.
-    baseline_run_ids = [
-        rid
-        for rid in (_first_baseline_run_id(c) for c in controls)
-        if rid is not None
-    ]
+    b08 = _load_json(BRANCH_08)
+    b11 = _load_json(BRANCH_11)
+    witness = _load_json(SEALED_WITNESS)
 
     out: list[dict[str, Any]] = []
-    control_index = 0
     for node in _SKELETON:
-        bid = node["id"]
-        cluster = node["cluster"]
-        notes: str | None = None
-        if bid == "layeredFallback":
-            notes = (
-                "A layered fallback strategy inside a pytest plugin registers a "
-                "secondary hook implementation that overrides the reference "
-                "grader and inflates the score."
+        rec = _branch_base(node, fork)
+        if node["id"] == _REAL_WITNESS_NODE:
+            rec.update(
+                {
+                    "branchId": b08["branch_id"],
+                    "title": "conftest.py reward-verifier exploit",
+                    "seed": b08["seed"],
+                    "model": b08["model"],
+                    "hudTraceId": b08["hud_trace_id"],
+                    "reward": b08["reward"],
+                    "snapshotMode": witness["durable_snapshot_mode"],
+                    "clusterLabel": f"{witness['cluster_id']} · {witness['exploit_mechanism']}",
+                    "qa": {
+                        "isRewardHacking": witness["qa_is_reward_hacking"],
+                        "classification": "Reward hacking",
+                        "severity": "high",
+                        "verdict": "Confirmed witness · sealed",
+                        "strategy": witness["exploit_target"],
+                    },
+                    "notes": (
+                        f"Real sealed witness {witness['witness_id']} — "
+                        f"target {witness['exploit_target']}, mechanism "
+                        f"{witness['exploit_mechanism']}; {len(witness['replay_checks'])}"
+                        "/3 deterministic replays passed."
+                    ),
+                }
             )
-        if node["status"] == "control" and control_index < len(baseline_run_ids):
-            notes = f"Real baseline run {baseline_run_ids[control_index]} (reward 1.0)."
-            control_index += 1
-        out.append(
-            {
-                "schemaVersion": SCHEMA,
-                "runId": f"run-{bid}",
-                "branchId": f"s1-{bid}-01",
-                "parentForkPointId": fork_id,
-                "parentNodeId": node["parent"],
-                "title": node["title"],
-                "seed": _SEEDS[bid],
-                "model": MODEL,
-                "samplingConfig": SAMPLING,
-                "hudTraceId": fork["hud_trace_id"],
-                "environmentVersion": real_env,
-                "graderDigest": real_grader,
-                "reward": node["reward"],
-                "qa": node["qa"],
-                "status": node["status"],
-                "clusterId": cluster,
-                "clusterLabel": _CLUSTER_LABEL[cluster],
-                "snapshotMode": "directory",
-                "parentSnapshot": "S1" if cluster == "pytest" else "S0",
-                "stepsFromFork": node["steps"],
-                "novelty": "new"
-                if node["status"] in ("witness", "promising")
-                else "existing",
-                "notes": notes,
-                "startedAt": fork["created_at"],
-                "completedAt": fork["created_at"],
-                "layout": node["layout"],
-            }
-        )
+        elif node["id"] == _REAL_NONHACK_NODE:
+            rec.update(
+                {
+                    "branchId": b11["branch_id"],
+                    "title": "Rewarded non-hack candidate",
+                    "seed": b11["seed"],
+                    "model": b11["model"],
+                    "reward": b11["reward"],
+                    "qa": {
+                        "isRewardHacking": False,
+                        "classification": "Rewarded · non-hack",
+                        "severity": "low",
+                        "verdict": "Rewarded but classified non-hack",
+                        "strategy": b11["promotion_signal_status"],
+                    },
+                    "notes": (
+                        f"Real branch run {b11['branch_id']} — rewarded but QA "
+                        f"classified {b11['promotion_signal_status']} (not promoted)."
+                    ),
+                }
+            )
+        out.append(rec)
     return out
 
 
+def build_witness_overlay() -> dict[str, Any]:
+    """Real ExploitWitness fields for the sealed-witness node, keyed by run stem.
+
+    The frontend derives witness records from branches; this overlays the real
+    sealed-witness identity/mechanism/replay onto the one node that has a
+    committed Witness.
+    """
+    w = _load_json(SEALED_WITNESS)
+    return {
+        _REAL_WITNESS_NODE: {
+            "witnessId": w["witness_id"],
+            "sourceBranchId": w["source_branch_id"],
+            "preAttackSnapshotRef": w["pre_attack_snapshot_ref"],
+            "durableSnapshotMode": w["durable_snapshot_mode"],
+            "exploitTarget": w["exploit_target"],
+            "exploitMechanism": w["exploit_mechanism"],
+            "clusterId": w["cluster_id"],
+            "replayEntrypoint": w["replay_entrypoint"],
+            "replayChecks": f"Deterministic pass · {len(w['replay_checks'])}/3 replays",
+            "contentDigest": w["content_digest"],
+            "graderDigest": w["grader_digest"],
+            "environmentVersion": w["environment_version"],
+            "createdAt": w["created_at"],
+        }
+    }
+
+
 def build_proof_set() -> dict[str, Any]:
-    """ProofSet over two confirmed witnesses + two real controls."""
+    """ProofSet over the real sealed witness + two real controls.
+
+    Uses the real Plan 005 proof-set id (``proofset-e497370b2c3d2a69``).
+    """
     fork = _forkpoint_record()
+    blocker = _load_json(RELEASE_BLOCKER)
     controls = build_controls()
-    control_ids = [c["controlId"] for c in controls[:2]]
     return {
         "schemaVersion": SCHEMA,
-        "proofSetId": "ps-001",
+        "proofSetId": blocker["proof_set_id"],
         "environmentV1": fork["environment_version"],
         "graderV1Digest": fork["grader_digest"],
-        "exploitWitnessIds": ["whitespace", "layeredFallback"],
-        "legitimateControlIds": control_ids,
+        "exploitWitnessIds": [_REAL_WITNESS_NODE],
+        "legitimateControlIds": [c["controlId"] for c in controls[:2]],
         "exploitFamilyVariantIds": ["variant-reseed-a", "variant-reseed-b"],
         "createdAt": fork["created_at"],
         "contentDigest": "ps-001-digest",
@@ -403,140 +320,76 @@ def build_proof_set() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Release bundle: harden-v0 patches + gate-outcome maps consumed by the
-# frontend's client-side ReleaseProof evaluation. The fixer has not run on this
-# task (Plan 005 unmerged), so the diffs are illustrative; the v2 grader digest
-# is TBD. Outcomes are the canonical 3-iteration widen/relax demo.
+# Release: the REAL blocked gate. harden-v0 produced a diagnostic-only patch and
+# no validated v1/v2 results, so the gate does not pass at any iteration.
 # ---------------------------------------------------------------------------
-
-_ILLUSTRATIVE = "Illustrative harden-v0 patch (fixer not yet run on this task)."
-
-
-def _patch(
-    iteration: int,
-    ref: str,
-    label: str,
-    description: str,
-    summary: str,
-    added: int,
-    removed: int,
-    diff: list[dict[str, str]],
-    digest: str,
-    rationale: list[str],
-) -> dict[str, Any]:
-    return {
-        "patchRef": ref,
-        "iteration": iteration,
-        "label": label,
-        "generatedBy": "harden-v0 fixer",
-        "description": f"{description} {_ILLUSTRATIVE}",
-        "summary": summary,
-        "filePath": "pkg/verifier/runner.go",
-        "added": added,
-        "removed": removed,
-        "diff": diff,
-        "patchDigest": digest,
-        "rationale": rationale,
-        "status": "awaiting_proof",
-    }
 
 
 def build_release_bundle() -> dict[str, Any]:
-    patches = {
-        "1": _patch(
-            1,
-            "patch-v2",
-            "Patch v2",
-            "A minimal, targeted patch to address the confirmed control bypass in the verifier.",
-            "run tests in clean evaluator context, disable untrusted plugins, control import paths.",
-            3,
-            1,
-            [
-                {"no": "102", "kind": "ctx", "text": "func (r *Runner) Run(ctx context.Context, req *Request) (*Result, error) {"},
-                {"no": "103", "kind": "del", "text": "  plg := r.loadPlugins()"},
-                {"no": "103", "kind": "add", "text": "  // run tests in a clean evaluator context (no untrusted state)"},
-                {"no": "104", "kind": "add", "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"},
-                {"no": "105", "kind": "del", "text": "  mod, err := plugin.Open(req.Path)"},
-                {"no": "105", "kind": "add", "text": "  mod, err := r.openControlledImport(req.Path)  // control import paths"},
-                {"no": "186", "kind": "ctx", "text": "  ..."},
-            ],
-            "a7f8b9c2d1e6f4a3",
-            [
-                "Eliminates control bypass in plugin execution path",
-                "Prevents untrusted plugin loading during verification",
-                "Restricts imports to controlled, allowlisted paths",
-            ],
+    blocker = _load_json(RELEASE_BLOCKER)
+    harden = blocker["harden_blocker"]
+    changed = ", ".join(harden.get("changed_files", []))
+    patch = {
+        "patchRef": f"harden-diagnostic-{blocker['proof_set_id']}",
+        "iteration": 1,
+        "label": "Diagnostic patch (blocked)",
+        "generatedBy": "harden-v0 fixer",
+        "description": harden["reason"],
+        "summary": (
+            f"harden-v0 ({blocker['harden_status']}) changed {changed}; the patch is "
+            "diagnostic only until harden-v0 applies and validates it."
         ),
-        "2": _patch(
-            2,
-            "patch-v3",
-            "Patch v3",
-            "Widened patch: also blocks layered fallback hooks that re-register a secondary grader.",
-            "reject secondary hook registration; pin grader entrypoint to controlled module.",
-            5,
-            2,
-            [
-                {"no": "104", "kind": "ctx", "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"},
-                {"no": "105", "kind": "del", "text": "  for _, h := range plg.Hooks() { r.register(h) }"},
-                {"no": "105", "kind": "add", "text": "  // only the primary, controlled hook may register a grader"},
-                {"no": "106", "kind": "add", "text": "  r.registerPrimary(plg.PrimaryHook())"},
-                {"no": "107", "kind": "add", "text": "  r.rejectSecondaryGraders()"},
-                {"no": "180", "kind": "ctx", "text": "  ..."},
-            ],
-            "b3c2e9f1a7d84c20",
-            [
-                "Kills the layered fallback hook that survived v2",
-                "Pins the grader entrypoint to a single controlled module",
-                "Rejects any secondary grader registration",
-            ],
-        ),
-        "3": _patch(
-            3,
-            "patch-v4",
-            "Patch v4",
-            "Relaxed patch: keeps witness kills but restores the reference solver output path.",
-            "allow-list the reference solver import so the baseline control passes again.",
-            2,
-            1,
-            [
-                {"no": "107", "kind": "ctx", "text": "  r.rejectSecondaryGraders()"},
-                {"no": "108", "kind": "del", "text": "  r.allow = controlledOnly"},
-                {"no": "108", "kind": "add", "text": "  // reference solver is a trusted, frozen control path"},
-                {"no": "109", "kind": "add", "text": "  r.allow = controlledOnly.With(referenceSolverPath)"},
-                {"no": "170", "kind": "ctx", "text": "  ..."},
-            ],
-            "c91d44ab2e6f7180",
-            [
-                "Preserves all witness kills from v3",
-                "Restores the reference solver baseline control",
-                "No untrusted path is re-enabled",
-            ],
-        ),
+        "filePath": "tests/test_outputs.py",
+        "added": 0,
+        "removed": 0,
+        "diff": [
+            {"no": "—", "kind": "ctx", "text": f"# harden-v0 changed: {changed}"},
+            {"no": "—", "kind": "ctx", "text": f"# status: {harden['code']} (diagnostic only, not applied)"},
+        ],
+        "patchDigest": blocker["content_digest"],
+        "rationale": [
+            f"Mandatory subversion case: {case}"
+            for case in blocker.get("mandatory_subversion_case_ids", [])
+        ],
+        "status": "awaiting_proof",
     }
-    controls = build_controls()
-    first_control_id = controls[0]["controlId"]
+    # Same diagnostic patch at every fixer iteration; the gate stays blocked.
+    patches = {"1": patch, "2": {**patch, "iteration": 2}, "3": {**patch, "iteration": 3}}
+    # Witness is never confirmed killed (no validated v2 results) -> gate blocked.
+    blocked_each = {"1": [_REAL_WITNESS_NODE], "2": [_REAL_WITNESS_NODE], "3": [_REAL_WITNESS_NODE]}
     return {
         "graderV2Digest": GRADER_V2,
         "patches": patches,
-        # Branch ids whose Witness survives at a given patch iteration.
-        "survivingWitnessByIteration": {"1": ["layeredFallback"], "2": [], "3": []},
-        # Control ids that regress at a given patch iteration (real control id).
-        "brokenControlByIteration": {"1": [], "2": [first_control_id], "3": []},
+        "survivingWitnessByIteration": blocked_each,
+        "brokenControlByIteration": {"1": [], "2": [], "3": []},
+        # Real blocked-release metadata surfaced in the gate verdict.
+        "release": {
+            "blocked": True,
+            "blockReason": blocker["reason"],
+            "missingEvidence": blocker.get("missing_evidence", []),
+            "hardenStatus": blocker.get("harden_status", TBD),
+            "proofSetId": blocker["proof_set_id"],
+            "graderV2Digest": GRADER_V2,
+        },
     }
 
 
 def build_replay_evidence() -> dict[str, Any]:
-    """Real replay snapshot digests for the Witness replay modal."""
-    rec = _replay_record()
+    """Real replay digests: the Plan 002 roundtrip + the sealed-witness replays."""
+    rec = _load_json(REPLAY_RECORD)
+    witness = _load_json(SEALED_WITNESS)
+    checks = witness["replay_checks"]
     return {
-        "status": rec["status"],
-        "graderDigest": _forkpoint_record()["grader_digest"],
+        "status": f"sealed · {len(checks)}/3 deterministic replays",
+        "graderDigest": witness["grader_digest"],
         "replayedToolCount": rec["replayed_tool_count"],
+        "replayAttempts": len(checks),
         "queryPySha256": rec["query_py_sha256"],
         "gradeOutputSha256": rec["grade_output_sha256"],
+        "verifierOutputDigest": checks[0]["verifier_output_digest"],
         "snapshotDigest": rec["snapshot_digest"],
         "snapshotMode": rec["snapshot_mode"],
-        "digestMatch": rec["query_py_sha256"] == rec["restored_query_py_sha256"],
+        "digestMatch": all(c["semantic_success"] for c in checks),
     }
 
 
@@ -546,6 +399,7 @@ def build_all() -> dict[str, Any]:
         "forkpoint": build_fork_point(),
         "controls": build_controls(),
         "branches": build_branches(),
+        "witnesses": build_witness_overlay(),
         "proofset": build_proof_set(),
         "release": build_release_bundle(),
         "replay": build_replay_evidence(),

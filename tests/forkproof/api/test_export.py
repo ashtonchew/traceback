@@ -12,7 +12,7 @@ def test_export_writes_all_routes(tmp_path: Path) -> None:
     written = export.export(tmp_path)
     names = {p.name for p in written}
     assert names == {
-        "forkpoint.json", "controls.json", "branches.json",
+        "forkpoint.json", "controls.json", "branches.json", "witnesses.json",
         "proofset.json", "release.json", "replay.json",
     }
     for path in written:

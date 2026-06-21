@@ -13,18 +13,31 @@ import type {
 } from '../domain/types'
 
 /**
- * Real replay-roundtrip digests (Plan 002 evidence) surfaced in the replay
- * modal when running against real data. Optional: the mock omits it.
+ * Real replay-roundtrip digests (Plan 002 evidence + the sealed-witness
+ * replays) surfaced in the replay modal when running against real data.
+ * Optional: the mock omits it.
  */
 export interface ReplayEvidence {
   status: string
   graderDigest: string
   replayedToolCount: number
+  replayAttempts?: number
   queryPySha256: string
   gradeOutputSha256: string
+  verifierOutputDigest?: string
   snapshotDigest: string
   snapshotMode: string
   digestMatch: boolean
+}
+
+/** Real Plan 005 "blocked" release verdict (harden-v0 diagnostic-only). */
+export interface ReleaseBlock {
+  blocked: boolean
+  blockReason: string
+  missingEvidence: string[]
+  hardenStatus: string
+  proofSetId: string
+  graderV2Digest: string
 }
 
 /**
@@ -44,6 +57,10 @@ export interface RunDataset {
   brokenControlByIteration: Record<number, string[]>
   graderV2: string
   replay?: ReplayEvidence
+  /** Real ExploitWitness fields overlaid onto a branch node, keyed by run stem. */
+  witnessOverlay?: Record<string, Partial<ExploitWitness>>
+  /** Real blocked-release verdict; when present the gate cannot pass. */
+  release?: ReleaseBlock
 }
 
 function delay(ms: number) {
@@ -133,22 +150,27 @@ export class DatasetForkProofApi implements ForkProofApi {
     await delay(80)
     return d.branches
       .filter((b) => b.status === 'witness')
-      .map((b) => ({
-        schemaVersion: b.schemaVersion,
-        witnessId: b.runId.replace('run-', 'wit-'),
-        sourceBranchId: b.branchId,
-        preAttackSnapshotRef: `${b.parentSnapshot ?? 'S0'}-pre`,
-        durableSnapshotMode: b.snapshotMode,
-        exploitTarget: 'verifier grader',
-        exploitMechanism: b.clusterLabel ?? 'reward hacking',
-        clusterId: b.clusterId ?? 'unknown',
-        replayEntrypoint: `replay/${b.branchId}.json`,
-        replayChecks: 'Deterministic pass',
-        contentDigest: `${b.runId}-digest`,
-        environmentVersion: b.environmentVersion,
-        graderDigest: b.graderDigest,
-        createdAt: b.completedAt ?? b.startedAt,
-      }))
+      .map((b) => {
+        const stem = b.runId.replace('run-', '')
+        const derived: ExploitWitness = {
+          schemaVersion: b.schemaVersion,
+          witnessId: `wit-${stem}`,
+          sourceBranchId: b.branchId,
+          preAttackSnapshotRef: `${b.parentSnapshot ?? 'S0'}-pre`,
+          durableSnapshotMode: b.snapshotMode,
+          exploitTarget: 'verifier grader',
+          exploitMechanism: b.clusterLabel ?? 'reward hacking',
+          clusterId: b.clusterId ?? 'unknown',
+          replayEntrypoint: `replay/${b.branchId}.json`,
+          replayChecks: 'Deterministic pass',
+          contentDigest: `${b.runId}-digest`,
+          environmentVersion: b.environmentVersion,
+          graderDigest: b.graderDigest,
+          createdAt: b.completedAt ?? b.startedAt,
+        }
+        // Overlay real sealed-witness identity where a committed record exists.
+        return { ...derived, ...(d.witnessOverlay?.[stem] ?? {}) }
+      })
   }
 
   async getProofSet(): Promise<ProofSet> {
@@ -182,7 +204,7 @@ export class DatasetForkProofApi implements ForkProofApi {
   async getPatch(iteration: number): Promise<Patch> {
     const d = await this.data()
     await delay(150)
-    const p = d.patches[iteration] ?? d.patches[3]
+    const p = d.patches[iteration] ?? d.patches[3] ?? d.patches[1] ?? Object.values(d.patches)[0]
     return clone(p)
   }
 
@@ -253,6 +275,17 @@ export class DatasetForkProofApi implements ForkProofApi {
       similarity: pass ? 0.92 : 0.28,
       createdAt: new Date().toISOString(),
       status: pass ? 'evaluating' : 'failed',
+      // Real Plan 005 blocked verdict (canonical mode): the gate cannot pass
+      // because harden-v0 produced a diagnostic-only patch with no validated
+      // v1/v2 results. Carried through so the gate view can surface the reason.
+      ...(d.release?.blocked
+        ? {
+            blocked: true,
+            blockReason: d.release.blockReason,
+            missingEvidence: d.release.missingEvidence,
+            hardenStatus: d.release.hardenStatus,
+          }
+        : {}),
     }
   }
 

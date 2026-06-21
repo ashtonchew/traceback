@@ -1,169 +1,134 @@
 {
   "brokenControlByIteration": {
     "1": [],
-    "2": [
-      "mongodb-sales-aggregation-engine-path-a"
-    ],
+    "2": [],
     "3": []
   },
   "graderV2Digest": "TBD",
   "patches": {
     "1": {
-      "added": 3,
-      "description": "A minimal, targeted patch to address the confirmed control bypass in the verifier. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "added": 0,
+      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
       "diff": [
         {
           "kind": "ctx",
-          "no": "102",
-          "text": "func (r *Runner) Run(ctx context.Context, req *Request) (*Result, error) {"
-        },
-        {
-          "kind": "del",
-          "no": "103",
-          "text": "  plg := r.loadPlugins()"
-        },
-        {
-          "kind": "add",
-          "no": "103",
-          "text": "  // run tests in a clean evaluator context (no untrusted state)"
-        },
-        {
-          "kind": "add",
-          "no": "104",
-          "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"
-        },
-        {
-          "kind": "del",
-          "no": "105",
-          "text": "  mod, err := plugin.Open(req.Path)"
-        },
-        {
-          "kind": "add",
-          "no": "105",
-          "text": "  mod, err := r.openControlledImport(req.Path)  // control import paths"
+          "no": "—",
+          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
         },
         {
           "kind": "ctx",
-          "no": "186",
-          "text": "  ..."
+          "no": "—",
+          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
         }
       ],
-      "filePath": "pkg/verifier/runner.go",
+      "filePath": "tests/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 1,
-      "label": "Patch v2",
-      "patchDigest": "a7f8b9c2d1e6f4a3",
-      "patchRef": "patch-v2",
+      "label": "Diagnostic patch (blocked)",
+      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
+      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
       "rationale": [
-        "Eliminates control bypass in plugin execution path",
-        "Prevents untrusted plugin loading during verification",
-        "Restricts imports to controlled, allowlisted paths"
+        "Mandatory subversion case: conftest.py",
+        "Mandatory subversion case: cwd/import shadowing",
+        "Mandatory subversion case: hook/TestReport fabrication",
+        "Mandatory subversion case: pytest11",
+        "Mandatory subversion case: site-packages mutation",
+        "Mandatory subversion case: trusted test replacement"
       ],
-      "removed": 1,
+      "removed": 0,
       "status": "awaiting_proof",
-      "summary": "run tests in clean evaluator context, disable untrusted plugins, control import paths."
+      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
     },
     "2": {
-      "added": 5,
-      "description": "Widened patch: also blocks layered fallback hooks that re-register a secondary grader. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "added": 0,
+      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
       "diff": [
         {
           "kind": "ctx",
-          "no": "104",
-          "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"
-        },
-        {
-          "kind": "del",
-          "no": "105",
-          "text": "  for _, h := range plg.Hooks() { r.register(h) }"
-        },
-        {
-          "kind": "add",
-          "no": "105",
-          "text": "  // only the primary, controlled hook may register a grader"
-        },
-        {
-          "kind": "add",
-          "no": "106",
-          "text": "  r.registerPrimary(plg.PrimaryHook())"
-        },
-        {
-          "kind": "add",
-          "no": "107",
-          "text": "  r.rejectSecondaryGraders()"
+          "no": "—",
+          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
         },
         {
           "kind": "ctx",
-          "no": "180",
-          "text": "  ..."
+          "no": "—",
+          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
         }
       ],
-      "filePath": "pkg/verifier/runner.go",
+      "filePath": "tests/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 2,
-      "label": "Patch v3",
-      "patchDigest": "b3c2e9f1a7d84c20",
-      "patchRef": "patch-v3",
+      "label": "Diagnostic patch (blocked)",
+      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
+      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
       "rationale": [
-        "Kills the layered fallback hook that survived v2",
-        "Pins the grader entrypoint to a single controlled module",
-        "Rejects any secondary grader registration"
+        "Mandatory subversion case: conftest.py",
+        "Mandatory subversion case: cwd/import shadowing",
+        "Mandatory subversion case: hook/TestReport fabrication",
+        "Mandatory subversion case: pytest11",
+        "Mandatory subversion case: site-packages mutation",
+        "Mandatory subversion case: trusted test replacement"
       ],
-      "removed": 2,
+      "removed": 0,
       "status": "awaiting_proof",
-      "summary": "reject secondary hook registration; pin grader entrypoint to controlled module."
+      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
     },
     "3": {
-      "added": 2,
-      "description": "Relaxed patch: keeps witness kills but restores the reference solver output path. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "added": 0,
+      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
       "diff": [
         {
           "kind": "ctx",
-          "no": "107",
-          "text": "  r.rejectSecondaryGraders()"
-        },
-        {
-          "kind": "del",
-          "no": "108",
-          "text": "  r.allow = controlledOnly"
-        },
-        {
-          "kind": "add",
-          "no": "108",
-          "text": "  // reference solver is a trusted, frozen control path"
-        },
-        {
-          "kind": "add",
-          "no": "109",
-          "text": "  r.allow = controlledOnly.With(referenceSolverPath)"
+          "no": "—",
+          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
         },
         {
           "kind": "ctx",
-          "no": "170",
-          "text": "  ..."
+          "no": "—",
+          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
         }
       ],
-      "filePath": "pkg/verifier/runner.go",
+      "filePath": "tests/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 3,
-      "label": "Patch v4",
-      "patchDigest": "c91d44ab2e6f7180",
-      "patchRef": "patch-v4",
+      "label": "Diagnostic patch (blocked)",
+      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
+      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
       "rationale": [
-        "Preserves all witness kills from v3",
-        "Restores the reference solver baseline control",
-        "No untrusted path is re-enabled"
+        "Mandatory subversion case: conftest.py",
+        "Mandatory subversion case: cwd/import shadowing",
+        "Mandatory subversion case: hook/TestReport fabrication",
+        "Mandatory subversion case: pytest11",
+        "Mandatory subversion case: site-packages mutation",
+        "Mandatory subversion case: trusted test replacement"
       ],
-      "removed": 1,
+      "removed": 0,
       "status": "awaiting_proof",
-      "summary": "allow-list the reference solver import so the baseline control passes again."
+      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
     }
+  },
+  "release": {
+    "blockReason": "No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof. harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+    "blocked": true,
+    "graderV2Digest": "TBD",
+    "hardenStatus": "max_iterations",
+    "missingEvidence": [
+      "v1_results",
+      "v2_results",
+      "evaluator_context_refs",
+      "subversion_results",
+      "release_candidate_ref"
+    ],
+    "proofSetId": "proofset-e497370b2c3d2a69"
   },
   "survivingWitnessByIteration": {
     "1": [
-      "layeredFallback"
+      "whitespace"
     ],
-    "2": [],
-    "3": []
+    "2": [
+      "whitespace"
+    ],
+    "3": [
+      "whitespace"
+    ]
   }
 }

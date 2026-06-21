@@ -22,7 +22,7 @@ from forkproof.api.mapping import ROOT, build_all
 DEFAULT_OUT_DIR = ROOT / "frontend" / "public" / "api"
 
 # route filename stem -> payload key in build_all()
-ROUTES = ("forkpoint", "controls", "branches", "proofset", "release", "replay")
+ROUTES = ("forkpoint", "controls", "branches", "witnesses", "proofset", "release", "replay")
 
 
 def export(out_dir: Path | None = None) -> list[Path]:

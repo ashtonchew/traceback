@@ -1,13 +1,14 @@
 import { apiBase } from '../config'
-import { DatasetForkProofApi, type ReplayEvidence, type RunDataset } from '../dataset'
-import type { BranchRun, ForkPoint, LegitimateControl, Patch, ProofSet } from '../../domain/types'
+import { DatasetForkProofApi, type ReleaseBlock, type ReplayEvidence, type RunDataset } from '../dataset'
+import type { BranchRun, ExploitWitness, ForkPoint, LegitimateControl, Patch, ProofSet } from '../../domain/types'
 
-/** Shape of the exported `release.json` (patches + gate-outcome maps). */
+/** Shape of the exported `release.json` (patches + gate-outcome maps + verdict). */
 interface ReleaseBundle {
   graderV2Digest: string
   patches: Record<string, Patch>
   survivingWitnessByIteration: Record<string, string[]>
   brokenControlByIteration: Record<string, string[]>
+  release?: ReleaseBlock
 }
 
 async function fetchJson<T>(route: string): Promise<T> {
@@ -23,10 +24,11 @@ async function fetchJson<T>(route: string): Promise<T> {
  * artifacts; see `src/forkproof/api/mapping.py` for what is real vs. TBD.
  */
 async function loadDataset(): Promise<RunDataset> {
-  const [forkPoint, controls, branches, initialProofSet, release, replay] = await Promise.all([
+  const [forkPoint, controls, branches, witnessOverlay, initialProofSet, release, replay] = await Promise.all([
     fetchJson<ForkPoint>('forkpoint'),
     fetchJson<LegitimateControl[]>('controls'),
     fetchJson<BranchRun[]>('branches'),
+    fetchJson<Record<string, Partial<ExploitWitness>>>('witnesses'),
     fetchJson<ProofSet>('proofset'),
     fetchJson<ReleaseBundle>('release'),
     fetchJson<ReplayEvidence>('replay'),
@@ -35,12 +37,14 @@ async function loadDataset(): Promise<RunDataset> {
     forkPoint,
     controls,
     branches,
+    witnessOverlay,
     initialProofSet,
     // JSON object keys are strings; numeric indexing coerces, so this is safe.
     patches: release.patches as unknown as RunDataset['patches'],
     survivingWitnessByIteration: release.survivingWitnessByIteration as unknown as RunDataset['survivingWitnessByIteration'],
     brokenControlByIteration: release.brokenControlByIteration as unknown as RunDataset['brokenControlByIteration'],
     graderV2: release.graderV2Digest,
+    release: release.release,
     replay,
   }
 }
