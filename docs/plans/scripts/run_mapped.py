@@ -7,8 +7,54 @@ import argparse
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from common import PLAN_DIR, ROOT, ValidationError, load_json, print_errors
+
+PLAN_004_COMMANDS = {"plan-004-tests", "integration-controls"}
+PLAN_004_DEFAULT_TASK_ID = "mongodb-sales-aggregation-engine"
+PLAN_004_DEFAULT_MODEL = "gemini-3.1-pro"
+PLAN_004_TASK_FILES = (
+    "tests/test_outputs.py",
+    "tests/test.sh",
+    "environment/Dockerfile",
+)
+
+
+def _resolve_from_cwd(value: str, cwd: Path) -> Path:
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    return (cwd / path).resolve()
+
+
+def _check_plan_004_prerequisites(command: str, cwd: Path, env: dict[str, str]) -> None:
+    if command not in PLAN_004_COMMANDS:
+        return
+
+    terminal_wrench = _resolve_from_cwd(
+        env.get("H2F2H_TERMINAL_WRENCH_PATH", ".external/terminal-wrench"),
+        cwd,
+    )
+    task_id = env.get("H2F2H_TERMINAL_WRENCH_TASK_ID", PLAN_004_DEFAULT_TASK_ID)
+    model = env.get("H2F2H_TERMINAL_WRENCH_MODEL", PLAN_004_DEFAULT_MODEL)
+    original_task = terminal_wrench / "tasks" / task_id / model / "original_task"
+    missing = [
+        str(original_task / relative)
+        for relative in PLAN_004_TASK_FILES
+        if not (original_task / relative).is_file()
+    ]
+
+    if missing:
+        missing_block = "\n  - ".join(missing)
+        raise ValidationError(
+            f"command {command!r} is missing Plan 004 external prerequisite files:\n"
+            f"  - {missing_block}\n"
+            "Run `scripts/bootstrap_external_deps.sh` from the repository root, "
+            "or set `H2F2H_TERMINAL_WRENCH_PATH` to a checkout containing the "
+            "pinned Terminal Wrench task sources. `.external/` is intentionally "
+            "gitignored and must not be committed."
+        )
 
 
 def main() -> int:
@@ -61,6 +107,7 @@ def main() -> int:
         timeout = entry.get("timeout_seconds")
         if timeout is not None and (not isinstance(timeout, int) or timeout <= 0):
             raise ValidationError(f"{path}: timeout_seconds must be positive integer")
+        _check_plan_004_prerequisites(args.command, cwd, env)
         print(f"RUN: {args.command}: cwd={cwd_raw} argv={argv}", flush=True)
         completed = subprocess.run(argv, cwd=cwd, env=env, timeout=timeout, check=False)
         return int(completed.returncode)
