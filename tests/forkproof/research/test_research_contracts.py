@@ -5,8 +5,12 @@ from pathlib import Path
 
 import pytest
 
+from forkproof.research.artifacts import (
+    build_child_selection_artifact,
+    build_depth_two_preflight_artifact,
+)
 from forkproof.research.capability import CapabilityGateError, classify_capability_gate
-from forkproof.research.artifacts import build_child_selection_artifact
+from forkproof.research.cli import integration
 from forkproof.research.models import (
     ChildCandidate,
     DepthTwoRunRecord,
@@ -277,6 +281,41 @@ def test_child_selection_artifact_is_reproducible_from_sealed_witness():
     )
 
     assert generated == expected
+
+
+def test_depth_two_preflight_artifact_records_fail_closed_gate():
+    manifest = json.loads((ROOT / "docs/plans/evidence/003/MANIFEST.json").read_text(encoding="utf-8"))
+
+    artifact = build_depth_two_preflight_artifact(
+        plan003_manifest=manifest,
+        child_selection_ref="artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
+        child_selection_exists=True,
+        command_ref="uv run python -m forkproof.research.cli integration",
+        recorded_at="2026-06-21T11:43:19Z",
+    )
+
+    assert artifact["status"] == "blocked"
+    assert artifact["plan003_gate"]["status"] == "pass"
+    assert artifact["child_selection"]["status"] == "present"
+    assert artifact["depth_two_execution"]["executor"] == "not-mapped"
+    assert artifact["depth_two_execution"]["completed_branch_run_ref"] is None
+    assert artifact["completion_claim"] == "not-complete"
+    assert artifact["content_digest"]
+
+
+def test_integration_cli_writes_preflight_artifact_and_fails_closed(tmp_path):
+    output = tmp_path / "depth-two-preflight.json"
+
+    exit_code = integration(output_path=output)
+
+    assert exit_code == 2
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    assert artifact["artifact_id"] == "plan-007-depth-two-integration-preflight"
+    assert artifact["status"] == "blocked"
+    assert artifact["plan003_gate"]["status"] == "pass"
+    assert artifact["blockers"] == [
+        "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact.",
+    ]
 
 
 def test_capability_gate_returns_exact_unavailable_outcome_without_scaffold_refs():

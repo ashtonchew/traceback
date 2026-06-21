@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from forkproof.witnesses.models import digest_json
+
 
 def build_child_selection_artifact(
     *,
@@ -109,3 +111,65 @@ def build_child_selection_artifact(
         },
         "completion_claim": "not-complete",
     }
+
+
+def build_depth_two_preflight_artifact(
+    *,
+    plan003_manifest: dict[str, Any],
+    child_selection_ref: str,
+    child_selection_exists: bool,
+    command_ref: str,
+    recorded_at: str,
+) -> dict[str, Any]:
+    """Build the fail-closed integration preflight record for Plan 007."""
+
+    checks = plan003_manifest.get("checks", [])
+    sealed = any(
+        check.get("name") == "Promotion and replay seal" and check.get("status") == "pass"
+        for check in checks
+        if isinstance(check, dict)
+    )
+    plan003_complete = plan003_manifest.get("status") == "complete"
+    plan003_gate_status = "pass" if sealed and plan003_complete else "blocked"
+    blockers = []
+    if plan003_gate_status != "pass":
+        blockers.append(
+            "Plan 003 does not have complete sealed Witness evidence on this stack."
+        )
+    if not child_selection_exists:
+        blockers.append("Plan 007 child-selection artifact is missing.")
+    blockers.append(
+        "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact."
+    )
+
+    artifact: dict[str, Any] = {
+        "schema_version": 1,
+        "artifact_id": "plan-007-depth-two-integration-preflight",
+        "status": "blocked",
+        "recorded_at": recorded_at,
+        "command_ref": command_ref,
+        "plan003_gate": {
+            "status": plan003_gate_status,
+            "manifest_ref": "docs/plans/evidence/003/MANIFEST.json",
+            "sealed_witness_check": sealed,
+            "manifest_status": plan003_manifest.get("status"),
+        },
+        "child_selection": {
+            "status": "present" if child_selection_exists else "missing",
+            "artifact_ref": child_selection_ref,
+        },
+        "depth_two_execution": {
+            "status": "blocked",
+            "executor": "not-mapped",
+            "completed_branch_run_ref": None,
+            "required_next_artifacts": [
+                "independent child re-snapshot restore evidence",
+                "completed depth-two BranchRun artifact",
+                "adaptive-stop decision event from a real run",
+            ],
+        },
+        "blockers": blockers,
+        "completion_claim": "not-complete",
+    }
+    artifact["content_digest"] = digest_json(artifact)
+    return artifact

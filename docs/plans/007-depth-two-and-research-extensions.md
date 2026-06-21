@@ -134,6 +134,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T12:32:00Z — Added Plan 007-owned lineage and depth-two run record contracts plus `artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json`. The artifact selects the sealed Witness branch as the promising child using observable file-change, cluster, and grader-visible signals, but marks the depth-two run blocked because no child re-snapshot or depth-two BranchRun has been produced.
 - 2026-06-21T12:52:00Z — Added a behavior test that loads the committed child-selection artifact and validates its selection, lineage, and blocked depth-two run sections through public Plan 007 contracts. Focused research tests now pass at 14 tests.
 - 2026-06-21T13:12:00Z — Added `src/forkproof/research/artifacts.py` so the selected-child artifact is reproducible from the sealed Witness and causal-delta inputs rather than only hand-written JSON. Focused research tests now pass at 15 tests.
+- 2026-06-21T13:43:00Z — Added a Plan 007 integration preflight artifact builder and wired `uv run python -m forkproof.research.cli integration` to write `artifacts/forkproof/research/depth-two-integration-preflight.json` before failing closed. Focused research tests now pass at 17 tests; the CLI still exits 2 because there is no mapped live depth-two executor or completed depth-two BranchRun.
 
 ### Surprises & Discoveries
 
@@ -143,6 +144,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T12:03:00Z — Plan 005 is the better stack base for Plan 007 than the earlier Plan 003 branch: it includes the sealed Witness produced by Plan 003 rescue work and keeps Plan 007 closer to the current release-proof stack. This does not make Plan 007 complete; it only removes the prior no-Witness base problem.
 - 2026-06-21T12:08:00Z — The previous external-dependency blocker was base-specific. On the Plan 005 stack, the verifier exists and passes once the pinned local HUD Trace Explorer checkout is linked into ignored `.external/`.
 - 2026-06-21T12:32:00Z — The first WP1 sentence is now partially grounded: a promising child is selected from observable sealed-Witness evidence. The WP1 pass condition is still not met because the selected child has not been re-snapshotted independently under Plan 007.
+- 2026-06-21T13:43:00Z — The integration STOP now has durable Plan 007-owned evidence. The preflight artifact proves the blocked state without turning the mapped `integration-research` skip into a success claim.
 
 ### Decision Log
 
@@ -150,6 +152,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 - 2026-06-21T11:19:15Z — Implemented only pure Plan 007 contracts and skip/report evidence until Plan 003 seals a Witness. This preserves the STOP condition while making the unblocked scheduler and gating behavior testable.
 - 2026-06-21T12:03:00Z — Keep the integration CLI fail-closed even when a sealed Witness is present on the stack. Returning success at that point would overstate readiness because Plan 007 has not yet produced a live depth-two BranchRun artifact.
 - 2026-06-21T12:32:00Z — Treat child selection as a separate artifact from child re-snapshot. Selection can be evidenced from the sealed Witness, but independent restore/re-snapshot remains a live-system WP1 requirement.
+- 2026-06-21T13:43:00Z — Keep the preflight artifact stable across reruns by preserving an existing `recorded_at` value. Re-running the fail-closed CLI should not dirty committed evidence unless the underlying gate facts change.
 
 ### Outcomes & Retrospective
 

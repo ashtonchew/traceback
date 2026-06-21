@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "artifact_id": "plan-007-depth-two-integration-preflight",
+  "status": "blocked",
+  "recorded_at": "2026-06-21T11:44:38Z",
+  "command_ref": "uv run python -m forkproof.research.cli integration",
+  "plan003_gate": {
+    "status": "pass",
+    "manifest_ref": "docs/plans/evidence/003/MANIFEST.json",
+    "sealed_witness_check": true,
+    "manifest_status": "complete"
+  },
+  "child_selection": {
+    "status": "present",
+    "artifact_ref": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+  },
+  "depth_two_execution": {
+    "status": "blocked",
+    "executor": "not-mapped",
+    "completed_branch_run_ref": null,
+    "required_next_artifacts": [
+      "independent child re-snapshot restore evidence",
+      "completed depth-two BranchRun artifact",
+      "adaptive-stop decision event from a real run"
+    ]
+  },
+  "blockers": [
+    "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact."
+  ],
+  "completion_claim": "not-complete",
+  "content_digest": "6badefb9682f3a1916c009202de843d1f00a175f31d5c6d5df2c36ff80ad8c10"
+}
