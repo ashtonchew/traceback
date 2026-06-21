@@ -1,8 +1,8 @@
 {
   "base_image_digest": "sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348",
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
-  "environment_image_digest": "forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee",
-  "fork_point_id": "fp-c2adfb186abac17f61ac4824",
+  "environment_image_digest": "forkpoint-image-sha256:dc11b737edf6fe985d7698754a6e218fb39bc383f2bc5edbd3f3a7a51ff295d6",
+  "fork_point_id": "fp-38471977e47584bfa2688f23",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -77,7 +77,7 @@
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "f20c9ebf4f8dae3bfd7b1f842bac9ebe4890316f60856a76401dae5a1fed58e4",
+  "restored_grade_output_sha256": "0e8309c48a7a035b4a3f37f668ec09611a6adaee17b2e385153b30a241f2c1a4",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
   "security_probe": {
@@ -86,10 +86,10 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "92c611adea00ce395429dd2820088fa2784de897154501b244ddb3212c65640d",
-  "snapshot_id": "im-01KVKRSVCSKF89KF283WDW6G0G",
+  "snapshot_digest": "6aa5470b35c9f9a5dafa57771cf4ca2b1e694f6cc149911c18b01c8ae0421ac3",
+  "snapshot_id": "im-01KVKSP4RKSV710QEK4ZK46F2Z",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKRSVCSKF89KF283WDW6G0G",
+  "snapshot_restore_ref": "modal-image://im-01KVKSP4RKSV710QEK4ZK46F2Z",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",

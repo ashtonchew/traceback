@@ -8,8 +8,8 @@
     "source": "Docker Registry HTTP API",
     "tag": "7.0"
   },
-  "environment_image_digest": "forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee",
-  "environment_source_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
+  "environment_image_digest": "forkpoint-image-sha256:dc11b737edf6fe985d7698754a6e218fb39bc383f2bc5edbd3f3a7a51ff295d6",
+  "environment_source_digest": "source-tree-sha256:5a5ff1aeca8f4600cb0d890ecc012a9510873ca3c4780b0f17575ff684775a49",
   "limitations": [
     "Base image digest is resolved from Docker Hub at evidence time.",
     "Combined digest identifies the source inputs and Modal build recipe, not a Modal-internal built image manifest."

@@ -74,6 +74,7 @@ def test_valid_capture_has_required_fields(tmp_path: Path):
         "grader_digest",
         "fork_reason",
         "created_at",
+        "content_digest",
         "source_evidence_refs",
     ):
         assert record[field]
@@ -176,6 +177,47 @@ def test_finalized_record_is_immutable(tmp_path: Path):
     store = ForkPointStore(tmp_path / "store")
     with pytest.raises(ForkPointError):
         store.put(record)
+
+
+def test_capture_returns_store_verified_record(tmp_path: Path):
+    provider = InMemorySnapshotProvider()
+    src = source(tmp_path)
+    store = ForkPointStore(tmp_path / "store")
+    record = capture_forkpoint(
+        source=src,
+        hud_step_id="step-1",
+        history_prefix=history(),
+        task_state=state(),
+        snapshot_mode="filesystem",
+        provider=provider,
+        store=store,
+    )
+    stored = store.get(record["fork_point_id"])
+
+    assert record == stored
+
+
+def test_store_rejects_tampered_finalized_record(tmp_path: Path):
+    provider = InMemorySnapshotProvider()
+    src = source(tmp_path)
+    store = ForkPointStore(tmp_path / "store")
+    record = capture_forkpoint(
+        source=src,
+        hud_step_id="step-1",
+        history_prefix=history(),
+        task_state=state(),
+        snapshot_mode="filesystem",
+        provider=provider,
+        store=store,
+    )
+    path = store.root / f"{record['fork_point_id']}.json"
+    tampered = json.loads(path.read_text(encoding="utf-8"))
+    tampered["grader_digest"] = "tampered"
+    path.write_text(json.dumps(tampered), encoding="utf-8")
+
+    with pytest.raises(ForkPointError) as err:
+        store.get(record["fork_point_id"])
+    assert err.value.error_class == "state_restore_failed"
 
 
 def test_environment_source_digest_covers_copied_task_assets(tmp_path: Path):

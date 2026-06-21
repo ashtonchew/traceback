@@ -219,7 +219,7 @@ def capture_forkpoint(
             "created_at": utc_now(),
         }
         store.put(record)
-        return record
+        return store.get(fork_point_id)
     except Exception:
         if snapshot is not None:
             provider.cleanup(snapshot["snapshot_id"])
