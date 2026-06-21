@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T10:35:06Z",
+  "updated_at": "2026-06-21T10:50:03Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -40,7 +40,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "validate-sections",
@@ -48,7 +48,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 8 plans have valid frontmatter, sections, packets, and goal blocks",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "validate-ownership-repo-bound",
@@ -56,7 +56,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: repo-bound ownership is collision-free for 8 plans",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "validate-traceability",
@@ -64,15 +64,15 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: 47 requirements map to all 8 plans",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "plan-006-tests",
       "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after report status/source/live consistency hardening: 32 passed.",
-      "recorded_at": "2026-06-21T10:32:18Z"
+      "observed_behavior": "Mapped Plan 006 tests passed after readiness pack validation: 38 passed.",
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "integration-publication",
@@ -128,15 +128,15 @@
       "exit_code": 2,
       "status": "blocked",
       "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and refused to claim an Acceptance Demo Run before ReleaseProof/publish binding exist.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "ruff-plan-006-demo",
       "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after report validation hardening.",
-      "recorded_at": "2026-06-21T10:32:18Z"
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after readiness pack validation.",
+      "recorded_at": "2026-06-21T10:47:12Z"
     },
     {
       "key": "lint",
@@ -144,7 +144,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped lint passed: ruff check docs/plans/scripts.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "build",
@@ -152,15 +152,15 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped build passed: uv lock --check resolved 155 packages.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "file-size-006",
       "command": "python docs/plans/scripts/validate_file_sizes.py --plan 006",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS with warning: docs/plans/evidence/006/MANIFEST.json is 532 lines, above the 500-line target but below the validator hard limit.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "observed_behavior": "PASS: 16 text files are within file-size limits.",
+      "recorded_at": "2026-06-21T10:50:03Z"
     },
     {
       "key": "evidence-006",
@@ -168,7 +168,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T10:50:03Z"
     }
   ],
   "rechecks": [
@@ -273,6 +273,11 @@
       "name": "Report status and live-source consistency",
       "status": "pass",
       "evidence": "Plan 006 report validation now rejects invalid top-level report status, invalid live_attempt_result values, live-new-witness without a new-witness result, live-no-witness that claims a new Witness, report replay that is not audit-only, and Prior-Run Witness Replay without a bounded live attempt result. Demo Report Replay remains audit-only and preserves the source report discovery mode rather than requiring new replay refs."
+    },
+    {
+      "name": "Demo readiness pack validation",
+      "status": "pass",
+      "evidence": "Plan 006 now validates a digest-checked demo readiness pack for presentation/acceptance modes without probing live systems or reading secrets. The pack requires evidence-backed checks for HUD auth, Modal auth, model gateway auth, network, quota, source trace, ForkPoint, prior Witness, replay entrypoint, ProofSet, ReleaseProof, release candidate, publication attempt or expected block, and local artifact paths. Blocked packs require explicit blocked/expected-block reasons; passing packs cannot include blockers; secret-like content is rejected."
     }
   ],
   "artifacts": [
@@ -378,6 +383,8 @@
     "2026-06-21T10:17:43Z — Added safe publication-preflight CLI for the independently runnable publish/display preflight path. It consumes a ReleaseProof JSON path, emits a validated PublicationAttempt artifact, returns nonzero for failed preflight outcomes, and still never invokes or invents a publish primitive. Mapped plan-006-tests passed with 31 tests; integration-publication passed with 13 tests.",
     "2026-06-21T10:21:09Z — Ran feasible validators after publication-preflight CLI work. Graph, sections, repo-bound ownership, traceability, mapped publication idempotency/permission/trust/redaction, lint, build, file-size, and evidence validation passed. Mapped demo still exits 2 by design and refreshes the blocker artifact because Plan 005/Gate 4 and publish binding are missing.",
     "2026-06-21T10:32:18Z — Hardened report status/source/live consistency. The validator now rejects invalid report status and incoherent live discovery claims while preserving Demo Report Replay as audit-only revalidation of the source report mode. Mapped plan-006-tests passed with 32 tests; demo-report-replay passed with 1 test.",
-    "2026-06-21T10:35:06Z — Compacted superseded command rows in this evidence manifest after latest validation results made earlier duplicate command rows redundant; the Plan 006 living-doc log retains the chronological history."
+    "2026-06-21T10:35:06Z — Compacted superseded command rows in this evidence manifest after latest validation results made earlier duplicate command rows redundant; the Plan 006 living-doc log retains the chronological history.",
+    "2026-06-21T10:47:12Z — Added demo readiness pack validation and CLI support. This validates a digest-checked readiness pack with evidence-backed auth/network/quota/artifact statuses without probing live systems or reading secrets. Mapped plan-006-tests passed with 38 tests.",
+    "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist."
   ]
 }

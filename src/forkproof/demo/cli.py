@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
 from .publication import publication_preflight, validate_publication_attempt
+from .readiness import validate_readiness_pack
 from .redaction import redact_record
 from .report import validate_demo_report
 
@@ -225,6 +226,42 @@ def publication_preflight_command(
     return 0
 
 
+def validate_readiness(*, pack: Path, output: Path | None) -> int:
+    """Validate a demo readiness pack without probing live systems."""
+
+    try:
+        record = _load_json(pack)
+        validate_readiness_pack(record)
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "source_readiness_pack_ref": pack.as_posix(),
+            "error_class": exc.error_class,
+            "observed_behavior": _safe_observed_behavior(exc),
+            "validated_at": utc_now(),
+        }
+        if output:
+            _write_json(output, result)
+            print(f"WROTE {output}")
+        print(f"FAIL: {exc.error_class}: {exc}")
+        return 2
+    result = {
+        "schema_version": 1,
+        "status": "pass",
+        "source_readiness_pack_ref": pack.as_posix(),
+        "readiness_pack_id": record["readiness_pack_id"],
+        "readiness_status": record["status"],
+        "observed_behavior": "Readiness pack validated without probing live auth, network, quota, HUD, Modal, or publish systems.",
+        "validated_at": utc_now(),
+    }
+    if output:
+        _write_json(output, result)
+        print(f"WROTE {output}")
+    print(f"PASS: readiness_pack={pack} status={record['status']}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -248,6 +285,9 @@ def main() -> int:
     preflight_parser.add_argument("--permission-denied", action="store_true")
     preflight_parser.add_argument("--evidence-ref", action="append", default=[])
     preflight_parser.add_argument("--output", required=True, type=Path)
+    readiness_parser = sub.add_parser("validate-readiness-pack")
+    readiness_parser.add_argument("--pack", required=True, type=Path)
+    readiness_parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.command == "demo-preflight":
         return demo_preflight()
@@ -269,6 +309,8 @@ def main() -> int:
             evidence_refs=args.evidence_ref,
             output=args.output,
         )
+    if args.command == "validate-readiness-pack":
+        return validate_readiness(pack=args.pack, output=args.output)
     raise AssertionError(args.command)
 
 

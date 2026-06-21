@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import json
 
-from forkproof.demo.cli import publication_preflight_command, report_replay, validate_publication, validate_report
+from forkproof.demo.cli import (
+    publication_preflight_command,
+    report_replay,
+    validate_publication,
+    validate_readiness,
+    validate_report,
+)
 from forkproof.demo.models import with_content_digest
 from forkproof.demo.publication import idempotency_key
+from forkproof.demo.readiness import REQUIRED_CHECKS
 from forkproof.demo.report import STEP_LABELS
 from forkproof.releases.models import digest_json
 
@@ -100,6 +107,48 @@ def release_proof(**overrides):
     record.update(overrides)
     record["content_digest"] = digest_json(record)
     return record
+
+
+def readiness_check(name, *, status="pass", reason=None):
+    record = {"name": name, "status": status, "evidence_refs": [f"readiness/{name}.json"]}
+    if reason:
+        record["reason"] = reason
+    return record
+
+
+def readiness_pack(**overrides):
+    checks = [
+        readiness_check(
+            name,
+            status="expected-block" if name == "publication_attempt_or_expected_block" else "pass",
+            reason="Publish binding is not available before Plan 005 completes"
+            if name == "publication_attempt_or_expected_block"
+            else None,
+        )
+        for name in sorted(REQUIRED_CHECKS)
+    ]
+    record = {
+        "schema_version": 1,
+        "readiness_pack_id": "ready-cli-001",
+        "created_at": "2026-06-21T00:00:00Z",
+        "mode": "presentation",
+        "status": "blocked",
+        "checks": checks,
+        "artifact_refs": {
+            "source_trace_ref": "trace://source",
+            "forkpoint_ref": "forkpoint.json",
+            "prior_witness_ref": "witness.json",
+            "replay_entrypoint_ref": "replay.py",
+            "proofset_ref": "proofset.json",
+            "release_proof_ref": "blocked:plan-005",
+            "release_candidate_ref": "blocked:plan-005",
+            "metrics_report_ref": "metrics.json",
+            "publication_attempt_or_block_ref": "blocked:publish-binding",
+        },
+        "redaction_status": "redacted",
+    }
+    record.update(overrides)
+    return with_content_digest(record)
 
 
 def write_json(path, record):
@@ -255,3 +304,29 @@ def test_publication_preflight_cli_writes_failure_artifact_for_bad_proof(tmp_pat
     assert result["outcome"] == "failed"
     assert result["normalized_error_class"] == "proof_mismatch"
     assert result["content_digest"]
+
+
+def test_validate_readiness_pack_cli_writes_pass_artifact(tmp_path):
+    source = tmp_path / "readiness.json"
+    output = tmp_path / "readiness-validation.json"
+    write_json(source, readiness_pack())
+
+    assert validate_readiness(pack=source, output=output) == 0
+
+    result = read_json(output)
+    assert result["status"] == "pass"
+    assert result["readiness_pack_id"] == "ready-cli-001"
+    assert result["readiness_status"] == "blocked"
+    assert result["content_digest"]
+
+
+def test_validate_readiness_pack_cli_writes_failure_artifact(tmp_path):
+    source = tmp_path / "readiness.json"
+    output = tmp_path / "readiness-validation.json"
+    write_json(source, readiness_pack(redaction_status="unsafe"))
+
+    assert validate_readiness(pack=source, output=output) == 2
+
+    result = read_json(output)
+    assert result["status"] == "failed"
+    assert result["error_class"] == "secret_exposure"
