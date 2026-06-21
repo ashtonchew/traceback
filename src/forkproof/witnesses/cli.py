@@ -326,7 +326,7 @@ def integration_witness() -> int:
             },
         )
         if qa_classification.get("status") != "pass":
-            promotion_blockers.append("repo-bound HUD Reward Hacking QA classification did not return a verdict")
+            promotion_blockers.append("canonical hud-trace-explorer Reward Hacking QA classification did not return a verdict")
         else:
             qa_classifier_ready = True
     if not qa_classifier_ready:
@@ -374,7 +374,8 @@ def integration_witness() -> int:
         },
         "observed_behavior": (
             "integration preflight plus diagnostic BranchGateway smoke and, when QA is approved, the full 12 "
-            "Hacker BranchRun batch. QA remains a separate post-run classification path required before Witness promotion."
+            "Hacker BranchRun batch. Canonical hud-trace-explorer QA remains a separate post-run classification "
+            "path required before Witness promotion."
         ),
     }
     path = _write_artifact("integration-witness-preflight.json", artifact)

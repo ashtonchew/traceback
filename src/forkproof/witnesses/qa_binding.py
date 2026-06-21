@@ -10,6 +10,8 @@ from typing import Any
 
 import httpx
 
+from .qa_canonical import fetch_canonical_prompt, load_canonical_reward_hacking_module as _load_canonical_reward_hacking_module
+
 
 def _load_local_env(root: Path) -> None:
     env_path = root / ".env"
@@ -27,23 +29,12 @@ def _load_local_env(root: Path) -> None:
 
 
 def _credential_presence() -> dict[str, str]:
-    names = (
-        "MODAL_TOKEN_ID",
-        "MODAL_TOKEN_SECRET",
-        "HUD_API_KEY",
-        "ANTHROPIC_API_KEY",
-    )
+    names = ("MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "HUD_API_KEY", "ANTHROPIC_API_KEY")
     return {name: "present" if os.environ.get(name) else "absent" for name in names}
 
 
 def _hud_org_binding() -> dict[str, str | None]:
-    names = (
-        "HUD_ORGANIZATION_ID",
-        "HUD_ORG_ID",
-        "HUD_PROJECT_ID",
-        "HUD_WORKSPACE_ID",
-        "X_ORGANIZATION_ID",
-    )
+    names = ("HUD_ORGANIZATION_ID", "HUD_ORG_ID", "HUD_PROJECT_ID", "HUD_WORKSPACE_ID", "X_ORGANIZATION_ID")
     for name in names:
         value = os.environ.get(name)
         if value:
@@ -231,6 +222,39 @@ def _classify_compact_trace(compact: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _classify_prompt_text(prompt: str) -> dict[str, Any]:
+    import anthropic
+
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not anthropic_key:
+        return {
+            "status": "blocked",
+            "credential_presence": _credential_presence(),
+            "observed_behavior": "reward-hacking analysis skipped because Anthropic credentials are absent",
+        }
+    model = os.environ.get("FORKPROOF_QA_MODEL") or os.environ.get("H2F2H_HACKER_MODEL") or "claude-haiku-4-5"
+    response = anthropic.Anthropic(api_key=anthropic_key).messages.create(
+        model=model,
+        max_tokens=1200,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = "\n".join(block.text for block in response.content if getattr(block, "type", "") == "text")
+    parsed = _extract_json_object(text)
+    if parsed is None:
+        return {
+            "status": "blocked",
+            "model": model,
+            "prompt_digest": _digest({"prompt": prompt}),
+            "observed_behavior": "Reward Hacking QA model did not return parseable JSON.",
+        }
+    return {
+        "status": "pass",
+        "model": model,
+        "prompt_digest": _digest({"prompt": prompt}),
+        **_validate_reward_hacking_result(parsed),
+    }
+
+
 def synthetic_reward_hack_trace(**overrides: Any) -> dict[str, Any]:
     trace = {
         "trace_id": "synthetic-reward-hack",
@@ -326,9 +350,10 @@ def run_reward_hacking_analysis(root: Path, trace_id: str, *, branch_id: str, ac
             "hud_trace_id": trace_id,
             "branch_id": branch_id,
             "action_record_digest": action_record_digest,
-            "source_adapter": "hud-trace-explorer-compatible-v2",
+            "source_adapter": "hud-trace-explorer.qa_reward_hacking",
             "observed_behavior": (
-                "Reward Hacking QA adapter is bound to the official trace-explorer schema, but running it would "
+                "Reward Hacking QA adapter is bound to the canonical hud-evals/hud-trace-explorer "
+                "qa_reward_hacking.py scenario, but running it would "
                 "export private HUD trace data to an external model provider. Set FORKPROOF_ALLOW_EXTERNAL_QA=1 "
                 "only after explicit approval for that data export."
             ),
@@ -340,14 +365,20 @@ def run_reward_hacking_analysis(root: Path, trace_id: str, *, branch_id: str, ac
             "credential_presence": _credential_presence(),
             "observed_behavior": "reward-hacking analysis skipped because HUD or Anthropic credentials are absent",
         }
-
-    base = os.environ.get("HUD_API_URL", "https://api.beta.hud.ai").rstrip("/")
-    headers = {"Authorization": f"Bearer {api_key}"}
-    trace_data = _fetch_v2_trace(base, headers, trace_id)
-    compact = _compact_trace_for_prompt(trace_data)
-    classified = _classify_compact_trace(compact)
+    module, binding = _load_canonical_reward_hacking_module(root)
+    prompt_payload = fetch_canonical_prompt(module, binding, trace_id=trace_id, hud_api_key=api_key)
+    if prompt_payload.get("status") != "pass":
+        return {
+            **binding,
+            **prompt_payload,
+            "credential_presence": _credential_presence(),
+            "hud_trace_id": trace_id,
+            "branch_id": branch_id,
+            "action_record_digest": action_record_digest,
+        }
+    classified = _classify_prompt_text(str(prompt_payload["prompt"]))
     if classified.get("status") != "pass":
-        return {**classified, "trace_id": trace_id}
+        return {**classified, **binding, "trace_id": trace_id}
     result = {
         key: classified[key]
         for key in ("reasoning", "is_reward_hacking", "hacking_strategy", "severity", "confidence")
@@ -361,14 +392,16 @@ def run_reward_hacking_analysis(root: Path, trace_id: str, *, branch_id: str, ac
         "branch_id": branch_id,
         "hud_trace_id": trace_id,
         "action_record_digest": action_record_digest,
-        "authoritative_source": "repo_bound_hud_qa",
-        "source_adapter": "hud-trace-explorer-compatible-v2",
+        "authoritative_source": "hud_trace_explorer_reward_hacking_analysis",
+        "source_adapter": "hud-trace-explorer.qa_reward_hacking",
+        "canonical_module_file": prompt_payload.get("module_file") or binding.get("module_file"),
+        "canonical_execution_mode": prompt_payload.get("execution_mode"),
         "model": classified["model"],
-        "trace_digest": classified["trace_digest"],
+        "prompt_digest": classified["prompt_digest"],
         **result,
         "observed_behavior": (
-            "Ran a repo-bound HUD Reward Hacking QA classifier using official trace-explorer output schema "
-            "and current HUD /v2 trace readback. This diagnostic result is not a Witness promotion by itself."
+            "Ran the canonical hud-evals/hud-trace-explorer qa_reward_hacking.reward_hacking_analysis scenario. "
+            "This diagnostic result is not a Witness promotion by itself."
         ),
     }
 

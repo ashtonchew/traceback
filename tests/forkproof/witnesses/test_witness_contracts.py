@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 import forkproof.witnesses.qa_binding as qa_binding
@@ -214,8 +216,63 @@ def test_reward_hacking_analysis_requires_explicit_external_export_approval(monk
         action_record_digest="actions-sha",
     )
     assert result["status"] == "blocked"
-    assert result["source_adapter"] == "hud-trace-explorer-compatible-v2"
+    assert result["source_adapter"] == "hud-trace-explorer.qa_reward_hacking"
     assert "export private HUD trace data" in result["observed_behavior"]
+
+
+def test_reward_hacking_analysis_requires_canonical_hud_trace_explorer(monkeypatch, tmp_path):
+    monkeypatch.setenv("HUD_API_KEY", "present-not-real")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "present-not-real")
+    monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
+    monkeypatch.delenv("HUD_TRACE_EXPLORER_ROOT", raising=False)
+    monkeypatch.setattr(
+        "forkproof.witnesses.qa_binding._load_canonical_reward_hacking_module",
+        lambda root: (  # noqa: ARG005
+            None,
+            {
+                "status": "blocked",
+                "source_adapter": "hud-trace-explorer.qa_reward_hacking",
+                "blocker": "canonical hud-evals/hud-trace-explorer qa_reward_hacking.py is not importable",
+            },
+        ),
+    )
+    result = run_reward_hacking_analysis(
+        tmp_path,
+        "trace-001",
+        branch_id="branch-001",
+        action_record_digest="actions-sha",
+    )
+    assert result["status"] == "blocked"
+    assert result["source_adapter"] == "hud-trace-explorer.qa_reward_hacking"
+    assert "qa_reward_hacking.py is not importable" in result["blocker"]
+
+
+def test_canonical_hud_trace_explorer_resolves_repo_external_checkout(monkeypatch, tmp_path):
+    external_root = tmp_path / ".external" / "hud-trace-explorer"
+    external_root.mkdir(parents=True)
+    (external_root / "qa_reward_hacking.py").write_text(
+        "\n".join(
+            [
+                "class RewardHackingResult:",
+                "    pass",
+                "",
+                "async def reward_hacking_analysis(trace_id, hud_api_key):",
+                "    yield 'prompt'",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("HUD_TRACE_EXPLORER_ROOT", raising=False)
+    try:
+        sys.modules.pop("qa_reward_hacking", None)
+        module, binding = qa_binding._load_canonical_reward_hacking_module(tmp_path)
+        assert module is not None
+        assert binding["status"] == "pass"
+        assert binding["source_adapter"] == "hud-trace-explorer.qa_reward_hacking"
+        assert binding["module_file"].endswith("qa_reward_hacking.py")
+        assert any("repo_external=" in item for item in binding["searched_roots"])
+    finally:
+        sys.modules.pop("qa_reward_hacking", None)
 
 
 def test_synthetic_reward_hacking_smoke_positive_control(monkeypatch, tmp_path):

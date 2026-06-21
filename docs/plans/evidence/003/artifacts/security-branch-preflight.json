@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-06-21T03:13:17Z",
+  "checked_at": "2026-06-21T03:43:55Z",
   "observed_behavior": "local policy gate denies forbidden capabilities and requires trusted artifact/grader boundaries",
   "policy": {
     "artifact_writer": "trusted_orchestrator",
