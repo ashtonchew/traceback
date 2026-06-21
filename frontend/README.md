@@ -39,7 +39,7 @@ VITE_FORKPROOF_API=mock npm run dev  # in-memory demo
 
 The JSON is generated from committed repo artifacts by a Python mapper
 (`src/forkproof/api/mapping.py`). Re-run the export after any of those artifacts
-change (a merged Plan 002 / 003 / 004 / 005 / 008 record), then commit the
+change (a merged Plan 002 / 003 / 004 / 005 / 006 / 008 record), then commit the
 updated files:
 
 ```bash
@@ -56,14 +56,15 @@ It writes one file per resource:
 | `branches.json` | Plan 003 branch runs (2 real seals plus illustrative tree geometry) | mixed |
 | `witnesses.json` | Plan 003 sealed Exploit Witness | real |
 | `proofset.json` | Plan 005 ProofSet record | real |
-| `release.json` | Plan 005 ReleaseProof verdict (v2 grader/env digests) | real |
+| `release.json` | Plan 005 ReleaseProof verdict (v2 grader/env digests) + Plan 006 HUD publication receipt | real |
 | `replay.json` | Plan 002/003 deterministic replay digests | real |
 | `benchmark.json` | Plan 008 QA-classifier benchmark (`artifacts/forkproof/qabench/`) | real |
 
 What is real vs illustrative is documented in `src/forkproof/api/mapping.py`:
 the ForkPoint identity/snapshot/grader digests, the controls, the sealed Witness
-and its replays, the v2 grader/environment digests, the ReleaseProof verdict,
-and the Plan 008 benchmark are **real, committed** values. The remaining
+and its replays, the v2 grader/environment digests, the ReleaseProof verdict, the
+Plan 006 HUD publication receipt (published ref, build, and residual caveat), and
+the Plan 008 benchmark are **real, committed** values. The remaining
 branch-tree sibling nodes preserve the run-graph geometry and are marked
 illustrative in their notes; values without a merged producer stay `TBD`.
 

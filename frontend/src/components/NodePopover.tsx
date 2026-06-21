@@ -26,27 +26,22 @@ function Row({ icon, label, children }: { icon: ReactNode; label: string; childr
 
 export function NodePopover({
   branch,
-  x,
-  y,
   onClose,
   onAddToProofSet,
   onReplay,
   onViewPreAttackState,
 }: {
   branch: BranchRun
-  x: number
-  y: number
   onClose: () => void
   onAddToProofSet?: () => void
   onReplay?: () => void
   onViewPreAttackState?: () => void
 }) {
   const sd = POP_STATUS[branch.status] ?? POP_STATUS.promising
+  // Positioning is owned by the parent <NodeToolbar>, which anchors this card to
+  // the node inside React Flow's transformed pane so it tracks pan/zoom/recenter.
   return (
-    <div
-      style={{ left: x, top: y }}
-      className="animate-dropdown-show absolute z-20 w-72 origin-top-left rounded-lg border border-hairline bg-surface-raised p-4 shadow-lg"
-    >
+    <div className="animate-dropdown-show w-72 origin-top rounded-lg border border-hairline bg-surface-raised p-4 shadow-lg">
       <div className="flex items-center gap-2">
         <span className="truncate text-sm font-semibold text-ink-primary">{branch.title}</span>
         <Chip status={sd.chip}>{branch.status === 'witness' ? 'CONFIRMED' : branch.status === 'verifying' ? 'VERIFYING' : branch.status === 'control' ? 'BASELINE' : 'CANDIDATE'}</Chip>

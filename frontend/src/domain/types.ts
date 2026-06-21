@@ -282,6 +282,15 @@ export interface ReleaseProof {
   blockReason?: string
   missingEvidence?: string[]
   hardenStatus?: string
+  // Optional Plan 006 HUD publication outcome (real receipt) for a passing
+  // release: what was actually deployed, plus the honest hardening caveat.
+  publishOutcome?: string
+  publishedVersion?: number
+  environmentUrl?: string
+  buildId?: string
+  buildStatus?: string
+  graderHardeningNote?: string
+  residualLimitation?: string
 }
 
 /** High-level run lifecycle the store tracks. */

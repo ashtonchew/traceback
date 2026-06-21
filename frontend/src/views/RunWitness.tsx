@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GitFork, Loader2, Play, PlusCircle } from '../components/icons'
+import { NodeToolbar, Position } from '@xyflow/react'
 import type { NodeMouseHandler } from '@xyflow/react'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
@@ -103,7 +104,7 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
   const navigate = useNavigate()
   const location = useLocation()
   const run = useRun()
-  const [pop, setPop] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [pop, setPop] = useState<{ id: string } | null>(null)
   const [modal, setModal] = useState<{ kind: 'replay' | 'preattack'; id: string; title: string } | null>(null)
   const [showForkPoint, setShowForkPoint] = useState(false)
   const wasConfirmedFocus = useRef(false)
@@ -135,7 +136,7 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
     }
   }, [confirmedFocus, run.branches, run.select, selected?.status])
 
-  const onNodeClick: NodeMouseHandler = (e, node) => {
+  const onNodeClick: NodeMouseHandler = (_, node) => {
     if (node.id === 'fork') {
       setShowForkPoint(true)
       run.select(undefined)
@@ -146,7 +147,7 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
     run.select(node.id)
     const branch = run.branches.find((b) => b.runId === `run-${node.id}`)
     if (confirmedFocus && branch?.status !== 'witness') navigate('/witness', { replace: true })
-    if (branch && node.type === 'branch') setPop({ id: node.id, x: e.clientX - 120, y: e.clientY + 12 })
+    if (branch && node.type === 'branch') setPop({ id: node.id })
     else setPop(null)
   }
 
@@ -176,14 +177,11 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
             fitPadding={0.02}
             fitMaxZoom={0.86}
             fitMinZoom={0.86}
-          />
-          {pop && popBranch && (
-            <div className="pointer-events-none fixed inset-0 z-20">
-              <div className="pointer-events-auto">
+          >
+            {pop && popBranch && (
+              <NodeToolbar nodeId={pop.id} isVisible position={Position.Bottom} offset={14} align="center">
                 <NodePopover
                   branch={popBranch}
-                  x={pop.x}
-                  y={pop.y}
                   onClose={() => setPop(null)}
                   onReplay={() => {
                     setModal({ kind: 'replay', id: pop.id, title: popBranch.title })
@@ -199,9 +197,9 @@ export function RunWitness({ mode = 'branch' }: { mode?: 'branch' | 'proofset' }
                     navigate('/proofset')
                   }}
                 />
-              </div>
-            </div>
-          )}
+              </NodeToolbar>
+            )}
+          </RunCanvas>
         </div>
         {canShowSidePanel && showForkPoint ? (
           <ForkPointPanel onStart={run.startDiscovery} onClose={() => setShowForkPoint(false)} />

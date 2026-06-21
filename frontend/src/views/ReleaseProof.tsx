@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ShieldCheck, Check, ArrowRight, Database, ExternalLink, Copy, FileDiff, Download } from '../components/icons'
+import { ShieldCheck, Check, ArrowRight, ArrowUpRight, Database, ExternalLink, Copy, FileDiff, Download, Loader2, Lock, Sparkles } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
@@ -60,7 +60,18 @@ export function ReleaseProof() {
   const cp = rp?.controlsPreserved ?? [run.proofSet?.legitimateControlIds.length ?? 3, run.proofSet?.legitimateControlIds.length ?? 3]
   const env = rp?.environmentV1 ?? 'mongodb-sales-aggregation-engine'
   const publishedRef = rp?.publishedEnvironmentRef ?? `${env} v2`
-  const commitId = rp?.commitId ?? 'rpf-20250508-102431'
+  const pubVersion = rp?.publishedVersion ? `v${rp.publishedVersion}` : 'v2'
+  const commitId = rp?.commitId ?? 'releaseproof-30e03914472631dd'
+  // v6 promote is a UI simulation only: a real registry deploy runs `hud deploy`
+  // with HUD credentials in a trusted context, which the static client never holds.
+  const [v6, setV6] = useState<'idle' | 'running' | 'done'>('idle')
+  const nextVersion = (rp?.publishedVersion ?? 5) + 1
+  const v6Ref = publishedRef.replace(/@v\d+$/, `@v${nextVersion}`)
+  const simulateV6 = () => {
+    if (v6 !== 'idle') return
+    setV6('running')
+    setTimeout(() => setV6('done'), 1200)
+  }
   const reward = (rp?.reward ?? 1.0).toFixed(2)
   const similarity = (rp?.similarity ?? 0.92).toFixed(2)
   const counts = getRunTreeCounts(run)
@@ -77,8 +88,8 @@ export function ReleaseProof() {
                 <ShieldCheck size={24} />
               </span>
               <h2 className="mt-3 font-display text-3xl tracking-tight text-ink-primary">Release proof committed</h2>
-              <p className="mt-1 text-base text-accent-text">Published {publishedRef}</p>
-              <p className="mt-1 text-sm text-ink-secondary">All witnesses were successfully killed and controls were preserved.</p>
+              <p className="mt-1 text-base text-accent-text">Published to HUD as {pubVersion}</p>
+              <p className="mt-1 text-sm text-ink-secondary">Every witness replays to reward 0 and every control stays at reward 1 under the hardened grader.</p>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4">
@@ -100,7 +111,7 @@ export function ReleaseProof() {
               <ArrowRight size={20} className="hidden text-ink-tertiary xl:block" />
               <EnvCard
                 when="After (published)"
-                version="v2"
+                version={pubVersion}
                 status="Published"
                 published
                 rows={[
@@ -114,12 +125,55 @@ export function ReleaseProof() {
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-lg border border-state-green-border bg-state-green-soft p-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-fill-accent text-ink-inverse"><Database size={18} /></span>
               <div className="min-w-0 flex-1">
-                <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Published</div>
-                <div className="truncate text-sm font-medium text-ink-primary">{publishedRef}</div>
-                <div className="text-xs text-ink-secondary">Environment successfully published and live.</div>
+                <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Published environment</div>
+                <div className="truncate font-mono text-xs font-medium text-ink-primary">{publishedRef}</div>
+                <div className="text-xs text-ink-secondary">{rp?.buildStatus ? `HUD build ${rp.buildStatus.toLowerCase()}, append-only.` : 'Published to HUD, append-only.'}</div>
               </div>
               <Button variant="secondary" size="sm" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View in HUD</Button>
             </div>
+
+            {rp?.graderHardeningNote && (
+              <div className="mt-3 rounded-lg border border-hairline bg-surface-raised p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={15} className="text-accent-text" />
+                    <span className="text-sm font-medium text-ink-primary">Promote to hardened v{nextVersion}</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-2xs font-medium text-ink-tertiary">
+                    <Lock size={11} /> Credentials required
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-ink-secondary">
+                  The v{nextVersion} out-of-process grader is built and kill-proven (witness 0.0, controls 1.0) but the registry is live at {pubVersion}. A real publish runs <code className="font-mono">hud deploy</code> in a trusted context with a HUD API key.
+                </p>
+
+                {v6 === 'idle' && (
+                  <button
+                    type="button"
+                    onClick={simulateV6}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-ink-primary transition-[background-color,transform] duration-150 ease-out hover:bg-tint-green active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <ArrowUpRight size={14} /> Publish v{nextVersion} to HUD
+                  </button>
+                )}
+                {v6 === 'running' && (
+                  <div className="mt-3 inline-flex items-center gap-2 text-sm text-ink-secondary-strong">
+                    <Loader2 size={14} className="animate-spin text-accent-text" /> Publishing v{nextVersion} to the registry (simulated)…
+                  </div>
+                )}
+                {v6 === 'done' && (
+                  <div className="mt-3 rounded-md border border-state-green-border bg-state-green-soft px-3 py-2 text-xs leading-relaxed text-ink-secondary-strong">
+                    <span className="inline-flex items-center gap-1 font-medium text-accent-text"><Check size={13} /> Simulated publish</span> to <span className="font-mono">{v6Ref}</span>. No real deploy ran. To publish for real, set <code className="font-mono">HUD_API_KEY</code> and run <code className="font-mono">hud deploy</code> from a trusted context.
+                  </div>
+                )}
+
+                <p className="mt-3 border-t border-hairline pt-3 text-xs leading-relaxed text-ink-tertiary">
+                  <span className="font-medium text-ink-secondary-strong">Hardening note. </span>
+                  {rp.graderHardeningNote}
+                  {rp.residualLimitation && <> Residual: {rp.residualLimitation}</>}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -133,8 +187,8 @@ export function ReleaseProof() {
           <div className="flex-1 px-5 py-4">
             <div className="divide-y divide-hairline">
               <KV label="Environment" valueClass="text-xs">{env}</KV>
-              <KV label="Published version">v2</KV>
-              <KV label="Commit ID" valueClass="font-mono text-xs">
+              <KV label="Published version">{pubVersion}</KV>
+              <KV label="Release proof ID" valueClass="font-mono text-xs">
                 <button type="button" onClick={() => copyText(commitId)} className="inline-flex min-w-0 items-center gap-1 rounded-sm transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="truncate">{commitId}</span> <Copy size={11} className="shrink-0 text-ink-tertiary" />
                 </button>

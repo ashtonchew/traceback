@@ -1,5 +1,5 @@
 import { apiBase } from '../config'
-import { DatasetForkProofApi, type ReleaseBlock, type ReplayEvidence, type RunDataset } from '../dataset'
+import { DatasetForkProofApi, type Publication, type ReleaseBlock, type ReplayEvidence, type RunDataset } from '../dataset'
 import type { BranchRun, ExploitWitness, ForkPoint, LegitimateControl, Patch, ProofSet } from '../../domain/types'
 
 /** Shape of the exported `release.json` (patches + gate-outcome maps + verdict). */
@@ -11,6 +11,7 @@ interface ReleaseBundle {
   survivingWitnessByIteration: Record<string, string[]>
   brokenControlByIteration: Record<string, string[]>
   release?: ReleaseBlock
+  publication?: Publication
 }
 
 async function fetchJson<T>(route: string): Promise<T> {
@@ -49,6 +50,7 @@ async function loadDataset(): Promise<RunDataset> {
     environmentV2: release.environmentV2,
     releaseProofId: release.releaseProofId,
     release: release.release,
+    publication: release.publication,
     replay,
   }
 }
