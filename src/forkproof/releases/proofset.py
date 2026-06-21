@@ -98,6 +98,21 @@ def _evaluator_profile(record: dict[str, Any]) -> str:
     return "generic-verifier"
 
 
+def _proofset_replay_surface(witness: dict[str, Any]) -> dict[str, Any]:
+    surface = witness["replay_surface"]
+    return {
+        "witness_id": witness["witness_id"],
+        "replay_surface_id": surface["replay_surface_id"],
+        "environment_version": surface["environment_version"],
+        "grader_digest": surface["grader_digest"],
+        "trusted_entrypoint_ref": surface.get("trusted_entrypoint_ref"),
+        "cwd": surface.get("cwd"),
+        "command_argv": surface.get("command_argv") or [],
+        "pre_grader_command_argv": surface.get("pre_grader_command_argv") or [],
+        "grader_command_argv": surface.get("grader_command_argv") or [],
+    }
+
+
 def build_proofset(
     *,
     witnesses: list[dict[str, Any]],
@@ -147,6 +162,7 @@ def build_proofset(
         "legitimate_control_ids": [control["control_id"] for control in controls],
         "exploit_family_variant_ids": [],
         "evaluator_profiles": evaluator_profiles,
+        "v1_replay_surfaces": [_proofset_replay_surface(witness) for witness in witnesses],
         "taskset_or_suite_ref": taskset_or_suite_ref,
         "selection_query_ref": selection_query_ref,
         "created_at": utc_now(),

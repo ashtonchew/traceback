@@ -24,6 +24,7 @@ REQUIRED_PROOFSET_FIELDS = {
     "exploit_witness_ids",
     "legitimate_control_ids",
     "evaluator_profiles",
+    "v1_replay_surfaces",
     "taskset_or_suite_ref",
     "created_at",
     "content_digest",

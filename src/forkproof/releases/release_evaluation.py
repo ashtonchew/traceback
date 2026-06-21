@@ -44,6 +44,51 @@ def expected_subversion_case_ids(proof_set: dict[str, Any]) -> list[str]:
     return sorted(GENERIC_VERIFIER_SUBVERSION_CHECKS)
 
 
+def validate_harden_task_source_surface(*, proof_set: dict[str, Any], task_source: Path) -> None:
+    """Require harden-v0 to run against the sealed v1 replay/grader surface."""
+
+    surface_path = task_source / "forkproof-replay-surface.json"
+    if not surface_path.exists():
+        raise ReleaseError(
+            "harden_surface_mismatch",
+            (
+                "harden task source does not declare forkproof-replay-surface.json; "
+                "detached harden-v0 task layouts cannot prove the sealed Witness replay surface"
+            ),
+        )
+    declared = json.loads(surface_path.read_text(encoding="utf-8"))
+    expected = proof_set.get("v1_replay_surfaces") or []
+    if not expected:
+        raise ReleaseError("harden_surface_mismatch", "ProofSet does not record sealed v1 replay surfaces")
+    expected_by_id = {surface["replay_surface_id"]: surface for surface in expected}
+    declared_surfaces = declared.get("v1_replay_surfaces") or []
+    missing = sorted(set(expected_by_id) - {surface.get("replay_surface_id") for surface in declared_surfaces})
+    if missing:
+        raise ReleaseError("harden_surface_mismatch", f"harden task source missing replay surfaces {missing}")
+    mismatches: list[str] = []
+    for surface in declared_surfaces:
+        surface_id = surface.get("replay_surface_id")
+        if surface_id not in expected_by_id:
+            continue
+        expected_surface = expected_by_id[surface_id]
+        for field in (
+            "environment_version",
+            "grader_digest",
+            "trusted_entrypoint_ref",
+            "cwd",
+            "command_argv",
+            "pre_grader_command_argv",
+            "grader_command_argv",
+        ):
+            if surface.get(field) != expected_surface.get(field):
+                mismatches.append(f"{surface_id}:{field}")
+    if mismatches:
+        raise ReleaseError(
+            "harden_surface_mismatch",
+            f"harden task source replay surface does not match ProofSet: {sorted(mismatches)}",
+        )
+
+
 def build_harden_blocker_artifact(
     *,
     proof_set: dict[str, Any],
@@ -109,6 +154,19 @@ def run_release_evaluation(
     if harden_task_source is not None or harden_task_id is not None:
         if harden_task_source is None or harden_task_id is None:
             raise ReleaseError("harden_unavailable", "harden task source and task id must be provided together")
+        try:
+            validate_harden_task_source_surface(proof_set=proof_set, task_source=harden_task_source)
+        except ReleaseError as exc:
+            blocker = build_harden_blocker_artifact(
+                proof_set=proof_set,
+                harden_run=None,
+                release_results_ref=str(release_results_ref) if release_results_ref else None,
+                reason=str(exc),
+            )
+            path = artifact_root / "release-blockers" / f"{proof_set['proof_set_id']}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(blocker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            raise
         harden_run = run_harden_v0(
             repo_root=repo_root,
             harden_root=repo_root / ".external/harden-v0",

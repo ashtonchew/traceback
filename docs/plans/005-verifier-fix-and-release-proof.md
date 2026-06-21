@@ -175,6 +175,8 @@ Every evaluation is keyed by ProofSet and grader digest, so reruns are append-on
 
 - 2026-06-21T10:52:35Z — Switched generic harden-v0 hacker runs onto the canonical terminal-bench authorized-audit prompt while preserving upstream KernelBench behavior. Clarified and enforced retry semantics: harden-v0 `*_retries` flags are total attempt counts, so Plan 005 uses value 1 for one audit attempt with Harbor `n_retries=0`; value 0 is now rejected because it would run no hacker/precheck/replay attempt and could falsely report robust. The latest mapped `integration-release` used a fresh run root, did not resume stale state, did not refuse, produced an audit-style hardcoded-output candidate, and exited blocked because harden-v0 assigned reward=0.00 and no real per-case v1/v2 ReleaseProof evidence exists. Summary: `artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json`.
 
+- 2026-06-21T10:58:18Z — Diagnosed the latest harden-v0 `reward=0.00` run as detached-surface evidence rather than a valid robustness signal. The sealed Witness replay surface runs from `/app` through `env:env` and grades with `python3 -m pytest task_assets/test_outputs.py`; the configured harden-v0 task source used a different terminal-wrench layout with `../tests/test_outputs.py` and /solution artifact collection. Plan 005 now propagates sealed v1 replay surfaces into the ProofSet and rejects harden task sources that do not declare a matching `forkproof-replay-surface.json`, so `integration-release` fails fast with `harden_surface_mismatch` instead of spending model/runtime budget on detached verifier evidence.
+
 ### Surprises & Discoveries
 
 - None yet.

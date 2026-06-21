@@ -6,7 +6,11 @@ import pytest
 
 from forkproof.releases.models import ReleaseError, digest_json
 from forkproof.releases.proofset import build_proofset
-from forkproof.releases.release_evaluation import load_release_results, run_release_evaluation
+from forkproof.releases.release_evaluation import (
+    load_release_results,
+    run_release_evaluation,
+    validate_harden_task_source_surface,
+)
 from forkproof.releases.harden_adapter import (
     DEFAULT_ANTHROPIC_HARDEN_MODEL,
     require_selected_model_credentials,
@@ -118,6 +122,24 @@ def test_proofset_infers_pytest_profile_from_replay_surface():
     )
 
     assert ps["evaluator_profiles"] == ["pytest"]
+
+
+def test_proofset_carries_sealed_replay_surface_identity():
+    ps = proofset()
+
+    assert ps["v1_replay_surfaces"] == [
+        {
+            "witness_id": "wit-001",
+            "replay_surface_id": "surface-001",
+            "environment_version": "env-v1",
+            "grader_digest": "grader-v1",
+            "trusted_entrypoint_ref": "grader://entrypoint",
+            "cwd": "/workspace",
+            "command_argv": ["grader", "run", "--case", "sealed-witness"],
+            "pre_grader_command_argv": [],
+            "grader_command_argv": ["grader", "grade", "--case", "sealed-witness"],
+        }
+    ]
 
 
 def result(case_id, kind, reward, grader, environment="env-v1"):
@@ -253,6 +275,41 @@ def test_release_evaluation_requires_harden_source_and_id_together(tmp_path):
             harden_max_iterations=1,
             harden_timeout_seconds=1,
         )
+
+
+def test_harden_task_source_must_declare_exact_replay_surface(tmp_path):
+    task_source = tmp_path / "harden-task"
+    task_source.mkdir()
+
+    with pytest.raises(ReleaseError, match="forkproof-replay-surface.json"):
+        validate_harden_task_source_surface(proof_set=proofset(), task_source=task_source)
+
+
+def test_harden_task_source_accepts_matching_replay_surface(tmp_path):
+    task_source = tmp_path / "harden-task"
+    task_source.mkdir()
+    ps = proofset()
+    (task_source / "forkproof-replay-surface.json").write_text(
+        json.dumps({"v1_replay_surfaces": ps["v1_replay_surfaces"]}),
+        encoding="utf-8",
+    )
+
+    validate_harden_task_source_surface(proof_set=ps, task_source=task_source)
+
+
+def test_harden_task_source_rejects_detached_grader_command(tmp_path):
+    task_source = tmp_path / "harden-task"
+    task_source.mkdir()
+    ps = proofset()
+    detached = dict(ps["v1_replay_surfaces"][0])
+    detached["grader_command_argv"] = ["bash", "tests/test.sh"]
+    (task_source / "forkproof-replay-surface.json").write_text(
+        json.dumps({"v1_replay_surfaces": [detached]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ReleaseError, match="grader_command_argv"):
+        validate_harden_task_source_surface(proof_set=ps, task_source=task_source)
 
 
 def test_harden_model_selection_uses_anthropic_fallback_not_gemini(monkeypatch):

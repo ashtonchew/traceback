@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T10:52:35Z",
+  "updated_at": "2026-06-21T10:58:18Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 28 passed in 0.32s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 32 passed in 0.29s."
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-release"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-release with terminal-bench authorized-audit prompt default, Anthropic claude-haiku-4-5 models, one harden-v0 total attempt per hacker/solver-precheck/replay (Harbor n_retries=0), hacker_max_turns=80, and fresh run root run-20260621T104504Z. harden-v0 returned 0/status robust after one audit trial reward=0.00; it produced an audit-style hardcoded-output candidate but the grader assigned no reward. Plan 005 correctly exited 2 because no real per-case v1/v2 release-results artifact, evaluator context refs, subversion results, or release candidate ref exists. Summary: artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json."
+      "observed": "RUN: integration-release now fails fast before harden-v0 execution with harden_surface_mismatch. The configured harden task source lacks forkproof-replay-surface.json, while ProofSet proofset-e497370b2c3d2a69 records the sealed v1 replay surface for wit-run-20260621T075711-branch-08: cwd=/app, trusted_entrypoint_ref=env:env, grader_digest=ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f, and grader_command_argv=[bash, -lc, python3 -m pytest task_assets/test_outputs.py -rA -q > .grade.log 2>&1; rc=$?; cat .grade.log; exit $rc]. Detached harden-v0 task layouts cannot prove the sealed Witness replay surface."
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
         "005"
       ],
       "exit_code": 0,
-      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 24 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 25 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -122,12 +122,12 @@
     {
       "name": "Release contract coverage",
       "status": "pass",
-      "evidence": "plan-005-tests passes with ProofSet membership, BranchRun rejection, binary gate, mixed digest, v1 failure, immutable v1/v2 case identity, evaluator-context execution-surface checks, profile-driven mandatory subversion checks, pytest profile inference from replay surface, Anthropic harden model fallback, selected-provider credential preflight, harden-v0 zero-attempt guard, authorized-audit prompt default, release-results fail-closed behavior, candidate patch rejection history, bounded failure, append-only ReleaseProof sealing, and harden-v0 config/result.json schema inspection."
+      "evidence": "plan-005-tests passes with ProofSet membership, sealed replay-surface propagation, BranchRun rejection, binary gate, mixed digest, v1 failure, immutable v1/v2 case identity, evaluator-context execution-surface checks, profile-driven mandatory subversion checks, pytest profile inference from replay surface, Anthropic harden model fallback, selected-provider credential preflight, harden-v0 zero-attempt guard, authorized-audit prompt default, detached harden surface rejection, release-results fail-closed behavior, candidate patch rejection history, bounded failure, append-only ReleaseProof sealing, and harden-v0 config/result.json schema inspection."
     },
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release remains blocked. The current mapped run used the terminal-bench authorized-audit prompt by default, fresh per-run harden output, one harden-v0 total attempt (Harbor n_retries=0), and hacker_max_turns=80. harden-v0 ran without refusal or resume contamination and returned robust after the audit candidate received reward 0.00. No real per-case v1/v2 release-results artifact or ReleaseProof exists."
+      "evidence": "integration-release remains blocked. Plan 005 now fails closed before harden-v0 execution when the configured task source does not declare a forkproof-replay-surface.json matching every sealed ProofSet Witness replay surface. This prevents treating the current terminal-wrench /solution and ../tests layout as proof for the sealed /app/task_assets pytest replay surface."
     }
   ],
   "artifacts": [
@@ -190,6 +190,18 @@
     {
       "ref": "artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json",
       "description": "Committed compact summary of the latest mapped integration-release harden run. It records prompt profile, attempt/retry semantics, Harbor n_retries=0, harden status, reward outcome, blocker reason, and missing ReleaseProof evidence without committing the raw mutable harden workdir."
+    },
+    {
+      "ref": "src/forkproof/releases/proofset.py",
+      "description": "ProofSet construction now preserves sealed Witness v1 replay-surface identity, including replay_surface_id, environment, grader digest, trusted entrypoint, cwd, command argv, pre-grader argv, and grader argv."
+    },
+    {
+      "ref": "src/forkproof/releases/release_evaluation.py",
+      "description": "Release evaluation now requires harden-v0 task sources to declare forkproof-replay-surface.json matching the closed ProofSet before any harden run, preventing detached-grader harden evidence from being mistaken for ReleaseProof progress."
+    },
+    {
+      "ref": "tests/forkproof/releases/test_release_evaluation.py",
+      "description": "Release evaluation tests now cover ProofSet replay-surface propagation and harden task-source acceptance/rejection for matching, missing, and detached grader command surfaces."
     }
   ],
   "screenshots": [],
