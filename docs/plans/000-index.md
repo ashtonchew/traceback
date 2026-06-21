@@ -96,7 +96,7 @@ Planning is implemented when:
 | 004 | `src/forkproof/controls/**`, `tests/forkproof/controls/**`, `fixtures/forkproof/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/004/**` |
 | 005 | `src/forkproof/releases/**`, `tests/forkproof/releases/**`, `artifacts/forkproof/releases/**`, its plan/reference, `evidence/005/**` |
 | 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**` |
-| 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, its plan/reference, `evidence/007/**` |
+| 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, `docs/plans/GLOSSARY.md`, its plan/reference, `evidence/007/**` |
 
 ## Assignment checklist
 
