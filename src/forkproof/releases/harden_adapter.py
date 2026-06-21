@@ -12,6 +12,11 @@ from typing import Any
 
 from forkproof.witnesses.local_env import credential_presence, load_local_env
 
+from .harden_inspection import (
+    inspect_fixer_artifact_layouts,
+    inspect_hacker_refusal_loops,
+    inspect_solver_validation_results,
+)
 from .models import ReleaseError, digest_json, utc_now
 
 DEFAULT_ANTHROPIC_HARDEN_MODEL = "anthropic/claude-haiku-4-5"
@@ -83,6 +88,10 @@ def run_harden_v0(
     output_root: Path,
     max_iterations: int,
     timeout_seconds: int,
+    hacker_retries: int = 1,
+    solver_precheck_retries: int = 1,
+    replay_retries: int = 1,
+    hacker_max_turns: int | None = None,
     hacker_model: str | None = None,
     fixer_model: str | None = None,
     solver_model: str | None = None,
@@ -109,6 +118,8 @@ def run_harden_v0(
         (
             "import sys; "
             f"sys.path.insert(0, {str(harden_root)!r}); "
+            "from forkproof.releases.harden_runtime_patch import install as _install_harden_patch; "
+            "_install_harden_patch(); "
             "from harden.__main__ import main; "
             "main()"
         ),
@@ -120,6 +131,12 @@ def run_harden_v0(
         str(harden_output),
         "--max-iterations",
         str(max_iterations),
+        "--hacker-retries",
+        str(hacker_retries),
+        "--solver-precheck-retries",
+        str(solver_precheck_retries),
+        "--replay-retries",
+        str(replay_retries),
         "--replay-enabled",
         "--no-legitimate-marker",
         "--summary-model",
@@ -127,6 +144,8 @@ def run_harden_v0(
         "--log-level",
         "INFO",
     ]
+    if hacker_max_turns is not None:
+        command.extend(["--hacker-max-turns", str(hacker_max_turns)])
     command.extend(["--hacker-model", selected_models["hacker_model"]])
     command.extend(["--fixer-model", selected_models["fixer_model"]])
     command.extend(["--solver-model", selected_models["solver_model"]])
@@ -155,6 +174,8 @@ def run_harden_v0(
     if result_path.exists():
         result_json = json.loads(result_path.read_text(encoding="utf-8"))
     fixer_artifact_layouts = inspect_fixer_artifact_layouts(harden_output, task_id)
+    solver_validation_results = inspect_solver_validation_results(harden_output, task_id)
+    hacker_refusal_loops = inspect_hacker_refusal_loops(harden_output, task_id)
     record = {
         "schema_version": 1,
         "adapter": "forkproof.releases.harden_adapter.run_harden_v0",
@@ -177,69 +198,84 @@ def run_harden_v0(
         "result_path": str(result_path),
         "result_json": result_json,
         "fixer_artifact_layouts": fixer_artifact_layouts,
+        "solver_validation_results": solver_validation_results,
+        "hacker_refusal_loops": hacker_refusal_loops,
     }
-    blocker = harden_artifact_layout_blocker(result_json, fixer_artifact_layouts)
+    blocker = harden_result_blocker(
+        result_json,
+        fixer_artifact_layouts,
+        solver_validation_results,
+        hacker_refusal_loops,
+    )
     if blocker is not None:
         record["harden_blocker"] = blocker
     record["content_digest"] = digest_json(record)
     return record
 
 
-def inspect_fixer_artifact_layouts(harden_output: Path, task_id: str) -> list[dict[str, Any]]:
-    """Inspect harden-v0 fixer artifact repos without treating them as release proof."""
-
-    jobs_root = harden_output / task_id / "jobs"
-    if not jobs_root.is_dir():
-        return []
-    layouts: list[dict[str, Any]] = []
-    for job_dir in sorted(p for p in jobs_root.glob("fixer_*") if p.is_dir()):
-        for trial_dir in sorted(p for p in job_dir.iterdir() if p.is_dir()):
-            expected = trial_dir / "artifacts"
-            nested = expected / "logs" / "artifacts"
-            expected_repo = _git_repo_status(expected)
-            nested_repo = _git_repo_status(nested)
-            layout_status = "missing"
-            changed_files: list[str] = []
-            patch_digest = None
-            if expected_repo["is_git_repo"]:
-                layout_status = "expected"
-                changed_files = _git_changed_files(expected)
-                patch_digest = _git_patch_digest(expected)
-            elif nested_repo["is_git_repo"]:
-                layout_status = "nested_logs_artifacts"
-                changed_files = _git_changed_files(nested)
-                patch_digest = _git_patch_digest(nested)
-            layouts.append(
-                {
-                    "schema_version": 1,
-                    "job_dir": str(job_dir),
-                    "trial_dir": str(trial_dir),
-                    "expected_artifacts_path": str(expected),
-                    "expected_artifacts_git": expected_repo,
-                    "nested_logs_artifacts_path": str(nested),
-                    "nested_logs_artifacts_git": nested_repo,
-                    "layout_status": layout_status,
-                    "changed_files": changed_files,
-                    "patch_digest": patch_digest,
-                }
-            )
-    return layouts
-
-
-def harden_artifact_layout_blocker(
+def harden_result_blocker(
     result_json: dict[str, Any] | None,
     layouts: list[dict[str, Any]],
+    solver_validation_results: list[dict[str, Any]],
+    hacker_refusal_loops: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
-    """Classify the Harbor/harden-v0 artifact-layout drift seen after fixer failure."""
+    """Classify the current harden-v0 blocking condition."""
 
+    if hacker_refusal_loops:
+        return {
+            "code": "harden_hacker_model_refusal_loop",
+            "status": "blocked",
+            "reason": (
+                "harden-v0's hacker role produced repeated refusal messages instead of valid "
+                "action JSON; the run cannot be treated as a release-gate attempt."
+            ),
+            "hacker_refusal_loops": hacker_refusal_loops,
+        }
     if not result_json or not layouts:
         return None
     iterations = result_json.get("iterations")
     if not isinstance(iterations, list):
         return None
     has_fix_failed = any(isinstance(item, dict) and item.get("outcome") == "fix_failed" for item in iterations)
+    replay_failures = [
+        {
+            "iteration": item.get("iteration"),
+            "outcome": item.get("outcome"),
+            "replay_reward": item.get("replay_reward"),
+        }
+        for item in iterations
+        if isinstance(item, dict)
+        and item.get("outcome") == "replay_broke_fix"
+        and isinstance(item.get("replay_reward"), (int, float))
+        and item.get("replay_reward") >= 1.0
+    ]
+    if replay_failures:
+        return {
+            "code": "harden_replay_broke_candidate_fix",
+            "status": "blocked",
+            "reason": (
+                "harden-v0 applied a candidate patch and reached targeted replay, but the "
+                "recorded replay still reproduced the exploit reward, so the candidate was "
+                "rejected before ReleaseProof."
+            ),
+            "replay_failures": replay_failures,
+        }
     if not has_fix_failed:
         return None
+    failed_validation = [
+        item for item in solver_validation_results
+        if isinstance(item.get("reward"), (int, float)) and item.get("reward") < 1.0
+    ]
+    if failed_validation:
+        return {
+            "code": "harden_candidate_broke_solver_validation",
+            "status": "blocked",
+            "reason": (
+                "harden-v0 applied the fixer patch to the validation surface, but solver validation "
+                "failed, so the candidate patch was rejected before replay or ReleaseProof."
+            ),
+            "solver_validation_results": failed_validation,
+        }
     drifted = [
         item for item in layouts
         if item.get("layout_status") == "nested_logs_artifacts" and item.get("changed_files")
@@ -325,53 +361,6 @@ def inspect_harden_result_schema(harden_root: Path) -> dict[str, Any]:
         "status_values": status_values,
         "output_paths": output_paths,
     }
-
-
-def _git_repo_status(path: Path) -> dict[str, Any]:
-    if not (path / ".git").exists():
-        return {"is_git_repo": False, "has_initial_ref": False}
-    return {
-        "is_git_repo": True,
-        "has_initial_ref": _git_has_ref(path, "initial"),
-    }
-
-
-def _git_has_ref(repo: Path, ref: str) -> bool:
-    result = subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "--verify", "--quiet", ref],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.returncode == 0
-
-
-def _git_changed_files(repo: Path) -> list[str]:
-    if not _git_has_ref(repo, "initial"):
-        return []
-    result = subprocess.run(
-        ["git", "-C", str(repo), "diff", "--name-only", "initial", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return []
-    return sorted(line for line in result.stdout.splitlines() if line)
-
-
-def _git_patch_digest(repo: Path) -> str | None:
-    if not _git_has_ref(repo, "initial"):
-        return None
-    result = subprocess.run(
-        ["git", "-C", str(repo), "diff", "--binary", "initial", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0 or not result.stdout:
-        return None
-    return digest_json({"patch": result.stdout})
 
 
 def _assigned_dict_keys(tree: ast.AST, name: str) -> list[str]:

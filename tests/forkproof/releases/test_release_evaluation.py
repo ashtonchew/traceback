@@ -8,10 +8,12 @@ import pytest
 from forkproof.releases.models import ReleaseError, digest_json
 from forkproof.releases.proofset import build_proofset
 from forkproof.releases.release_evaluation import load_release_results, run_release_evaluation
+from forkproof.releases.harden_runtime_patch import extract_fixer_artifacts, resolve_fixer_artifacts
 from forkproof.releases.harden_adapter import (
     DEFAULT_ANTHROPIC_HARDEN_MODEL,
-    harden_artifact_layout_blocker,
+    harden_result_blocker,
     inspect_fixer_artifact_layouts,
+    inspect_hacker_refusal_loops,
     require_selected_model_credentials,
     run_harden_v0,
     select_harden_models,
@@ -316,6 +318,7 @@ def test_harden_release_adapter_disables_legitimate_marker(monkeypatch, tmp_path
         output_root=tmp_path / "release-artifacts",
         max_iterations=1,
         timeout_seconds=1,
+        hacker_max_turns=80,
         hacker_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
         fixer_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
         solver_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
@@ -323,6 +326,12 @@ def test_harden_release_adapter_disables_legitimate_marker(monkeypatch, tmp_path
 
     assert "--no-legitimate-marker" in captured["command"]
     assert "--replay-enabled" in captured["command"]
+    assert captured["command"][captured["command"].index("--hacker-retries") + 1] == "1"
+    assert captured["command"][captured["command"].index("--solver-precheck-retries") + 1] == "1"
+    assert captured["command"][captured["command"].index("--replay-retries") + 1] == "1"
+    assert captured["command"][captured["command"].index("--hacker-max-turns") + 1] == "80"
+    command_source = captured["command"][captured["command"].index("-c") + 1]
+    assert "_install_harden_patch()" in command_source
     assert record["result_json"]["status"] == "max_iterations"
 
 
@@ -358,9 +367,125 @@ def test_harden_adapter_reports_nested_fixer_artifact_layout(tmp_path):
     assert layouts[0]["changed_files"] == ["tests/test_outputs.py"]
     assert layouts[0]["patch_digest"]
 
-    blocker = harden_artifact_layout_blocker(
+    blocker = harden_result_blocker(
         {"iterations": [{"outcome": "fix_failed"}]},
         layouts,
+        [],
     )
     assert blocker["code"] == "harden_fixer_artifact_layout_drift"
     assert blocker["changed_files"] == ["tests/test_outputs.py"]
+
+    blocker = harden_result_blocker(
+        {"iterations": [{"outcome": "fix_failed"}]},
+        layouts,
+        [{"reward": 0.0, "trial_dir": "solver-trial"}],
+    )
+    assert blocker["code"] == "harden_candidate_broke_solver_validation"
+    assert blocker["solver_validation_results"] == [{"reward": 0.0, "trial_dir": "solver-trial"}]
+
+    blocker = harden_result_blocker(
+        {
+            "iterations": [
+                {"iteration": 0, "outcome": "fix_failed"},
+                {"iteration": 1, "outcome": "replay_broke_fix", "replay_reward": 1.0},
+            ]
+        },
+        layouts,
+        [{"reward": 0.0, "trial_dir": "older-solver-trial"}],
+    )
+    assert blocker["code"] == "harden_replay_broke_candidate_fix"
+    assert blocker["replay_failures"] == [
+        {"iteration": 1, "outcome": "replay_broke_fix", "replay_reward": 1.0}
+    ]
+
+
+def test_harden_adapter_reports_hacker_refusal_loop(tmp_path):
+    trajectory_path = (
+        tmp_path
+        / "harden-output"
+        / "task-001"
+        / "jobs"
+        / "hacker_h0_a0__20260621_000000__abcdef12"
+        / "task-001__trial"
+        / "agent"
+        / "trajectory.json"
+    )
+    trajectory_path.parent.mkdir(parents=True)
+    trajectory_path.write_text(
+        json.dumps(
+            {
+                "steps": [
+                    {
+                        "step_id": 1,
+                        "timestamp": "2026-06-21T10:00:00Z",
+                        "model_name": "model-a",
+                        "message": "Analysis: Declined\nPlan: Cannot proceed",
+                    },
+                    {
+                        "step_id": 2,
+                        "timestamp": "2026-06-21T10:00:01Z",
+                        "model_name": "model-a",
+                        "message": "I will not continue this task.",
+                    },
+                    {
+                        "step_id": 3,
+                        "timestamp": "2026-06-21T10:00:02Z",
+                        "model_name": "model-a",
+                        "message": "I refuse to engage further.",
+                    },
+                ],
+                "final_metrics": {"total_prompt_tokens": 123},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    refusal_loops = inspect_hacker_refusal_loops(tmp_path / "harden-output", "task-001")
+
+    assert refusal_loops == [
+        {
+            "schema_version": 1,
+            "trajectory_ref": str(trajectory_path),
+            "trial_dir": str(trajectory_path.parents[1]),
+            "job_dir": str(trajectory_path.parents[2]),
+            "step_count": 3,
+            "decline_step_count": 3,
+            "last_decline_step_id": 3,
+            "last_decline_timestamp": "2026-06-21T10:00:02Z",
+            "last_model_name": "model-a",
+            "last_message_excerpt": "I refuse to engage further.",
+            "final_metrics": {"total_prompt_tokens": 123},
+        }
+    ]
+    blocker = harden_result_blocker(None, [], [], refusal_loops)
+    assert blocker["code"] == "harden_hacker_model_refusal_loop"
+
+
+def test_harden_runtime_patch_applies_nested_fixer_artifacts(tmp_path):
+    trial_dir = tmp_path / "trial"
+    repo = trial_dir / "artifacts" / "logs" / "artifacts"
+    (repo / "tests").mkdir(parents=True)
+    (repo / "environment").mkdir()
+    (repo / "tests" / "test_outputs.py").write_text("def test_old():\n    assert True\n", encoding="utf-8")
+    (repo / "environment" / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.test"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=repo, check=True)
+    subprocess.run(["git", "tag", "initial"], cwd=repo, check=True)
+    (repo / "tests" / "test_outputs.py").write_text("def test_new():\n    assert True\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "fix"], cwd=repo, check=True)
+
+    working_copy = tmp_path / "working"
+    task_dir = working_copy / "task-001"
+    (task_dir / "tests").mkdir(parents=True)
+    (task_dir / "environment").mkdir()
+    (task_dir / "tests" / "test_outputs.py").write_text("def test_old():\n    assert True\n", encoding="utf-8")
+
+    assert resolve_fixer_artifacts(trial_dir) == repo
+    assert extract_fixer_artifacts(trial_dir, working_copy, "task-001") == "applied"
+    assert (task_dir / "tests" / "test_outputs.py").read_text(encoding="utf-8") == (
+        "def test_new():\n    assert True\n"
+    )

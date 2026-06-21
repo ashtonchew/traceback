@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T09:28:04Z",
+  "updated_at": "2026-06-21T10:45:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 23 passed in 0.18s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 25 passed in 0.26s."
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
         "005"
       ],
       "exit_code": 0,
-      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 20 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 22 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -107,6 +107,15 @@
       ],
       "exit_code": 1,
       "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release command rows did not exit 0, one check remains blocked, and this require-complete command did not exit 0."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "integration-release"
+      ],
+      "exit_code": 130,
+      "observed": "Interrupted live mapped integration-release after verifying it was semantically stalled, not merely slow. The harden-v0 hacker trial was actively writing trajectory data, but by step 530 the selected model claude-haiku-4-5-20251001 was repeatedly returning 'Analysis: Declined / Plan: Cannot proceed' and invalid/extra-text JSON. The run was stopped with exit 130 to avoid burning more tokens/cost without release evidence. No ReleaseProof is claimed."
     }
   ],
   "checks": [
@@ -118,13 +127,13 @@
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release exits 2 after running the stricter release path. A direct rerun with larger bounded harden timeout closed ProofSet proofset-e497370b2c3d2a69, recorded harden-v0 returncode 0/status max_iterations after a rewarded hack and failed fixer attempt, and now records harden_fixer_artifact_layout_drift: the committed fixer repo was exported under trial_dir/artifacts/logs/artifacts instead of harden-v0's expected trial_dir/artifacts path. ReleaseProof remains blocked because no validated patch or real per-case v1/v2 release-results artifact exists."
+      "evidence": "integration-release remains blocked. The adapter fixed the earlier Harbor nested artifact extraction drift, and a later bounded run showed targeted replay can reject a candidate. The latest mapped retry-cap run was interrupted with exit 130 after verifying an active hacker-model refusal loop, not a release pass. No real per-case v1/v2 release-results artifact or ReleaseProof exists."
     }
   ],
   "artifacts": [
     {
       "ref": "src/forkproof/releases/**",
-      "description": "Plan 005 release contracts: ProofSet construction with sealed-Witness QA/replay-surface/dedup checks, binary gate, profile-driven subversion check closure, evaluator-context execution-surface validation, append-only artifact store, harden-v0 config/result.json schema inspection, and integration preflight CLI."
+      "description": "Plan 005 release contracts: ProofSet construction with sealed-Witness QA/replay-surface/dedup checks, binary gate, profile-driven subversion check closure, evaluator-context execution-surface validation, append-only artifact store, harden-v0 config/result.json schema inspection, integration preflight CLI, harden-v0 artifact extraction compatibility patch, and refusal-loop diagnostics."
     },
     {
       "ref": "tests/forkproof/releases/**",
@@ -161,6 +170,14 @@
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
       "description": "Rescue exception update: plan-005-tests and integration-release now have real verified argv instead of not-applicable skip rows."
+    },
+    {
+      "ref": "src/forkproof/releases/harden_inspection.py",
+      "description": "harden-v0 output inspection helpers for fixer artifact layout, solver-validation outcomes, and generic hacker refusal-loop trajectory blockers."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/refusal-loops/proofset-e497370b2c3d2a69-20260621T103501Z.json",
+      "description": "Committed compact refusal-loop summary for the interrupted mapped integration-release run. The raw harden-v0 workdir is intentionally not committed because it is large/mutable; this summary records model, step count, final metrics, blocker code, and retry-policy observation without secret values."
     }
   ],
   "screenshots": [],
@@ -268,6 +285,16 @@
         "docs/plans/evidence/005/integration-release-preflight.json"
       ],
       "next_owner": "Fix or configure the harden-v0/Harbor artifact extraction surface so the fixer repo is applied before solver/replay validation, rerun the bounded fixer loop, then produce real v1/v2 per-case release results and seal ReleaseProof only if the binary gate passes."
+    },
+    {
+      "type": "HARDEN_HACKER_MODEL_REFUSAL_LOOP",
+      "recorded_at": "2026-06-21T10:35:01Z",
+      "reason": "The mapped integration-release retry-cap run used one hacker attempt, one solver-precheck retry, and one replay retry. It did not stall at the process/filesystem level: harden_job.log and the Harbor trajectory kept updating. It was semantically stalled because the hacker model repeatedly refused the authorized verifier-hardening task, reached trajectory step 530, and continued emitting decline text instead of valid action JSON. The run was interrupted with exit 130; this is not release evidence and does not satisfy Plan 005.",
+      "evidence_refs": [
+        "artifacts/forkproof/releases/refusal-loops/proofset-e497370b2c3d2a69-20260621T103501Z.json",
+        "docs/plans/repo-map/COMMANDS.json"
+      ],
+      "next_owner": "Use a prompt/model path that reliably complies with the authorized harden-v0 hacker role, or rerun integration-release with the new --harden-hacker-max-turns cap and inspect the recorded harden_hacker_model_refusal_loop blocker if it fails closed. Keep hacker_retries >= 1 because harden-v0 uses range(hacker_retries); zero would run no hacker attempt and could falsely report robustness."
     }
   ],
   "notes": [
@@ -289,6 +316,8 @@
     "2026-06-21T08:37:31Z integration-release is now a strict release command rather than a ProofSet-only preflight: it runs harden-v0 through the repo optional dependency boundary, writes harden-run and release-blocker artifacts, infers mandatory pytest subversion checks from replay_surface, and exits 2 until real v1/v2 release results can seal ReleaseProof.",
     "2026-06-21T09:02:13Z harden-v0 model selection no longer silently falls back to Gemini/Google. The adapter defaults to Anthropic, the mapped command explicitly passes anthropic/claude-haiku-4-5 for hacker/fixer/solver, and credential checks record presence only. The integration-release run reached Anthropic-backed hacker execution and then timed out with returncode 124/status unknown; ReleaseProof remained blocked on completing harden-v0 plus real v1/v2 release-results evidence.",
     "2026-06-21T09:13:48Z reran integration-release with the same explicit Anthropic model path and a larger bounded harden timeout. harden-v0 returned 0/status max_iterations, found a rewarded hack, attempted the fixer, and recorded iteration outcome fix_failed with fix_applied false. The release gate still exits 2 because harden-v0 did not produce a successful candidate patch or real per-case v1/v2 release-results artifact.",
-    "2026-06-21T09:28:04Z adapter diagnostics now record the concrete fixer failure: harden-v0 expected the committed fixer artifact repo at trial_dir/artifacts, but Harbor exported /logs/artifacts under trial_dir/artifacts/logs/artifacts. The nested diff includes fixer patch material, but it is diagnostic only because harden-v0 did not apply it or validate it through solver/replay."
+    "2026-06-21T09:28:04Z adapter diagnostics now record the concrete fixer failure: harden-v0 expected the committed fixer artifact repo at trial_dir/artifacts, but Harbor exported /logs/artifacts under trial_dir/artifacts/logs/artifacts. The nested diff includes fixer patch material, but it is diagnostic only because harden-v0 did not apply it or validate it through solver/replay.",
+    "2026-06-21T10:35:01Z stopped a live mapped integration-release run after verifying it was semantically stalled. The process and files were active, but the single hacker_h0_a0 trial was in a refusal loop: trajectory step_count=530, model=claude-haiku-4-5-20251001, last message='Analysis: Declined / Plan: Cannot proceed', final_metrics total_prompt_tokens=17509755 and total_cost_usd=2.2138652000000008. This proves retry=0 is not the right Plan 005 speed lever: harden-v0 implements hacker_retries as range(hacker_retries), so zero would run no hacker attempt; fastest trustworthy setting is one hacker attempt plus fail-fast on refusal/step budget or a more compliant model/prompt path.",
+    "2026-06-21T10:45:00Z added a canonical harden-v0 refusal-loop guard and turn cap: integration-release now passes --harden-hacker-max-turns 80, the adapter records generic hacker_refusal_loops from Harbor trajectory files, and harden_result_blocker reports harden_hacker_model_refusal_loop before release evidence can be mistaken for a gate attempt. Split harden output inspection into src/forkproof/releases/harden_inspection.py to satisfy the Plan 005 file-size gate."
   ]
 }

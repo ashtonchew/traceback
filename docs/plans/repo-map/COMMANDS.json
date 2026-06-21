@@ -192,9 +192,17 @@
         "--harden-task-id",
         "mongodb-sales-aggregation-engine",
         "--harden-max-iterations",
-        "1",
+        "2",
         "--harden-timeout-seconds",
         "5400",
+        "--harden-hacker-retries",
+        "1",
+        "--harden-solver-precheck-retries",
+        "1",
+        "--harden-replay-retries",
+        "1",
+        "--harden-hacker-max-turns",
+        "80",
         "--harden-hacker-model",
         "anthropic/claude-haiku-4-5",
         "--harden-fixer-model",
@@ -207,7 +215,7 @@
         "PYTHONPATH": "src"
       },
       "timeout_seconds": 7200,
-      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, runs the upstream harden-v0 adapter over an explicit task source using the available Anthropic credential path rather than Gemini/Google defaults, gives the real hacker/fixer loop a bounded 5400-second adapter window, and fails closed until real per-case v1/v2 release results can seal a ReleaseProof."
+      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, runs the upstream harden-v0 adapter over an explicit task source using the available Anthropic credential path rather than Gemini/Google defaults, gives the real hacker/fixer loop a bounded 5400-second adapter window, caps hacker, solver-precheck, and replay retries at one each, caps hacker turns at 80 to fail fast on refusal loops, records a two-iteration bounded attempt, and fails closed until real per-case v1/v2 release results can seal a ReleaseProof."
     },
     "plan-006-tests": {
       "status": "not-applicable",

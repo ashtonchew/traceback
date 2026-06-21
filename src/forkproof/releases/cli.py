@@ -42,6 +42,10 @@ def integration(
     release_results_ref: Path | None = None,
     harden_max_iterations: int = 1,
     harden_timeout_seconds: int = 5400,
+    harden_hacker_retries: int = 1,
+    harden_solver_precheck_retries: int = 1,
+    harden_replay_retries: int = 1,
+    harden_hacker_max_turns: int | None = None,
     harden_hacker_model: str | None = None,
     harden_fixer_model: str | None = None,
     harden_solver_model: str | None = None,
@@ -80,6 +84,10 @@ def integration(
                 artifact_root=ROOT / "artifacts/forkproof/releases",
                 harden_max_iterations=harden_max_iterations,
                 harden_timeout_seconds=harden_timeout_seconds,
+                harden_hacker_retries=harden_hacker_retries,
+                harden_solver_precheck_retries=harden_solver_precheck_retries,
+                harden_replay_retries=harden_replay_retries,
+                harden_hacker_max_turns=harden_hacker_max_turns,
                 harden_hacker_model=harden_hacker_model,
                 harden_fixer_model=harden_fixer_model,
                 harden_solver_model=harden_solver_model,
@@ -141,6 +149,10 @@ def main() -> int:
     integration_parser.add_argument("--release-results-ref", type=Path)
     integration_parser.add_argument("--harden-max-iterations", type=int, default=1)
     integration_parser.add_argument("--harden-timeout-seconds", type=int, default=5400)
+    integration_parser.add_argument("--harden-hacker-retries", type=int, default=1)
+    integration_parser.add_argument("--harden-solver-precheck-retries", type=int, default=1)
+    integration_parser.add_argument("--harden-replay-retries", type=int, default=1)
+    integration_parser.add_argument("--harden-hacker-max-turns", type=int)
     integration_parser.add_argument("--harden-hacker-model")
     integration_parser.add_argument("--harden-fixer-model")
     integration_parser.add_argument("--harden-solver-model")
@@ -155,6 +167,10 @@ def main() -> int:
             release_results_ref=args.release_results_ref,
             harden_max_iterations=args.harden_max_iterations,
             harden_timeout_seconds=args.harden_timeout_seconds,
+            harden_hacker_retries=args.harden_hacker_retries,
+            harden_solver_precheck_retries=args.harden_solver_precheck_retries,
+            harden_replay_retries=args.harden_replay_retries,
+            harden_hacker_max_turns=args.harden_hacker_max_turns,
             harden_hacker_model=args.harden_hacker_model,
             harden_fixer_model=args.harden_fixer_model,
             harden_solver_model=args.harden_solver_model,
