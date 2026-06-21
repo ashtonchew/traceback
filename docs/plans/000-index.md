@@ -19,13 +19,14 @@ Wave 1 grounds the real repository. No source implementation begins while `docs/
       ├── 002 atomic-forkpoint-seam
       │     └── 003 stochastic-witness-loop
       │            ├── 005 verifier-fix-and-release-proof
-      │            │      └── 006 demo-observability-and-publication
+      │            │      ├── 006 demo-observability-and-publication
+      │            │      └── 008 qa-classifier-benchmark
       │            └── 007 depth-two-and-research-extensions
       └── 004 legitimate-control-fixtures
              ├── 003 stochastic-witness-loop
              └── 005 verifier-fix-and-release-proof
 
-The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 004 frozen legitimate controls. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo.
+The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 004 frozen legitimate controls. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo. Plan 008 (QA classifier benchmark) depends on Plans 003, 004, and 005; it is parallel with Plan 006 and additive — never a prerequisite for the live demo or the core release gate.
 
 ## Parallel waves
 
@@ -35,7 +36,7 @@ The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 0
 | 2 | 002, 004 | ForkPoint/state fidelity and legitimate controls use separate feature paths. |
 | 3 | 003 | Produces real BranchRuns and durable replayable Witnesses. |
 | 4 | 005, 007 | Core release proof and optional research extension write disjoint paths. |
-| 5 | 006 | Integrates only merged core artifacts into the demo and publication surface. |
+| 5 | 006, 008 | Demo/publication and the additive QA classifier benchmark consume merged core artifacts on disjoint feature paths. |
 
 ## Merge gates
 
@@ -87,6 +88,17 @@ Planning is implemented when:
 - Core metrics contain observed values or explicit not-measured status.
 - Plan 006 manifest and all core manifests are complete.
 
+### Gate 6 — QA classifier benchmark complete (additive, non-blocking)
+
+Plan 008 is implemented when:
+
+- An importer template materializes 20 Terminal Wrench tasks as live HUD envs (or honestly skips them) with provenance, a working sterile `clean_verify` referee per env, and a passing isolation check.
+- Each task runs the ForkProof discovery tree; every rewarded trajectory carries a sterile-referee verdict, and every QA-visible real trace carries a post-trace HUD QA verdict (called without `ground_truth`).
+- The sterile referee is validated against curated Terminal Wrench labels on overlapping trajectories (agreement rate recorded).
+- One report shows, per-task and aggregate, the additive benchmark — baseline X (referee-confirmed clusters QA alone found) and lift Δ (additional confirmed clusters the discovery layer adds), split into detection and discovery deltas, plus cost/latency, with no metric unreported and Δ = 0 a valid result.
+- A live-hook log contains at least one dual-verdict BranchRun from a real ForkProof run.
+- Plan 008 manifest is complete. This gate does not weaken or delay Gates 4 or 5.
+
 ## Ownership map
 
 | Plan | Exclusive proposed writes |
@@ -98,6 +110,7 @@ Planning is implemented when:
 | 005 | `src/forkproof/releases/**`, `tests/forkproof/releases/**`, `artifacts/forkproof/releases/**`, its plan/reference, `evidence/005/**` |
 | 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**` |
 | 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, its plan/reference, `evidence/007/**` |
+| 008 | `src/forkproof/qabench/**`, `tests/forkproof/qabench/**`, `fixtures/forkproof/qabench/**`, `artifacts/forkproof/qabench/**`, `envs/qabench/**`, its plan/reference, `evidence/008/**` |
 
 ## Assignment checklist
 
