@@ -42,7 +42,7 @@ export function HomeView() {
                     type="button"
                     onClick={() => navigate(step.route)}
                     className={clsx(
-                      'group flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors duration-150 ease-out hover:bg-accent-wash active:bg-accent-wash focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      'group flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors duration-150 ease-out hover:bg-tint-green active:bg-tint-green focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                       i > 0 && 'border-t border-hairline',
                     )}
                   >

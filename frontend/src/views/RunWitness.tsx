@@ -50,7 +50,7 @@ function ConfirmedWitnessesPanel({
               type="button"
               onClick={() => onSelect(id)}
               className={[
-                'w-full rounded-lg border px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-accent-wash active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'w-full rounded-lg border px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:bg-tint-green active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 active ? 'border-fill-accent bg-green-50/60' : 'border-hairline bg-surface-raised',
               ].join(' ')}
             >

@@ -110,7 +110,7 @@
   /* Hover keeps the existing outline (so a selected node never loses its accent
    * border) and tints the surface with the accent wash instead of lifting. */
   .fp-node-frame:hover {
-    background-color: var(--ds-accent-wash);
+    background-color: var(--ds-tint-green);
     box-shadow: var(--ds-shadow);
   }
 }

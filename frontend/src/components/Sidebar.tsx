@@ -25,7 +25,7 @@ function Item({ to, label, icon: Icon, end }: { to: string; label: string; icon:
           <span
             className={clsx(
               'flex h-11 w-11 items-center justify-center rounded-lg transition-[background-color,color,transform] duration-150 ease-out group-active:scale-[0.96]',
-              isActive ? 'bg-surface text-ink-primary' : 'text-ink-tertiary group-hover:bg-accent-wash group-hover:text-ink-secondary',
+              isActive ? 'bg-surface text-ink-primary' : 'text-ink-tertiary group-hover:bg-tint-green group-hover:text-ink-secondary',
             )}
           >
             <Icon size={21} strokeWidth={1.75} />
