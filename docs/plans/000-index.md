@@ -19,14 +19,15 @@ Wave 1 grounds the real repository. No source implementation begins while `docs/
       ├── 002 atomic-forkpoint-seam
       │     └── 003 stochastic-witness-loop
       │            ├── 005 verifier-fix-and-release-proof
-      │            │      ├── 006 demo-observability-and-publication
-      │            │      └── 008 qa-classifier-benchmark
-      │            └── 007 depth-two-and-research-extensions
+      │            │      └── 006 demo-observability-and-publication
+      │            ├── 007 depth-two-and-research-extensions
+      │            └── 008 qa-classifier-benchmark
       └── 004 legitimate-control-fixtures
              ├── 003 stochastic-witness-loop
-             └── 005 verifier-fix-and-release-proof
+             ├── 005 verifier-fix-and-release-proof
+             └── 008 qa-classifier-benchmark
 
-The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 004 frozen legitimate controls. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo. Plan 008 (QA classifier benchmark) depends on Plans 003, 004, and 005; it is parallel with Plan 006 and additive — never a prerequisite for the live demo or the core release gate.
+The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 004 frozen legitimate controls. Plan 005 waits for both a replayable Witness and frozen legitimate controls. Plan 007 is parallel with Plan 005 after core Witness creation and is never a prerequisite for the live demo. Plan 008 (QA classifier benchmark) depends on Plans 003 and 004 only; its Plan 005 edge was relaxed (2026-06-21, owner-approved) because 008 grounds hack-or-not on its own sterile referee plus the v1 grader and does not use Plan 005's v2 grader or ReleaseProof. It is now parallel with Plans 005 and 007, additive — never a prerequisite for the live demo or the core release gate.
 
 ## Parallel waves
 
@@ -35,8 +36,8 @@ The graph is acyclic. Plan 003 waits for both Plan 002 state fidelity and Plan 0
 | 1 | 001 | Single repository-grounding gate. |
 | 2 | 002, 004 | ForkPoint/state fidelity and legitimate controls use separate feature paths. |
 | 3 | 003 | Produces real BranchRuns and durable replayable Witnesses. |
-| 4 | 005, 007 | Core release proof and optional research extension write disjoint paths. |
-| 5 | 006, 008 | Demo/publication and the additive QA classifier benchmark consume merged core artifacts on disjoint feature paths. |
+| 4 | 005, 007, 008 | Core release proof, optional research extension, and the additive QA classifier benchmark write disjoint paths; 007 and 008 are non-blocking and consume Plan 003 artifacts (008 also reads the v1 grader, not Plan 005's v2). |
+| 5 | 006 | Demo/publication consumes the merged core release artifacts. |
 
 ## Merge gates
 
@@ -90,7 +91,7 @@ Planning is implemented when:
 
 ### Gate 6 — QA classifier benchmark complete (additive, non-blocking)
 
-Plan 008 is implemented when:
+Plan 008 depends on Plans 003 and 004 only (the Plan 005 edge was relaxed 2026-06-21; see the dependency graph note). It may begin once Plan 003 lands its sealed Witness and Plan 004 is complete; it does not wait on the Plan 005 release loop. Plan 008 is implemented when:
 
 - An importer template materializes 20 Terminal Wrench tasks as live HUD envs (or honestly skips them) with provenance, a working sterile `clean_verify` referee per env, and a passing isolation check.
 - Each task runs the ForkProof discovery tree; every rewarded trajectory carries a sterile-referee verdict, and every QA-visible real trace carries a post-trace HUD QA verdict (called without `ground_truth`).

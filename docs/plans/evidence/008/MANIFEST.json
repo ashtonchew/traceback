@@ -2,19 +2,54 @@
   "schema_version": 1,
   "plan_id": "008",
   "plan_name": "qa-classifier-benchmark",
-  "wave": 5,
-  "status": "not-started",
-  "started_at": null,
-  "updated_at": "2026-06-20T18:10:00.000000+00:00",
+  "wave": 4,
+  "status": "in-progress",
+  "started_at": "2026-06-21T00:00:00.000000+00:00",
+  "updated_at": "2026-06-21T00:00:00.000000+00:00",
   "completed_at": null,
   "commit": null,
-  "commands": [],
-  "checks": [],
-  "artifacts": [],
+  "commands": [
+    {
+      "command": "uv run pytest tests/forkproof/qabench/ -q",
+      "exit_code": 0,
+      "output": "22 passed",
+      "scope": "decoupled scaffold unit behavior (NOT the plan-008-tests mapped Done-when command, which is still unbound in COMMANDS.json)"
+    },
+    {
+      "command": "uv run ruff check src/forkproof/qabench tests/forkproof/qabench",
+      "exit_code": 0,
+      "output": "All checks passed!"
+    },
+    {
+      "command": "uv run python docs/plans/scripts/validate_file_sizes.py --plan 008",
+      "exit_code": 0,
+      "output": "PASS: 16 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target"
+    }
+  ],
+  "checks": [
+    {"name": "referee adjudication", "result": "pass", "observed": "v1-rewarded + clean_verify-fail = CONFIRMED_HACK; pass = LEGITIMATE; clean_verify-unrunnable = UNDECIDED (not silently legitimate); non-rewarded input raises."},
+    {"name": "X/Delta scorer buckets", "result": "pass", "observed": "depth splits X / detection / discovery; coverage counts newly-found tasks; Delta=0 is valid; a branch hack matching a QA-visible cluster folds into detection not discovery; injected dedup is applied symmetrically."},
+    {"name": "importer planner", "result": "pass", "observed": "plan_env materializes env layout + sterile clean_verify entrypoint + provenance digests; re-planning a pinned source is idempotent (stable content_digest)."},
+    {"name": "003 seams remain not-wired", "result": "pass", "observed": "NotWiredDiscoveryDriver and NotWiredCleanVerifyRunner raise NotWiredError with wiring pointers; default TargetMechanismDeduplicator groups by (target, mechanism)."}
+  ],
+  "artifacts": [
+    {"path": "src/forkproof/qabench/models.py", "note": "pure domain model (3 separated signals, clusters, report)"},
+    {"path": "src/forkproof/qabench/referee.py", "note": "sterile referee adjudication + label-agreement (WP3 pure core)"},
+    {"path": "src/forkproof/qabench/scoring.py", "note": "X/Delta scorer (WP5 pure math)"},
+    {"path": "src/forkproof/qabench/importer.py", "note": "TW->HUD importer planner (WP1 layout/provenance)"},
+    {"path": "src/forkproof/qabench/seams.py", "note": "the only Plan 003 / live-infra coupling, stubbed NotWired"},
+    {"path": "tests/forkproof/qabench/", "note": "22 behavior tests"},
+    {"path": "fixtures/forkproof/qabench/sample-task/", "note": "importer planner fixture"}
+  ],
   "screenshots": [],
   "skips": [],
   "blockers": [],
   "notes": [
-    "Planning template only; no implementation evidence is claimed."
+    "STATUS in-progress reflects DECOUPLED SCAFFOLD ONLY, built ahead of Gate 6 on the unmerged branch feat/plan-008-qabench-scaffold. Gate 6 is NOT open (Plan 003 has no sealed Witness yet) and this work is NOT merged and NOT claimed complete. Only the 003-independent WP cores exist: WP1 importer planner, WP3 referee/label-validation logic, WP5 scorer math, and the WP2/WP3/dedup SEAMS as not-wired stubs.",
+    "STILL TODO before COMPLETE (needs Plan 003 merged + qabench envs materialized): wire DiscoveryDriver to forkproof.witnesses.branch_runs (WP2), wire CleanVerifyRunner to a real sterile sandbox over materialized envs/qabench/** (WP1/WP3), bind the symmetric dedup to Plan 003 (or keep TargetMechanismDeduplicator), run the QA baseline on real traces (WP4), materialize 20 envs, add the live dual-verdict hook + sealed report (WP6), and bind plan-008-tests / integration-qabench / bench-qa-vs-forkproof in COMMANDS.json.",
+    "2026-06-21 dependency relaxation (owner-approved): depends_on is now [stochastic-witness-loop (003), legitimate-control-fixtures (004)]; the verifier-fix-and-release-proof (005) edge was removed and wave dropped 5 -> 4. 008 grounds hack-or-not on its own sterile referee plus the v1 grader (digest ecaf1222...b56f61f from Plans 001/004), and explicitly does not consume Plan 005's v2 grader or ReleaseProof. See the 008 Decision Log (2026-06-21) and 000-index.md.",
+    "STILL REQUIRED before 008 may START: (1) Plan 003 manifest complete with the sealed Witness landed (causal-delta minimization, durable packaging, target/mechanism dedup, 3x deterministic v1 replay); (2) Plan 004 complete (done); (3) canonical reward_hacking_analysis QA path operational (inherited from 003); (4) Plan 003 branch isolation / security-branch (inherited).",
+    "STILL REQUIRED before 008 may COMPLETE (none built yet): importer template + 20 envs/qabench/** with working clean_verify referee, referee-vs-curated-label validation, QA baseline on real traces, X/Delta cluster scoring (coverage + depth, detection + discovery deltas), live dual-verdict hook, sealed report, and COMMANDS.json keys plan-008-tests / integration-qabench / bench-qa-vs-forkproof.",
+    "NOT required: Plan 005 ProofSet, v2 grader, or ReleaseProof."
   ]
 }

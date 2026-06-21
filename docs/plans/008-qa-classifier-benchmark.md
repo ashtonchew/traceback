@@ -5,14 +5,15 @@ description: >
   freshly materialized Terminal Wrench tasks, adjudicates every rewarded trajectory
   with a neutral sterile golden/held-out referee, and reports how many referee-confirmed
   reward-hack clusters each method surfaces (X for QA, Y for ForkProof) split into a
-  detection delta and a discovery delta. Use when Plans 003, 004, and 005 have merged
-  with a replayable Witness, frozen controls, and the Plan 003 branch/replay path; it
-  owns src/forkproof/qabench/**, tests/forkproof/qabench/**, fixtures/forkproof/qabench/**,
-  artifacts/forkproof/qabench/**, envs/qabench/**, this plan/reference, and
-  docs/plans/evidence/008/**.
+  detection delta and a discovery delta. Use when Plans 003 and 004 have merged (a
+  replayable Plan 003 branch/replay path and frozen controls); it grounds truth on its
+  own sterile referee plus the v1 grader and does NOT depend on Plan 005's v2 release
+  artifact. It owns src/forkproof/qabench/**, tests/forkproof/qabench/**,
+  fixtures/forkproof/qabench/**, artifacts/forkproof/qabench/**, envs/qabench/**, this
+  plan/reference, and docs/plans/evidence/008/**.
 owns: ["docs/plans/008-qa-classifier-benchmark.md", "docs/plans/008-qa-classifier-benchmark.REFERENCE.md", "src/forkproof/qabench/**", "tests/forkproof/qabench/**", "fixtures/forkproof/qabench/**", "artifacts/forkproof/qabench/**", "envs/qabench/**", "docs/plans/evidence/008/**"]
-depends_on: ["stochastic-witness-loop", "legitimate-control-fixtures", "verifier-fix-and-release-proof"]
-wave: 5
+depends_on: ["stochastic-witness-loop", "legitimate-control-fixtures"]
+wave: 4
 ---
 
 # QA classifier benchmark
@@ -93,9 +94,11 @@ report schema before WP3.
 ## Constraints
 
 - **Scope/ownership.** Write only inside the owned globs above. Consume Plan 003's
-  branch/replay path, Plan 004's frozen controls, and Plan 005's pinned v1 grader
-  read-only. The single existing `envs/mongodb-sales-aggregation-engine/**` env stays
-  owned by Plan 001; the 20 new envs live under `envs/qabench/**`.
+  branch/replay path and Plan 004's frozen controls read-only, plus the pinned v1 grader
+  (digest `ecaf1222…b56f61f` from Plans 001/004). Do not consume Plan 005's v2 grader or
+  ReleaseProof — they are irrelevant to deciding hack-or-not here (see Context). The
+  single existing `envs/mongodb-sales-aggregation-engine/**` env stays owned by Plan 001;
+  the 20 new envs live under `envs/qabench/**`.
 - **Additive baseline, not adversarial.** Frame and measure QA as the ablated baseline
   and QA + ForkProof as the system; report the lift Δ, never "ForkProof beats QA." On
   the **real traces QA actually has** (base rollouts, recorded dataset traces), give QA
@@ -294,8 +297,9 @@ append-only and may be marked superseded, not rewritten.
 
 ## Executor prompt
 
-    /goal Execute docs/plans/008-qa-classifier-benchmark.md after Plans 003, 004, and
-    005 merge. Build a Terminal-Wrench-to-HUD importer template (generalize the mongodb
+    /goal Execute docs/plans/008-qa-classifier-benchmark.md after Plans 003 and 004
+    merge (it does not depend on Plan 005's v2 release artifact). Build a
+    Terminal-Wrench-to-HUD importer template (generalize the mongodb
     env) with a sterile clean_verify referee, and materialize 20 tasks under
     envs/qabench/**. For each task run the ForkProof discovery tree (base rollout plus
     Plan 003 stochastic branches). Adjudicate every rewarded trajectory with clean_verify
@@ -369,6 +373,31 @@ append-only and may be marked superseded, not rewritten.
   counterfactuals never reach QA-in-production, so not-seeing-them is the win, guarded by
   divergence lineage. QA runs only on real QA-visible traces (which carry trace ids), so
   there is no branch-trace_id plumbing requirement. QA is called without `ground_truth`.
+- 2026-06-21 — Dependency decision (owner-approved): **relaxed the Plan 005 edge.**
+  `depends_on` is now `[stochastic-witness-loop (003), legitimate-control-fixtures (004)]`
+  and `wave` drops 5 → 4 (parallel with 005/007, additive/non-blocking like 007).
+  Rationale: 008 grounds "is this a hack" on its **own sterile golden/held-out referee**
+  re-running each task's v1 verification, **not** on a sealed Witness and **not** on
+  Plan 005's v2 grader. The Context section is explicit that the v2 patch is Plan 005's
+  *release* deliverable and "is irrelevant to deciding hack-or-not here." The v1 grader
+  digest 008 reads (`ecaf1222…b56f61f`) originates in Plans 001/004, independent of 005.
+  `000-index.md` (dependency graph, parallel-waves table, Gate 6) and
+  `evidence/008/MANIFEST.json` updated to match. This relaxation does NOT mark 008
+  startable or complete — it only removes a non-substantive ordering edge so 008 can
+  begin the moment Plan 003 lands its sealed Witness, without waiting on the 005 release
+  loop. **Still required before 008 may START (Gate 6 substantive preconditions):**
+  (1) Plan 003 manifest `complete` with the sealed Witness fix landed — i.e. the
+  discovery/QA/replay/isolation path 008 reuses is stable (causal-delta minimization,
+  durable packaging, target/mechanism dedup, and 3× deterministic v1 replay all passing);
+  (2) Plan 004 `complete` (already done); (3) the canonical `reward_hacking_analysis` QA
+  path operational (inherited from 003); (4) Plan 003 branch isolation / `security-branch`
+  (inherited). **Still required before 008 may COMPLETE (its own Done-when, none built
+  yet):** the importer template + 20 materialized `envs/qabench/**` envs with a working
+  `clean_verify` referee, referee-vs-curated-label validation, the QA baseline on real
+  traces, X/Δ cluster scoring (coverage + depth, detection + discovery deltas), the live
+  dual-verdict hook, a sealed report, and binding the `plan-008-tests`,
+  `integration-qabench`, and `bench-qa-vs-forkproof` keys in `COMMANDS.json` (absent today).
+  **Explicitly NOT required:** Plan 005's ProofSet, v2 grader, or ReleaseProof.
 
 ### Outcomes & Retrospective
 
