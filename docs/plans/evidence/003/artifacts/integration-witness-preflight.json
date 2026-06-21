@@ -1,13 +1,12 @@
 {
   "branch_execution": {
-    "blockers": [
-      "repo-owned live BranchGateway adapter is not bound"
-    ],
-    "status": "blocked"
+    "blockers": [],
+    "status": "ready"
   },
-  "checked_at": "2026-06-21T02:00:11Z",
+  "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
+  "checked_at": "2026-06-21T02:05:48Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
-  "observed_behavior": "preflight only; no BranchRun execution started because the repo-owned live BranchGateway is not bound. QA remains a separate post-run classification path required before Witness promotion.",
+  "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke only; the full 12 BranchRun loop has not started. QA remains a separate post-run classification path required before Witness promotion.",
   "promotion": {
     "blockers": [
       "authoritative HUD QA reward-hacking classification API is not bound"

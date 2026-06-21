@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import importlib.util
 import json
 import os
 import shutil
@@ -143,6 +145,65 @@ def _modal_restore_inspection(forkpoint: dict[str, Any]) -> dict[str, Any]:
         sandbox.terminate()
 
 
+async def _run_branch_gateway_smoke(forkpoint: dict[str, Any]) -> dict[str, Any]:
+    _load_local_env()
+    presence = _credential_presence()
+    if any(value != "present" for value in presence.values()):
+        return {
+            "status": "blocked",
+            "credential_presence": presence,
+            "observed_behavior": "BranchGateway smoke skipped because required local credentials were absent",
+        }
+
+    import modal
+    from hud.agents.claude.agent import ClaudeAgent, ClaudeConfig
+    from hud.eval.runtime import ModalRuntime
+
+    env_path = ROOT / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
+    spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load HUD env from {env_path}")
+    env_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(env_module)
+
+    task = env_module.implement_sales_analyzer()
+    runtime = ModalRuntime(
+        image=modal.Image.from_id(forkpoint["snapshot_id"]),
+        app_name="forkproof-plan-003",
+        workdir="/app",
+        command=("uv", "run", "hud", "serve", "env:env", "--host", "0.0.0.0", "--port", "8765"),
+    )
+    agent = ClaudeAgent(
+        ClaudeConfig(
+            model="claude-haiku-4-5",
+            max_steps=2,
+            max_tokens=2048,
+            use_computer_beta=False,
+        )
+    )
+    job = await task.run(agent, runtime=runtime)
+    runs = getattr(job, "runs", None) or []
+    trace_id = None
+    if runs:
+        trace_id = getattr(runs[0], "trace_id", None)
+    trace_id = trace_id or getattr(job, "trace_id", None)
+    return {
+        "status": "pass" if getattr(job, "id", None) and trace_id else "blocked",
+        "credential_presence": presence,
+        "job_id": str(getattr(job, "id", "")),
+        "trace_id": str(trace_id or ""),
+        "reward": getattr(job, "reward", None),
+        "model": "claude-haiku-4-5",
+        "max_steps": 2,
+        "counted_branch_run": False,
+        "observed_behavior": (
+            "Diagnostic BranchGateway smoke produced a HUD job/trace from the corrected ForkPoint snapshot. "
+            "It is not counted as a Plan 003 BranchRun because it does not run the full branch budget, does not "
+            "join HUD QA, and starts from an already reward-1 accepted state."
+        ),
+    }
+
+
 def integration_witness() -> int:
     plan002 = _load_json(ROOT / "docs" / "plans" / "evidence" / "002" / "MANIFEST.json")
     plan004 = _load_json(ROOT / "docs" / "plans" / "evidence" / "004" / "MANIFEST.json")
@@ -187,10 +248,29 @@ def integration_witness() -> int:
         branch_execution_blockers.append(
             "accepted ForkPoint restore is not branch-ready for live BranchGateway execution"
         )
+    else:
+        try:
+            smoke = asyncio.run(_run_branch_gateway_smoke(forkpoint))
+        except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
+            smoke = {
+                "status": "blocked",
+                "error_class": type(exc).__name__,
+                "observed_behavior": str(exc),
+            }
+        smoke_path = _write_artifact(
+            "branch-gateway-smoke.json",
+            {
+                "checked_at": utc_now(),
+                "fork_point_id": forkpoint.get("fork_point_id"),
+                "snapshot_id": forkpoint.get("snapshot_id"),
+                **smoke,
+            },
+        )
+        if smoke.get("status") != "pass":
+            branch_execution_blockers.append("repo-owned live BranchGateway adapter smoke did not produce HUD trace evidence")
 
     # These are distinct Plan 003 seams. Branch execution produces a completed
     # BranchRun; QA classification is a later same-branch promotion signal.
-    branch_execution_blockers.append("repo-owned live BranchGateway adapter is not bound")
     promotion_blockers.append("authoritative HUD QA reward-hacking classification API is not bound")
 
     artifact = {
@@ -199,6 +279,9 @@ def integration_witness() -> int:
         "fork_point_id": forkpoint.get("fork_point_id"),
         "snapshot_id": forkpoint.get("snapshot_id"),
         "restore_inspection_ref": str(restore_path.relative_to(ROOT)),
+        "branch_gateway_smoke_ref": (
+            str(smoke_path.relative_to(ROOT)) if "smoke_path" in locals() else None
+        ),
         "branch_execution": {
             "status": "blocked" if branch_execution_blockers else "ready",
             "blockers": branch_execution_blockers,
@@ -208,8 +291,8 @@ def integration_witness() -> int:
             "blockers": promotion_blockers,
         },
         "observed_behavior": (
-            "preflight only; no BranchRun execution started because the repo-owned live BranchGateway is not "
-            "bound. QA remains a separate post-run classification path required before Witness promotion."
+            "integration preflight plus diagnostic BranchGateway smoke only; the full 12 BranchRun loop has not "
+            "started. QA remains a separate post-run classification path required before Witness promotion."
         ),
     }
     path = _write_artifact("integration-witness-preflight.json", artifact)
