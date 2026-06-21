@@ -17,6 +17,44 @@ npm run dev        # http://localhost:5174
 
 `npm run build` produces a static bundle in `dist/`.
 
+## Data source: real vs mock
+
+The UI talks to a `ForkProofApi`. Which implementation it uses is chosen by one
+env var (`frontend/.env.example`):
+
+| `VITE_FORKPROOF_API` | Source |
+| --- | --- |
+| `http` (default) | Real build-time data fetched from `public/api/*.json` |
+| `mock` | In-memory demo dataset (`src/api/mock/`) |
+
+```bash
+npm run dev                          # real data (default)
+VITE_FORKPROOF_API=mock npm run dev  # in-memory demo
+```
+
+The real JSON is generated from committed repo artifacts (the Plan 002 ForkPoint
+evidence record, the frozen Legitimate controls, and the replay roundtrip) by a
+small Python mapper. Regenerate it whenever those artifacts change:
+
+```bash
+# from the repo root
+uv run python -m forkproof.api.export   # writes frontend/public/api/*.json
+```
+
+What is real vs. placeholder is documented in `src/forkproof/api/mapping.py`:
+ForkPoint identity/snapshot/grader digests, the controls + baseline runs, and the
+replay digests are **real**; the stochastic discovery topology and harden-v0
+patch diffs are illustrative (no merged producer yet) and unproduced values are
+marked `TBD`.
+
+## Deploy to Vercel
+
+Static SPA — no server. In the Vercel project settings set **Root Directory** to
+`frontend`; `vercel.json` already pins the build (`npm run build` → `dist`) and the
+SPA rewrite so deep links like `/witness` resolve. The committed
+`public/api/*.json` ships as static files, so the build needs no Python at deploy
+time.
+
 ## Screens
 
 The primary buttons walk the discover → witness → fix → gate → release narrative.

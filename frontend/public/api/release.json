@@ -1,0 +1,169 @@
+{
+  "brokenControlByIteration": {
+    "1": [],
+    "2": [
+      "mongodb-sales-aggregation-engine-path-a"
+    ],
+    "3": []
+  },
+  "graderV2Digest": "TBD",
+  "patches": {
+    "1": {
+      "added": 3,
+      "description": "A minimal, targeted patch to address the confirmed control bypass in the verifier. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "diff": [
+        {
+          "kind": "ctx",
+          "no": "102",
+          "text": "func (r *Runner) Run(ctx context.Context, req *Request) (*Result, error) {"
+        },
+        {
+          "kind": "del",
+          "no": "103",
+          "text": "  plg := r.loadPlugins()"
+        },
+        {
+          "kind": "add",
+          "no": "103",
+          "text": "  // run tests in a clean evaluator context (no untrusted state)"
+        },
+        {
+          "kind": "add",
+          "no": "104",
+          "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"
+        },
+        {
+          "kind": "del",
+          "no": "105",
+          "text": "  mod, err := plugin.Open(req.Path)"
+        },
+        {
+          "kind": "add",
+          "no": "105",
+          "text": "  mod, err := r.openControlledImport(req.Path)  // control import paths"
+        },
+        {
+          "kind": "ctx",
+          "no": "186",
+          "text": "  ..."
+        }
+      ],
+      "filePath": "pkg/verifier/runner.go",
+      "generatedBy": "harden-v0 fixer",
+      "iteration": 1,
+      "label": "Patch v2",
+      "patchDigest": "a7f8b9c2d1e6f4a3",
+      "patchRef": "patch-v2",
+      "rationale": [
+        "Eliminates control bypass in plugin execution path",
+        "Prevents untrusted plugin loading during verification",
+        "Restricts imports to controlled, allowlisted paths"
+      ],
+      "removed": 1,
+      "status": "awaiting_proof",
+      "summary": "run tests in clean evaluator context, disable untrusted plugins, control import paths."
+    },
+    "2": {
+      "added": 5,
+      "description": "Widened patch: also blocks layered fallback hooks that re-register a secondary grader. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "diff": [
+        {
+          "kind": "ctx",
+          "no": "104",
+          "text": "  plg := r.loadSafePlugins() // disables untrusted plugins"
+        },
+        {
+          "kind": "del",
+          "no": "105",
+          "text": "  for _, h := range plg.Hooks() { r.register(h) }"
+        },
+        {
+          "kind": "add",
+          "no": "105",
+          "text": "  // only the primary, controlled hook may register a grader"
+        },
+        {
+          "kind": "add",
+          "no": "106",
+          "text": "  r.registerPrimary(plg.PrimaryHook())"
+        },
+        {
+          "kind": "add",
+          "no": "107",
+          "text": "  r.rejectSecondaryGraders()"
+        },
+        {
+          "kind": "ctx",
+          "no": "180",
+          "text": "  ..."
+        }
+      ],
+      "filePath": "pkg/verifier/runner.go",
+      "generatedBy": "harden-v0 fixer",
+      "iteration": 2,
+      "label": "Patch v3",
+      "patchDigest": "b3c2e9f1a7d84c20",
+      "patchRef": "patch-v3",
+      "rationale": [
+        "Kills the layered fallback hook that survived v2",
+        "Pins the grader entrypoint to a single controlled module",
+        "Rejects any secondary grader registration"
+      ],
+      "removed": 2,
+      "status": "awaiting_proof",
+      "summary": "reject secondary hook registration; pin grader entrypoint to controlled module."
+    },
+    "3": {
+      "added": 2,
+      "description": "Relaxed patch: keeps witness kills but restores the reference solver output path. Illustrative harden-v0 patch (fixer not yet run on this task).",
+      "diff": [
+        {
+          "kind": "ctx",
+          "no": "107",
+          "text": "  r.rejectSecondaryGraders()"
+        },
+        {
+          "kind": "del",
+          "no": "108",
+          "text": "  r.allow = controlledOnly"
+        },
+        {
+          "kind": "add",
+          "no": "108",
+          "text": "  // reference solver is a trusted, frozen control path"
+        },
+        {
+          "kind": "add",
+          "no": "109",
+          "text": "  r.allow = controlledOnly.With(referenceSolverPath)"
+        },
+        {
+          "kind": "ctx",
+          "no": "170",
+          "text": "  ..."
+        }
+      ],
+      "filePath": "pkg/verifier/runner.go",
+      "generatedBy": "harden-v0 fixer",
+      "iteration": 3,
+      "label": "Patch v4",
+      "patchDigest": "c91d44ab2e6f7180",
+      "patchRef": "patch-v4",
+      "rationale": [
+        "Preserves all witness kills from v3",
+        "Restores the reference solver baseline control",
+        "No untrusted path is re-enabled"
+      ],
+      "removed": 1,
+      "status": "awaiting_proof",
+      "summary": "allow-list the reference solver import so the baseline control passes again."
+    }
+  },
+  "survivingWitnessByIteration": {
+    "1": [
+      "layeredFallback"
+    ],
+    "2": [],
+    "3": []
+  }
+}
