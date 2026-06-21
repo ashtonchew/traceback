@@ -24,11 +24,11 @@
     "task_id",
     "task_visible_probe"
   ],
-  "live_boundary_forkpoint_id": "fp-38471977e47584bfa2688f23",
+  "live_boundary_forkpoint_id": "fp-826ba545cf30870e67d42ddb",
   "live_boundary_forkpoint_ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
-  "live_boundary_snapshot_id": "im-01KVKSP4RKSV710QEK4ZK46F2Z",
+  "live_boundary_snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
-  "modal_snapshot_id": "im-01KVKSMWEXGW2MEES6835DFQG9",
+  "modal_snapshot_id": "im-01KVKY876G6SHHYQFW8BHY2YYR",
   "modal_snapshot_mode": "filesystem",
   "remaining_real_system_gaps": [
     "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
@@ -40,7 +40,7 @@
   "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
   "trace_event_count": 66,
   "trace_raw_events_sha256": "4a856566523b9fc338bbcdf130735e34267ff42ddc9a9aab5a5a3da26d53fa59",
-  "trace_replay_snapshot_id": "im-01KVKSNFKRVS0C9V1Z3YCJ8XZX",
+  "trace_replay_snapshot_id": "im-01KVKYAPQ25DPT4C56XYACWGJ7",
   "trace_replay_snapshot_ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
   "trace_replay_tool_count": 29
 }

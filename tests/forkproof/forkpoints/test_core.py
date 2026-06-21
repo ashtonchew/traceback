@@ -15,6 +15,7 @@ from forkproof.forkpoints.core import (
     load_source_trace,
     restore_forkpoint,
 )
+from forkproof.forkpoints.replay_probe import QUERY_STUB, _setup_command
 
 
 def source(tmp_path: Path) -> dict:
@@ -243,3 +244,13 @@ def test_environment_source_digest_covers_copied_task_assets(tmp_path: Path):
     (env_root / "task_assets" / "reference_solution.sh").write_text("changed", encoding="utf-8")
 
     assert environment_source_digest(tmp_path) != before
+
+
+def test_trace_replay_setup_writes_query_stub_without_indentation():
+    command = _setup_command()
+    heredoc = command.split("cat > /app/query.py <<'PY'\n", 1)[1].split("\nPY\n", 1)[0]
+
+    assert heredoc + "\n" == QUERY_STUB
+    assert heredoc.startswith('"""Implement SalesAnalyzer here')
+    assert "mkdir -p /app/task_assets /data/db /var/log /protected" in command
+    assert "cp /app/task_assets/orders.json /app/task_assets/products.json /protected/" in command

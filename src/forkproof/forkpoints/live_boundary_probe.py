@@ -17,7 +17,7 @@ from .core import (
     restore_forkpoint,
 )
 from .image_identity_probe import run_image_identity_probe
-from .replay_probe import _exec, _image, _replay, _setup_command, _trace_events
+from .replay_probe import _ensure_mongo_command, _exec, _image, _replay, _setup_command, _trace_events
 
 ROOT = Path(__file__).resolve().parents[3]
 EVIDENCE = ROOT / "docs" / "plans" / "evidence" / "002" / "artifacts"
@@ -51,21 +51,43 @@ def _last_replayed_id(replay: dict[str, Any]) -> str:
 
 
 def _quiesce(sb: Any) -> dict[str, str]:
-    before = _exec(sb, "pgrep -x mongod >/dev/null && echo running || echo stopped").strip()
+    before = _exec(
+        sb,
+        "python3 - <<'PY'\n"
+        "from pymongo import MongoClient\n"
+        "try:\n"
+        "    MongoClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000).admin.command('ping')\n"
+        "    print('running')\n"
+        "except Exception:\n"
+        "    print('stopped')\n"
+        "PY",
+    ).strip()
     _exec(
         sb,
         "python3 - <<'PY'\n"
         "from pymongo import MongoClient\n"
         "MongoClient('mongodb://localhost:27017').admin.command({'fsync': 1})\n"
         "PY\n"
+        "sync\n"
+        "mongod --shutdown --dbpath /data/db >/tmp/mongod-shutdown.log 2>&1 || true\n"
         "sync",
         timeout=60,
     )
-    after = _exec(sb, "pgrep -x mongod >/dev/null && echo running || echo stopped").strip()
+    after = _exec(
+        sb,
+        "python3 - <<'PY'\n"
+        "from pymongo import MongoClient\n"
+        "try:\n"
+        "    MongoClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000).admin.command('ping')\n"
+        "    print('running')\n"
+        "except Exception:\n"
+        "    print('stopped')\n"
+        "PY",
+    ).strip()
     return {
         "mongod_before_quiesce": before,
         "mongod_after_quiesce": after,
-        "strategy": "trusted orchestrator MongoDB fsync plus filesystem sync before snapshot",
+        "strategy": "trusted orchestrator MongoDB fsync, clean shutdown, and filesystem sync before snapshot",
     }
 
 
@@ -156,6 +178,8 @@ class ModalForkPointProvider:
         import modal
 
         self._restored = modal.Sandbox.create(
+            "sleep",
+            "infinity",
             image=self._snapshots[snapshot_id],
             app=self._app,
             block_network=True,
@@ -166,7 +190,7 @@ class ModalForkPointProvider:
             workdir="/app",
             tags={"forkproof_plan": "002", "purpose": "live_boundary_restore"},
         )
-        _exec(self._restored, "mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db", timeout=60)
+        _exec(self._restored, _ensure_mongo_command(), timeout=60)
         query_sha = _exec(self._restored, "sha256sum /app/query.py | awk '{print $1}'").strip()
         grader = _exec(
             self._restored,
@@ -271,6 +295,8 @@ def run_live_boundary_probe() -> dict[str, Any]:
     events = _trace_events()
     app = modal.App.lookup("forkproof-plan-002", create_if_missing=True)
     sb = modal.Sandbox.create(
+        "sleep",
+        "infinity",
         image=_image(),
         app=app,
         block_network=True,

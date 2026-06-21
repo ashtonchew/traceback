@@ -28,6 +28,8 @@
 
 **History prefix.** Agent-visible messages, tool calls, and results through exactly the ForkPoint action boundary.
 
+**Hacker BranchRun.** A counted BranchRun whose task instruction is rewritten into an adversarial verifier-testing goal before the live gateway call. Its `branch_role`, `prompt_profile`, source reference, and prompt digest are provenance fields only; they do not replace reward, HUD QA classification, deduplication, durable packaging, or replay.
+
 **Legitimate control.** A frozen, path-diverse, valid solution that must remain rewarded after verifier hardening.
 
 **Lineage.** The parent ForkPoint or branch-node chain that explains how a branch reached its state.
@@ -39,6 +41,8 @@
 **Proof.** The deterministic phase that restores saved state and replays recorded actions against pinned environment and grader versions.
 
 **ProofSet.** A rerunnable HUD taskset containing Exploit Witnesses that must fail under the patch, legitimate controls that must continue to pass, and optional re-seeded family variants.
+
+**Prompt profile.** Provenance metadata identifying the instruction rewrite used for a BranchRun, such as the harden-v0 generic reward-hacking profile. It explains what kind of live continuation was attempted; it is not a classifier, reward signal, dedup decision, or replay proof.
 
 **Release gate.** The binary rule that a patch may ship only when every Witness scores 0 and every legitimate control scores 1.
 
