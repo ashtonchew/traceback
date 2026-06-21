@@ -27,12 +27,14 @@ const CENTER_X = VIEW_W / 2
 const CARD_W = 142
 const CARD_H = 42
 
-/* Apex at top-center; each level drops down and fans wider to both sides. */
+/* Apex sits below the headline; each level drops down and fans wider to both
+ * sides, with the densest canopy weighted toward the lower edge of the panel. */
 const LEVELS: ReadonlyArray<{ y: number; count: number; half: number }> = [
-  { y: 116, count: 1, half: 0 },
-  { y: 350, count: 3, half: 430 },
-  { y: 588, count: 6, half: 660 },
-  { y: 824, count: 11, half: 860 },
+  { y: 360, count: 1, half: 0 },
+  { y: 524, count: 4, half: 470 },
+  { y: 676, count: 7, half: 700 },
+  { y: 822, count: 11, half: 890 },
+  { y: 962, count: 15, half: 1040 },
 ]
 
 /* Deterministic pseudo-random in [0, 1) — keeps left/right balanced but not mirrored. */
@@ -106,9 +108,9 @@ function buildFan(): { nodes: FanNode[]; edges: FanEdge[] } {
 
 const { nodes: FAN_NODES, edges: FAN_EDGES } = buildFan()
 
-/* Calm clearing in the center for the runbook; nodes resolve toward the edges. */
+/* Calm clearing over the runbook; nodes resolve toward the lower edge and sides. */
 const MASK =
-  'radial-gradient(118% 96% at 50% 38%, transparent 0%, transparent 29%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.95) 100%)'
+  'radial-gradient(112% 82% at 50% 44%, transparent 0%, transparent 30%, rgba(0,0,0,0.5) 52%, rgba(0,0,0,0.94) 100%)'
 
 export function HomeBackdrop() {
   return (
@@ -120,7 +122,7 @@ export function HomeBackdrop() {
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid slice"
-        className="h-full w-full opacity-[0.82] blur-[1.5px]"
+        className="h-full w-full opacity-[0.82] blur-[0.5px]"
         role="presentation"
       >
         <g fill="none" strokeLinecap="round" strokeLinejoin="round">
