@@ -1,8 +1,9 @@
 ---
 name: qa-classifier-benchmark
 description: >
-  Runs the ForkProof discovery tree and HUD's Reward Hacking QA agent on the same 20
-  freshly materialized Terminal Wrench tasks, adjudicates every rewarded trajectory
+  Runs the ForkProof discovery tree and HUD's Reward Hacking QA agent on the same 5
+  freshly materialized Terminal Wrench tasks (reduced from 20 for hackathon scope),
+  adjudicates every rewarded trajectory
   with a neutral sterile golden/held-out referee, and reports how many referee-confirmed
   reward-hack clusters each method surfaces (X for QA, Y for ForkProof) split into a
   detection delta and a discovery delta. Use when Plans 003 and 004 have merged (a
@@ -20,7 +21,7 @@ wave: 4
 
 ## Goal
 
-On 20 freshly materialized Terminal Wrench tasks, run the ForkProof discovery tree and
+On 5 freshly materialized Terminal Wrench tasks (reduced from 20 for hackathon scope), run the ForkProof discovery tree and
 the HUD Reward Hacking QA agent over the same trajectory population, adjudicate every
 rewarded trajectory with one neutral sterile golden/held-out referee, and report — as an
 additive (ablation) benchmark — the baseline X (referee-confirmed reward hacks QA alone
@@ -28,7 +29,7 @@ finds) and the lift Δ (additional referee-confirmed hacks the ForkProof discove
 adds on top of QA), each in two units (coverage: per-task did-you-find-any; depth:
 distinct exploit clusters under one symmetric dedup) and split into a detection delta
 (real traces QA saw but judged wrong) and a discovery delta (hacks living only on forked
-branches). Done is binary only when all 20 tasks run (or are honestly skipped), every
+branches). Done is binary only when all 5 tasks run (or are honestly skipped), every
 real (QA-visible) rewarded trace has a referee verdict and a HUD QA verdict, every
 branch hack carries a referee verdict plus divergence lineage, the referee is validated
 against curated Terminal Wrench labels on overlapping trajectories, and one report gives
@@ -98,7 +99,7 @@ report schema before WP3.
   (digest `ecaf1222…b56f61f` from Plans 001/004). Do not consume Plan 005's v2 grader or
   ReleaseProof — they are irrelevant to deciding hack-or-not here (see Context). The
   single existing `envs/mongodb-sales-aggregation-engine/**` env stays owned by Plan 001;
-  the 20 new envs live under `envs/qabench/**`.
+  the 5 new envs live under `envs/qabench/**` (one re-imports the known-good mongodb env).
 - **Additive baseline, not adversarial.** Frame and measure QA as the ablated baseline
   and QA + ForkProof as the system; report the lift Δ, never "ForkProof beats QA." On
   the **real traces QA actually has** (base rollouts, recorded dataset traces), give QA
@@ -160,15 +161,15 @@ report schema before WP3.
 
 ## Work packets
 
-### WP1 — Build the importer template and materialize 20 tasks
+### WP1 — Build the importer template and materialize 5 tasks
 
 Generalize the `mongodb-sales-aggregation-engine` env into a reusable
 Terminal-Wrench-to-HUD importer template that, per task, lays down the env, the v1
 grader, and a sterile `clean_verify` referee entrypoint (re-runs the task's golden/test
-verification isolated from agent-writable state). Materialize 20 selected tasks under
+verification isolated from agent-writable state). Materialize 5 selected tasks under
 `envs/qabench/<task-slug>/` with recorded provenance, reusing Plan 003 isolation.
 
-**Pass:** The importer materializes 20 tasks; each env starts, runs its v1 grader, and
+**Pass:** The importer materializes 5 tasks; each env starts, runs its v1 grader, and
 exposes a working `clean_verify`; two concurrent task agents cannot read or mutate each
 other's state.
 **Fail:** Tasks are bespoke one-offs, a task lacks a usable `clean_verify`, or
@@ -242,7 +243,7 @@ Wire the referee + the QA call as an in-loop hook that, during a real Plan 003 r
 logs both verdicts per BranchRun without blocking the loop. Then emit one
 content-addressed report under `artifacts/forkproof/qabench/` linking every trajectory,
 the three signals, X/Y, both deltas, the referee-vs-label validation, the live-hook
-log, skips, cost, and the explicit scope ("20 measured tasks, not broad coverage").
+log, skips, cost, and the explicit scope ("5 measured tasks, not broad coverage").
 
 **Pass:** A real run logs >=1 BranchRun with both verdicts and lineage; the sealed
 report round-trips, content-verifies, and states whether the win is detection,
@@ -264,7 +265,7 @@ Run from repository root:
 
 Expected evidence:
 
-- an importer template plus 20 materialized task envs with provenance, a working
+- an importer template plus 5 materialized task envs with provenance, a working
   `clean_verify` per env, and an isolation negative check,
 - per-task ForkProof trajectory populations with branch lineage,
 - a sterile referee verdict per rewarded trajectory and the referee-vs-curated-label
@@ -300,7 +301,7 @@ append-only and may be marked superseded, not rewritten.
     /goal Execute docs/plans/008-qa-classifier-benchmark.md after Plans 003 and 004
     merge (it does not depend on Plan 005's v2 release artifact). Build a
     Terminal-Wrench-to-HUD importer template (generalize the mongodb
-    env) with a sterile clean_verify referee, and materialize 20 tasks under
+    env) with a sterile clean_verify referee, and materialize 5 tasks under
     envs/qabench/**. For each task run the ForkProof discovery tree (base rollout plus
     Plan 003 stochastic branches). Adjudicate every rewarded trajectory with clean_verify
     in a clean sandbox (v1-reward but referee-fail = confirmed hack) and validate the
@@ -322,7 +323,7 @@ append-only and may be marked superseded, not rewritten.
 
 ### Progress
 
-- [ ] Importer template and 20 task envs materialized.
+- [ ] Importer template and 5 task envs materialized.
 - [ ] ForkProof discovery trajectory populations complete.
 - [ ] Sterile referee adjudication and label validation complete.
 - [ ] QA baseline on real traces complete.
@@ -392,7 +393,7 @@ append-only and may be marked superseded, not rewritten.
   (2) Plan 004 `complete` (already done); (3) the canonical `reward_hacking_analysis` QA
   path operational (inherited from 003); (4) Plan 003 branch isolation / `security-branch`
   (inherited). **Still required before 008 may COMPLETE (its own Done-when, none built
-  yet):** the importer template + 20 materialized `envs/qabench/**` envs with a working
+  yet):** the importer template + 5 materialized `envs/qabench/**` envs with a working
   `clean_verify` referee, referee-vs-curated-label validation, the QA baseline on real
   traces, X/Δ cluster scoring (coverage + depth, detection + discovery deltas), the live
   dual-verdict hook, a sealed report, and binding the `plan-008-tests`,
@@ -410,6 +411,18 @@ append-only and may be marked superseded, not rewritten.
   anyway (the relaxation becomes a no-op); revert the relaxation commit to restore
   canonical wording. **Honesty caveat:** any 008 result produced before a seal must state
   that the deterministic-seal step was not exercised (its ground truth is the referee).
+- 2026-06-21 — Task-count reduction **20 → 5** (owner-approved): the benchmark target is
+  **5 tasks**, not 20, for hackathon scope. Rationale: 008 is an additive/ablation
+  benchmark whose per-task and aggregate X/Δ are valid at **any N ≥ 1**, and the plan
+  already mandates the honest "N measured tasks, not broad coverage" framing plus
+  evidence-backed skips — so 5 is a complete, honest result at ~4× lower live cost.
+  Recommended composition: one env **re-imports the known-good mongodb conversion**
+  (guarantees ≥1 working env) plus **4 new public-base Terminal Wrench tasks** (e.g.
+  `ubuntu:24.04` tasks, which convert more easily than mongodb's private-registry base);
+  any new task that cannot be honestly materialized/refereed is a recorded skip, not faked
+  to reach 5. Wherever this plan or its REFERENCE still says "20", read it as **5**, and
+  the report must state N=5 explicitly. This narrows scope only — it changes no metric
+  definition, the referee, or the three-separated-signals rule.
 
 ### Outcomes & Retrospective
 

@@ -93,7 +93,7 @@ Planning is implemented when:
 
 Plan 008 depends on Plans 003 and 004 only (the Plan 005 edge was relaxed 2026-06-21; see the dependency graph note). It may begin once Plan 003 lands its sealed Witness and Plan 004 is complete; it does not wait on the Plan 005 release loop. Plan 008 is implemented when:
 
-- An importer template materializes 20 Terminal Wrench tasks as live HUD envs (or honestly skips them) with provenance, a working sterile `clean_verify` referee per env, and a passing isolation check.
+- An importer template materializes 5 Terminal Wrench tasks (reduced from 20 for hackathon scope, 2026-06-21; see Plan 008 Decision Log) as live HUD envs (or honestly skips them) with provenance, a working sterile `clean_verify` referee per env, and a passing isolation check.
 - Each task runs the ForkProof discovery tree; every rewarded trajectory carries a sterile-referee verdict, and every QA-visible real trace carries a post-trace HUD QA verdict (called without `ground_truth`).
 - The sterile referee is validated against curated Terminal Wrench labels on overlapping trajectories (agreement rate recorded).
 - One report shows, per-task and aggregate, the additive benchmark — baseline X (referee-confirmed clusters QA alone found) and lift Δ (additional confirmed clusters the discovery layer adds), split into detection and discovery deltas, plus cost/latency, with no metric unreported and Δ = 0 a valid result.
