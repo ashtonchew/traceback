@@ -19,14 +19,14 @@ Honesty contract (AGENTS.md "Claims and reporting"):
     ``docs/plans/evidence/003/artifacts/branch-runs/``.
   - The real sealed Exploit Witness (``wit-run-…-branch-08``) with its 3
     deterministic replay attempts.
-  - The real **blocked** release gate (``proofset-e497370b2c3d2a69``): harden-v0
-    produced a diagnostic-only patch and no validated v1/v2 results, so the gate
-    does not pass. We surface that real verdict rather than a green release.
+  - The real passing ReleaseProof (``releaseproof-30e03914472631dd``):
+    one sealed Witness killed, three controls preserved, mandatory subversion
+    cases blocked, and v2 grader/environment digests captured.
   - The frozen Legitimate controls + the grader digest / environment version.
 * **Illustrative** — the remaining branch-tree nodes have no committed branch
   record yet; they reuse the proven demo skeleton (so the React Flow tree keeps
   the exact geometry PR #20 shipped) and are marked ``illustrative`` in notes.
-  Unproduced values (e.g. the patched grader v2) are ``TBD``.
+  Values without a merged producer remain ``TBD``.
 """
 
 from __future__ import annotations
@@ -57,11 +57,16 @@ SEALED_WITNESS = ROOT / (
 RELEASE_BLOCKER = ROOT / (
     "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
 )
+RELEASE_RESULTS = ROOT / (
+    "artifacts/forkproof/releases/release-results/proofset-e497370b2c3d2a69.json"
+)
+RELEASE_PROOF = ROOT / (
+    "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json"
+)
 
 SCHEMA = "1.0.0"
 TBD = "TBD"
 SAMPLING = {"temperature": 0.0, "topP": 1.0}
-GRADER_V2 = TBD  # patched grader v2 has no validated producer (release blocked)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -299,20 +304,20 @@ def build_witness_overlay() -> dict[str, Any]:
 
 
 def build_proof_set() -> dict[str, Any]:
-    """ProofSet over the real sealed witness + two real controls.
+    """ProofSet over the real sealed witness + all real controls.
 
     Uses the real Plan 005 proof-set id (``proofset-e497370b2c3d2a69``).
     """
     fork = _forkpoint_record()
-    blocker = _load_json(RELEASE_BLOCKER)
+    proof = _load_json(RELEASE_PROOF)
     controls = build_controls()
     return {
         "schemaVersion": SCHEMA,
-        "proofSetId": blocker["proof_set_id"],
+        "proofSetId": proof["proof_set_id"],
         "environmentV1": fork["environment_version"],
         "graderV1Digest": fork["grader_digest"],
         "exploitWitnessIds": [_REAL_WITNESS_NODE],
-        "legitimateControlIds": [c["controlId"] for c in controls[:2]],
+        "legitimateControlIds": [c["controlId"] for c in controls],
         "exploitFamilyVariantIds": ["variant-reseed-a", "variant-reseed-b"],
         "createdAt": fork["created_at"],
         "contentDigest": "ps-001-digest",
@@ -320,57 +325,58 @@ def build_proof_set() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Release: the REAL blocked gate. harden-v0 produced a diagnostic-only patch and
-# no validated v1/v2 results, so the gate does not pass at any iteration.
+# Release: the REAL passing gate. Plan 005 sealed a ReleaseProof with the
+# Witness killed under v2, all controls preserved, and mandatory subversion
+# cases blocked.
 # ---------------------------------------------------------------------------
 
 
 def build_release_bundle() -> dict[str, Any]:
-    blocker = _load_json(RELEASE_BLOCKER)
-    harden = blocker["harden_blocker"]
-    changed = ", ".join(harden.get("changed_files", []))
+    proof = _load_json(RELEASE_PROOF)
+    results = _load_json(RELEASE_RESULTS)
+    candidate = results["release_candidate"]
+    terminal = candidate["terminal_iteration"]
+    subversion_cases = [
+        item["case_id"]
+        for item in proof.get("subversion_results", [])
+        if item.get("status") == "blocked"
+    ]
     patch = {
-        "patchRef": f"harden-diagnostic-{blocker['proof_set_id']}",
+        "patchRef": proof["patch_ref"],
         "iteration": 1,
-        "label": "Diagnostic patch (blocked)",
+        "label": "Release candidate v2",
         "generatedBy": "harden-v0 fixer",
-        "description": harden["reason"],
-        "summary": (
-            f"harden-v0 ({blocker['harden_status']}) changed {changed}; the patch is "
-            "diagnostic only until harden-v0 applies and validates it."
+        "description": (
+            f"harden-v0 produced a robust candidate after iteration "
+            f"{terminal['iteration']} ({terminal['outcome']})."
         ),
-        "filePath": "tests/test_outputs.py",
+        "summary": (
+            f"ReleaseProof {proof['release_proof_id']} kills "
+            f"{proof['witnesses_killed']} witness and preserves "
+            f"{proof['controls_preserved']} controls."
+        ),
+        "filePath": "task_assets/test_outputs.py",
         "added": 0,
         "removed": 0,
         "diff": [
-            {"no": "—", "kind": "ctx", "text": f"# harden-v0 changed: {changed}"},
-            {"no": "—", "kind": "ctx", "text": f"# status: {harden['code']} (diagnostic only, not applied)"},
+            {"no": "—", "kind": "ctx", "text": f"# release candidate: {candidate['release_candidate_id']}"},
+            {"no": "—", "kind": "ctx", "text": f"# grader v2: {proof['grader_v2_digest']}"},
+            {"no": "—", "kind": "ctx", "text": f"# source tree: {candidate['source_tree_digest']}"},
         ],
-        "patchDigest": blocker["content_digest"],
-        "rationale": [
-            f"Mandatory subversion case: {case}"
-            for case in blocker.get("mandatory_subversion_case_ids", [])
-        ],
-        "status": "awaiting_proof",
+        "patchDigest": candidate["content_digest"],
+        "rationale": [f"Mandatory subversion case blocked: {case}" for case in subversion_cases],
+        "status": "proven",
     }
-    # Same diagnostic patch at every fixer iteration; the gate stays blocked.
     patches = {"1": patch, "2": {**patch, "iteration": 2}, "3": {**patch, "iteration": 3}}
-    # Witness is never confirmed killed (no validated v2 results) -> gate blocked.
-    blocked_each = {"1": [_REAL_WITNESS_NODE], "2": [_REAL_WITNESS_NODE], "3": [_REAL_WITNESS_NODE]}
+    surviving_each = {"1": [], "2": [], "3": []}
+    broken_each = {"1": [], "2": [], "3": []}
     return {
-        "graderV2Digest": GRADER_V2,
+        "environmentV2": proof["environment_v2"],
+        "graderV2Digest": proof["grader_v2_digest"],
+        "releaseProofId": proof["release_proof_id"],
         "patches": patches,
-        "survivingWitnessByIteration": blocked_each,
-        "brokenControlByIteration": {"1": [], "2": [], "3": []},
-        # Real blocked-release metadata surfaced in the gate verdict.
-        "release": {
-            "blocked": True,
-            "blockReason": blocker["reason"],
-            "missingEvidence": blocker.get("missing_evidence", []),
-            "hardenStatus": blocker.get("harden_status", TBD),
-            "proofSetId": blocker["proof_set_id"],
-            "graderV2Digest": GRADER_V2,
-        },
+        "survivingWitnessByIteration": surviving_each,
+        "brokenControlByIteration": broken_each,
     }
 
 

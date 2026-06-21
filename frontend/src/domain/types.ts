@@ -276,9 +276,8 @@ export interface ReleaseProof {
   similarity: number
   createdAt: string
   status: 'evaluating' | 'failed' | 'committed'
-  // Canonical Plan 005 "blocked" verdict: harden-v0 produced a diagnostic-only
-  // patch with no validated v1/v2 results, so the gate cannot pass. Optional —
-  // absent in the illustrative mock.
+  // Optional Plan 005 blocker metadata for runs that have not produced a
+  // validated ReleaseProof yet.
   blocked?: boolean
   blockReason?: string
   missingEvidence?: string[]

@@ -4,131 +4,128 @@
     "2": [],
     "3": []
   },
-  "graderV2Digest": "TBD",
+  "environmentV2": "mongodb-sales-aggregation-engine:c2ee704d5c4e653e",
+  "graderV2Digest": "c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908",
   "patches": {
     "1": {
       "added": 0,
-      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+      "description": "harden-v0 produced a robust candidate after iteration 0 (hacker_failed).",
       "diff": [
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
+          "text": "# release candidate: releasecandidate-294df1726b8a5ed0"
         },
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
+          "text": "# grader v2: c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908"
+        },
+        {
+          "kind": "ctx",
+          "no": "—",
+          "text": "# source tree: c2ee704d5c4e653ea8de5da0fca96cfeaf6bf35d4322e551cafc76f21887cedc"
         }
       ],
-      "filePath": "tests/test_outputs.py",
+      "filePath": "task_assets/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 1,
-      "label": "Diagnostic patch (blocked)",
-      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
-      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
+      "label": "Release candidate v2",
+      "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
+      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
-        "Mandatory subversion case: conftest.py",
-        "Mandatory subversion case: cwd/import shadowing",
-        "Mandatory subversion case: hook/TestReport fabrication",
-        "Mandatory subversion case: pytest11",
-        "Mandatory subversion case: site-packages mutation",
-        "Mandatory subversion case: trusted test replacement"
+        "Mandatory subversion case blocked: conftest.py",
+        "Mandatory subversion case blocked: cwd/import shadowing",
+        "Mandatory subversion case blocked: hook/TestReport fabrication",
+        "Mandatory subversion case blocked: pytest11",
+        "Mandatory subversion case blocked: site-packages mutation",
+        "Mandatory subversion case blocked: trusted test replacement"
       ],
       "removed": 0,
-      "status": "awaiting_proof",
-      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
+      "status": "proven",
+      "summary": "ReleaseProof releaseproof-30e03914472631dd kills 1 witness and preserves 3 controls."
     },
     "2": {
       "added": 0,
-      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+      "description": "harden-v0 produced a robust candidate after iteration 0 (hacker_failed).",
       "diff": [
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
+          "text": "# release candidate: releasecandidate-294df1726b8a5ed0"
         },
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
+          "text": "# grader v2: c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908"
+        },
+        {
+          "kind": "ctx",
+          "no": "—",
+          "text": "# source tree: c2ee704d5c4e653ea8de5da0fca96cfeaf6bf35d4322e551cafc76f21887cedc"
         }
       ],
-      "filePath": "tests/test_outputs.py",
+      "filePath": "task_assets/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 2,
-      "label": "Diagnostic patch (blocked)",
-      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
-      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
+      "label": "Release candidate v2",
+      "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
+      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
-        "Mandatory subversion case: conftest.py",
-        "Mandatory subversion case: cwd/import shadowing",
-        "Mandatory subversion case: hook/TestReport fabrication",
-        "Mandatory subversion case: pytest11",
-        "Mandatory subversion case: site-packages mutation",
-        "Mandatory subversion case: trusted test replacement"
+        "Mandatory subversion case blocked: conftest.py",
+        "Mandatory subversion case blocked: cwd/import shadowing",
+        "Mandatory subversion case blocked: hook/TestReport fabrication",
+        "Mandatory subversion case blocked: pytest11",
+        "Mandatory subversion case blocked: site-packages mutation",
+        "Mandatory subversion case blocked: trusted test replacement"
       ],
       "removed": 0,
-      "status": "awaiting_proof",
-      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
+      "status": "proven",
+      "summary": "ReleaseProof releaseproof-30e03914472631dd kills 1 witness and preserves 3 controls."
     },
     "3": {
       "added": 0,
-      "description": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+      "description": "harden-v0 produced a robust candidate after iteration 0 (hacker_failed).",
       "diff": [
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# harden-v0 changed: .legitimate, tests/test_outputs.py"
+          "text": "# release candidate: releasecandidate-294df1726b8a5ed0"
         },
         {
           "kind": "ctx",
           "no": "—",
-          "text": "# status: harden_fixer_artifact_layout_drift (diagnostic only, not applied)"
+          "text": "# grader v2: c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908"
+        },
+        {
+          "kind": "ctx",
+          "no": "—",
+          "text": "# source tree: c2ee704d5c4e653ea8de5da0fca96cfeaf6bf35d4322e551cafc76f21887cedc"
         }
       ],
-      "filePath": "tests/test_outputs.py",
+      "filePath": "task_assets/test_outputs.py",
       "generatedBy": "harden-v0 fixer",
       "iteration": 3,
-      "label": "Diagnostic patch (blocked)",
-      "patchDigest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
-      "patchRef": "harden-diagnostic-proofset-e497370b2c3d2a69",
+      "label": "Release candidate v2",
+      "patchDigest": "6a45619acc5accf94a82e4043e7b720b2226f65bf60a1c4172bbce1259c154f0",
+      "patchRef": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/run-20260621T123033Z/harden-output/mongodb-sales-aggregation-engine/result.json",
       "rationale": [
-        "Mandatory subversion case: conftest.py",
-        "Mandatory subversion case: cwd/import shadowing",
-        "Mandatory subversion case: hook/TestReport fabrication",
-        "Mandatory subversion case: pytest11",
-        "Mandatory subversion case: site-packages mutation",
-        "Mandatory subversion case: trusted test replacement"
+        "Mandatory subversion case blocked: conftest.py",
+        "Mandatory subversion case blocked: cwd/import shadowing",
+        "Mandatory subversion case blocked: hook/TestReport fabrication",
+        "Mandatory subversion case blocked: pytest11",
+        "Mandatory subversion case blocked: site-packages mutation",
+        "Mandatory subversion case blocked: trusted test replacement"
       ],
       "removed": 0,
-      "status": "awaiting_proof",
-      "summary": "harden-v0 (max_iterations) changed .legitimate, tests/test_outputs.py; the patch is diagnostic only until harden-v0 applies and validates it."
+      "status": "proven",
+      "summary": "ReleaseProof releaseproof-30e03914472631dd kills 1 witness and preserves 3 controls."
     }
   },
-  "release": {
-    "blockReason": "No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof. harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
-    "blocked": true,
-    "graderV2Digest": "TBD",
-    "hardenStatus": "max_iterations",
-    "missingEvidence": [
-      "v1_results",
-      "v2_results",
-      "evaluator_context_refs",
-      "subversion_results",
-      "release_candidate_ref"
-    ],
-    "proofSetId": "proofset-e497370b2c3d2a69"
-  },
+  "releaseProofId": "releaseproof-30e03914472631dd",
   "survivingWitnessByIteration": {
-    "1": [
-      "whitespace"
-    ],
-    "2": [
-      "whitespace"
-    ],
-    "3": [
-      "whitespace"
-    ]
+    "1": [],
+    "2": [],
+    "3": []
   }
 }

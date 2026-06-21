@@ -30,7 +30,7 @@ export interface ReplayEvidence {
   digestMatch: boolean
 }
 
-/** Real Plan 005 "blocked" release verdict (harden-v0 diagnostic-only). */
+/** Optional Plan 005 blocked release verdict from pre-proof runs. */
 export interface ReleaseBlock {
   blocked: boolean
   blockReason: string
@@ -56,6 +56,8 @@ export interface RunDataset {
   survivingWitnessByIteration: Record<number, string[]>
   brokenControlByIteration: Record<number, string[]>
   graderV2: string
+  environmentV2?: string
+  releaseProofId?: string
   replay?: ReplayEvidence
   /** Real ExploitWitness fields overlaid onto a branch node, keyed by run stem. */
   witnessOverlay?: Record<string, Partial<ExploitWitness>>
@@ -259,11 +261,11 @@ export class DatasetForkProofApi implements ForkProofApi {
 
     return {
       schemaVersion: '1.0.0',
-      releaseProofId: `rpf-${patch.iteration}`,
+      releaseProofId: d.releaseProofId ?? `rpf-${patch.iteration}`,
       proofSetId: proofSet.proofSetId,
       environmentV1: proofSet.environmentV1,
       graderV1Digest: proofSet.graderV1Digest,
-      environmentV2: proofSet.environmentV1,
+      environmentV2: d.environmentV2 ?? proofSet.environmentV1,
       graderV2Digest: d.graderV2,
       patchRef: patch.patchRef,
       results,
@@ -275,9 +277,8 @@ export class DatasetForkProofApi implements ForkProofApi {
       similarity: pass ? 0.92 : 0.28,
       createdAt: new Date().toISOString(),
       status: pass ? 'evaluating' : 'failed',
-      // Real Plan 005 blocked verdict (canonical mode): the gate cannot pass
-      // because harden-v0 produced a diagnostic-only patch with no validated
-      // v1/v2 results. Carried through so the gate view can surface the reason.
+      // Older Plan 005 exports can carry a blocked verdict when no ReleaseProof
+      // exists yet. Passing exports omit this metadata.
       ...(d.release?.blocked
         ? {
             blocked: true,
@@ -298,7 +299,7 @@ export class DatasetForkProofApi implements ForkProofApi {
       status: 'committed',
       gateStatus: 'pass',
       commitId: 'rpf-20250508-102431',
-      publishedEnvironmentRef: `${this.proofSet!.environmentV1} v2`,
+      publishedEnvironmentRef: proof.environmentV2,
     }
   }
 

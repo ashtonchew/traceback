@@ -33,8 +33,9 @@ VITE_FORKPROOF_API=mock npm run dev  # in-memory demo
 ```
 
 The real JSON is generated from committed repo artifacts (the Plan 002 ForkPoint
-evidence record, the frozen Legitimate controls, and the replay roundtrip) by a
-small Python mapper. Regenerate it whenever those artifacts change:
+evidence record, the frozen Legitimate controls, the sealed Witness replay
+roundtrip, and the Plan 005 ReleaseProof) by a small Python mapper. Regenerate
+it whenever those artifacts change:
 
 ```bash
 # from the repo root
@@ -42,10 +43,10 @@ uv run python -m forkproof.api.export   # writes frontend/public/api/*.json
 ```
 
 What is real vs. placeholder is documented in `src/forkproof/api/mapping.py`:
-ForkPoint identity/snapshot/grader digests, the controls + baseline runs, and the
-replay digests are **real**; the stochastic discovery topology and harden-v0
-patch diffs are illustrative (no merged producer yet) and unproduced values are
-marked `TBD`.
+ForkPoint identity/snapshot/grader digests, the controls + baseline runs, the
+sealed Witness, replay digests, v2 grader/environment digests, and ReleaseProof
+verdict are **real**. The remaining branch-tree sibling nodes preserve the UI
+geometry and are marked illustrative in their notes.
 
 ## Deploy to Vercel
 

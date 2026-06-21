@@ -4,7 +4,9 @@ import type { BranchRun, ExploitWitness, ForkPoint, LegitimateControl, Patch, Pr
 
 /** Shape of the exported `release.json` (patches + gate-outcome maps + verdict). */
 interface ReleaseBundle {
+  environmentV2: string
   graderV2Digest: string
+  releaseProofId: string
   patches: Record<string, Patch>
   survivingWitnessByIteration: Record<string, string[]>
   brokenControlByIteration: Record<string, string[]>
@@ -44,6 +46,8 @@ async function loadDataset(): Promise<RunDataset> {
     survivingWitnessByIteration: release.survivingWitnessByIteration as unknown as RunDataset['survivingWitnessByIteration'],
     brokenControlByIteration: release.brokenControlByIteration as unknown as RunDataset['brokenControlByIteration'],
     graderV2: release.graderV2Digest,
+    environmentV2: release.environmentV2,
+    releaseProofId: release.releaseProofId,
     release: release.release,
     replay,
   }

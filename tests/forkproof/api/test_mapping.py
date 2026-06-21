@@ -2,7 +2,7 @@
 
 This integration is stacked on the Plan 003/005 work (PR #27); these tests assert
 the payloads source the real committed producer records — the two discovered
-branch runs, the sealed Exploit Witness, and the blocked release gate — plus the
+branch runs, the sealed Exploit Witness, and the passing ReleaseProof — plus the
 React Flow layout invariants that keep the tree from flashing/zooming, and honest
 `TBD` markers where no validated producer exists.
 """
@@ -106,34 +106,38 @@ def test_witness_overlay_is_the_real_sealed_witness() -> None:
     assert overlay["contentDigest"] == sealed["content_digest"]
 
 
-# --- ProofSet + release: real ids and the real BLOCKED verdict -------------
+# --- ProofSet + release: real ids and the real passing verdict --------------
 
 
 def test_proofset_uses_the_real_plan005_proof_set_id() -> None:
-    blocker = _raw(mapping.RELEASE_BLOCKER)
+    proof = _raw(mapping.RELEASE_PROOF)
     controls = {c["controlId"] for c in mapping.build_controls()}
     ps = mapping.build_proof_set()
-    assert ps["proofSetId"] == blocker["proof_set_id"]
+    assert ps["proofSetId"] == proof["proof_set_id"]
     for cid in ps["legitimateControlIds"]:
         assert cid in controls
     assert ps["exploitWitnessIds"] == ["whitespace"]
 
 
-def test_release_is_the_real_blocked_gate() -> None:
-    blocker = _raw(mapping.RELEASE_BLOCKER)
+def test_release_is_the_real_passing_gate() -> None:
+    proof = _raw(mapping.RELEASE_PROOF)
+    results = _raw(mapping.RELEASE_RESULTS)
     bundle = mapping.build_release_bundle()
-    rel = bundle["release"]
-    assert rel["blocked"] is True
-    assert rel["blockReason"] == blocker["reason"]
-    assert rel["missingEvidence"] == blocker["missing_evidence"]
-    assert rel["hardenStatus"] == blocker["harden_status"]
-    # gate cannot pass at any iteration: the witness is never confirmed killed
+    assert "release" not in bundle
+    assert bundle["environmentV2"] == proof["environment_v2"]
+    assert bundle["graderV2Digest"] == proof["grader_v2_digest"]
+    assert bundle["releaseProofId"] == proof["release_proof_id"]
+    assert proof["witnesses_killed"] == 1
+    assert proof["controls_preserved"] == 3
+    assert {case["status"] for case in proof["subversion_results"]} == {"blocked"}
+    # gate passes at every iteration: no surviving witness or broken control
     for it in ("1", "2", "3"):
-        assert bundle["survivingWitnessByIteration"][it] == ["whitespace"]
-    # the diagnostic patch targets the real changed file and is content-addressed
+        assert bundle["survivingWitnessByIteration"][it] == []
+        assert bundle["brokenControlByIteration"][it] == []
+    # the patch metadata is content-addressed by the release candidate
     patch = bundle["patches"]["1"]
-    assert patch["filePath"] == "tests/test_outputs.py"
-    assert patch["patchDigest"] == blocker["content_digest"]
+    assert patch["filePath"] == "task_assets/test_outputs.py"
+    assert patch["patchDigest"] == results["release_candidate"]["content_digest"]
     assert patch["rationale"]  # mandatory subversion cases
 
 
@@ -150,13 +154,13 @@ def test_replay_evidence_is_real() -> None:
     assert replay["digestMatch"] is True
 
 
-# --- Honesty: unproduced values are explicitly TBD -------------------------
+# --- Honesty: validated release values are concrete ------------------------
 
 
-def test_unproduced_values_are_marked_tbd() -> None:
+def test_validated_v2_values_are_not_tbd() -> None:
     bundle = mapping.build_release_bundle()
-    assert bundle["graderV2Digest"] == "TBD"  # no validated patched grader
-    assert mapping.GRADER_V2 == "TBD"
+    assert bundle["graderV2Digest"] != "TBD"
+    assert bundle["environmentV2"] != "TBD"
 
 
 def test_build_all_has_every_route() -> None:

@@ -12,7 +12,8 @@
   "graderV1Digest": "ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f",
   "legitimateControlIds": [
     "mongodb-sales-aggregation-engine-path-a",
-    "mongodb-sales-aggregation-engine-path-b"
+    "mongodb-sales-aggregation-engine-path-b",
+    "mongodb-sales-aggregation-engine-path-c"
   ],
   "proofSetId": "proofset-e497370b2c3d2a69",
   "schemaVersion": "1.0.0"
