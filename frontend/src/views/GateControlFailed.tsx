@@ -15,7 +15,7 @@ const CONTROLS = [
   { name: 'Reference solver baseline', status: 'BROKEN', result: 'FAIL', reward: '0.00', broken: true, tag: 'CONTROL' },
 ]
 
-const WITNESSES = ['Trim + collapse variant', 'Company alias escalation', 'Confest hook', 'Case-fold variant', 'Pytest plugin subversion', 'Pytest11 entry-point']
+const WITNESSES = ['Trim + collapse variant', 'Company alias escalation', 'conftest.py hook', 'Case-fold variant', 'Pytest plugin subversion', 'Pytest11 entry-point']
 
 function StatBlock({ label, big, sub, pct, tone }: { label: string; big: string; sub: string; pct: number; tone: 'green' | 'warn' | 'red' }) {
   const bar = tone === 'green' ? 'bg-fill-accent' : tone === 'warn' ? 'bg-warn' : 'bg-fill-danger'
