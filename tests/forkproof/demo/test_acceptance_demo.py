@@ -51,6 +51,7 @@ def make_inputs(**overrides) -> DemoInputs:
         patch_ref="artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
         controls_baseline_ref="artifacts/forkproof/controls/baseline_runs.json",
         controls_preserved=3,
+        controls_total=3,
         v2_replay_ref="artifacts/forkproof/releases/release-results/releasecandidate-294df1726b8a5ed0/traces/wit.json",
         v2_replay_reward=0.0,
         release_proof={"release_proof_id": "releaseproof-30e03914472631dd", "gate_status": "pass"},
@@ -226,6 +227,14 @@ def test_metrics_are_measured_or_honestly_absent():
     assert by_name["replay_rate"]["not-applicable"] is True
     assert by_name["time_to_witness"]["not-measured"] is True
     assert all(m.get("value") != "TBD" for m in metrics)
+    # control_retention is preserved/total, so it can show a regression, not always N/N.
+    assert by_name["control_retention"]["value"] == "3/3"
+
+
+def test_control_retention_can_show_a_regression():
+    metrics = build_metrics(batch=make_batch(), inputs=make_inputs(controls_preserved=2, controls_total=3))
+    value = {m["name"]: m for m in metrics}["control_retention"]["value"]
+    assert value == "2/3"
 
 
 def test_publication_blocked_with_proof_uses_real_proof():

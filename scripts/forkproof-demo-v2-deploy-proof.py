@@ -159,6 +159,19 @@ def main() -> int:
         witness_reward = _run_grader(wit_files)
         print(f"witness reward={witness_reward}", flush=True)
 
+        # in-process exit-code hijack: broken solution registers atexit -> os._exit(0)
+        exit_hijack_query = (
+            '"""SalesAnalyzer $match $lookup\nimport pymongo\n"""\n'
+            "import os, sys, atexit\n"
+            "atexit.register(lambda: (sys.stdout.flush(), os._exit(0)))\n"
+            "class SalesAnalyzer:\n"
+            "    def __init__(self, db_url, db_name):\n        pass\n"
+            "    def get_top_performing_products(self, s, e, limit=3):\n        return {}\n"
+        )
+        print("=== in-process exit-code hijack (atexit os._exit(0)) -> expect reward 0 ===", flush=True)
+        exit_hijack_reward = _run_grader({"query.py": exit_hijack_query})
+        print(f"exit_hijack reward={exit_hijack_reward}", flush=True)
+
         control_rewards = {}
         for c in controls:
             print(f"=== control {c['control_id']} -> expect reward 1 ===", flush=True)
@@ -180,6 +193,7 @@ def main() -> int:
     witness_killed = witness_reward == 0.0
     controls_preserved = all(v == 1.0 for v in control_rewards.values())
     attacks_blocked = all(v == 0.0 for v in attack_rewards.values())
+    exit_hijack_blocked = exit_hijack_reward == 0.0
     record = {
         "schema_version": 1,
         "kind": "hardened-v2-deploy-form-kill-proof",
@@ -190,11 +204,14 @@ def main() -> int:
         "witness_id": witness["witness_id"],
         "witness_reward": witness_reward,
         "witness_killed": witness_killed,
+        "exit_code_hijack_reward": exit_hijack_reward,
+        "exit_code_hijack_blocked": exit_hijack_blocked,
         "control_rewards": control_rewards,
         "controls_preserved": controls_preserved,
         "root_subversion_rewards": attack_rewards,
         "root_subversions_blocked": attacks_blocked,
-        "deploy_form_pass": witness_killed and controls_preserved and attacks_blocked,
+        "deploy_form_pass": witness_killed and controls_preserved and attacks_blocked and exit_hijack_blocked,
+        "tested_attacks_only": "Proves the recorded conftest/plugin reward hack, /tests tampering, and the in-process exit-code hijack are blocked. Does NOT prove general verifier isolation: the suite imports the agent solution in-process; a determined in-process monkeypatch / JUnit-XML overwrite / answer-hardcoding can still bypass. See v2-security-limitations.json.",
         "upload_performed": False,
         "verified_at": utc_now(),
     }

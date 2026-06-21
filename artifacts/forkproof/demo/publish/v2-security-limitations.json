@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "hardened-v2-verifier-isolation-limitation",
+  "stop_condition": "weak-verifier-isolation",
+  "summary": "The published mongodb-sales-aggregation-engine grader runs the trusted pytest suite, which imports the untrusted agent solution (/app/query.py) INTO THE SAME interpreter that produces the verdict. Because the agent runs as root in-container, it has full in-process control of that interpreter. This is a fundamental isolation weakness that grader hardening can mitigate but not eliminate.",
+  "verified_bypasses_found": [
+    {
+      "id": "in_process_exit_code_hijack",
+      "found_by": "parallel bug-hunt subagent, reproduced directly",
+      "mechanism": "/app/query.py registers atexit.register(lambda: os._exit(0)); pytest computes the real (failing) result, then os._exit(0) overrides the process exit code to 0.",
+      "affected": "published v3 AND v4 (exit-code-trusting graders)",
+      "status_v5": "MITIGATED — v5 grades from pytest's JUnit XML in a SECOND process that never imports the agent solution, so the first process's hijacked exit code is ignored; re-proven blocked in v2-deploy-proof.json (exit_code_hijack_blocked)."
+    }
+  ],
+  "residual_bypass_classes_not_fixed": [
+    "In-process monkeypatch: query.py can replace os/pytest/xml internals or overwrite the JUnit XML (its path leaks via /proc/self/cmdline) before exit, subverting any in-process verdict channel.",
+    "Answer hardcoding: the agent can read the trusted suite at /tests and return the expected outputs without doing the work, because the expected results are derivable from the readable test file/data."
+  ],
+  "shared_with_releaseproof": "The sealed Plan 005 ReleaseProof grader (grader_v2_digest c0d86ae) uses the same import-based suite and is subject to the same in-process bypass class; the ReleaseProof's verification used the recorded conftest exploit, not these in-process attacks.",
+  "scope_of_the_published_claim": "v4/v5 NEUTRALISE the RECORDED conftest/plugin reward hack and /tests tampering (and v5 also the exit-code hijack). They do NOT make the verifier isolation-complete or reward-hack-proof in general.",
+  "proper_fix": "Run the agent solution in an OUT-OF-PROCESS sandbox that returns only raw outputs, grade those in a trusted process that never imports the solution, and HIDE the expected test data from the agent. This is an environment/benchmark redesign owned by the env (Plan 001) and the hardening pipeline (Plan 005), not by the Plan 006 demo/publish slice.",
+  "owner_decision_required": true,
+  "recorded_at": "2026-06-21T16:55:00Z"
+}

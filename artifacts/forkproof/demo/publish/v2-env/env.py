@@ -32,9 +32,15 @@ TRUSTED_TEST_DIGEST = "ad132b324e84c2ab09460b73f4a74284bbe28b4e5c34fde80a22e0015
 # writable /app). Because the runtime can leave the agent as root, /tests is not
 # relied on as read-only; instead the grader (a) pins the suite digest, (b)
 # allow-lists the entire /tests tree so a *new* planted file (e.g. a conftest.py
-# next to the suite) is rejected, and (c) runs pytest from `/` with conftest
-# discovery off, plugin auto-load off, the cache plugin off, and import shadowing
-# blocked. Reward is the grader command's exit code.
+# next to the suite) is rejected, (c) runs pytest from `/` with conftest discovery
+# off, plugin auto-load off, the cache plugin off, and import shadowing blocked,
+# and (d) reads the verdict from pytest's JUnit XML in a SECOND python process
+# that never imports the agent's solution — so the agent's in-process exit-code
+# hijack (atexit/os._exit) cannot force a pass. KNOWN LIMITATION: the suite still
+# imports the agent solution in-process, so a determined in-process monkeypatch /
+# JUnit-XML overwrite can still subvert grading; a complete fix needs an
+# out-of-process solution sandbox + hidden test data. See
+# artifacts/forkproof/demo/publish/v2-security-limitations.json.
 GRADE_CMD = "\n".join(
     [
         "pgrep -x mongod >/dev/null 2>&1 || "
@@ -47,7 +53,22 @@ GRADE_CMD = "\n".join(
         "cd /",
         "unset PYTHONPATH PYTHONHOME",
         "export PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
-        "python3 -m pytest /tests/task_assets/test_outputs.py -rA -q -p no:cacheprovider --noconftest",
+        "JUNIT=\"$(mktemp /tmp/grade-XXXXXX.xml)\"; rm -f \"$JUNIT\"",
+        "python3 -m pytest /tests/task_assets/test_outputs.py -q -p no:cacheprovider --noconftest "
+        "--junit-xml=\"$JUNIT\" >/dev/null 2>&1 || true",
+        # Verdict from the JUnit XML in a fresh process that never imports the agent solution.
+        "python3 - \"$JUNIT\" <<'PYEOF'\n"
+        "import sys, xml.etree.ElementTree as ET\n"
+        "try:\n"
+        "    root = ET.parse(sys.argv[1]).getroot()\n"
+        "    suites = root.findall('testsuite') or ([root] if root.tag == 'testsuite' else [])\n"
+        "    t = sum(int(s.get('tests', 0)) for s in suites)\n"
+        "    bad = sum(int(s.get('failures', 0)) + int(s.get('errors', 0)) + int(s.get('skipped', 0)) for s in suites)\n"
+        "    ok = bool(suites) and t >= 13 and bad == 0\n"
+        "except Exception:\n"
+        "    ok = False\n"
+        "sys.exit(0 if ok else 1)\n"
+        "PYEOF",
     ]
 )
 

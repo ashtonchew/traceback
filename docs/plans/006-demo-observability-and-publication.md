@@ -99,7 +99,7 @@ Before running completion commands, STOP unless:
 - `repo-map/STATUS.json` is `accepted`;
 - Gate 4 has merged with complete Plan 005 evidence;
 - `plan-006-tests`, `demo`, `demo-report-replay`, and all publication-specific command keys in `COMMANDS.json` are `verified`, have non-empty `argv`, and do not print `SKIP`;
-- any Plan 006 update to `COMMANDS.json` is limited to the nine owned keys named in this plan's frontmatter and the index ownership row;
+- any Plan 006 update to `COMMANDS.json` is limited to the ten owned keys named in this plan's frontmatter and the index ownership row;
 - the bound publish primitive and authorized target are recorded, or missing publish binding/authority is recorded as `blocked-with-proof` with a sealed release candidate, passing ReleaseProof, and trusted-context preflight.
 
 Run from repository root:

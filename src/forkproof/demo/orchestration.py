@@ -169,6 +169,15 @@ def record_published_publication(root: Path = ROOT) -> tuple[int, str]:
     published_environment_ref = receipt.get("published_environment_ref")
     if not published_environment_ref:
         raise DemoError("publication_attempt_invalid", "publish receipt lacks published_environment_ref")
+    # Bind the published record to the proven target + the demo's own inputs, so a
+    # 'published' attempt cannot claim an environment unrelated to the sealed ReleaseProof.
+    if receipt.get("outcome") != "published":
+        raise DemoError("publication_attempt_invalid", "publish receipt outcome is not 'published'")
+    if receipt.get("registry_env_name") != inputs.target_id.split(":", 1)[0]:
+        raise DemoError("publication_attempt_invalid", "publish receipt registry env name does not match the proven target")
+    for field in ("release_proof_ref", "release_candidate_ref"):
+        if receipt.get(field) not in (None, getattr(inputs, field)):
+            raise DemoError("publication_attempt_invalid", f"publish receipt {field} does not match the demo inputs")
     base = {
         "schema_version": 1,
         "release_proof_id": inputs.release_proof.get("release_proof_id"),
@@ -223,7 +232,8 @@ def _persist_owned_branch_run(invocation_dir: Path, summary: dict[str, Any]) -> 
 
     def rewrite(value: Any) -> Any:
         if isinstance(value, str):
-            return value.replace(src_prefix, dst_prefix, 1) if value.startswith(src_prefix) else value
+            on_boundary = value == src_prefix or value.startswith(src_prefix + "/")
+            return value.replace(src_prefix, dst_prefix, 1) if on_boundary else value
         if isinstance(value, list):
             return [rewrite(item) for item in value]
         return value

@@ -92,6 +92,7 @@ class DemoInputs:
     patch_ref: str
     controls_baseline_ref: str
     controls_preserved: int
+    controls_total: int
     v2_replay_ref: str
     v2_replay_reward: Any
     release_proof: dict[str, Any]
@@ -215,6 +216,8 @@ def load_demo_inputs() -> DemoInputs:
     controls_preserved = proof.get("controls_preserved")
     if not isinstance(controls_preserved, int):
         raise DemoError("missing_artifacts", "ReleaseProof lacks a controls_preserved count")
+    broken_controls = proof.get("broken_control_ids")
+    broken_count = len(broken_controls) if isinstance(broken_controls, list) else 0
 
     v2_replay = _load_json(V2_REPLAY_REF)
     source_trace_id = forkpoint_record.get("hud_trace_id")
@@ -242,6 +245,7 @@ def load_demo_inputs() -> DemoInputs:
         patch_ref=FIXER_RUN_REF,
         controls_baseline_ref=CONTROLS_BASELINE_REF,
         controls_preserved=controls_preserved,
+        controls_total=controls_preserved + broken_count,
         v2_replay_ref=V2_REPLAY_REF,
         v2_replay_reward=v2_replay.get("reward"),
         release_proof=proof,

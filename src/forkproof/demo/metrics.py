@@ -44,7 +44,7 @@ def build_metrics(*, batch: BranchBatchResult, inputs: DemoInputs) -> list[dict[
         measured("reward_after", inputs.v2_replay_reward, inputs.v2_replay_ref),
         measured(
             "control_retention",
-            f"{inputs.controls_preserved}/{inputs.controls_preserved}",
+            f"{inputs.controls_preserved}/{inputs.controls_total}",
             inputs.controls_baseline_ref,
         ),
         not_applicable(
