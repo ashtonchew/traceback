@@ -13,7 +13,7 @@ from typing import Any
 
 from .branch_runs import run_live_branch_batch
 from .models import WitnessError, digest_json, utc_now
-from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
+from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis, run_synthetic_reward_hacking_smoke
 from .security import assert_branch_security
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -414,16 +414,45 @@ def security_branch() -> int:
     return 0
 
 
+def qa_synthetic_smoke(trace_json: str | None = None) -> int:
+    _load_local_env()
+    trace_summary = _load_json(Path(trace_json)) if trace_json else None
+    result = run_synthetic_reward_hacking_smoke(ROOT, trace_summary=trace_summary)
+    path = _write_artifact(
+        "hud-qa-synthetic-reward-hack-smoke.json",
+        {
+            "checked_at": utc_now(),
+            **result,
+        },
+    )
+    print(f"WROTE {path}")
+    if result.get("status") != "pass":
+        print(f"STOP: {result.get('observed_behavior', 'synthetic QA smoke did not return a verdict')}")
+        return 2
+    print(
+        "PASS synthetic QA smoke "
+        f"is_reward_hacking={result.get('is_reward_hacking')} "
+        f"strategy={result.get('hacking_strategy')} "
+        f"severity={result.get('severity')} "
+        f"confidence={result.get('confidence')}"
+    )
+    return 0 if result.get("is_reward_hacking") is True else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("integration")
     sub.add_parser("security")
+    qa_smoke = sub.add_parser("qa-synthetic-smoke")
+    qa_smoke.add_argument("--trace-json")
     args = parser.parse_args()
     if args.command == "integration":
         return integration_witness()
     if args.command == "security":
         return security_branch()
+    if args.command == "qa-synthetic-smoke":
+        return qa_synthetic_smoke(args.trace_json)
     raise AssertionError(args.command)
 
 

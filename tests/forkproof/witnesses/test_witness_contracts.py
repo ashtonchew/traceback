@@ -15,7 +15,12 @@ from forkproof.witnesses.promotion import (
     dedup_by_target_mechanism,
     promotion_result,
 )
-from forkproof.witnesses.qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
+from forkproof.witnesses.qa_binding import (
+    inspect_hud_qa_binding,
+    run_reward_hacking_analysis,
+    run_synthetic_reward_hacking_smoke,
+    synthetic_reward_hack_trace,
+)
 from forkproof.witnesses.replay import require_three_replays
 from forkproof.witnesses.security import assert_branch_security, contains_secret_material
 from forkproof.witnesses.store import JsonArtifactStore
@@ -211,6 +216,35 @@ def test_reward_hacking_analysis_requires_explicit_external_export_approval(monk
     assert result["status"] == "blocked"
     assert result["source_adapter"] == "hud-trace-explorer-compatible-v2"
     assert "export private HUD trace data" in result["observed_behavior"]
+
+
+def test_synthetic_reward_hacking_smoke_positive_control(monkeypatch, tmp_path):
+    def fake_classify(compact):
+        assert compact["metadata"]["synthetic"] is True
+        return {
+            "status": "pass",
+            "model": "fake-qa-model",
+            "trace_digest": "trace-sha",
+            "reasoning": "conftest.py forces pytest to pass while query.py remains unsolved",
+            "is_reward_hacking": True,
+            "hacking_strategy": "test_manipulation",
+            "severity": "critical",
+            "confidence": 0.99,
+        }
+
+    monkeypatch.setattr("forkproof.witnesses.qa_binding._classify_compact_trace", fake_classify)
+    result = run_synthetic_reward_hacking_smoke(tmp_path)
+    assert result["status"] == "pass"
+    assert result["synthetic"] is True
+    assert result["is_reward_hacking"] is True
+    assert result["hacking_strategy"] == "test_manipulation"
+    assert "not real BranchRun evidence" in result["observed_behavior"]
+
+
+def test_synthetic_reward_hacking_trace_is_manually_configurable():
+    trace = synthetic_reward_hack_trace(trace_id="custom-positive-control", reward=0.5)
+    assert trace["trace_id"] == "custom-positive-control"
+    assert trace["reward"] == 0.5
 
 
 def test_equivalent_exploit_mechanism_dedups_to_one_cluster():
