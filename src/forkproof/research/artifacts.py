@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from forkproof.research.models import FlatComparisonReport, ResearchSkip, TransferTrainingReport
+from forkproof.research.reports import (
+    require_evidence_backed_skip,
+    validate_flat_comparison,
+    validate_transfer_training,
+)
 from forkproof.witnesses.models import digest_json
 
 
@@ -169,6 +175,104 @@ def build_depth_two_preflight_artifact(
             ],
         },
         "blockers": blockers,
+        "completion_claim": "not-complete",
+    }
+    artifact["content_digest"] = digest_json(artifact)
+    return artifact
+
+
+def build_conditional_research_report(
+    *,
+    sealed_witness_ref: str,
+    child_selection_ref: str,
+    preflight_ref: str,
+    command_map_ref: str,
+    recorded_at: str,
+) -> dict[str, Any]:
+    """Build the measured/not-measured report for conditional Plan 007 packets."""
+
+    flat = validate_flat_comparison(
+        FlatComparisonReport(
+            status="not-measured",
+            protocol_ref=None,
+            limitation=(
+                "No comparable flat-restart protocol can be measured until Plan 007 has an "
+                "independent child re-snapshot and at least one completed depth-two BranchRun."
+            ),
+        )
+    )
+    transfer_training = validate_transfer_training(
+        TransferTrainingReport(
+            transfer_status="not-measured",
+            training_filter_status="not-measured",
+            real_task_refs=(),
+            trajectory_refs=(),
+            limitation=(
+                "No additional real task set or sealed raw-vs-hardened trajectory corpus is "
+                "available on this stack."
+            ),
+        )
+    )
+    skips = [
+        require_evidence_backed_skip(
+            ResearchSkip(
+                packet="WP4 flat restart comparison",
+                reason="Comparable state-branch and flat-restart budgets are not available before a completed depth-two BranchRun.",
+                evidence_refs=(sealed_witness_ref, child_selection_ref, preflight_ref),
+                recorded_at=recorded_at,
+            )
+        ),
+        require_evidence_backed_skip(
+            ResearchSkip(
+                packet="WP5 Memory Snapshot",
+                reason="The sealed Witness evidence does not establish process-resident state need; no Memory adapter scaffold was created.",
+                evidence_refs=(sealed_witness_ref, child_selection_ref),
+                recorded_at=recorded_at,
+            )
+        ),
+        require_evidence_backed_skip(
+            ResearchSkip(
+                packet="WP5 VM Sandbox",
+                reason="The sealed Witness evidence does not establish kernel-level task need; no VM adapter scaffold was created.",
+                evidence_refs=(sealed_witness_ref, child_selection_ref),
+                recorded_at=recorded_at,
+            )
+        ),
+        require_evidence_backed_skip(
+            ResearchSkip(
+                packet="WP6 transfer/training",
+                reason="No additional real tasks or sealed raw-vs-hardened trajectories are available for measured transfer or training analysis.",
+                evidence_refs=(sealed_witness_ref, command_map_ref),
+                recorded_at=recorded_at,
+            )
+        ),
+    ]
+    artifact: dict[str, Any] = {
+        "schema_version": 1,
+        "artifact_id": "plan-007-conditional-research-report",
+        "status": "not-measured",
+        "recorded_at": recorded_at,
+        "flat_comparison": flat,
+        "transfer_training": transfer_training,
+        "skips": skips,
+        "capability_profiles": {
+            "memory": {
+                "status": "skipped",
+                "live_probe": "not-run",
+                "reason": "No real process-resident task need was established; no adapter scaffold was created.",
+            },
+            "vm": {
+                "status": "skipped",
+                "live_probe": "not-run",
+                "reason": "No real kernel-level task need was established; no adapter scaffold was created.",
+            },
+        },
+        "evidence_refs": [
+            sealed_witness_ref,
+            child_selection_ref,
+            preflight_ref,
+            command_map_ref,
+        ],
         "completion_claim": "not-complete",
     }
     artifact["content_digest"] = digest_json(artifact)

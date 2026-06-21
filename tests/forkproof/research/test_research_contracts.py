@@ -7,6 +7,7 @@ import pytest
 
 from forkproof.research.artifacts import (
     build_child_selection_artifact,
+    build_conditional_research_report,
     build_depth_two_preflight_artifact,
 )
 from forkproof.research.capability import CapabilityGateError, classify_capability_gate
@@ -40,6 +41,7 @@ SOURCE_WITNESS = (
 SOURCE_CAUSAL_DELTA = (
     ROOT / "docs/plans/evidence/003/artifacts/sealed/causal-deltas/run-20260621T075711-branch-08.json"
 )
+CONDITIONAL_RESEARCH_REPORT = ROOT / "artifacts/forkproof/research/conditional-research-report.json"
 
 
 def test_scheduler_stops_after_four_completed_no_new_cluster_branches():
@@ -316,6 +318,44 @@ def test_integration_cli_writes_preflight_artifact_and_fails_closed(tmp_path):
     assert artifact["blockers"] == [
         "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact.",
     ]
+
+
+def test_conditional_research_report_records_not_measured_packets():
+    artifact = build_conditional_research_report(
+        sealed_witness_ref="docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        child_selection_ref="artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
+        preflight_ref="artifacts/forkproof/research/depth-two-integration-preflight.json",
+        command_map_ref="docs/plans/repo-map/COMMANDS.json",
+        recorded_at="2026-06-21T13:57:00Z",
+    )
+
+    assert artifact["status"] == "not-measured"
+    assert artifact["flat_comparison"]["status"] == "not-measured"
+    assert artifact["transfer_training"]["transfer_status"] == "not-measured"
+    assert artifact["transfer_training"]["training_filter_status"] == "not-measured"
+    assert {skip["packet"] for skip in artifact["skips"]} == {
+        "WP4 flat restart comparison",
+        "WP5 Memory Snapshot",
+        "WP5 VM Sandbox",
+        "WP6 transfer/training",
+    }
+    assert artifact["capability_profiles"]["memory"]["live_probe"] == "not-run"
+    assert artifact["completion_claim"] == "not-complete"
+    assert artifact["content_digest"]
+
+
+def test_committed_conditional_research_report_is_reproducible():
+    expected = json.loads(CONDITIONAL_RESEARCH_REPORT.read_text(encoding="utf-8"))
+
+    generated = build_conditional_research_report(
+        sealed_witness_ref=expected["evidence_refs"][0],
+        child_selection_ref=expected["evidence_refs"][1],
+        preflight_ref=expected["evidence_refs"][2],
+        command_map_ref=expected["evidence_refs"][3],
+        recorded_at=expected["recorded_at"],
+    )
+
+    assert generated == expected
 
 
 def test_capability_gate_returns_exact_unavailable_outcome_without_scaffold_refs():

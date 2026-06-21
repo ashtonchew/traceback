@@ -7,7 +7,11 @@ releases.
 """
 
 from .capability import CapabilityOutcome, classify_capability_gate
-from .artifacts import build_child_selection_artifact, build_depth_two_preflight_artifact
+from .artifacts import (
+    build_child_selection_artifact,
+    build_conditional_research_report,
+    build_depth_two_preflight_artifact,
+)
 from .models import (
     CapabilityGateRecord,
     ChildCandidate,
@@ -37,6 +41,7 @@ __all__ = [
     "StopEvent",
     "TransferTrainingReport",
     "build_child_selection_artifact",
+    "build_conditional_research_report",
     "build_depth_two_preflight_artifact",
     "classify_capability_gate",
     "select_promising_child",

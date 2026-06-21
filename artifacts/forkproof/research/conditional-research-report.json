@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "artifact_id": "plan-007-conditional-research-report",
+  "status": "not-measured",
+  "recorded_at": "2026-06-21T13:57:00Z",
+  "flat_comparison": {
+    "schema_version": 1,
+    "status": "not-measured",
+    "protocol_ref": null,
+    "state_branch_observations": null,
+    "flat_restart_observations": null,
+    "limitation": "No comparable flat-restart protocol can be measured until Plan 007 has an independent child re-snapshot and at least one completed depth-two BranchRun.",
+    "content_digest": "a3244953edcffea372c3824d15c5efee18d1407c0f3696af7ca0efff3a6db2c3"
+  },
+  "transfer_training": {
+    "schema_version": 1,
+    "transfer_status": "not-measured",
+    "training_filter_status": "not-measured",
+    "real_task_refs": [],
+    "trajectory_refs": [],
+    "raw_vs_hardened_filter": null,
+    "limitation": "No additional real task set or sealed raw-vs-hardened trajectory corpus is available on this stack.",
+    "content_digest": "e0cd87820303adcc6d1902a25d9ee4e53d67baad63f7e7997ad38bb2c43eed98"
+  },
+  "skips": [
+    {
+      "packet": "WP4 flat restart comparison",
+      "reason": "Comparable state-branch and flat-restart budgets are not available before a completed depth-two BranchRun.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/depth-two-integration-preflight.json"
+      ],
+      "recorded_at": "2026-06-21T13:57:00Z"
+    },
+    {
+      "packet": "WP5 Memory Snapshot",
+      "reason": "The sealed Witness evidence does not establish process-resident state need; no Memory adapter scaffold was created.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+      ],
+      "recorded_at": "2026-06-21T13:57:00Z"
+    },
+    {
+      "packet": "WP5 VM Sandbox",
+      "reason": "The sealed Witness evidence does not establish kernel-level task need; no VM adapter scaffold was created.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+      ],
+      "recorded_at": "2026-06-21T13:57:00Z"
+    },
+    {
+      "packet": "WP6 transfer/training",
+      "reason": "No additional real tasks or sealed raw-vs-hardened trajectories are available for measured transfer or training analysis.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+        "docs/plans/repo-map/COMMANDS.json"
+      ],
+      "recorded_at": "2026-06-21T13:57:00Z"
+    }
+  ],
+  "capability_profiles": {
+    "memory": {
+      "status": "skipped",
+      "live_probe": "not-run",
+      "reason": "No real process-resident task need was established; no adapter scaffold was created."
+    },
+    "vm": {
+      "status": "skipped",
+      "live_probe": "not-run",
+      "reason": "No real kernel-level task need was established; no adapter scaffold was created."
+    }
+  },
+  "evidence_refs": [
+    "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
+    "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json",
+    "artifacts/forkproof/research/depth-two-integration-preflight.json",
+    "docs/plans/repo-map/COMMANDS.json"
+  ],
+  "completion_claim": "not-complete",
+  "content_digest": "11788a1dd19dc5653d8fa544b3af5997d725b6c88c270ecce9c9cc3a40253461"
+}
