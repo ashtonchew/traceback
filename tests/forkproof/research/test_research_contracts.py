@@ -338,16 +338,22 @@ def test_depth_two_preflight_artifact_records_fail_closed_gate():
 def test_integration_cli_writes_preflight_artifact_and_fails_closed(tmp_path):
     output = tmp_path / "depth-two-preflight.json"
 
-    exit_code = integration(output_path=output)
+    # Absent child-snapshot/depth-two evidence always drives the fail-closed path.
+    exit_code = integration(
+        output_path=output,
+        child_snapshot_path=tmp_path / "missing-child-snapshot.json",
+        depth_two_run_path=tmp_path / "missing-depth-two-run.json",
+    )
 
     assert exit_code == 2
     artifact = json.loads(output.read_text(encoding="utf-8"))
     assert artifact["artifact_id"] == "plan-007-depth-two-integration-preflight"
     assert artifact["status"] == "blocked"
     assert artifact["plan003_gate"]["status"] == "pass"
-    assert artifact["blockers"] == [
-        "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact.",
-    ]
+    assert artifact["depth_two_execution"]["status"] == "blocked"
+    assert artifact["depth_two_execution"]["completed_branch_run_ref"] is None
+    assert any("completed depth-two BranchRun" in blocker for blocker in artifact["blockers"])
+    assert artifact["completion_claim"] == "not-complete"
 
 
 def test_conditional_research_report_records_not_measured_packets():

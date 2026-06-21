@@ -119,6 +119,24 @@ def build_child_selection_artifact(
     }
 
 
+def _child_snapshot_ok(child_snapshot: dict[str, Any] | None) -> bool:
+    if not isinstance(child_snapshot, dict) or child_snapshot.get("status") != "captured":
+        return False
+    snapshot = child_snapshot.get("child_snapshot")
+    return isinstance(snapshot, dict) and snapshot.get("snapshot_mode") == "filesystem" and bool(snapshot.get("snapshot_id"))
+
+
+def _depth_two_run_ok(depth_two_run: dict[str, Any] | None) -> bool:
+    if not isinstance(depth_two_run, dict) or depth_two_run.get("status") != "completed":
+        return False
+    run = depth_two_run.get("depth_two_run")
+    if not isinstance(run, dict) or run.get("status") != "completed":
+        return False
+    if not run.get("completed_branch_refs") or not run.get("measured_values"):
+        return False
+    return bool(depth_two_run.get("stop_event"))
+
+
 def build_depth_two_preflight_artifact(
     *,
     plan003_manifest: dict[str, Any],
@@ -126,8 +144,17 @@ def build_depth_two_preflight_artifact(
     child_selection_exists: bool,
     command_ref: str,
     recorded_at: str,
+    child_snapshot: dict[str, Any] | None = None,
+    child_snapshot_ref: str | None = None,
+    depth_two_run: dict[str, Any] | None = None,
+    depth_two_run_ref: str | None = None,
 ) -> dict[str, Any]:
-    """Build the fail-closed integration preflight record for Plan 007."""
+    """Verify Plan 007 depth-two evidence; fail closed until it is real and complete.
+
+    Returns a ``ready`` artifact only when Plan 003 is sealed, a filesystem-class
+    child re-snapshot exists, and a completed depth-two BranchRun with measured
+    values and an adaptive-stop event exists. Otherwise it stays ``blocked``.
+    """
 
     checks = plan003_manifest.get("checks", [])
     sealed = any(
@@ -137,21 +164,30 @@ def build_depth_two_preflight_artifact(
     )
     plan003_complete = plan003_manifest.get("status") == "complete"
     plan003_gate_status = "pass" if sealed and plan003_complete else "blocked"
+
+    child_snapshot_ok = _child_snapshot_ok(child_snapshot)
+    depth_two_ok = _depth_two_run_ok(depth_two_run)
+
     blockers = []
     if plan003_gate_status != "pass":
-        blockers.append(
-            "Plan 003 does not have complete sealed Witness evidence on this stack."
-        )
+        blockers.append("Plan 003 does not have complete sealed Witness evidence on this stack.")
     if not child_selection_exists:
         blockers.append("Plan 007 child-selection artifact is missing.")
-    blockers.append(
-        "Plan 007 has no mapped live depth-two executor and no completed depth-two BranchRun artifact."
-    )
+    if not child_snapshot_ok:
+        blockers.append(
+            "Plan 007 has no captured filesystem-class child re-snapshot artifact."
+        )
+    if not depth_two_ok:
+        blockers.append(
+            "Plan 007 has no mapped live depth-two executor result with a completed depth-two "
+            "BranchRun artifact, measured values, and an adaptive-stop event."
+        )
 
+    status = "ready" if not blockers else "blocked"
     artifact: dict[str, Any] = {
         "schema_version": 1,
         "artifact_id": "plan-007-depth-two-integration-preflight",
-        "status": "blocked",
+        "status": status,
         "recorded_at": recorded_at,
         "command_ref": command_ref,
         "plan003_gate": {
@@ -164,18 +200,27 @@ def build_depth_two_preflight_artifact(
             "status": "present" if child_selection_exists else "missing",
             "artifact_ref": child_selection_ref,
         },
+        "child_snapshot": {
+            "status": "captured" if child_snapshot_ok else "missing",
+            "artifact_ref": child_snapshot_ref,
+            "snapshot_ref": (child_snapshot or {}).get("child_snapshot", {}).get("snapshot_ref")
+            if child_snapshot_ok
+            else None,
+        },
         "depth_two_execution": {
-            "status": "blocked",
-            "executor": "not-mapped",
-            "completed_branch_run_ref": None,
-            "required_next_artifacts": [
+            "status": "completed" if depth_two_ok else "blocked",
+            "executor": "mapped" if child_snapshot_ok else "not-mapped",
+            "completed_branch_run_ref": depth_two_run_ref if depth_two_ok else None,
+            "required_next_artifacts": []
+            if depth_two_ok
+            else [
                 "independent child re-snapshot restore evidence",
                 "completed depth-two BranchRun artifact",
                 "adaptive-stop decision event from a real run",
             ],
         },
         "blockers": blockers,
-        "completion_claim": "not-complete",
+        "completion_claim": "complete" if status == "ready" else "not-complete",
     }
     artifact["content_digest"] = digest_json(artifact)
     return artifact
