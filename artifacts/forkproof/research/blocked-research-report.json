@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "report_id": "plan-007-blocked-research-20260621T111915Z",
+  "status": "blocked",
+  "recorded_at": "2026-06-21T11:19:15Z",
+  "summary": "Plan 007 local research contracts are implemented and tested, but live depth-two execution is blocked because Plan 003 has reward-hacking candidates and no sealed Exploit Witness.",
+  "plan003_gate": {
+    "status": "blocked",
+    "manifest_ref": "docs/plans/evidence/003/MANIFEST.json",
+    "latest_candidate_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json",
+    "observed": "Plan 003 records 12 live Hacker BranchRuns, 4 reward-hacking candidates with sufficient QA evidence, complete provenance, and causal_delta_status=not_minimized for all branches. No candidate is sealed until causal delta minimization, durable packaging, dedup clustering, and three consecutive deterministic replays pass."
+  },
+  "implemented_contracts": [
+    {
+      "name": "adaptive scheduler",
+      "refs": [
+        "src/forkproof/research/scheduler.py",
+        "tests/forkproof/research/test_research_contracts.py"
+      ],
+      "observed": "Policy enforces max depth 2, child budget <= 8, stop after four completed no-new-cluster branches, in-flight completion, late new-cluster reset, budget exhaustion, and no raw-reward cluster counting."
+    },
+    {
+      "name": "promising-node selector",
+      "refs": [
+        "src/forkproof/research/selection.py",
+        "tests/forkproof/research/test_research_contracts.py"
+      ],
+      "observed": "Selection requires at least one observable signal; exposed reasoning alone fails."
+    },
+    {
+      "name": "capability gates and reports",
+      "refs": [
+        "src/forkproof/research/capability.py",
+        "src/forkproof/research/reports.py",
+        "tests/forkproof/research/test_research_contracts.py"
+      ],
+      "observed": "Memory/VM gates return exactly unavailable, available-unneeded, or available-needed. Memory available-needed requires durable filesystem-class conversion evidence."
+    }
+  ],
+  "skips": [
+    {
+      "packet": "WP1/WP2 depth-two live run",
+      "status": "blocked",
+      "reason": "Plan 003 has no sealed Exploit Witness or equivalent durable child candidate.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/MANIFEST.json",
+        "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json"
+      ]
+    },
+    {
+      "packet": "WP4 flat restart comparison",
+      "status": "not-measured",
+      "reason": "No comparable state-branch depth-two budget can run until a sealed Plan 003 Witness or durable child candidate exists.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/MANIFEST.json"
+      ]
+    },
+    {
+      "packet": "WP5 Memory Snapshot",
+      "status": "skipped",
+      "reason": "No live Memory capability probe was run and no real process-resident task need exists without a sealed candidate; no adapter scaffold was created.",
+      "evidence_refs": [
+        "docs/plans/007-depth-two-and-research-extensions.md",
+        "docs/plans/007-depth-two-and-research-extensions.REFERENCE.md"
+      ]
+    },
+    {
+      "packet": "WP5 VM Sandbox",
+      "status": "skipped",
+      "reason": "No live VM capability probe was run and no real kernel-level task need exists without a sealed candidate; no adapter scaffold was created.",
+      "evidence_refs": [
+        "docs/plans/007-depth-two-and-research-extensions.md",
+        "docs/plans/007-depth-two-and-research-extensions.REFERENCE.md"
+      ]
+    },
+    {
+      "packet": "WP6 transfer/training",
+      "status": "not-measured",
+      "reason": "No additional real tasks and no sealed raw-vs-hardened trajectory set are available for transfer or training-data filtering.",
+      "evidence_refs": [
+        "docs/plans/evidence/003/MANIFEST.json"
+      ]
+    }
+  ],
+  "unresolved_risks": [
+    "Plan 007 mapped commands remain not-applicable in docs/plans/repo-map/COMMANDS.json, which Plan 007 does not own.",
+    "scripts/verify_external_deps.sh is absent on the Plan 003 stack branch used as the base, so the requested worktree external verification could not run here.",
+    "hud-environment-builder and modal skill files were not present at the advertised local skill cache paths in this environment."
+  ],
+  "completion_claim": "not-complete"
+}

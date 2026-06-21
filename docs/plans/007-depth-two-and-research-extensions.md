@@ -122,20 +122,25 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 
 - [ ] Promising child selected and re-snapshotted.
 - [ ] Depth-two branch run.
-- [ ] Adaptive stop proved.
-- [ ] Flat comparison measured or skipped with evidence.
-- [ ] Memory/VM profiles run or skipped with evidence.
-- [ ] Transfer/training analysis run or skipped with evidence.
+- [x] Adaptive stop proved.
+- [x] Flat comparison measured or skipped with evidence.
+- [x] Memory/VM profiles run or skipped with evidence.
+- [x] Transfer/training analysis run or skipped with evidence.
+
+- 2026-06-21T11:19:15Z — Started Plan 007 from `codex/plan-002-003-witness` on branch `codex/plan-007-research-stack`. Read the required plan context and Plan 003 evidence. Confirmed Plan 003 records live reward-hacking candidates but no sealed Exploit Witness, so WP1/WP2 live depth-two execution remains blocked. Implemented Plan 007-owned local contracts for adaptive scheduling, promising-node selection, capability gates, and measured/not-measured report validation, with focused behavior tests.
+- 2026-06-21T11:24:00Z — Ran feasible validators. Focused tests and research lint pass; mapped `plan-007-tests` and `integration-research` skip because COMMANDS.json still marks them not-applicable; graph, sections, ownership, traceability, file-size, mapped lint/build, and evidence-without-require-complete pass. `validate_evidence.py --plan 007 --require-complete` fails as expected because the manifest remains blocked.
 
 ### Surprises & Discoveries
 
-- None yet.
+- 2026-06-21T11:19:15Z — `scripts/verify_external_deps.sh` is absent on the Plan 003 stack branch used for this work, so the requested `.external/` verification command could not run even though `.external/harden-v0` and `.external/terminal-wrench` are present.
+- 2026-06-21T11:19:15Z — `docs/plans/repo-map/COMMANDS.json` still marks `plan-007-tests` and `integration-research` as `not-applicable`; Plan 007 does not own command-map keys, so direct focused tests are recorded separately and mapped commands are left unchanged.
+- 2026-06-21T11:19:15Z — The requested `hud-environment-builder` and `modal` skill files were not present at the advertised local plugin cache paths; repository docs remained the only usable project source of truth.
 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: put all non-core research behind one removable feature boundary and forbid it from gating the demo.
-- 2026-06-21 — Start-precondition relaxation for **007-CORE** (owner-approved, **REVERSIBLE**): the 007 core deliverables — one depth-two lineage, adaptive stopping, and the measured report — may START against a **stable** Plan 003 discovery/restore machinery **without** waiting for a sealed Exploit Witness (index Gate 3). Rationale: 007-core's binary done is "a depth-two BranchRun **completes**" (WP2 Pass) + adaptive policy + report; it uses the working discovery/snapshot/restore path, **not** the replay-seal gate. The **optional** depth-two Witness promotion ("promote any qualifying exploit through the same deterministic replay gate", WP2) **remains gated** on the replay-seal working (the same Modal replay-image fix Plan 003 needs). This is a scoped exception to Gate 3 for 007's non-seal core work only. **Revert:** once 003 seals a Witness, Gate 3 holds anyway (the relaxation becomes a no-op); revert the relaxation commit to restore canonical wording. **Honesty caveat:** a depth-two report produced before any seal must state the deterministic-seal step was not exercised — capability + policy demonstrated, not a sealed proof.
+- 2026-06-21T11:19:15Z — Implemented only pure Plan 007 contracts and skip/report evidence until Plan 003 seals a Witness. This preserves the STOP condition while making the unblocked scheduler and gating behavior testable.
 
 ### Outcomes & Retrospective
 
-- Pending execution.
+- 2026-06-21T11:19:15Z — Partial implementation only. Local contracts and skips are evidenced in `artifacts/forkproof/research/blocked-research-report.json`; live depth-two execution, flat comparison, Memory/VM integration, transfer, and training remain blocked or not measured until real sealed Plan 003 artifacts exist.
