@@ -16,17 +16,99 @@ SOURCE_ADAPTER = "hud-trace-explorer.qa_reward_hacking"
 _PROMPT_SCRIPT = r"""
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
+
+import httpx
 
 root = Path(sys.argv[1])
 trace_id = sys.argv[2]
 hud_api_key = sys.argv[3]
 sys.path.insert(0, str(root))
 
+async def fetch_trace_v2(trace_id, api_key, data_sources):
+    base = os.environ.get("HUD_API_URL", "https://api.beta.hud.ai").rstrip("/")
+    headers = {"Authorization": f"Bearer {api_key}"}
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        context_response = await client.get(f"{base}/v2/trace/{trace_id}/analysis-context", headers=headers)
+        context_response.raise_for_status()
+        context = context_response.json()
+        events_response = await client.get(f"{base}/v2/trace/{trace_id}/events", headers=headers)
+        events_response.raise_for_status()
+        events = (events_response.json() or {}).get("events") or []
+
+    def trim(value, limit=4000):
+        text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
+        return text if len(text) <= limit else text[:limit] + f"\n... ({len(text)} total chars)"
+
+    trajectory = []
+    for event in events:
+        kind = event.get("kind")
+        if kind == "scenario_setup":
+            trajectory.append({
+                "name": "prompts/get.mcp",
+                "attributes": {"request": {"params": {"arguments": {"prompt": event.get("result", {}).get("prompt", "")}}}},
+            })
+        elif kind == "agent_message":
+            trajectory.append({
+                "name": "inference.agent",
+                "attributes": {
+                    "result": {
+                        "content": trim(event.get("text", ""), 2000),
+                        "tool_calls": event.get("tool_calls") or [],
+                    }
+                },
+            })
+        elif kind == "tool_call":
+            trajectory.append({
+                "name": "tools/call.mcp",
+                "attributes": {
+                    "request": {
+                        "params": {
+                            "name": event.get("tool_name") or event.get("name") or "tool",
+                            "arguments": event.get("arguments") or {},
+                        }
+                    },
+                    "result": {"content": [{"type": "text", "text": trim(event.get("result_text", ""), 4000)}]},
+                },
+                "status_code": "ERROR" if event.get("error") else "OK",
+            })
+        elif kind == "scenario_evaluate":
+            trajectory.append({
+                "name": "resources/read.mcp",
+                "attributes": {"result": {"contents": [{"text": json.dumps(event.get("result") or {})}]}},
+            })
+
+    return {
+        "trace_id": context.get("trace_id") or trace_id,
+        "job_id": context.get("job_id"),
+        "task_id": context.get("task_id"),
+        "task_version_id": context.get("task_version_id"),
+        "status": context.get("status"),
+        "reward": context.get("reward"),
+        "error": context.get("error"),
+        "scenario": context.get("scenario_name"),
+        "scenario_args": context.get("scenario_args") or [],
+        "scenario_code": context.get("scenario_code"),
+        "registry_id": context.get("registry_id"),
+        "prompt": context.get("prompt"),
+        "metadata": {
+            **(context.get("metadata") or {}),
+            "evaluation_result": context.get("evaluation_result"),
+        },
+        "trajectory": trajectory,
+        "trajectory_length": len(trajectory),
+        "logs": context.get("env_logs") or [],
+        "rollout_logs": context.get("worker_logs") or "",
+        "trace_provider": "hud-v2-analysis-context",
+    }
+
 async def main():
     try:
         import qa_reward_hacking
+        import qa_common
+        qa_common.fetch_trace = fetch_trace_v2
         generator = qa_reward_hacking.reward_hacking_analysis(trace_id=trace_id, hud_api_key=hud_api_key)
         if not hasattr(generator, "__anext__"):
             print(json.dumps({
@@ -41,7 +123,8 @@ async def main():
             "source_adapter": "hud-trace-explorer.qa_reward_hacking",
             "module_file": str(getattr(qa_reward_hacking, "__file__", "")),
             "prompt": str(prompt),
-            "execution_mode": "uv-project-subprocess",
+            "execution_mode": "uv-project-subprocess-v2-trace-provider",
+            "trace_provider": "hud-v2-analysis-context",
         }))
     except Exception as exc:
         print(json.dumps({
@@ -184,9 +267,9 @@ def fetch_canonical_prompt(
     trace_id: str,
     hud_api_key: str,
 ) -> dict[str, Any]:
-    if module is not None:
-        return asyncio.run(fetch_prompt_from_module(module, trace_id=trace_id, hud_api_key=hud_api_key))
     canonical_root = binding.get("canonical_root")
     if canonical_root and (Path(canonical_root) / "pyproject.toml").exists():
         return fetch_prompt_with_uv_project(Path(canonical_root), trace_id=trace_id, hud_api_key=hud_api_key)
+    if module is not None:
+        return asyncio.run(fetch_prompt_from_module(module, trace_id=trace_id, hud_api_key=hud_api_key))
     return binding

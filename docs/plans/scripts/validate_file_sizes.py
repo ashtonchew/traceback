@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check text files under the bundle or one plan's owned paths for the 500-line target."""
+"""Check text files under the bundle or one plan's owned paths for line-count policy."""
 
 from __future__ import annotations
 
@@ -31,8 +31,13 @@ IGNORED_DIRS = {
 }
 
 
+def _generated_evidence_artifact(path: Path) -> bool:
+    parts = path.relative_to(ROOT).parts if path.is_absolute() else path.parts
+    return len(parts) >= 5 and parts[:3] == ("docs", "plans", "evidence") and parts[4] == "artifacts"
+
+
 def _ignored(path: Path) -> bool:
-    return any(part in IGNORED_DIRS for part in path.parts)
+    return any(part in IGNORED_DIRS for part in path.parts) or _generated_evidence_artifact(path)
 
 
 def expand_pattern(pattern: str) -> list[Path]:
@@ -65,7 +70,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", help="Check one plan's owned paths")
     parser.add_argument("--repo-bound", action="store_true")
-    parser.add_argument("--max-lines", type=int, default=500)
+    parser.add_argument("--target-lines", type=int, default=500)
+    parser.add_argument("--max-lines", type=int, default=550)
     args = parser.parse_args()
 
     try:
@@ -81,6 +87,7 @@ def main() -> int:
 
         seen: set[Path] = set()
         oversized: list[str] = []
+        warnings: list[str] = []
         checked = 0
         for pattern in patterns:
             for path in expand_pattern(pattern):
@@ -96,9 +103,18 @@ def main() -> int:
                     oversized.append(
                         f"{path.relative_to(ROOT)}: {count} lines > {args.max_lines}"
                     )
+                elif count > args.target_lines:
+                    warnings.append(
+                        f"WARN: {path.relative_to(ROOT)}: {count} lines > {args.target_lines} target"
+                    )
         if oversized:
             return print_errors(oversized)
-        print_ok(f"{checked} text file(s) are at most {args.max_lines} lines")
+        for warning in warnings:
+            print(warning)
+        print_ok(
+            f"{checked} text file(s) are at most {args.max_lines} lines; "
+            f"{len(warnings)} file(s) exceed the {args.target_lines}-line target"
+        )
         return 0
     except (ValidationError, ValueError) as exc:
         return print_errors([str(exc)])

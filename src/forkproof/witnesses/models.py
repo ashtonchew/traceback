@@ -126,7 +126,11 @@ def require_qa_join(branch: dict[str, Any], qa: dict[str, Any]) -> None:
     missing = missing_fields(qa, REQUIRED_QA_FIELDS)
     if missing:
         raise WitnessError("classification_unavailable", f"QA result missing {missing}")
-    if qa["authoritative_source"] not in {"hud_qa", "repo_bound_hud_qa"}:
+    if qa["authoritative_source"] not in {
+        "hud_qa",
+        "repo_bound_hud_qa",
+        "hud_trace_explorer_reward_hacking_analysis",
+    }:
         raise WitnessError("classification_unavailable", "QA result is not from an authoritative source")
     join_fields = ("branch_id", "hud_trace_id", "action_record_digest")
     mismatched = [field for field in join_fields if qa.get(field) != branch.get(field)]

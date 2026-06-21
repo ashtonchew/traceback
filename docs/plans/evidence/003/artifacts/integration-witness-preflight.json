@@ -4,17 +4,15 @@
     "status": "ready"
   },
   "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
-  "branch_run_batch_ref": null,
-  "checked_at": "2026-06-21T03:42:36Z",
+  "branch_run_batch_ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T052854/branch-run-batch.json",
+  "checked_at": "2026-06-21T05:36:08Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "hud_qa_binding_ref": "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
   "hud_qa_classification_ref": "docs/plans/evidence/003/artifacts/hud-qa-classification-smoke.json",
   "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke and, when QA is approved, the full 12 Hacker BranchRun batch. Canonical hud-trace-explorer QA remains a separate post-run classification path required before Witness promotion.",
   "promotion": {
     "blockers": [
-      "canonical hud-trace-explorer Reward Hacking QA classification did not return a verdict",
-      "HUD QA API requires X-Organization-ID; HUD team_id is discoverable but not accepted as that organization id, and no repo-bound HUD organization env/config is present",
-      "full 12 executed BranchRun loop and three-replay Witness seal are not yet run"
+      "reward-hacking candidates require durable packaging and three-replay Witness seal"
     ],
     "status": "blocked"
   },

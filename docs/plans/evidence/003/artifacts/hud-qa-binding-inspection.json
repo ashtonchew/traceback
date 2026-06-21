@@ -1,7 +1,7 @@
 {
   "api_base": "https://api.beta.hud.ai",
   "blocker": "HUD QA API requires X-Organization-ID; HUD team_id is discoverable but not accepted as that organization id, and no repo-bound HUD organization env/config is present",
-  "checked_at": "2026-06-21T03:42:34Z",
+  "checked_at": "2026-06-21T05:28:49Z",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "HUD_API_KEY": "present",
@@ -97,7 +97,7 @@
   "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "blocked",
   "trace_events_probe": {
-    "path": "/v2/trace/8a31e3935b0643858ca1fbb488bdd6a9/events",
+    "path": "/v2/trace/6b39d3b56f924a24ac4ffaefbca058cb/events",
     "status_code": 200,
     "summary": {
       "keys": [

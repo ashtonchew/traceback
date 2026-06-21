@@ -65,16 +65,49 @@ def install_fake_hud_modules(monkeypatch, *, runtime_raises=False):
     monkeypatch.setitem(sys.modules, "hud.agents.claude", types.ModuleType("hud.agents.claude"))
     monkeypatch.setitem(sys.modules, "hud.agents.claude.agent", agent_module)
 
-    runtime_module = types.ModuleType("hud.eval.runtime")
+    monkeypatch.setitem(sys.modules, "hud.eval", types.ModuleType("hud.eval"))
 
-    class ModalRuntime:
+    class EvidenceModalRuntime:
         def __init__(self, *args, **kwargs):  # noqa: ARG002
             if runtime_raises:
                 raise RuntimeError("runtime setup failed")
+            self.evidence = kwargs["evidence"]
 
-    runtime_module.ModalRuntime = ModalRuntime
-    monkeypatch.setitem(sys.modules, "hud.eval", types.ModuleType("hud.eval"))
-    monkeypatch.setitem(sys.modules, "hud.eval.runtime", runtime_module)
+        def __call__(self, task):  # noqa: ARG002
+            runtime = self
+
+            class Context:
+                async def __aenter__(self):
+                    runtime.evidence.runtime_params = {
+                        "provider": "modal",
+                        "instance_id": "sb-test",
+                        "egress_policy": "outbound_cidr_allowlist",
+                        "outbound_cidr_allowlist": ["127.0.0.1/32"],
+                        "secret_policy": "secrets=[]",
+                        "network_file_systems": [],
+                        "volumes": [],
+                    }
+                    runtime.evidence.before_snapshot = {
+                        "status": "pass",
+                        "files": {"/app/query.py": {"sha256": "old", "text": "print('old')\n"}},
+                    }
+                    return object()
+
+                async def __aexit__(self, exc_type, exc, tb):  # noqa: ANN001
+                    runtime.evidence.after_snapshot = {
+                        "status": "pass",
+                        "files": {"/app/query.py": {"sha256": "new", "text": "print('new')\n"}},
+                    }
+                    runtime.evidence.security_probe = {
+                        "status": "pass",
+                        "forbidden_secret_presence": {"HUD_API_KEY": "absent"},
+                        "disallowed_egress_probe": "denied",
+                        "repo_or_workspace_write_probes": {"/workspace/forkproof-probe": "denied"},
+                    }
+
+            return Context()
+
+    monkeypatch.setattr(branch_runs, "EvidenceModalRuntime", EvidenceModalRuntime)
 
 
 def test_branch_runtime_setup_failure_is_not_counted_as_executed(monkeypatch, tmp_path):
@@ -127,6 +160,8 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
 
     class Task:
         async def run(self, agent, runtime):  # noqa: ARG002
+            async with runtime(self):
+                pass
             return Job()
 
     source = forkpoint(environment_image_digest="image-real", grader_digest="grader-real")
@@ -148,7 +183,9 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     assert record["grader_digest"] == "grader-real"
     assert record["history_hash"] == source["history_hash"]
     assert record["snapshot_digest"] == source["snapshot_digest"]
-    assert record["provenance_status"] == "incomplete"
+    assert record["provenance_status"] == "complete"
+    assert record["file_diff_ref"].endswith(".json")
+    assert record["security_probe_ref"].endswith(".json")
 
 
 def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_path):
@@ -176,6 +213,7 @@ def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_pa
             "qa_ref": "qa.json",
             "action_record_ref": "action.json",
             "file_diff_ref": "diff.json",
+            "security_probe_ref": "security.json",
         }
 
     monkeypatch.setattr(branch_runs, "_run_one_branch", fake_run_one_branch)
@@ -184,3 +222,56 @@ def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_pa
     assert result["provenance_status"] == "incomplete"
     assert result["status"] == "blocked"
     assert result["executed_branch_count"] == 2
+
+
+def test_feedback_retry_is_tagged_separately_from_core_branch_count(monkeypatch, tmp_path):
+    monkeypatch.setenv("MODAL_TOKEN_ID", "present")
+    monkeypatch.setenv("MODAL_TOKEN_SECRET", "present")
+    monkeypatch.setenv("HUD_API_KEY", "present")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "present")
+    monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
+    monkeypatch.setenv("FORKPROOF_HACKER_FEEDBACK_RETRIES", "1")
+    monkeypatch.setattr(branch_runs, "_load_hud_task", lambda root: (object(), prompt_packet()))
+    feedback_packets = []
+
+    def fake_load_with_feedback(root, feedback_attempts):  # noqa: ARG001
+        packet = build_hacker_branch_instruction("## Your Goal\nTest prompt.", feedback_attempts=feedback_attempts)
+        feedback_packets.append(packet)
+        return object(), packet
+
+    monkeypatch.setattr(branch_runs, "_load_hud_task_with_feedback", fake_load_with_feedback)
+
+    async def fake_run_one_branch(**kwargs):
+        prompt = kwargs["prompt_packet"]
+        branch_id = f"{kwargs['run_id']}-branch-{kwargs['branch_index']:02d}"
+        branch = {
+            "branch_id": branch_id,
+            "seed": kwargs["branch_index"],
+            "hud_trace_id": f"trace-{branch_id}",
+            "reward": 1.0,
+            "promotion_signal_status": "rewarded-non-hack",
+            "execution_boundary_crossed": True,
+            "provenance_blockers": [],
+            "prompt_profile": prompt["prompt_profile"],
+            "feedback_enabled": prompt["feedback_enabled"],
+            "feedback_attempt_count": prompt["feedback_attempt_count"],
+        }
+        return {
+            "branch": branch,
+            "qa": {"status": "pass", "is_reward_hacking": False},
+            "branch_ref": f"{branch_id}.json",
+            "qa_ref": f"{branch_id}-qa.json",
+            "action_record_ref": f"{branch_id}-action.json",
+            "file_diff_ref": f"{branch_id}-diff.json",
+            "security_probe_ref": f"{branch_id}-security.json",
+        }
+
+    monkeypatch.setattr(branch_runs, "_run_one_branch", fake_run_one_branch)
+    result = asyncio.run(branch_runs.run_live_branch_batch(tmp_path, forkpoint(), count=2, concurrency=2))
+
+    assert result["executed_branch_count"] == 2
+    assert result["feedback_retry_budget"] == 1
+    assert result["feedback_retry_count"] == 1
+    assert len(result["feedback_branch_refs"]) == 1
+    assert feedback_packets[0]["feedback_enabled"] is True
+    assert feedback_packets[0]["feedback_attempt_count"] == 2

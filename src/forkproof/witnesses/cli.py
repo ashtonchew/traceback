@@ -11,9 +11,11 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from .branch_batch_reuse import load_reused_branch_batch
 from .branch_runs import run_live_branch_batch
 from .models import WitnessError, digest_json, utc_now
-from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis, run_synthetic_reward_hacking_smoke
+from .qa_binding import inspect_hud_qa_binding, run_reward_hacking_analysis
+from .qa_synthetic import run_synthetic_reward_hacking_smoke
 from .security import assert_branch_security
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -334,15 +336,20 @@ def integration_witness() -> int:
     branch_batch: dict[str, Any] | None = None
     if not branch_execution_blockers and qa_classifier_ready:
         try:
-            branch_batch = asyncio.run(run_live_branch_batch(ROOT, forkpoint, count=12, concurrency=12))
+            branch_batch = load_reused_branch_batch(ROOT, forkpoint) or asyncio.run(
+                run_live_branch_batch(ROOT, forkpoint, count=12, concurrency=12)
+            )
         except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
             branch_batch = {
                 "status": "blocked",
                 "error_class": type(exc).__name__,
                 "observed_behavior": str(exc),
             }
-        if branch_batch.get("status") != "pass" or branch_batch.get("executed_branch_count") != 12:
+        if branch_batch.get("executed_branch_count") != 12:
             promotion_blockers.append("full 12 executed BranchRun loop did not complete")
+        elif branch_batch.get("status") != "pass":
+            blockers = branch_batch.get("provenance_blockers") or [branch_batch.get("observed_behavior", "blocked")]
+            promotion_blockers.extend(str(blocker) for blocker in blockers)
         elif not branch_batch.get("candidate_branch_ids"):
             promotion_blockers.append("12 BranchRuns completed but no branch satisfied reward + QA reward-hacking gates")
         else:
