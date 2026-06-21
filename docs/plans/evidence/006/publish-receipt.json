@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "hud-environment-publish-receipt",
+  "outcome": "published",
+  "deployed_via": "hud deploy (POST /v2/builds/trigger, server-side AWS CodeBuild + ECR push), authenticated with the trusted-context HUD_API_KEY",
+  "registry_env_id": "b3409057-8fdd-4f6b-a78f-8754910c66c3",
+  "registry_env_name": "mongodb-sales-aggregation-engine",
+  "team": "hud-hacks",
+  "published_version": 3,
+  "build_id": "3bc11838-830a-4884-97f1-c7c550f5febb",
+  "build_status": "SUCCEEDED",
+  "environment_url": "https://hud.ai/environments/b3409057-8fdd-4f6b-a78f-8754910c66c3",
+  "published_environment_ref": "hud:registry/b3409057-8fdd-4f6b-a78f-8754910c66c3@v3",
+  "non_destructive": "Versions are append-only immutable builds. v3 is the new latest_build; v2 (SUCCEEDED 2026-06-20) and v1 are retained (total builds = 3). Existing v2 runs/traces are not invalidated.",
+  "defense_proofs": [
+    "artifacts/forkproof/demo/publish/v2-grader-verification.json",
+    "artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json",
+    "artifacts/forkproof/demo/publish/v2-deploy-proof.json"
+  ],
+  "release_proof_ref": "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json",
+  "release_candidate_ref": "artifacts/forkproof/releases/candidates/releasecandidate-294df1726b8a5ed0.json",
+  "deployed_at": "2026-06-21T16:03:12Z"
+}

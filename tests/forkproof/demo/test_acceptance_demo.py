@@ -18,6 +18,7 @@ from forkproof.demo.metrics import build_metrics
 from forkproof.demo.models import DemoError
 from forkproof.demo.orchestration import (
     _build_publication_attempt,
+    record_published_publication,
     run_acceptance_demo,
 )
 from forkproof.demo.publication import publication_preflight, validate_publication_attempt
@@ -298,6 +299,32 @@ def test_prepared_rejects_published_environment_ref():
     with pytest.raises(DemoError) as exc:
         validate_publication_attempt(with_content_digest(attempt))
     assert "published environment ref" in str(exc.value)
+
+
+def test_published_attempt_validates_from_real_deploy_receipt():
+    import json
+
+    exit_code, ref = record_published_publication(ROOT)
+    assert exit_code == 0
+    attempt = json.loads((ROOT / ref).read_text())
+    assert attempt["outcome"] == "published"
+    assert attempt["published_environment_ref"].startswith("hud:registry/")
+    assert attempt["release_proof_gate_status"] == "pass"
+    assert not attempt.get("normalized_error_class")
+    assert attempt["trusted_publication_evidence_ref"] in attempt["evidence_refs"]
+    validate_publication_attempt(attempt)
+
+
+def test_published_rejects_untrusted_publication_evidence_ref():
+    import json
+
+    from forkproof.demo.models import with_content_digest
+
+    _, ref = record_published_publication(ROOT)
+    attempt = dict(json.loads((ROOT / ref).read_text()))
+    attempt["trusted_publication_evidence_ref"] = "artifacts/forkproof/demo/publish/hud-target.json"
+    with pytest.raises(DemoError):
+        validate_publication_attempt(with_content_digest(attempt))
 
 
 def test_publication_rejects_untrusted_candidate_ref():

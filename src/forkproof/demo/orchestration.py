@@ -22,7 +22,7 @@ from forkproof.releases.models import utc_now
 from .branch_launch import BranchBatchResult, BranchRunner, live_branch_runner, normalize_batch
 from .forkpoint_inputs import ROOT, DemoInputs, load_demo_inputs
 from .models import DemoError, with_content_digest
-from .publication import publication_preflight, validate_publication_attempt
+from .publication import idempotency_key, publication_preflight, validate_publication_attempt
 from .readiness import validate_readiness_pack
 from .redaction import redact_record
 from .report_builder import ReportContext, build_acceptance_report
@@ -120,6 +120,8 @@ DEPLOY_COMMAND_REF = "docs/plans/repo-map/COMMANDS.json:hud-deploy"
 PUBLISH_TARGET_REF = "artifacts/forkproof/demo/publish/hud-target.json"
 V2_VERIFICATION_REF = "artifacts/forkproof/demo/publish/v2-grader-verification.json"
 V2_KILL_PROOF_REF = "artifacts/forkproof/demo/publish/v2-runtime-kill-proof.json"
+V2_DEPLOY_PROOF_REF = "artifacts/forkproof/demo/publish/v2-deploy-proof.json"
+PUBLISH_RECEIPT_REF = "docs/plans/evidence/006/publish-receipt.json"
 DEFERRED_PUBLISH_REASON = (
     "Ready to publish; the actual registry upload awaits an explicit go-ahead. The bound HUD deploy primitive, "
     "the authorized 'mongodb-sales-aggregation-engine' registry target, and the hardened v2 are all verified: the "
@@ -155,6 +157,51 @@ def prepare_publication(root: Path = ROOT) -> tuple[int, str]:
     if attempt["outcome"] != "prepared":
         raise DemoError("publication_attempt_invalid", f"expected prepared, resolved to {attempt['outcome']}")
     path = root / PUBLISH_DIR / "publication-prepared-attempt.json"
+    _write_sealed(path, attempt)
+    return 0, _relative(path)
+
+
+def record_published_publication(root: Path = ROOT) -> tuple[int, str]:
+    """Build and persist a validated ``published`` PublicationAttempt from the deploy receipt."""
+
+    inputs = load_demo_inputs()
+    receipt = json.loads((root / PUBLISH_RECEIPT_REF).read_text(encoding="utf-8"))
+    published_environment_ref = receipt.get("published_environment_ref")
+    if not published_environment_ref:
+        raise DemoError("publication_attempt_invalid", "publish receipt lacks published_environment_ref")
+    base = {
+        "schema_version": 1,
+        "release_proof_id": inputs.release_proof.get("release_proof_id"),
+        "release_proof_digest": inputs.release_proof_digest,
+        "target_id": inputs.target_id,
+        "publisher_capability_label": PUBLISHER_CAPABILITY_LABEL,
+        "command_key": "integration-publication",
+        "command_argv_ref": TRUSTED_PUBLICATION_CONTEXT_REF,
+        "trusted_context_ref": TRUSTED_PUBLICATION_CONTEXT_REF,
+        "outcome": "published",
+        "release_proof_gate_status": inputs.release_proof.get("gate_status"),
+        "release_candidate_ref": inputs.release_candidate_ref,
+        "published_environment_ref": published_environment_ref,
+        "trusted_publication_evidence_ref": PUBLISH_RECEIPT_REF,
+        "evidence_refs": [
+            PLAN_005_MANIFEST_REF,
+            inputs.release_proof_ref,
+            inputs.release_candidate_ref,
+            PUBLISH_RECEIPT_REF,
+            V2_DEPLOY_PROOF_REF,
+        ],
+        "redaction_status": "redacted",
+        "created_at": utc_now(),
+    }
+    base["idempotency_key"] = idempotency_key(
+        release_proof_digest=base["release_proof_digest"], target_id=base["target_id"]
+    )
+    base["publication_attempt_id"] = "pubattempt-" + base["idempotency_key"][:16]
+    attempt = with_content_digest(base)
+    validate_publication_attempt(attempt)
+    if attempt["outcome"] != "published":
+        raise DemoError("publication_attempt_invalid", f"expected published, resolved to {attempt['outcome']}")
+    path = root / PUBLISH_DIR / "publication-published-attempt.json"
     _write_sealed(path, attempt)
     return 0, _relative(path)
 

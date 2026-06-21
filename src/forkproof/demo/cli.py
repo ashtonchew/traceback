@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
-from .orchestration import prepare_publication, run_acceptance_demo
+from .orchestration import prepare_publication, record_published_publication, run_acceptance_demo
 from .publication import publication_preflight, validate_publication_attempt
 from .readiness import validate_readiness_pack
 from .redaction import redact_record
@@ -432,6 +432,19 @@ def publish_prepare_command() -> int:
     return exit_code
 
 
+def publish_record_command() -> int:
+    """Write a validated `published` PublicationAttempt from the deploy receipt."""
+
+    try:
+        exit_code, ref = record_published_publication()
+    except DemoError as exc:
+        _print_failure(exc)
+        return 2
+    print(f"WROTE {ref}")
+    print("PASS: publish-record outcome=published")
+    return exit_code
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -440,6 +453,7 @@ def main() -> int:
     acceptance_parser.add_argument("--count", type=int, default=12)
     acceptance_parser.add_argument("--concurrency", type=int, default=12)
     sub.add_parser("publish-prepare")
+    sub.add_parser("publish-record")
     validate_parser = sub.add_parser("validate-report")
     validate_parser.add_argument("--report", required=True, type=Path)
     validate_parser.add_argument("--output", type=Path)
@@ -469,6 +483,8 @@ def main() -> int:
         return acceptance_demo_command(count=args.count, concurrency=args.concurrency)
     if args.command == "publish-prepare":
         return publish_prepare_command()
+    if args.command == "publish-record":
+        return publish_record_command()
     if args.command == "validate-report":
         return validate_report(report=args.report, output=args.output)
     if args.command == "report-replay":

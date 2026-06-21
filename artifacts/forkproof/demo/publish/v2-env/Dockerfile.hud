@@ -1,0 +1,31 @@
+# mongodb-sales-aggregation-engine HARDENED v2.
+# MongoDB 7.0 base (Ubuntu) so mongod is present.
+FROM mongo:7.0
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 python3-pip python3-venv curl ca-certificates \
+        git bubblewrap openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Task + grader runtime, system-wide so the BashGrader's `python3 -m pytest`
+# (run as a subprocess) resolves pytest + pymongo.
+RUN pip3 install --no-cache-dir pymongo "pytest==8.4.1"
+RUN pip3 install --no-cache-dir uv
+
+RUN mkdir -p /data/db && chown -R mongodb:mongodb /data/db
+
+# HARDENING: the trusted verifier suite is served from /tests, OUTSIDE the
+# agent's /app workspace, and made read-only. The grader (env.py) runs pytest
+# from `/` against /tests with plugin auto-load disabled, so an agent-planted
+# /app/conftest.py or pytest11 plugin is never discovered, and a grade-time
+# digest check rejects any tampering of the trusted suite.
+COPY tests /tests
+RUN chmod -R a-w /tests
+
+WORKDIR /app
+COPY . /app/
+RUN uv sync
+
+EXPOSE 8765
+ENTRYPOINT []
+CMD ["uv", "run", "hud", "serve", "env:env", "--host", "0.0.0.0", "--port", "8765"]

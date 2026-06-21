@@ -330,7 +330,7 @@
         "PYTHONPATH": "src"
       },
       "timeout_seconds": 1800,
-      "reason": "Bound HUD environment-version publish primitive (hud deploy -> POST /v2/builds/trigger, get-or-rebuild by name). INTENTIONALLY NOT EXECUTED: the maintainer deferred the actual registry upload, so this row is not-applicable and run_mapped will SKIP rather than deploy. Evidence that the bind is real: the hardened v2 grader is verified offline (grader_v2_digest matches ReleaseProof releaseproof-30e03914472631dd; artifacts/forkproof/demo/publish/v2-grader-verification.json) and the authorized target is the authenticated account's 'mongodb-sales-aggregation-engine' registry environment (artifacts/forkproof/demo/publish/hud-target.json). Before a real publish, the deploy context artifacts/forkproof/demo/publish/v2 must be completed into a full env that serves the hardened /tests read-only under hud serve, and an explicit upload authorization must be given. HUD_API_KEY comes from the root .env."
+      "reason": "Bound HUD environment-version publish primitive (hud deploy -> POST /v2/builds/trigger, get-or-rebuild by name). ALREADY EXECUTED on 2026-06-21: published the hardened env as mongodb-sales-aggregation-engine version 3 (registry b3409057, build 3bc11838; docs/plans/evidence/006/publish-receipt.json). This row stays not-applicable so run_mapped SKIPs rather than RE-deploying a new version on every CI run; rerun manually (with the assembled v2 build context) only when intentionally cutting a new version. The deployed env.py grader serves the hardened /tests read-only and its kill is proven (artifacts/forkproof/demo/publish/v2-deploy-proof.json). HUD_API_KEY comes from the root .env."
     },
     "demo-report-replay": {
       "status": "verified",

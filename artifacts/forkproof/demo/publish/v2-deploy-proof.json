@@ -1,0 +1,22 @@
+{
+  "content_digest": "01b860f65a412ea7a8137c631674dffedc2ab5984c9e8f3da683bf16cb70f689",
+  "control_rewards": {
+    "mongodb-sales-aggregation-engine-path-a": 1.0,
+    "mongodb-sales-aggregation-engine-path-b": 1.0,
+    "mongodb-sales-aggregation-engine-path-c": 1.0
+  },
+  "controls_preserved": true,
+  "deploy_form_pass": true,
+  "grader": "env.py BashGrader command (served form), trusted suite at read-only /tests, digest-gated",
+  "image": "forkproof-mongodb-v2:proof",
+  "kind": "hardened-v2-deploy-form-kill-proof",
+  "root_test_replacement_blocked": true,
+  "root_test_replacement_reward": 0.0,
+  "schema_version": 1,
+  "trusted_test_digest": "ad132b324e84c2ab09460b73f4a74284bbe28b4e5c34fde80a22e0015e10c7f1",
+  "upload_performed": false,
+  "verified_at": "2026-06-21T15:56:43Z",
+  "witness_id": "wit-run-20260621T075711-branch-08",
+  "witness_killed": true,
+  "witness_reward": 0.0
+}
