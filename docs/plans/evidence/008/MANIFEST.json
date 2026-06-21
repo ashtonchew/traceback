@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "in-progress",
   "started_at": "2026-06-21T00:00:00.000000+00:00",
-  "updated_at": "2026-06-21T09:00:00.000000+00:00",
+  "updated_at": "2026-06-21T10:00:00.000000+00:00",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -59,7 +59,8 @@
     {"name": "per-task HUD env generation (WP1 live)", "result": "pass", "observed": "hud_env.generate_hud_env emits the 4 HUD-serve files per env (env.py exposing a generic build_task template + grader/instruction laid into /app + start.sh service hook; Dockerfile.hud = the task build with CMD/ENTRYPOINT stripped + a serve layer; pyproject/tasks.py). Grade-time deps are parsed from each task's test.sh `uv add` lines and baked in. Proven on constrained-portfolio: Dockerfile.hud builds, env:env imports, and the grader resolves system pytest+numpy offline. Service tasks (blockchain start.sh) and the C-compile task rely on the start.sh hook / task image toolchain; their live grade is validated in step 3."},
     {"name": "sterile clean_verify runner (WP3 live)", "result": "pass", "observed": "LocalCleanVerifyRunner runs an env's clean_verify.sh in a throwaway container with the trusted grader mounted read-only OUTSIDE /app and --network=none; an injectable CleanVerifyExecutor keeps the decision logic unit-tested without Docker (5 tests). A real docker-backed proof: a wrong-answer workspace with a planted /app/conftest.py force-pass FAILS clean_verify (sterile) but PASSES naive in-place pytest (rc=0) — sterility defeats the tamper. NOT yet wired: a Modal-snapshot executor for restoring a live branch's snapshot_restore_ref."},
     {"name": "materialized envs deploy for real", "result": "pass", "observed": "10/10 locked TW tasks materialize as deployable; every Dockerfile COPY/ADD source + required files (clean_verify.sh, provenance.json, task_assets/test_outputs.py) verified present. Two envs proven by a real docker build: the rewritten python-3-13 base (constrained-portfolio) builds and imports numpy 2.4.6 / scipy 1.18.0 in-image; the direct-public ubuntu-24-04 base (adaptive-rejection-sampler) builds. NOT yet exercised: live HUD deploy, the clean_verify referee on a real run, and the X/Delta benchmark (steps 2-3, not built)."},
-    {"name": "003 seams remain not-wired", "result": "pass", "observed": "NotWiredLiveDiscoveryDriver (live in-loop hook) and NotWiredCleanVerifyRunner raise NotWiredError with wiring pointers; default TargetMechanismDeduplicator groups by (target, mechanism)."},
+    {"name": "live discovery driver wired (WP6)", "result": "pass", "observed": "live_discovery.LiveDiscoveryDriver implements the DiscoveryDriver seam: it points branch_runs at a qabench env via FORKPROOF_TASK_ENV/FACTORY/BRANCH_STATE_ROOTS, runs a live BranchRun batch from a captured ForkPoint, and maps the batch's recorded branches/qa/file-diffs via the SAME validated offline mapper (witness_loop_adapter.load_branches) so live and recorded paths yield identical DiscoveredBranch records (no referee verdict). Unit-tested with an injected fake batch runner (env-var selection asserted; blocked batch -> LiveDiscoveryBlocked). NOT yet exercised against real Modal/HUD (real-spend step 3) and the seams.NotWired* defaults still raise until a driver is injected."},
+    {"name": "seams default stubs still raise", "result": "pass", "observed": "the seams.py defaults NotWiredLiveDiscoveryDriver and NotWiredCleanVerifyRunner still raise NotWiredError with wiring pointers (the real wired impls live in live_discovery.py and clean_verify_runner.py); default TargetMechanismDeduplicator groups by (target, mechanism)."},
     {"name": "witness_loop_adapter on REAL 003 artifacts", "result": "pass", "observed": "RecordedBatchDiscoveryDriver maps real PR #27 batch run-20260621T075711 branch records: branch-00 reward=1 + conftest exploit but QA evidence insufficient -> qa_is_reward_hacking=None (NOT False); branch-08 candidate -> QA-confirmed conftest hack; all mapped as BRANCH-source with divergence lineage. mechanism<-hacking_strategy, target<-grader-relevant added paths."}
   ],
   "artifacts": [
@@ -76,7 +77,8 @@
     {"path": "fixtures/forkproof/qabench/tw-tasks/", "note": "importer fixtures: public-base, private-mirror-rewrite, and unverified-variant-skip sample TW tasks"},
     {"path": "src/forkproof/qabench/seams.py", "note": "Plan 003 / live-infra coupling; live discovery hook + clean_verify runner stubbed NotWired"},
     {"path": "src/forkproof/qabench/witness_loop_adapter.py", "note": "REAL offline adapter: 003 batch artifacts -> DiscoveredBranch, grounded in PR #27 contract"},
-    {"path": "tests/forkproof/qabench/", "note": "52 behavior tests incl. adapter on real 003 artifacts, verified base-rewrite/build-context importer tests, and the sterile clean_verify runner"}
+    {"path": "src/forkproof/qabench/live_discovery.py", "note": "LIVE in-loop discovery driver (WP6): branch_runs batch -> DiscoveredBranch via the offline mapper"},
+    {"path": "tests/forkproof/qabench/", "note": "55 behavior tests incl. adapter on real 003 artifacts, verified base-rewrite/build-context importer tests, and the sterile clean_verify runner"}
   ],
   "screenshots": [],
   "skips": [],
