@@ -121,6 +121,7 @@ def run_harden_v0(
         "--max-iterations",
         str(max_iterations),
         "--replay-enabled",
+        "--no-legitimate-marker",
         "--summary-model",
         "",
         "--log-level",
@@ -153,6 +154,7 @@ def run_harden_v0(
     result_json = None
     if result_path.exists():
         result_json = json.loads(result_path.read_text(encoding="utf-8"))
+    fixer_artifact_layouts = inspect_fixer_artifact_layouts(harden_output, task_id)
     record = {
         "schema_version": 1,
         "adapter": "forkproof.releases.harden_adapter.run_harden_v0",
@@ -174,9 +176,87 @@ def run_harden_v0(
         "stderr_digest": digest_json({"stderr": completed.stderr}),
         "result_path": str(result_path),
         "result_json": result_json,
+        "fixer_artifact_layouts": fixer_artifact_layouts,
     }
+    blocker = harden_artifact_layout_blocker(result_json, fixer_artifact_layouts)
+    if blocker is not None:
+        record["harden_blocker"] = blocker
     record["content_digest"] = digest_json(record)
     return record
+
+
+def inspect_fixer_artifact_layouts(harden_output: Path, task_id: str) -> list[dict[str, Any]]:
+    """Inspect harden-v0 fixer artifact repos without treating them as release proof."""
+
+    jobs_root = harden_output / task_id / "jobs"
+    if not jobs_root.is_dir():
+        return []
+    layouts: list[dict[str, Any]] = []
+    for job_dir in sorted(p for p in jobs_root.glob("fixer_*") if p.is_dir()):
+        for trial_dir in sorted(p for p in job_dir.iterdir() if p.is_dir()):
+            expected = trial_dir / "artifacts"
+            nested = expected / "logs" / "artifacts"
+            expected_repo = _git_repo_status(expected)
+            nested_repo = _git_repo_status(nested)
+            layout_status = "missing"
+            changed_files: list[str] = []
+            patch_digest = None
+            if expected_repo["is_git_repo"]:
+                layout_status = "expected"
+                changed_files = _git_changed_files(expected)
+                patch_digest = _git_patch_digest(expected)
+            elif nested_repo["is_git_repo"]:
+                layout_status = "nested_logs_artifacts"
+                changed_files = _git_changed_files(nested)
+                patch_digest = _git_patch_digest(nested)
+            layouts.append(
+                {
+                    "schema_version": 1,
+                    "job_dir": str(job_dir),
+                    "trial_dir": str(trial_dir),
+                    "expected_artifacts_path": str(expected),
+                    "expected_artifacts_git": expected_repo,
+                    "nested_logs_artifacts_path": str(nested),
+                    "nested_logs_artifacts_git": nested_repo,
+                    "layout_status": layout_status,
+                    "changed_files": changed_files,
+                    "patch_digest": patch_digest,
+                }
+            )
+    return layouts
+
+
+def harden_artifact_layout_blocker(
+    result_json: dict[str, Any] | None,
+    layouts: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    """Classify the Harbor/harden-v0 artifact-layout drift seen after fixer failure."""
+
+    if not result_json or not layouts:
+        return None
+    iterations = result_json.get("iterations")
+    if not isinstance(iterations, list):
+        return None
+    has_fix_failed = any(isinstance(item, dict) and item.get("outcome") == "fix_failed" for item in iterations)
+    if not has_fix_failed:
+        return None
+    drifted = [
+        item for item in layouts
+        if item.get("layout_status") == "nested_logs_artifacts" and item.get("changed_files")
+    ]
+    if not drifted:
+        return None
+    return {
+        "code": "harden_fixer_artifact_layout_drift",
+        "status": "blocked",
+        "reason": (
+            "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor "
+            "exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; "
+            "the observed patch is diagnostic only until harden-v0 applies and validates it."
+        ),
+        "affected_trial_dirs": [item["trial_dir"] for item in drifted],
+        "changed_files": sorted({path for item in drifted for path in item.get("changed_files", [])}),
+    }
 
 
 def select_harden_models(
@@ -245,6 +325,53 @@ def inspect_harden_result_schema(harden_root: Path) -> dict[str, Any]:
         "status_values": status_values,
         "output_paths": output_paths,
     }
+
+
+def _git_repo_status(path: Path) -> dict[str, Any]:
+    if not (path / ".git").exists():
+        return {"is_git_repo": False, "has_initial_ref": False}
+    return {
+        "is_git_repo": True,
+        "has_initial_ref": _git_has_ref(path, "initial"),
+    }
+
+
+def _git_has_ref(repo: Path, ref: str) -> bool:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--verify", "--quiet", ref],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def _git_changed_files(repo: Path) -> list[str]:
+    if not _git_has_ref(repo, "initial"):
+        return []
+    result = subprocess.run(
+        ["git", "-C", str(repo), "diff", "--name-only", "initial", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    return sorted(line for line in result.stdout.splitlines() if line)
+
+
+def _git_patch_digest(repo: Path) -> str | None:
+    if not _git_has_ref(repo, "initial"):
+        return None
+    result = subprocess.run(
+        ["git", "-C", str(repo), "diff", "--binary", "initial", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout:
+        return None
+    return digest_json({"patch": result.stdout})
 
 
 def _assigned_dict_keys(tree: ast.AST, name: str) -> list[str]:

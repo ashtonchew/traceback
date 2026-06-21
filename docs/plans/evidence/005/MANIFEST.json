@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T09:13:48Z",
+  "updated_at": "2026-06-21T09:28:04Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 21 passed in 0.06s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 23 passed in 0.18s."
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-release"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-release invoked forkproof.releases.cli integration with explicit controls-manifest/taskset/selection refs, harden task source, and Anthropic harden model flags. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 no longer uses Gemini/Google by default, reached real Anthropic-backed hacker execution, then hit the adapter timeout with result status unknown. No real per-case v1/v2 release-results artifact exists."
+      "observed": "RUN: integration-release invoked forkproof.releases.cli integration with explicit controls-manifest/taskset/selection refs, harden task source, --harden-timeout-seconds 5400, and Anthropic harden model flags. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 completed without adapter timeout, found a rewarded hack, attempted the fixer, and recorded harden_fixer_artifact_layout_drift. No validated candidate patch or real per-case v1/v2 release-results artifact exists."
     },
     {
       "argv": [
@@ -57,7 +57,7 @@
         "anthropic/claude-haiku-4-5"
       ],
       "exit_code": 2,
-      "observed": "RUN: direct integration-release rerun with a larger bounded harden timeout. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 completed without adapter timeout, found a rewarded hack, attempted the fixer, and returned status max_iterations with iteration outcome fix_failed and fix_applied false. No real per-case v1/v2 release-results artifact exists."
+      "observed": "RUN: direct integration-release rerun with a larger bounded harden timeout. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 completed without adapter timeout, found a rewarded hack, attempted the fixer, and returned status max_iterations with iteration outcome fix_failed and fix_applied false. Adapter diagnostics record harden_fixer_artifact_layout_drift: harden-v0 expected the fixer git repo at trial_dir/artifacts, while Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts. The observed nested patch is diagnostic only; no real per-case v1/v2 release-results artifact exists."
     },
     {
       "argv": [
@@ -75,7 +75,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 5ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 25ms."
     },
     {
       "argv": [
@@ -106,7 +106,7 @@
         "--require-complete"
       ],
       "exit_code": 1,
-      "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release did not exit 0, and this require-complete command did not exit 0."
+      "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release command rows did not exit 0, one check remains blocked, and this require-complete command did not exit 0."
     }
   ],
   "checks": [
@@ -118,7 +118,7 @@
     {
       "name": "Integration release gate",
       "status": "blocked",
-      "evidence": "integration-release exits 2 after running the stricter release path. The mapped command reached real Anthropic-backed harden execution but timed out; a follow-up direct rerun with larger bounded harden timeout closed ProofSet proofset-e497370b2c3d2a69, recorded harden-v0 returncode 0/status max_iterations after a rewarded hack and failed fixer attempt, and still blocked ReleaseProof because no real per-case v1/v2 release-results artifact exists."
+      "evidence": "integration-release exits 2 after running the stricter release path. A direct rerun with larger bounded harden timeout closed ProofSet proofset-e497370b2c3d2a69, recorded harden-v0 returncode 0/status max_iterations after a rewarded hack and failed fixer attempt, and now records harden_fixer_artifact_layout_drift: the committed fixer repo was exported under trial_dir/artifacts/logs/artifacts instead of harden-v0's expected trial_dir/artifacts path. ReleaseProof remains blocked because no validated patch or real per-case v1/v2 release-results artifact exists."
     }
   ],
   "artifacts": [
@@ -152,11 +152,11 @@
     },
     {
       "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-      "description": "harden-v0 adapter run record with command argv, credential-presence flags only, result.json status, output digests, task source copy, and content digest."
+      "description": "harden-v0 adapter run record with command argv, credential-presence flags only, result.json status, output digests, task source copy, fixer artifact layout diagnostics, harden_fixer_artifact_layout_drift blocker, and content digest."
     },
     {
       "ref": "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
-      "description": "Fail-closed release blocker: harden-v0 result.json alone is not ReleaseProof; missing real v1/v2 case results, evaluator context, mandatory pytest subversion results, and release candidate ref."
+      "description": "Fail-closed release blocker: harden-v0 result.json alone is not ReleaseProof; latest harden blocker records fixer artifact layout drift; missing real v1/v2 case results, evaluator context, mandatory pytest subversion results, and release candidate ref."
     },
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
@@ -257,6 +257,17 @@
         "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
       ],
       "next_owner": "Run another bounded harden-v0 fixer attempt or provide a successful harden-derived candidate patch, then produce real per-case v1/v2 release results and seal ReleaseProof only if the binary gate passes."
+    },
+    {
+      "type": "HARDEN_FIXER_ARTIFACT_LAYOUT_DRIFT",
+      "recorded_at": "2026-06-21T09:28:04Z",
+      "reason": "ProofSet closure succeeds and harden-v0 runs through the explicit Anthropic model path with --no-legitimate-marker and a bounded 5400-second adapter timeout. The latest run did not time out; harden-v0 found a rewarded hack, but the fixer iteration ended status max_iterations/outcome fix_failed/fix_applied false. Diagnostics show Harbor exported the committed /logs/artifacts git repo under trial_dir/artifacts/logs/artifacts rather than the trial_dir/artifacts path harden-v0 expects, so the patch was never applied or validated by harden-v0. The nested patch diff is diagnostic only, not ReleaseProof.",
+      "evidence_refs": [
+        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
+        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
+        "docs/plans/evidence/005/integration-release-preflight.json"
+      ],
+      "next_owner": "Fix or configure the harden-v0/Harbor artifact extraction surface so the fixer repo is applied before solver/replay validation, rerun the bounded fixer loop, then produce real v1/v2 per-case release results and seal ReleaseProof only if the binary gate passes."
     }
   ],
   "notes": [
@@ -277,6 +288,7 @@
     "2026-06-21T08:26:35Z replay now loads the symlinked repo-root .env before Modal access, without printing or overriding secrets. Retried Plan 003 sealing succeeded as wit-run-20260621T075711-branch-08, and integration-release reached ProofSet closure for proofset-e497370b2c3d2a69.",
     "2026-06-21T08:37:31Z integration-release is now a strict release command rather than a ProofSet-only preflight: it runs harden-v0 through the repo optional dependency boundary, writes harden-run and release-blocker artifacts, infers mandatory pytest subversion checks from replay_surface, and exits 2 until real v1/v2 release results can seal ReleaseProof.",
     "2026-06-21T09:02:13Z harden-v0 model selection no longer silently falls back to Gemini/Google. The adapter defaults to Anthropic, the mapped command explicitly passes anthropic/claude-haiku-4-5 for hacker/fixer/solver, and credential checks record presence only. The integration-release run reached Anthropic-backed hacker execution and then timed out with returncode 124/status unknown; ReleaseProof remained blocked on completing harden-v0 plus real v1/v2 release-results evidence.",
-    "2026-06-21T09:13:48Z reran integration-release with the same explicit Anthropic model path and a larger bounded harden timeout. harden-v0 returned 0/status max_iterations, found a rewarded hack, attempted the fixer, and recorded iteration outcome fix_failed with fix_applied false. The release gate still exits 2 because harden-v0 did not produce a successful candidate patch or real per-case v1/v2 release-results artifact."
+    "2026-06-21T09:13:48Z reran integration-release with the same explicit Anthropic model path and a larger bounded harden timeout. harden-v0 returned 0/status max_iterations, found a rewarded hack, attempted the fixer, and recorded iteration outcome fix_failed with fix_applied false. The release gate still exits 2 because harden-v0 did not produce a successful candidate patch or real per-case v1/v2 release-results artifact.",
+    "2026-06-21T09:28:04Z adapter diagnostics now record the concrete fixer failure: harden-v0 expected the committed fixer artifact repo at trial_dir/artifacts, but Harbor exported /logs/artifacts under trial_dir/artifacts/logs/artifacts. The nested diff includes fixer patch material, but it is diagnostic only because harden-v0 did not apply it or validate it through solver/replay."
   ]
 }

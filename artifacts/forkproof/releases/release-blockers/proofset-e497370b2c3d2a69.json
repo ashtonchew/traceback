@@ -1,5 +1,18 @@
 {
-  "content_digest": "cc961d6137aadbc26bff5734a37910e4593187683d29d16852caa7fb7bf1cda1",
+  "content_digest": "cb6c132e07091c402f0a50b989de001d90d870d493f3351c81d02cc539787fae",
+  "harden_blocker": {
+    "affected_trial_dirs": [
+      "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR",
+      "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8"
+    ],
+    "changed_files": [
+      ".legitimate",
+      "tests/test_outputs.py"
+    ],
+    "code": "harden_fixer_artifact_layout_drift",
+    "reason": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+    "status": "blocked"
+  },
   "harden_returncode": 0,
   "harden_run_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/result.json",
   "harden_status": "max_iterations",
@@ -19,8 +32,8 @@
     "release_candidate_ref"
   ],
   "proof_set_id": "proofset-e497370b2c3d2a69",
-  "reason": "No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof.",
-  "recorded_at": "2026-06-21T09:13:48Z",
+  "reason": "No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof. harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+  "recorded_at": "2026-06-21T09:29:23Z",
   "release_results_ref": null,
   "schema_version": 1,
   "status": "blocked"

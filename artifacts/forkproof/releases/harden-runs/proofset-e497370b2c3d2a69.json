@@ -17,6 +17,7 @@
     "--max-iterations",
     "1",
     "--replay-enabled",
+    "--no-legitimate-marker",
     "--summary-model",
     "",
     "--log-level",
@@ -28,14 +29,69 @@
     "--solver-model",
     "anthropic/claude-haiku-4-5"
   ],
-  "completed_at": "2026-06-21T09:13:48Z",
-  "content_digest": "9836b97bc7bd15191b2c8580c3d2c244b9ce6a0bbf9263a90476e9f1256828a1",
+  "completed_at": "2026-06-21T09:29:23Z",
+  "content_digest": "fa821306db1f57da28faac8e2b67560de3c15f17f248c734b24162f241bfd164",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "GEMINI_API_KEY": "absent",
     "GOOGLE_API_KEY": "absent",
     "MODAL_TOKEN_ID": "present",
     "MODAL_TOKEN_SECRET": "present"
+  },
+  "fixer_artifact_layouts": [
+    {
+      "changed_files": [
+        ".legitimate"
+      ],
+      "expected_artifacts_git": {
+        "has_initial_ref": false,
+        "is_git_repo": false
+      },
+      "expected_artifacts_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR/artifacts",
+      "job_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83",
+      "layout_status": "nested_logs_artifacts",
+      "nested_logs_artifacts_git": {
+        "has_initial_ref": true,
+        "is_git_repo": true
+      },
+      "nested_logs_artifacts_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR/artifacts/logs/artifacts",
+      "patch_digest": "6d46ecd53e714cb57560ae9f943f577d3dea4c68b578fbd02c0111584e93a5ad",
+      "schema_version": 1,
+      "trial_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR"
+    },
+    {
+      "changed_files": [
+        "tests/test_outputs.py"
+      ],
+      "expected_artifacts_git": {
+        "has_initial_ref": false,
+        "is_git_repo": false
+      },
+      "expected_artifacts_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8/artifacts",
+      "job_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e",
+      "layout_status": "nested_logs_artifacts",
+      "nested_logs_artifacts_git": {
+        "has_initial_ref": true,
+        "is_git_repo": true
+      },
+      "nested_logs_artifacts_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8/artifacts/logs/artifacts",
+      "patch_digest": "a91874f6192a2625761518f7656b5e5386c8dabfe0eb3b5bbb0a2d259d99b1a9",
+      "schema_version": 1,
+      "trial_dir": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8"
+    }
+  ],
+  "harden_blocker": {
+    "affected_trial_dirs": [
+      "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR",
+      "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8"
+    ],
+    "changed_files": [
+      ".legitimate",
+      "tests/test_outputs.py"
+    ],
+    "code": "harden_fixer_artifact_layout_drift",
+    "reason": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+    "status": "blocked"
   },
   "harden_root": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/.external/harden-v0",
   "output_root": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work",
@@ -50,13 +106,13 @@
         "replay_attempted": false,
         "replay_reward": null,
         "stats": {
-          "cost_usd": 0.3403509,
-          "duration_sec": 507.30298100000005,
-          "n_cache_tokens": 712169,
-          "n_input_tokens": 807720,
-          "n_output_tokens": 31006,
-          "n_total_tokens": 838726,
-          "n_trials": 3
+          "cost_usd": 0.2816187,
+          "duration_sec": 328.017992,
+          "n_cache_tokens": 729317,
+          "n_input_tokens": 805489,
+          "n_output_tokens": 23715,
+          "n_total_tokens": 829204,
+          "n_trials": 2
         }
       }
     ],
@@ -75,13 +131,13 @@
     "status": "max_iterations",
     "task_id": "mongodb-sales-aggregation-engine",
     "totals": {
-      "cost_usd": 0.3403509,
-      "duration_sec": 507.30298100000005,
-      "n_cache_tokens": 712169,
-      "n_input_tokens": 807720,
-      "n_output_tokens": 31006,
-      "n_total_tokens": 838726,
-      "n_trials": 3
+      "cost_usd": 0.2816187,
+      "duration_sec": 328.017992,
+      "n_cache_tokens": 729317,
+      "n_input_tokens": 805489,
+      "n_output_tokens": 23715,
+      "n_total_tokens": 829204,
+      "n_trials": 2
     }
   },
   "result_path": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/result.json",
@@ -92,9 +148,9 @@
     "hacker_model": "anthropic/claude-haiku-4-5",
     "solver_model": "anthropic/claude-haiku-4-5"
   },
-  "started_at": "2026-06-21T09:09:50Z",
-  "stderr_digest": "504c5c4a695cb9c98e595f2fc02aadd57a6ac80ea8115ba1614ee61879274ed3",
-  "stdout_digest": "4438e2eca5d34bb050b3a5dc5e5f08a346e7f4be1b92552bab534a104985eb77",
+  "started_at": "2026-06-21T09:29:22Z",
+  "stderr_digest": "c892d221e8c2343689a87784e0b190581f15a2bfab3b465d1e56ae9c1afe554d",
+  "stdout_digest": "d70a1c5ef2842a425d76df0bd0df851c51f577d604d7434b3d3b404478715c5b",
   "task_copy": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/tasks/mongodb-sales-aggregation-engine",
   "task_id": "mongodb-sales-aggregation-engine",
   "task_source": ".external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/gemini-3.1-pro/original_task",

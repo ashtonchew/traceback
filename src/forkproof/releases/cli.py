@@ -41,7 +41,7 @@ def integration(
     harden_task_id: str | None = None,
     release_results_ref: Path | None = None,
     harden_max_iterations: int = 1,
-    harden_timeout_seconds: int = 1200,
+    harden_timeout_seconds: int = 5400,
     harden_hacker_model: str | None = None,
     harden_fixer_model: str | None = None,
     harden_solver_model: str | None = None,
@@ -92,6 +92,12 @@ def integration(
                 "error_class": exc.error_class,
                 "observed_behavior": str(exc),
             }
+            blocker_path = ROOT / "artifacts/forkproof/releases/release-blockers" / f"{proofset['proof_set_id']}.json"
+            if blocker_path.exists():
+                blocker_record = _load_json(blocker_path)
+                release_evaluation["blocker_ref"] = blocker_path.as_posix()
+                if blocker_record.get("harden_blocker"):
+                    release_evaluation["harden_blocker"] = blocker_record["harden_blocker"]
             blockers.append(str(exc))
 
     artifact = {
@@ -134,7 +140,7 @@ def main() -> int:
     integration_parser.add_argument("--harden-task-id")
     integration_parser.add_argument("--release-results-ref", type=Path)
     integration_parser.add_argument("--harden-max-iterations", type=int, default=1)
-    integration_parser.add_argument("--harden-timeout-seconds", type=int, default=1200)
+    integration_parser.add_argument("--harden-timeout-seconds", type=int, default=5400)
     integration_parser.add_argument("--harden-hacker-model")
     integration_parser.add_argument("--harden-fixer-model")
     integration_parser.add_argument("--harden-solver-model")

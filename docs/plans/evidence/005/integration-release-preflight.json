@@ -115,8 +115,8 @@
   },
   "observed_behavior": "Plan 005 integration binds harden-v0 schema, closes ProofSet membership, then seals ReleaseProof only from real per-case v1/v2 evaluator results.",
   "proofset": {
-    "content_digest": "16148315484ca3a0e89d4707a2094a83b2b651c36d851332aa582b4c9b99df8e",
-    "created_at": "2026-06-21T09:09:50Z",
+    "content_digest": "c471df143fdc442464aa779efe851938893d3a0e50c66a31a17cae492f879580",
+    "created_at": "2026-06-21T09:29:22Z",
     "environment_v1": "57cb7f09-89c1-487b-8463-b525edf01153",
     "evaluator_profiles": [
       "pytest"
@@ -137,7 +137,21 @@
     "taskset_or_suite_ref": "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json"
   },
   "release_evaluation": {
+    "blocker_ref": "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
     "error_class": "release_results_missing",
+    "harden_blocker": {
+      "affected_trial_dirs": [
+        "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_021242__31461e83/mongodb-sales-aggregation-engine__UpvjFnR",
+        "/Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/harden-v0-work/harden-output/mongodb-sales-aggregation-engine/jobs/fixer_h0__20260621_022118__4f746d9e/mongodb-sales-aggregation-engine__AfcjqX8"
+      ],
+      "changed_files": [
+        ".legitimate",
+        "tests/test_outputs.py"
+      ],
+      "code": "harden_fixer_artifact_layout_drift",
+      "reason": "harden-v0 expected the fixer git repo at trial_dir/artifacts, but Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts; the observed patch is diagnostic only until harden-v0 applies and validates it.",
+      "status": "blocked"
+    },
     "observed_behavior": "release evaluation blocked; wrote /Users/ashtonchew/projects/hack2fix2hack/.worktrees/plan-005-release-proof/artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
     "status": "blocked"
   },

@@ -72,6 +72,8 @@ def build_harden_blocker_artifact(
         "reason": reason,
         "recorded_at": utc_now(),
     }
+    if harden_run and harden_run.get("harden_blocker"):
+        record["harden_blocker"] = harden_run["harden_blocker"]
     record["content_digest"] = digest_json(record)
     return record
 
@@ -119,11 +121,17 @@ def run_release_evaluation(
         harden_run_path.write_text(json.dumps(harden_run, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     if release_results_ref is None:
+        reason = (
+            "No real per-case v1/v2 release-results artifact was provided; "
+            "harden-v0 result.json alone is not ReleaseProof."
+        )
+        if harden_run and harden_run.get("harden_blocker"):
+            reason = f"{reason} {harden_run['harden_blocker']['reason']}"
         blocker = build_harden_blocker_artifact(
             proof_set=proof_set,
             harden_run=harden_run,
             release_results_ref=None,
-            reason="No real per-case v1/v2 release-results artifact was provided; harden-v0 result.json alone is not ReleaseProof.",
+            reason=reason,
         )
         path = artifact_root / "release-blockers" / f"{proof_set['proof_set_id']}.json"
         path.parent.mkdir(parents=True, exist_ok=True)

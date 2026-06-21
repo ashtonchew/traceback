@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import json
+import subprocess
 
 import pytest
 
 from forkproof.releases.models import ReleaseError, digest_json
 from forkproof.releases.proofset import build_proofset
 from forkproof.releases.release_evaluation import load_release_results, run_release_evaluation
-from forkproof.releases.harden_adapter import DEFAULT_ANTHROPIC_HARDEN_MODEL, require_selected_model_credentials, select_harden_models
+from forkproof.releases.harden_adapter import (
+    DEFAULT_ANTHROPIC_HARDEN_MODEL,
+    harden_artifact_layout_blocker,
+    inspect_fixer_artifact_layouts,
+    require_selected_model_credentials,
+    run_harden_v0,
+    select_harden_models,
+)
 
 
 def witness():
@@ -276,3 +284,83 @@ def test_harden_model_credentials_fail_fast_for_selected_provider(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     with pytest.raises(ReleaseError, match="Anthropic"):
         require_selected_model_credentials({"solver_model": DEFAULT_ANTHROPIC_HARDEN_MODEL})
+
+
+def test_harden_release_adapter_disables_legitimate_marker(monkeypatch, tmp_path):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    task_source = tmp_path / "source"
+    (task_source / "tests").mkdir(parents=True)
+    (task_source / "environment").mkdir()
+    (task_source / "instruction.md").write_text("task", encoding="utf-8")
+    captured = {}
+
+    def fake_run(command, *, cwd, text, capture_output, timeout, check):
+        captured["command"] = command
+        output_dir = command[command.index("--output-dir") + 1]
+        task_id = command[command.index("--task-id") + 1]
+        result_dir = tmp_path / output_dir / task_id
+        result_dir.mkdir(parents=True)
+        (result_dir / "result.json").write_text(
+            json.dumps({"task_id": task_id, "status": "max_iterations", "iterations": []}),
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(command, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    record = run_harden_v0(
+        repo_root=tmp_path,
+        harden_root=tmp_path / "harden-v0",
+        task_id="task-001",
+        task_source=task_source,
+        output_root=tmp_path / "release-artifacts",
+        max_iterations=1,
+        timeout_seconds=1,
+        hacker_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
+        fixer_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
+        solver_model=DEFAULT_ANTHROPIC_HARDEN_MODEL,
+    )
+
+    assert "--no-legitimate-marker" in captured["command"]
+    assert "--replay-enabled" in captured["command"]
+    assert record["result_json"]["status"] == "max_iterations"
+
+
+def test_harden_adapter_reports_nested_fixer_artifact_layout(tmp_path):
+    repo = (
+        tmp_path
+        / "harden-output"
+        / "task-001"
+        / "jobs"
+        / "fixer_h0__20260621_000000__abcdef12"
+        / "task-001__trial"
+        / "artifacts"
+        / "logs"
+        / "artifacts"
+    )
+    (repo / "tests").mkdir(parents=True)
+    (repo / "tests" / "test_outputs.py").write_text("def test_old(): pass\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.test"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=repo, check=True)
+    subprocess.run(["git", "tag", "initial"], cwd=repo, check=True)
+    (repo / "tests" / "test_outputs.py").write_text("def test_new(): pass\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "fix"], cwd=repo, check=True)
+
+    layouts = inspect_fixer_artifact_layouts(tmp_path / "harden-output", "task-001")
+
+    assert layouts[0]["layout_status"] == "nested_logs_artifacts"
+    assert layouts[0]["expected_artifacts_git"] == {"is_git_repo": False, "has_initial_ref": False}
+    assert layouts[0]["nested_logs_artifacts_git"] == {"is_git_repo": True, "has_initial_ref": True}
+    assert layouts[0]["changed_files"] == ["tests/test_outputs.py"]
+    assert layouts[0]["patch_digest"]
+
+    blocker = harden_artifact_layout_blocker(
+        {"iterations": [{"outcome": "fix_failed"}]},
+        layouts,
+    )
+    assert blocker["code"] == "harden_fixer_artifact_layout_drift"
+    assert blocker["changed_files"] == ["tests/test_outputs.py"]
