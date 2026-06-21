@@ -81,6 +81,7 @@ def validate_demo_report(record: dict[str, Any]) -> None:
         raise DemoError("report_invalid", "discovery_source is invalid")
     if record["live_attempt_result"] not in LIVE_ATTEMPT_RESULTS:
         raise DemoError("report_invalid", "live_attempt_result is invalid")
+    _validate_top_level_shapes(record)
     _validate_status_consistency(record)
     _validate_mode_source_consistency(record)
     if record["demo_mode"] == "report-replay":
@@ -133,6 +134,8 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             raise DemoError("fallback_unlabeled", "prior-run replay requires fallback step and replay refs")
     if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not report.get("live_branch_refs"):
         raise DemoError("fake_live_branch", "live discovery claims require persisted branch refs")
+    if report.get("live_branch_refs") is not None and not _is_string_list(report["live_branch_refs"]):
+        raise DemoError("fake_live_branch", "live_branch_refs must be non-empty strings")
     if report["discovery_source"] == "live-new-witness":
         if (
             not report.get("live_witness_ref")
@@ -140,6 +143,23 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             or report.get("live_witness_gate_status") != "pass"
         ):
             raise DemoError("fake_live_branch", "fresh exploit claims require a gate-passing live Witness")
+
+
+def _validate_top_level_shapes(record: dict[str, Any]) -> None:
+    for field in (
+        "invocation_id",
+        "commit",
+        "started_at",
+        "finished_at",
+        "live_attempt_id",
+        "proof_source",
+        "release_proof_ref",
+        "publication_attempt_ref",
+    ):
+        if not isinstance(record[field], str) or not record[field]:
+            raise DemoError("report_invalid", f"{field} must be a non-empty string")
+    if not _is_nonempty_string_list(record["command_argv"]):
+        raise DemoError("report_invalid", "command_argv must be a non-empty string list")
 
 
 def _validate_mode_source_consistency(record: dict[str, Any]) -> None:
@@ -171,6 +191,8 @@ def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
     refs = step.get("evidence_refs")
     if not isinstance(refs, list) or not refs:
         raise DemoError("step_incomplete", f"step {step['step_number']} lacks evidence refs")
+    if not all(isinstance(ref, str) and ref for ref in refs):
+        raise DemoError("step_incomplete", f"step {step['step_number']} evidence refs must be non-empty strings")
     non_screenshot = [
         ref for ref in refs if isinstance(ref, str) and not ref.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
     ]
@@ -247,3 +269,11 @@ def _reject_single_run_overclaims(record: dict[str, Any]) -> None:
     forbidden = sorted(claims & FORBIDDEN_SINGLE_RUN_CLAIMS)
     if forbidden:
         raise DemoError("statistical_overclaim", f"single-run report cannot claim {forbidden}")
+
+
+def _is_nonempty_string_list(value: Any) -> bool:
+    return isinstance(value, list) and bool(value) and all(isinstance(item, str) and item for item in value)
+
+
+def _is_string_list(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) and item for item in value)

@@ -85,12 +85,31 @@ def test_report_rejects_invalid_status_and_live_attempt_result():
         validate_demo_report(report(live_attempt_result="pretend-live"))
 
 
+def test_report_rejects_empty_required_refs_and_bad_command_argv():
+    with pytest.raises(DemoError, match="invocation_id"):
+        validate_demo_report(report(invocation_id=""))
+
+    with pytest.raises(DemoError, match="command_argv"):
+        validate_demo_report(report(command_argv="forkproof-demo acceptance"))
+
+
 def test_report_rejects_screenshot_only_step_evidence():
     steps = [step(i) for i in range(1, 14)]
     steps[0] = step(1, refs=["screenshots/trace.png"])
 
     with pytest.raises(DemoError, match="screenshot-only"):
         validate_demo_report(report(steps=steps))
+
+
+def test_report_rejects_malformed_step_and_branch_refs():
+    steps = [step(i) for i in range(1, 14)]
+    steps[0] = step(1, refs=[""])
+
+    with pytest.raises(DemoError, match="evidence refs"):
+        validate_demo_report(report(steps=steps))
+
+    with pytest.raises(DemoError, match="live_branch_refs"):
+        validate_demo_report(report(live_branch_refs=["branch-run-001.json", ""]))
 
 
 def test_acceptance_report_rejects_fake_live_branch_claims():
