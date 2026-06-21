@@ -5,10 +5,17 @@
   "wave": 4,
   "status": "blocked",
   "started_at": "2026-06-21T11:19:15Z",
-  "updated_at": "2026-06-21T12:40:00Z",
+  "updated_at": "2026-06-21T13:00:00Z",
   "completed_at": null,
   "commit": null,
   "commands": [
+    {
+      "argv": [
+        "scripts/verify_external_deps.sh"
+      ],
+      "exit_code": 0,
+      "observed": "External dependency check passed after linking the clean pinned HUD Trace Explorer checkout into ignored .external/."
+    },
     {
       "argv": [
         "uv",
@@ -18,7 +25,7 @@
         "-q"
       ],
       "exit_code": 0,
-      "observed": "11 passed in 0.03s. Behavior tests cover adaptive stop, late reset, child budget, raw reward not counted as cluster, observable child selection, capability gate outcomes, reports, and evidence-backed skips."
+      "observed": "14 passed in 0.03s. Tests cover scheduler policy, child selection, lineage, depth-two run records, capability gates, reports, skips, and the committed child-selection artifact."
     },
     {
       "argv": [
@@ -34,67 +41,6 @@
     },
     {
       "argv": [
-        "scripts/verify_external_deps.sh"
-      ],
-      "exit_code": 127,
-      "observed": "Historical result before restacking onto Plan 005: zsh:1: no such file or directory: scripts/verify_external_deps.sh. Superseded by the later passing external-dependency verification on the Plan 005 stack."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "plan-007-tests"
-      ],
-      "exit_code": 0,
-      "observed": "SKIP: plan-007-tests: Blocked until research source/test paths exist after core Witness creation. COMMANDS.json remains not-applicable and Plan 007 does not own this command key."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "integration-research"
-      ],
-      "exit_code": 0,
-      "observed": "SKIP: integration-research: Blocked until optional Memory/VM/depth-two capabilities are probed against real infrastructure. COMMANDS.json remains not-applicable and Plan 007 does not own this command key."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "lint"
-      ],
-      "exit_code": 2,
-      "observed": "Initial sandboxed run failed to initialize the user-level uv cache at /Users/ashtonchew/.cache/uv due Operation not permitted; rerun with escalation passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "lint"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "build"
-      ],
-      "exit_code": 2,
-      "observed": "Initial sandboxed run failed to initialize the user-level uv cache at /Users/ashtonchew/.cache/uv due Operation not permitted; rerun with escalation passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "build"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
-    },
-    {
-      "argv": [
         "uv",
         "run",
         "python",
@@ -103,124 +49,7 @@
         "integration"
       ],
       "exit_code": 2,
-      "observed": "Expected STOP before restack: Plan 007 live depth-two execution was blocked because the old Plan 003 base had no sealed Exploit Witness."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_graph.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 7 plans, 8 dependencies, waves [1, 2, 3, 4, 5], acyclic."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_sections.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 7 plans have valid frontmatter, sections, packets, and goal blocks."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_ownership.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: proposed ownership is collision-free for 7 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_traceability.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 45 requirements map to all 7 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_file_sizes.py",
-        "--plan",
-        "007"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 12 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "007"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 1 evidence manifest(s) are present/structured."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "007",
-        "--require-complete"
-      ],
-      "exit_code": 1,
-      "observed": "Expected blocked result: status must be complete, completed_at is required, complete manifest cannot have blockers, one setup command exited 127, and the Plan 003 sealed Witness check is blocked."
-    },
-    {
-      "argv": [
-        "git",
-        "rebase",
-        "--onto",
-        "origin/codex/plan-005-release-proof",
-        "codex/plan-002-003-witness",
-        "codex/plan-007-research-stack"
-      ],
-      "exit_code": 0,
-      "observed": "Successfully rebased Plan 007 onto the Plan 005 release-proof stack. The new base contains docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json."
-    },
-    {
-      "argv": [
-        "scripts/verify_external_deps.sh"
-      ],
-      "exit_code": 0,
-      "observed": "External dependency check passed after linking the clean pinned HUD Trace Explorer checkout from .worktrees/plan-002-003-witness/.external/hud-trace-explorer into ignored .external/."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/forkproof/research",
-        "-q"
-      ],
-      "exit_code": 0,
-      "observed": "11 passed in 0.02s after restacking onto Plan 005. Superseded by later 13-test run after lineage/depth-two run record coverage was added."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "ruff",
-        "check",
-        "src/forkproof/research",
-        "tests/forkproof/research"
-      ],
-      "exit_code": 0,
-      "observed": "All checks passed after restacking onto Plan 005."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "forkproof.research.cli",
-        "integration"
-      ],
-      "exit_code": 2,
-      "observed": "Expected STOP on the Plan 005 stack: Plan 003 has sealed Witness evidence, but Plan 007 has no mapped live depth-two executor or completed depth-two BranchRun artifact yet."
+      "observed": "Expected STOP: Plan 003 sealed Witness evidence exists on this stack, but no mapped live depth-two executor or completed depth-two BranchRun artifact exists."
     },
     {
       "argv": [
@@ -229,7 +58,7 @@
         "plan-007-tests"
       ],
       "exit_code": 0,
-      "observed": "SKIP: plan-007-tests remains not-applicable in COMMANDS.json after restacking."
+      "observed": "SKIP: plan-007-tests remains not-applicable in COMMANDS.json, which Plan 007 does not own."
     },
     {
       "argv": [
@@ -238,7 +67,7 @@
         "integration-research"
       ],
       "exit_code": 0,
-      "observed": "SKIP: integration-research remains not-applicable in COMMANDS.json after restacking."
+      "observed": "SKIP: integration-research remains not-applicable in COMMANDS.json, which Plan 007 does not own."
     },
     {
       "argv": [
@@ -256,7 +85,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 3ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 10ms."
     },
     {
       "argv": [
@@ -298,7 +127,7 @@
         "007"
       ],
       "exit_code": 0,
-      "observed": "PASS: 12 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
+      "observed": "PASS after manifest compaction: 13 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target. MANIFEST.json is 267 lines."
     },
     {
       "argv": [
@@ -308,7 +137,7 @@
         "007"
       ],
       "exit_code": 0,
-      "observed": "PASS: 1 evidence manifest(s) are present/structured."
+      "observed": "PASS: 1 evidence manifest(s) are present/structured after command-history compaction."
     },
     {
       "argv": [
@@ -319,104 +148,7 @@
         "--require-complete"
       ],
       "exit_code": 1,
-      "observed": "Expected blocked result after restack: manifest is not complete and includes blockers/STOP commands because no Plan 007 depth-two BranchRun has been produced."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/forkproof/research",
-        "-q"
-      ],
-      "exit_code": 0,
-      "observed": "13 passed in 0.02s after adding Plan 007 lineage and depth-two run record contracts."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "ruff",
-        "check",
-        "src/forkproof/research",
-        "tests/forkproof/research"
-      ],
-      "exit_code": 0,
-      "observed": "All checks passed after adding Plan 007 lineage and depth-two run record contracts."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_file_sizes.py",
-        "--plan",
-        "007"
-      ],
-      "exit_code": 0,
-      "observed": "WARN: docs/plans/evidence/007/MANIFEST.json: 534 lines > 500 target; PASS: 13 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "007"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 1 evidence manifest(s) are present/structured."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "lint"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "build"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 4ms."
-    },
-    {
-      "argv": [
-        "scripts/verify_external_deps.sh"
-      ],
-      "exit_code": 0,
-      "observed": "External dependency check passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "plan-007-tests"
-      ],
-      "exit_code": 0,
-      "observed": "SKIP: plan-007-tests remains not-applicable in COMMANDS.json after child-selection artifact work."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "integration-research"
-      ],
-      "exit_code": 0,
-      "observed": "SKIP: integration-research remains not-applicable in COMMANDS.json after child-selection artifact work."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "007",
-        "--require-complete"
-      ],
-      "exit_code": 1,
-      "observed": "Expected blocked result: manifest is not complete, contains blockers/STOP commands, and has Depth-two execution blocked because no completed depth-two BranchRun artifact exists."
+      "observed": "Expected blocked result: manifest is not complete and has blockers because no completed depth-two BranchRun artifact exists."
     }
   ],
   "checks": [
@@ -448,7 +180,7 @@
     {
       "name": "Child selection and lineage artifact",
       "status": "pass",
-      "evidence": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json selects sealed Witness branch run-20260621T075711-branch-08 as a promising child using observable file_change, cluster_precursor, and grader_visible_state signals. It records root-to-child lineage and explicitly blocks the depth-two run because no child re-snapshot or completed depth-two BranchRun exists."
+      "evidence": "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json selects sealed Witness branch run-20260621T075711-branch-08 as a promising child using observable file_change, cluster_precursor, and grader_visible_state signals. tests/forkproof/research/test_research_contracts.py loads this committed artifact and validates its selection, lineage, and blocked depth-two run sections through public Plan 007 contracts."
     },
     {
       "name": "Depth-two execution",
@@ -529,6 +261,7 @@
     }
   ],
   "notes": [
-    "Partial implementation only. Plan 003 sealed Witness evidence exists on the Plan 005 stack, but Plan 007 is not complete until a real depth-two run exists and Plan 007 Done-when passes."
+    "Partial implementation only. Plan 003 sealed Witness evidence exists on the Plan 005 stack, and Plan 007 has a selected promising child artifact, but Plan 007 is not complete until an independent child re-snapshot, real depth-two run, and Plan 007 Done-when pass.",
+    "Command history was compacted on 2026-06-21T12:58:00Z after superseded pre-restack entries pushed the manifest over the file-size validator ceiling; current command evidence remains recorded above."
   ]
 }

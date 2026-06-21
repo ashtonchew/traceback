@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from forkproof.research.capability import CapabilityGateError, classify_capability_gate
@@ -20,6 +23,12 @@ from forkproof.research.reports import (
 )
 from forkproof.research.scheduler import ResearchScheduler
 from forkproof.research.selection import ResearchError, select_promising_child
+
+
+ROOT = Path(__file__).resolve().parents[3]
+CHILD_SELECTION_ARTIFACT = (
+    ROOT / "artifacts/forkproof/research/child-selection-wit-run-20260621T075711-branch-08.json"
+)
 
 
 def test_scheduler_stops_after_four_completed_no_new_cluster_branches():
@@ -189,6 +198,61 @@ def test_depth_two_run_record_distinguishes_blocked_from_completed_runs():
             status="completed",
             branch_budget=8,
         )
+
+
+def test_committed_child_selection_artifact_matches_public_contracts():
+    artifact = json.loads(CHILD_SELECTION_ARTIFACT.read_text(encoding="utf-8"))
+    selection = artifact["selection_record"]
+    lineage = artifact["lineage"]
+    depth_two = artifact["depth_two_run"]
+
+    candidate = ChildCandidate(
+        node_id=selection["node_id"],
+        parent_node_id=selection["parent_node_id"],
+        depth=selection["depth"],
+        snapshot_ref=selection["snapshot_ref"],
+        branch_ref=selection["branch_ref"],
+        observable_signals=tuple(selection["observable_signals"]),
+        exposed_reasoning_refs=tuple(selection["exposed_reasoning_refs"]),
+        alternatives_considered=tuple(selection["alternatives_considered"]),
+    )
+
+    selected = select_promising_child([candidate])
+    assert selected["observable_signal_count"] == 3
+    assert {signal["kind"] for signal in selected["observable_signals"]} == {
+        "cluster_precursor",
+        "file_change",
+        "grader_visible_state",
+    }
+    assert artifact["status"] == "selected-not-resnapshotted"
+
+    lineage_record = ResearchLineage(
+        root_fork_point_id=lineage["root_fork_point_id"],
+        parent_node_id=lineage["parent_node_id"],
+        child_node_id=lineage["child_node_id"],
+        child_depth=lineage["child_depth"],
+        parent_snapshot_ref=lineage["parent_snapshot_ref"],
+        child_snapshot_ref=lineage["child_snapshot_ref"],
+        source_branch_ref=lineage["source_branch_ref"],
+        source_witness_ref=lineage["source_witness_ref"],
+    ).to_record()
+    assert lineage_record["child_depth"] == 1
+    assert lineage_record["source_witness_ref"] == artifact["source_witness_ref"]
+
+    run_record = DepthTwoRunRecord(
+        run_id=depth_two["run_id"],
+        child_node_id=depth_two["child_node_id"],
+        status=depth_two["status"],
+        branch_budget=depth_two["branch_budget"],
+        scheduled_branch_refs=tuple(depth_two["scheduled_branch_refs"]),
+        completed_branch_refs=tuple(depth_two["completed_branch_refs"]),
+        stop_event_ref=depth_two["stop_event_ref"],
+        blocker=depth_two["blocker"],
+        measured_values=depth_two["measured_values"],
+    ).to_record()
+    assert run_record["status"] == "blocked"
+    assert run_record["completed_branch_refs"] == []
+    assert run_record["measured_values"]["completed_depth_two_branch_count"] == 0
 
 
 def test_capability_gate_returns_exact_unavailable_outcome_without_scaffold_refs():
