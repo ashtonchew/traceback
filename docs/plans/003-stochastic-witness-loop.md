@@ -125,6 +125,7 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 ### Progress
 
 - At every STOP or handoff, append a timestamped entry and mirror the blocker, failed precondition, and evidence refs in `docs/plans/evidence/003/MANIFEST.json`.
+- 2026-06-21T01:27:04Z — Plan 002 dependency completed in this branch with canonical ForkPoint `fp-e815b0e5e999c1c4df73611a`. Plan 003 Witness contract code, tests, command mappings, and security preflight were added under owned paths. `plan-003-tests` passed with 12 tests, `security-branch` passed, mapped lint passed, Witness ruff passed, file-size validation passed, and repo-bound ownership passed. `integration-witness` stopped before BranchRun execution because no authoritative HUD QA reward-hacking classification API/command is bound in this repo or installed HUD 0.6.4 CLI. No fake QA verdict, scripted branch run, or Witness promotion is claimed.
 - [ ] Isolated BranchRun execution complete.
 - [ ] Twelve genuine branches complete.
 - [ ] Reward/QA/dedup gates complete.
@@ -136,6 +137,7 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 
 - 2026-06-20 — Corrected planning audit target from Plan 002 to Plan 003; Plan 003 remains blocked until Gate 2 and real branch gateway/snapshot restore/grader/QA/storage/security bindings are accepted.
 - 2026-06-20 — External docs audit added non-normative inline grounding for HUD run/trace/reward/QA/file evidence, Modal Sandbox snapshot/network/runtime identity behavior, and harden-v0 dedup/replay precedent.
+- 2026-06-21 — HUD 0.6.4 CLI in this repo exposes `eval`, `jobs`, and `trace`; public docs describe HUD QA Agents, but there is no checked-in or installed API surface that returns an authoritative same-branch reward-hacking classification. Plan 003 must stop before branch execution rather than inferring QA from reward or local heuristics.
 
 ### Decision Log
 
@@ -147,7 +149,8 @@ Branch ids are immutable and attempts are append-only. Resume missing branches w
 - 2026-06-20 — Grilling decision: Plan 003 uses four trust zones (`trusted_orchestrator`, `untrusted_branch`, `trusted_grader`, `trusted_release`) and gives untrusted branches only branch-scoped capabilities through the Branch gateway boundary.
 - 2026-06-20 — Grilling decision: Plan 003 frontmatter depends on both `atomic-forkpoint-seam` and `legitimate-control-fixtures` because Gate 2 requires Plan 002 state fidelity and Plan 004 frozen controls before Wave 3 may start.
 - 2026-06-20 — Rebase audit decision: Plan 003 must consume the full Plan 002 branch-ready handoff field list after PR #5, and its preconditions explicitly require a verified or Plan-003-remapped dedup binding before promotion work begins.
+- 2026-06-21 — Execution decision: add local Witness contracts and command mappings, but make `integration-witness` fail closed on missing authoritative HUD QA. Reward-hacking classification is a promotion prerequisite and cannot be replaced with the verifier reward, a local label, or an inferred conftest heuristic.
 
 ### Outcomes & Retrospective
 
-- Pending execution.
+- Partial Plan 003 implementation is present but not complete. The next required unblock is a repo-bound HUD QA command/API that returns authoritative reward-hacking verdicts tied to the same BranchRun trace/action digest. After that, `integration-witness` can be extended from preflight into the 12 executed BranchRun loop and Witness replay seal.

@@ -3,33 +3,163 @@
   "plan_id": "003",
   "plan_name": "stochastic-witness-loop",
   "wave": 3,
-  "status": "not-started",
-  "started_at": null,
-  "updated_at": "2026-06-20T22:57:09+00:00",
+  "status": "blocked",
+  "started_at": "2026-06-21T01:21:47Z",
+  "updated_at": "2026-06-21T01:27:04Z",
   "completed_at": null,
   "commit": null,
-  "commands": [],
-  "checks": [],
-  "artifacts": [],
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "plan-003-tests"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 12 passed in 0.04s"
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "security-branch"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: security-branch: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'security']; PASS security preflight artifact=docs/plans/evidence/003/artifacts/security-branch-preflight.json"
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "integration-witness"
+      ],
+      "exit_code": 2,
+      "observed": "RUN: integration-witness: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'integration']; wrote docs/plans/evidence/003/artifacts/integration-witness-preflight.json and stopped before BranchRun execution because authoritative HUD QA reward-hacking classification API is not bound."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "lint"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: lint: cwd=. argv=['uv', 'run', 'ruff', 'check', 'docs/plans/scripts']; All checks passed."
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "check",
+        "src/forkproof/witnesses",
+        "tests/forkproof/witnesses"
+      ],
+      "exit_code": 0,
+      "observed": "All checks passed."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "003"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 13 text file(s) are at most 500 lines"
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_ownership.py",
+        "--repo-bound"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: repo-bound ownership is collision-free for 7 plans"
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "003",
+        "--require-complete"
+      ],
+      "exit_code": 1,
+      "observed": "FAIL: 4 validation error(s): status must be complete, completed_at is required, complete manifest cannot have blockers, and commands[2] did not exit 0."
+    }
+  ],
+  "checks": [
+    {
+      "name": "Plan 002 and Plan 004 dependency gate",
+      "status": "pass",
+      "evidence": "Plan 002 is completed in this branch with canonical ForkPoint fp-e815b0e5e999c1c4df73611a and Plan 004 was already complete with frozen controls."
+    },
+    {
+      "name": "BranchRun contract coverage",
+      "status": "pass",
+      "evidence": "tests/forkproof/witnesses/test_witness_contracts.py covers complete BranchRun records, bounded failure records, 12 unique branch ids/seeds, and live gateway provenance requirements at the contract boundary."
+    },
+    {
+      "name": "Promotion and dedup gates",
+      "status": "pass",
+      "evidence": "Unit tests cover reward-only, QA-only, missing-classification, rewarded-hack promotion outcomes, and target/mechanism dedup into one cluster."
+    },
+    {
+      "name": "Durable storage and replay gates",
+      "status": "pass",
+      "evidence": "Unit tests cover append-only content-checked storage, secret redaction scan, three deterministic replay checks, model-call rejection during replay, replay divergence rejection, and required Witness fields."
+    },
+    {
+      "name": "Security preflight",
+      "status": "pass",
+      "evidence": "docs/plans/evidence/003/artifacts/security-branch-preflight.json records local policy checks for denied secrets, denied egress, sibling isolation, trusted artifact writer, and trusted grader boundary."
+    },
+    {
+      "name": "Live integration readiness",
+      "status": "skipped",
+      "evidence": "docs/plans/evidence/003/artifacts/integration-witness-preflight.json records a STOP before BranchRun execution: the repo has HUD eval/jobs/trace surfaces and pinned harden-v0 dedup, but no authoritative HUD QA reward-hacking classification API is bound."
+    }
+  ],
+  "artifacts": [
+    {
+      "ref": "src/forkproof/witnesses/**",
+      "description": "Plan 003 Witness contracts for BranchRun completeness, immutable storage, promotion, dedup, deterministic replay, security policy, and CLI preflights."
+    },
+    {
+      "ref": "tests/forkproof/witnesses/**",
+      "description": "Behavior tests covering the public Plan 003 promotion, replay, storage, dedup, and security gates."
+    },
+    {
+      "ref": "docs/plans/evidence/003/artifacts/security-branch-preflight.json",
+      "description": "Local branch-security policy preflight artifact."
+    },
+    {
+      "ref": "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
+      "description": "Integration preflight artifact recording the missing authoritative HUD QA binding."
+    },
+    {
+      "ref": "docs/plans/repo-map/COMMANDS.json",
+      "description": "Verified mappings for plan-003-tests, integration-witness, and security-branch."
+    }
+  ],
   "screenshots": [],
   "skips": [],
   "blockers": [
     {
-      "recorded_at": "2026-06-20T20:30:00+00:00",
+      "recorded_at": "2026-06-21T01:27:04Z",
       "type": "STOP",
-      "reason": "Rebase audit found Plan 003 remains blocked until Gate 2 is satisfied: Plans 002 and 004 manifests are complete, the full Plan 002 branch-ready handoff re-verifies after process restart, branch gateway/snapshot restore/grader/QA/dedup/storage/security bindings are accepted, and plan-003 command mappings are verified.",
+      "reason": "Plan 003 cannot execute the 12 genuine BranchRuns or promote a Witness until the authoritative HUD QA reward-hacking classification API/command is bound. The installed HUD 0.6.4 CLI exposes eval/jobs/trace and the public docs describe QA Agents, but this repo has no checked-in command/API that returns same-branch reward-hacking verdicts.",
       "evidence_refs": [
-        "docs/plans/repo-map/STATUS.json",
-        "docs/plans/repo-map/INTERFACES.md",
-        "docs/plans/repo-map/COMMANDS.json",
-        "docs/plans/000-index.md"
+        "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
+        "src/forkproof/witnesses/cli.py",
+        "docs/plans/repo-map/COMMANDS.json"
       ]
     }
   ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed.",
-    "2026-06-20 corrected audit target from Plan 002 to Plan 003; inline citations and completeness gates were added to Plan 003 docs only.",
+    "Plan 003 implementation has started but is not complete; no 12-branch run, QA classification, Witness promotion, or replay seal is claimed.",
     "2026-06-20 dependency audit made Plan 004 an explicit Plan 003 frontmatter dependency because Gate 2 requires frozen legitimate controls before Wave 3 may start.",
-    "2026-06-20 rebase audit aligned Plan 003 with merged Plan 002 branch-ready handoff fields, refreshed command-map blockers, and kept execution status not-started."
+    "2026-06-21 Plan 002 dependency was completed in this branch and Plan 003 command mappings plus local contracts were added.",
+    "2026-06-21 integration-witness failed closed before attacker execution because authoritative QA is missing; no fake QA verdict or scripted branch evidence was introduced."
   ]
 }

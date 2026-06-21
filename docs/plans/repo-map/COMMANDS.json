@@ -78,28 +78,54 @@
       "reason": "Runs the Plan 002 ForkPoint integration-readiness scenario that binds checked-in live-trace evidence to the capture/restore contract and records remaining real-system gaps."
     },
     "plan-003-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/witnesses",
+        "-q"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until Gate 2 is satisfied: Plans 002 and 004 are complete, Plan 003 Witness source/test paths exist, and the Witness command argv can be verified."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Runs Plan 003 witness contract tests for BranchRun records, promotion truth table, dedup, durable storage, replay gating, security policy, and Witness field completeness."
     },
     "integration-witness": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.witnesses.cli",
+        "integration"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because there is no branch runner, replay system, QA classification path, branch security policy, or durable Witness storage in the repository yet."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 600,
+      "reason": "Runs the Plan 003 live-integration preflight against the completed Plan 002 ForkPoint, Plan 004 controls, pinned harden-v0 dedup source, HUD CLI availability, and authoritative QA binding."
     },
     "security-branch": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.witnesses.cli",
+        "security"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because no sandbox isolation policy or branch execution surface is checked in."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Runs the Plan 003 local branch-security policy preflight for denied secrets, denied egress, sibling isolation, trusted artifact writes, and trusted grader boundary."
     },
     "plan-004-tests": {
       "status": "verified",
