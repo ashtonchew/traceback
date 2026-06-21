@@ -111,6 +111,18 @@ def test_scheduler_never_counts_raw_reward_as_new_cluster():
     assert all(decision.new_cluster_id is None for decision in scheduler.decisions)
 
 
+def test_scheduler_only_expands_completed_depth_one_children():
+    scheduler = ResearchScheduler(node_id="node-child", node_depth=1)
+    decision = scheduler.schedule_next()
+    assert decision is not None
+    assert decision.branch_id == "node-child-depth2-00"
+
+    with pytest.raises(ValueError, match="depth-one child"):
+        ResearchScheduler(node_id="node-root", node_depth=0)
+    with pytest.raises(ValueError, match="depth-one child"):
+        ResearchScheduler(node_id="node-depth-two", node_depth=2)
+
+
 def test_promising_child_requires_observable_signal_not_reasoning_only():
     reasoning_only = ChildCandidate(
         node_id="node-child",

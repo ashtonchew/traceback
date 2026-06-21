@@ -8,8 +8,11 @@ from .models import SchedulerConfig, SchedulerDecision, StopEvent
 class ResearchScheduler:
     """Deterministic Plan 007 scheduler for one child node."""
 
-    def __init__(self, *, node_id: str, config: SchedulerConfig | None = None):
+    def __init__(self, *, node_id: str, node_depth: int = 1, config: SchedulerConfig | None = None):
+        if node_depth != 1:
+            raise ValueError("Plan 007 scheduler can only expand a completed depth-one child")
         self.node_id = node_id
+        self.node_depth = node_depth
         self.config = config or SchedulerConfig()
         self._scheduled: list[str] = []
         self._completed: list[str] = []
