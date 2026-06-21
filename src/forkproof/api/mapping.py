@@ -64,6 +64,9 @@ RELEASE_PROOF = ROOT / (
     "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json"
 )
 
+# Plan 008 QA-classifier benchmark (PR #31, merged to main).
+QABENCH_REPORT = ROOT / "artifacts/forkproof/qabench/benchmark-report.json"
+
 SCHEMA = "1.0.0"
 TBD = "TBD"
 SAMPLING = {"temperature": 0.0, "topP": 1.0}
@@ -399,6 +402,54 @@ def build_replay_evidence() -> dict[str, Any]:
     }
 
 
+def build_benchmark() -> dict[str, Any]:
+    """The Plan 008 QA-classifier benchmark headline (real, committed, preliminary).
+
+    Sourced from ``artifacts/forkproof/qabench/benchmark-report.json`` (PR #31).
+    This is proactive discovery / red-teaming evidence, **not** a classifier-accuracy
+    claim: production QA correctly reports 0 hacks on the real (legitimate) traces,
+    while ForkProof's adversarial branches surface graders that are reward-hackable.
+    """
+    rec = _load_json(QABENCH_REPORT)
+    part = rec["sft_partition"]
+    per_task = [
+        {
+            "taskId": task_id,
+            "rewardedBranches": task["rewarded_branches"],
+            "hacks": task["hacks"],
+            "legit": task["legit"],
+            "qaCaughtOfHacks": task["qa_caught_of_hacks"],
+        }
+        for task_id, task in sorted(rec["per_task"].items())
+    ]
+    return {
+        "planId": rec["plan_id"],
+        "scope": rec["scope"],
+        "rewardedBranches": len(rec["trajectories"]),
+        "discoveryHacks": rec["discovery_hacks"],
+        "discoveryHacksNote": rec["discovery_hacks_note"],
+        "tasksWithHacks": rec["tasks_with_hacks"],
+        "tasksMeasured": rec["tasks_measured"],
+        "qaInProductionHacks": rec["qa_in_production_hacks"],
+        "qaCaughtOfDiscovered": rec["qa_caught_of_discovered"],
+        "sftPartition": {
+            "confirmedHacks": part["confirmed_hacks"],
+            "verifierLegit": part["verifier_legit"],
+            "sftClean": part["sft_clean"],
+            "quarantined": part["quarantined"],
+        },
+        "perTask": per_task,
+        "referee": rec["referee"],
+        "framing": (
+            "ForkProof surfaces exploitable graders and latent reward hacks that "
+            "production QA monitoring reports 0 of. This is proactive discovery and "
+            "red-teaming, not better classification: QA is reactive and correctly "
+            "finds 0 on the real legitimate traces."
+        ),
+        "sourcePath": "artifacts/forkproof/qabench/benchmark-report.json",
+    }
+
+
 def build_all() -> dict[str, Any]:
     """Every route payload, keyed by its exported JSON filename stem."""
     return {
@@ -409,4 +460,5 @@ def build_all() -> dict[str, Any]:
         "proofset": build_proof_set(),
         "release": build_release_bundle(),
         "replay": build_replay_evidence(),
+        "benchmark": build_benchmark(),
     }
