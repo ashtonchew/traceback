@@ -17,14 +17,15 @@ npm run dev        # http://localhost:5174
 
 `npm run build` produces a static bundle in `dist/`.
 
-## Data source: real vs mock
+## Data: how to run with the real evidence
 
-The UI talks to a `ForkProofApi`. Which implementation it uses is chosen by one
-env var (`frontend/.env.example`):
+The UI reads a small set of JSON files from `public/api/`. In `http` mode (the
+default) it fetches them at runtime; in `mock` mode it uses an in-memory demo
+dataset instead. Pick the source with one env var (see `frontend/.env.example`):
 
 | `VITE_FORKPROOF_API` | Source |
 | --- | --- |
-| `http` (default) | Real build-time data fetched from `public/api/*.json` |
+| `http` (default) | Real build-time data from `public/api/*.json` |
 | `mock` | In-memory demo dataset (`src/api/mock/`) |
 
 ```bash
@@ -32,21 +33,42 @@ npm run dev                          # real data (default)
 VITE_FORKPROOF_API=mock npm run dev  # in-memory demo
 ```
 
-The real JSON is generated from committed repo artifacts (the Plan 002 ForkPoint
-evidence record, the frozen Legitimate controls, the sealed Witness replay
-roundtrip, and the Plan 005 ReleaseProof) by a small Python mapper. Regenerate
-it whenever those artifacts change:
+`VITE_FORKPROOF_API_BASE` overrides the static base path (default `/api`).
+
+### Regenerating the data
+
+The JSON is generated from committed repo artifacts by a Python mapper
+(`src/forkproof/api/mapping.py`). Re-run the export after any of those artifacts
+change (a merged Plan 002 / 003 / 004 / 005 / 008 record), then commit the
+updated files:
 
 ```bash
-# from the repo root
+# from the repo root (needs uv; no network)
 uv run python -m forkproof.api.export   # writes frontend/public/api/*.json
 ```
 
-What is real vs. placeholder is documented in `src/forkproof/api/mapping.py`:
-ForkPoint identity/snapshot/grader digests, the controls + baseline runs, the
-sealed Witness, replay digests, v2 grader/environment digests, and ReleaseProof
-verdict are **real**. The remaining branch-tree sibling nodes preserve the UI
-geometry and are marked illustrative in their notes.
+It writes one file per resource:
+
+| File | Source | Real? |
+| --- | --- | --- |
+| `forkpoint.json` | Plan 002 ForkPoint evidence record | real |
+| `controls.json` | Plan 004 frozen legitimate controls | real |
+| `branches.json` | Plan 003 branch runs (2 real seals plus illustrative tree geometry) | mixed |
+| `witnesses.json` | Plan 003 sealed Exploit Witness | real |
+| `proofset.json` | Plan 005 ProofSet record | real |
+| `release.json` | Plan 005 ReleaseProof verdict (v2 grader/env digests) | real |
+| `replay.json` | Plan 002/003 deterministic replay digests | real |
+| `benchmark.json` | Plan 008 QA-classifier benchmark (`artifacts/forkproof/qabench/`) | real |
+
+What is real vs illustrative is documented in `src/forkproof/api/mapping.py`:
+the ForkPoint identity/snapshot/grader digests, the controls, the sealed Witness
+and its replays, the v2 grader/environment digests, the ReleaseProof verdict,
+and the Plan 008 benchmark are **real, committed** values. The remaining
+branch-tree sibling nodes preserve the run-graph geometry and are marked
+illustrative in their notes; values without a merged producer stay `TBD`.
+
+The `/benchmark` view always reads `benchmark.json` directly (committed static
+evidence), so it shows real data in both `http` and `mock` modes.
 
 ## Deploy to Vercel
 
@@ -58,20 +80,23 @@ time.
 
 ## Screens
 
-The primary buttons walk the discover → witness → fix → gate → release narrative.
-Use the dropdown next to **Resume run** (top-right) to jump directly to any screen:
+Navigate with the left sidebar. The screens walk the
+trace, fork, discover, witness, proofset, gate, release narrative:
 
 | Route | Screen |
 | --- | --- |
-| `/` | QA ForkPoint root (horizontal) |
-| `/tree` | Traceback Run — expanded branch tree |
-| `/witness` | Exploit Witness tree + branch detail panel |
-| `/proofset` | Exploit Witness + proof set panel |
+| `/` | Home: the numbered run-book over a proof-tree backdrop |
+| `/runs` | Traceback Run: root trace plus QA ForkPoint |
+| `/witness` | Exploit Witness tree plus branch detail panel |
+| `/proofset` | Exploit Witness plus proof set panel |
 | `/patch` | Verifier Patch v2 (code diff) |
-| `/gate` | Release Gate — running |
-| `/gate/witness-failed` | Release Gate — exploit survived |
-| `/gate/control-failed` | Release Gate — control broken |
+| `/gate` | Release Gate, running |
+| `/gate/witness-failed` | Release Gate, exploit survived |
+| `/gate/control-failed` | Release Gate, control broken |
 | `/releaseproof` | Release proof committed |
+| `/artifacts` | Evidence artifacts and inventory |
+| `/benchmark` | Plan 008 QA-classifier benchmark |
+| `/settings` | Read-only run settings |
 
 ## Structure
 
@@ -82,5 +107,5 @@ Use the dropdown next to **Resume run** (top-right) to jump directly to any scre
 - `src/views/` — one component per screen.
 
 All colors/spacing/type come from design-system tokens; a small set of semantic
-state tokens (`warn`, soft tints) is added in `tailwind.config.js`. `bash
-../design-system/lint-design.sh src` reports 0 violations.
+state tokens (`warn`, soft tints) is added in `tailwind.config.js`. Run `bash
+../design-system/lint-design.sh src` to check token usage.
