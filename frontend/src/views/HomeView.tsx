@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { HomeBackdrop } from '../components/HomeBackdrop'
 import { Button } from '../components/primitives'
@@ -30,9 +30,30 @@ export function HomeView() {
             <h1 className="mt-4 font-display text-5xl leading-tight tracking-tight text-ink-primary">
               Turn a suspected reward hack into a release proof.
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
-              Traceback opens the flagged HUD trace at its QA ForkPoint, runs seeded branches to find the exploit witnesses, then proves a patch kills every
-              witness while the legitimate controls keep passing. The five steps below follow that path.
+            <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-ink-primary">
+              Across 10{' '}
+              <Link
+                to="/benchmark"
+                className="rounded-sm text-accent-text underline decoration-1 underline-offset-2 transition-opacity hover:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Terminal Bench
+              </Link>{' '}
+              tasks, Traceback confirmed 14 grader-subversion hacks that production QA flags none of. Each one becomes a deterministic test and a
+              gated patch: the exploit dies, legitimate solutions still pass.
+            </p>
+            <p className="mt-3 max-w-xl text-base font-medium leading-relaxed text-ink-primary">
+              Git for agent trajectories.
+            </p>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
+              A reward hack only shows up deep in a run, once an agent has installed packages, edited files, and pushed the environment into a strange
+              state. Tools that restart the task from scratch spend their whole budget getting back there, so the deepest hacks never get found.
+            </p>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
+              Traceback reaches that moment once and snapshots it like a commit, then restores it across parallel sandboxes and sends a different attacker
+              down each branch. Every branch starts from the same state and tries a different move, so the budget goes to the exploit instead of the setup.
+            </p>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-secondary">
+              The five steps below walk one through.
             </p>
 
             <ol className="mt-7 overflow-hidden rounded-xl border border-hairline bg-surface-raised shadow-sm">
@@ -75,10 +96,6 @@ export function HomeView() {
                 Browse evidence artifacts
               </Button>
             </div>
-
-            <p className="mt-6 max-w-xl text-2xs leading-relaxed text-ink-tertiary">
-              Every ID, digest, replay, and verdict on these screens comes from committed run artifacts.
-            </p>
           </section>
         </div>
       </div>
