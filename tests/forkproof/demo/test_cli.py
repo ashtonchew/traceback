@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 
-from forkproof.demo.cli import report_replay, validate_publication, validate_report
+from forkproof.demo.cli import publication_preflight_command, report_replay, validate_publication, validate_report
 from forkproof.demo.models import with_content_digest
 from forkproof.demo.publication import idempotency_key
 from forkproof.demo.report import STEP_LABELS
+from forkproof.releases.models import digest_json
 
 
 def step(number: int, *, refs: list[str] | None = None):
@@ -70,6 +71,35 @@ def publication_attempt(**overrides):
     }
     record.update(overrides)
     return with_content_digest(record)
+
+
+def release_proof(**overrides):
+    record = {
+        "schema_version": 1,
+        "release_proof_id": "rp-cli-001",
+        "proof_set_id": "proof-set-cli",
+        "environment_v1": "env-v1",
+        "grader_v1_digest": "grader-v1",
+        "environment_v2": "env-v2",
+        "grader_v2_digest": "grader-v2",
+        "patch_ref": "artifacts/forkproof/releases/patch.json",
+        "fixer_run_ref": "artifacts/forkproof/releases/harden-result.json",
+        "v1_results": [{"case_id": "witness-001", "kind": "witness", "reward": 1.0}],
+        "v2_results": [{"case_id": "witness-001", "kind": "witness", "reward": 0.0}],
+        "subversion_results": [],
+        "evaluator_context_refs": ["artifacts/forkproof/releases/context.json"],
+        "rejection_history": [],
+        "family_variant_results": [],
+        "witnesses_killed": ["witness-001"],
+        "controls_preserved": ["control-001"],
+        "gate_status": "pass",
+        "trace_links": ["trace://source"],
+        "release_candidate_ref": "artifacts/forkproof/releases/candidate.json",
+        "created_at": "2026-06-21T00:00:00Z",
+    }
+    record.update(overrides)
+    record["content_digest"] = digest_json(record)
+    return record
 
 
 def write_json(path, record):
@@ -172,3 +202,56 @@ def test_validate_publication_attempt_cli_writes_failure_artifact(tmp_path):
     result = read_json(output)
     assert result["status"] == "failed"
     assert result["error_class"] == "secret_exposure"
+
+
+def test_publication_preflight_cli_writes_blocked_with_proof_attempt(tmp_path):
+    proof_path = tmp_path / "release-proof.json"
+    output = tmp_path / "publication-attempt.json"
+    write_json(proof_path, release_proof())
+
+    assert (
+        publication_preflight_command(
+            release_proof=proof_path,
+            target_id="target-prod",
+            trusted_context_ref="trusted-ci",
+            publish_binding_ref=None,
+            publisher_capability_label=None,
+            release_candidate_ref="candidate.json",
+            permission_denied=False,
+            evidence_refs=["release-proof.json", "candidate.json"],
+            output=output,
+        )
+        == 0
+    )
+
+    result = read_json(output)
+    assert result["outcome"] == "blocked-with-proof"
+    assert result["normalized_error_class"] == "publish_binding_missing"
+    assert result["release_proof_gate_status"] == "pass"
+    assert result["content_digest"]
+
+
+def test_publication_preflight_cli_writes_failure_artifact_for_bad_proof(tmp_path):
+    proof_path = tmp_path / "release-proof.json"
+    output = tmp_path / "publication-attempt.json"
+    write_json(proof_path, {"release_proof_id": "incomplete"})
+
+    assert (
+        publication_preflight_command(
+            release_proof=proof_path,
+            target_id="target-prod",
+            trusted_context_ref="trusted-ci",
+            publish_binding_ref=None,
+            publisher_capability_label=None,
+            release_candidate_ref="candidate.json",
+            permission_denied=False,
+            evidence_refs=["release-proof.json", "candidate.json"],
+            output=output,
+        )
+        == 2
+    )
+
+    result = read_json(output)
+    assert result["outcome"] == "failed"
+    assert result["normalized_error_class"] == "proof_mismatch"
+    assert result["content_digest"]

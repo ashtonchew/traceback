@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
-from .publication import validate_publication_attempt
+from .publication import publication_preflight, validate_publication_attempt
 from .redaction import redact_record
 from .report import validate_demo_report
 
@@ -176,6 +176,55 @@ def validate_publication(*, attempt: Path, output: Path | None) -> int:
     return 0
 
 
+def publication_preflight_command(
+    *,
+    release_proof: Path,
+    target_id: str | None,
+    trusted_context_ref: str | None,
+    publish_binding_ref: str | None,
+    publisher_capability_label: str | None,
+    release_candidate_ref: str | None,
+    permission_denied: bool,
+    evidence_refs: list[str],
+    output: Path,
+) -> int:
+    """Write a PublicationAttempt preflight artifact without invoking publish."""
+
+    try:
+        proof = _load_json(release_proof)
+        attempt = publication_preflight(
+            release_proof=proof,
+            target_id=target_id,
+            trusted_context_ref=trusted_context_ref,
+            publish_binding_ref=publish_binding_ref,
+            publisher_capability_label=publisher_capability_label,
+            release_candidate_ref=release_candidate_ref,
+            permission_denied=permission_denied,
+            evidence_refs=evidence_refs or [release_proof.as_posix()],
+        )
+        validate_publication_attempt(attempt)
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "source_release_proof_ref": release_proof.as_posix(),
+            "error_class": exc.error_class,
+            "observed_behavior": _safe_observed_behavior(exc),
+            "validated_at": utc_now(),
+        }
+        _write_json(output, result)
+        print(f"WROTE {output}")
+        print(f"FAIL: {exc.error_class}: {exc}")
+        return 2
+    _write_json(output, attempt)
+    print(f"WROTE {output}")
+    if attempt["outcome"] == "failed":
+        print(f"FAIL: publication-preflight {attempt['normalized_error_class']} id={attempt['publication_attempt_id']}")
+        return 2
+    print(f"PASS: publication-preflight outcome={attempt['outcome']} id={attempt['publication_attempt_id']}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -189,6 +238,16 @@ def main() -> int:
     pub_parser = sub.add_parser("validate-publication-attempt")
     pub_parser.add_argument("--attempt", required=True, type=Path)
     pub_parser.add_argument("--output", type=Path)
+    preflight_parser = sub.add_parser("publication-preflight")
+    preflight_parser.add_argument("--release-proof", required=True, type=Path)
+    preflight_parser.add_argument("--target-id")
+    preflight_parser.add_argument("--trusted-context-ref")
+    preflight_parser.add_argument("--publish-binding-ref")
+    preflight_parser.add_argument("--publisher-capability-label")
+    preflight_parser.add_argument("--release-candidate-ref")
+    preflight_parser.add_argument("--permission-denied", action="store_true")
+    preflight_parser.add_argument("--evidence-ref", action="append", default=[])
+    preflight_parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "demo-preflight":
         return demo_preflight()
@@ -198,6 +257,18 @@ def main() -> int:
         return report_replay(source_report=args.source_report, output=args.output)
     if args.command == "validate-publication-attempt":
         return validate_publication(attempt=args.attempt, output=args.output)
+    if args.command == "publication-preflight":
+        return publication_preflight_command(
+            release_proof=args.release_proof,
+            target_id=args.target_id,
+            trusted_context_ref=args.trusted_context_ref,
+            publish_binding_ref=args.publish_binding_ref,
+            publisher_capability_label=args.publisher_capability_label,
+            release_candidate_ref=args.release_candidate_ref,
+            permission_denied=args.permission_denied,
+            evidence_refs=args.evidence_ref,
+            output=args.output,
+        )
     raise AssertionError(args.command)
 
 

@@ -89,7 +89,9 @@ def publication_preflight(
         "schema_version": 1,
         "publication_attempt_id": "pubattempt-pending",
         "release_proof_id": release_proof.get("release_proof_id") if release_proof else "missing-release-proof",
-        "release_proof_digest": release_proof.get("content_digest") if release_proof else "missing-release-proof-digest",
+        "release_proof_digest": (release_proof.get("content_digest") or "invalid-release-proof-digest")
+        if release_proof
+        else "missing-release-proof-digest",
         "target_id": target_id or "missing-target",
         "publisher_capability_label": publisher_capability_label or "missing-capability",
         "command_key": "integration-publication",
