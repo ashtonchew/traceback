@@ -25,7 +25,7 @@ from pathlib import Path
 from forkproof.qabench.live_benchmark import adjudicate_branches
 from forkproof.qabench.live_discovery import LiveDiscoveryDriver
 from forkproof.qabench.modal_runtime import ModalCleanVerifyRunner, capture_forkpoint
-from forkproof.qabench.models import Trajectory
+from forkproof.qabench.models import DiscoveredBranch, Trajectory
 from forkproof.qabench.scoring import score
 
 _ARTIFACTS = Path("artifacts/forkproof/qabench")
@@ -76,15 +76,18 @@ def preflight(root: Path, tasks: list[str]) -> dict[str, dict]:
     return results
 
 
-def run_task(root: Path, slug: str, forkpoint: dict, *, count: int) -> list[Trajectory]:
-    """Run discovery branches for one task and adjudicate them with clean_verify."""
+def run_task(
+    root: Path, slug: str, forkpoint: dict, *, count: int
+) -> tuple[list[DiscoveredBranch], list[Trajectory]]:
+    """Run discovery branches for one task; return (all branches, adjudicated rewarded)."""
     env_dir = root / "envs/qabench" / slug
     driver = LiveDiscoveryDriver(
         root=root, env_rel=str(Path("envs/qabench") / slug / "env.py"), forkpoint=forkpoint,
         count=count, concurrency=count, state_roots=_STATE_ROOTS.get(slug, ("/app",)),
     )
     branches = list(driver.run_discovery_tree(slug))
-    return adjudicate_branches(branches, ModalCleanVerifyRunner(env_dir))
+    trajectories = adjudicate_branches(branches, ModalCleanVerifyRunner(env_dir))
+    return branches, trajectories
 
 
 def batch(root: Path, *, count: int) -> dict:
@@ -97,10 +100,11 @@ def batch(root: Path, *, count: int) -> dict:
     for slug, record in captured.items():
         started = time.time()
         try:
-            trajs = run_task(root, slug, record["forkpoint"], count=count)
+            branches, trajs = run_task(root, slug, record["forkpoint"], count=count)
             all_trajectories.extend(trajs)
             confirmed = sum(1 for t in trajs if t.is_confirmed_hack)
-            per_task[slug] = {"branches": len(trajs), "confirmed_hacks": confirmed,
+            per_task[slug] = {"branches": len(branches), "rewarded": len(trajs),
+                              "confirmed_hacks": confirmed,
                               "seconds": round(time.time() - started, 1)}
             print(f"DONE {slug}: {len(trajs)} branches, {confirmed} confirmed hacks "
                   f"({per_task[slug]['seconds']}s)", flush=True)
@@ -138,13 +142,14 @@ def run_one_task_to_file(root: Path, slug: str, *, count: int) -> Path:
     record = forkpoints[slug]
     if record["status"] != "ok":
         raise RuntimeError(f"{slug} was not captured")
-    trajs = run_task(root, slug, record["forkpoint"], count=count)
+    branches, trajs = run_task(root, slug, record["forkpoint"], count=count)
     report = score(trajs)
     confirmed = sum(1 for t in trajs if t.is_confirmed_hack)
     out = _ARTIFACTS / "tasks" / f"{slug}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({
         "slug": slug, "confirmed_hacks": confirmed, "branch_count": len(trajs),
+        "branches_discovered": len(branches), "branches_rewarded": len(trajs),
         "depth": dataclasses.asdict(report.depth),
         "coverage": dataclasses.asdict(report.coverage),
         "qa_false_positives": report.qa_false_positives, "undecided": report.undecided,

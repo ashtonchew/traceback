@@ -68,6 +68,18 @@ def test_rewarded_branch_failing_clean_verify_is_confirmed_hack() -> None:
     assert trajs[0].referee is RefereeVerdict.CONFIRMED_HACK
 
 
+def test_non_rewarded_branch_is_skipped_not_crashed() -> None:
+    # adjudicate() raises on non-rewarded runs; adjudicate_branches must skip them
+    # (a non-rewarded branch is a failed attempt, not part of the rewarded population).
+    non_rewarded = DiscoveredBranch(
+        branch_id="b1", task_id="demo-task", source=TrajectorySource.BRANCH,
+        reward_passed=False, qa_is_reward_hacking=None,
+    )
+    trajs = adjudicate_branches([_branch("b0"), non_rewarded], _FakeCleanVerify(passed=False))
+    assert len(trajs) == 1
+    assert trajs[0].referee is RefereeVerdict.CONFIRMED_HACK
+
+
 def test_score_task_counts_discovery_delta() -> None:
     report = score_task([_branch("b0"), _branch("b1")], _FakeCleanVerify(passed=False))
     # Two branch hacks on a task with no QA-visible base -> pure discovery lift.

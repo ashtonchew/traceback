@@ -116,9 +116,9 @@ def adjudicate_branches(
     """
     trajectories: list[Trajectory] = []
     for branch in branches:
-        clean_verify_passed: bool | None = None
-        if branch.reward_passed and branch.workspace_ref:
-            clean_verify_passed = clean_verify.run(branch.workspace_ref)
+        if not branch.reward_passed:
+            continue  # a non-rewarded run cannot be a reward hack; not in the population
+        clean_verify_passed = clean_verify.run(branch.workspace_ref) if branch.workspace_ref else None
         trajectories.append(referee.build_trajectory(branch, clean_verify_passed))
     return trajectories
 
