@@ -10,8 +10,9 @@ from forkproof.releases.release_proof import assert_release_proof
 from .models import DemoError, assert_content_digest, content_digest, require_fields, utc_now, with_content_digest
 from .redaction import redact_record
 
-OUTCOMES = {"published", "permission-blocked", "blocked-with-proof", "failed"}
+OUTCOMES = {"published", "permission-blocked", "blocked-with-proof", "prepared", "failed"}
 PUBLICATION_COMMAND_KEY = "integration-publication"
+DEPLOY_COMMAND_REF_SUFFIX = "COMMANDS.json:hud-deploy"
 FAILURE_CLASSES = {
     "proof_mismatch",
     "unauthorized_target",
@@ -97,6 +98,9 @@ def publication_preflight(
     release_candidate_ref: str | None,
     permission_denied: bool = False,
     evidence_refs: list[str] | None = None,
+    deferred_deploy_command_ref: str | None = None,
+    deferred_reason: str | None = None,
+    published_target_ref: str | None = None,
 ) -> dict[str, Any]:
     """Return a structured attempt/blocker without publishing anything."""
 
@@ -152,6 +156,22 @@ def publication_preflight(
                 "release_proof_gate_status": release_proof.get("gate_status"),
             }
         )
+        return with_content_digest(base)
+    if deferred_deploy_command_ref and deferred_reason:
+        # Real binding + authorized target are present, but the actual registry
+        # upload is deliberately not performed. This is "prepared": everything
+        # verified and ready, no environment published.
+        base.update(
+            {
+                "outcome": "prepared",
+                "release_candidate_ref": release_candidate_ref,
+                "release_proof_gate_status": release_proof.get("gate_status"),
+                "deferred_deploy_command_ref": deferred_deploy_command_ref,
+                "deferred_reason": deferred_reason,
+            }
+        )
+        if published_target_ref:
+            base["published_target_ref"] = published_target_ref
         return with_content_digest(base)
     base.update(
         {
@@ -225,6 +245,24 @@ def _validate_outcome(record: dict[str, Any]) -> None:
         }[outcome]
         if record.get("normalized_error_class") != expected_error:
             raise DemoError("publication_attempt_invalid", f"{outcome} needs {expected_error}")
+    if outcome == "prepared":
+        # Prepared proves a real bound primitive + authorized target + verified
+        # candidate are ready, with the actual upload deliberately deferred.
+        _require_trusted_publication_context(record, require_publish_binding=True)
+        if not record.get("release_candidate_ref"):
+            raise DemoError("publication_attempt_invalid", "prepared outcome needs release_candidate_ref")
+        if not _trusted_evidence_ref(record.get("release_candidate_ref")):
+            raise DemoError("publication_attempt_invalid", "prepared outcome needs trusted release_candidate_ref")
+        if record.get("release_proof_gate_status") != "pass":
+            raise DemoError("publication_attempt_invalid", "prepared outcome requires passing ReleaseProof")
+        if record.get("normalized_error_class"):
+            raise DemoError("publication_attempt_invalid", "prepared outcome cannot carry an error class")
+        if record.get("published_environment_ref"):
+            raise DemoError("publication_attempt_invalid", "prepared outcome cannot carry a published environment ref")
+        if not _trusted_deploy_command_ref(record.get("deferred_deploy_command_ref")):
+            raise DemoError("publication_attempt_invalid", "prepared outcome needs trusted deferred_deploy_command_ref")
+        if not isinstance(record.get("deferred_reason"), str) or not record["deferred_reason"].strip():
+            raise DemoError("publication_attempt_invalid", "prepared outcome needs a non-empty deferred_reason")
     if outcome == "failed":
         if record.get("normalized_error_class") not in FAILURE_CLASSES | {
             "proof_mismatch",
@@ -256,6 +294,10 @@ def _require_trusted_publication_context(record: dict[str, Any], *, require_publ
 
 def _trusted_command_ref(value: Any) -> bool:
     return isinstance(value, str) and value.strip().endswith(COMMAND_REF_SUFFIX) and not _is_untrusted_ref(value)
+
+
+def _trusted_deploy_command_ref(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().endswith(DEPLOY_COMMAND_REF_SUFFIX) and not _is_untrusted_ref(value)
 
 
 def _trusted_evidence_ref(value: Any) -> bool:

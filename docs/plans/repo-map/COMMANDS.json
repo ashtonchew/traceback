@@ -314,6 +314,24 @@
       "timeout_seconds": 1800,
       "reason": "Runs the Plan 006 noninteractive Acceptance Demo Run: launches the full 12-branch live budget from the accepted ForkPoint, persists the fresh branch run under Plan 006 ownership, and writes a validating 13-step report.json, readiness pack, and blocked-with-proof PublicationAttempt. Exits 0 only when report, publication, and readiness all validate; otherwise it records a resource STOP and exits nonzero. The 1800s budget matches the Plan 003 live integration command and leaves room for remote agent/QA jitter. Modal/HUD/Anthropic credentials come from the root .env via load_local_env; FORKPROOF_ALLOW_EXTERNAL_QA=1 authorizes the repo-bound Reward Hacking QA classification."
     },
+    "hud-deploy": {
+      "status": "not-applicable",
+      "argv": [
+        "uv",
+        "run",
+        "hud",
+        "deploy",
+        "artifacts/forkproof/demo/publish/v2",
+        "--name",
+        "mongodb-sales-aggregation-engine"
+      ],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 1800,
+      "reason": "Bound HUD environment-version publish primitive (hud deploy -> POST /v2/builds/trigger, get-or-rebuild by name). INTENTIONALLY NOT EXECUTED: the maintainer deferred the actual registry upload, so this row is not-applicable and run_mapped will SKIP rather than deploy. Evidence that the bind is real: the hardened v2 grader is verified offline (grader_v2_digest matches ReleaseProof releaseproof-30e03914472631dd; artifacts/forkproof/demo/publish/v2-grader-verification.json) and the authorized target is the authenticated account's 'mongodb-sales-aggregation-engine' registry environment (artifacts/forkproof/demo/publish/hud-target.json). Before a real publish, the deploy context artifacts/forkproof/demo/publish/v2 must be completed into a full env that serves the hardened /tests read-only under hud serve, and an explicit upload authorization must be given. HUD_API_KEY comes from the root .env."
+    },
     "demo-report-replay": {
       "status": "verified",
       "argv": [

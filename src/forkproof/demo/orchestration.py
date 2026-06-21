@@ -114,6 +114,48 @@ def _build_publication_attempt(inputs: DemoInputs) -> dict[str, Any]:
     return attempt
 
 
+PUBLISH_DIR = Path("artifacts/forkproof/demo/publish")
+PUBLISHER_CAPABILITY_LABEL = "hud-environment-deploy"
+DEPLOY_COMMAND_REF = "docs/plans/repo-map/COMMANDS.json:hud-deploy"
+PUBLISH_TARGET_REF = "artifacts/forkproof/demo/publish/hud-target.json"
+V2_VERIFICATION_REF = "artifacts/forkproof/demo/publish/v2-grader-verification.json"
+DEFERRED_PUBLISH_REASON = (
+    "Maintainer deferred the registry upload. The bound HUD deploy primitive, the authorized "
+    "'mongodb-sales-aggregation-engine' registry target, and the offline-verified hardened v2 grader "
+    "(grader_v2_digest matches the sealed ReleaseProof) are all ready; only the upload is withheld."
+)
+
+
+def prepare_publication(root: Path = ROOT) -> tuple[int, str]:
+    """Build and persist a validated ``prepared`` PublicationAttempt (no upload)."""
+
+    inputs = load_demo_inputs()
+    attempt = publication_preflight(
+        release_proof=inputs.release_proof,
+        target_id=inputs.target_id,
+        trusted_context_ref=TRUSTED_PUBLICATION_CONTEXT_REF,
+        publish_binding_ref=TRUSTED_PUBLICATION_CONTEXT_REF,
+        publisher_capability_label=PUBLISHER_CAPABILITY_LABEL,
+        release_candidate_ref=inputs.release_candidate_ref,
+        deferred_deploy_command_ref=DEPLOY_COMMAND_REF,
+        deferred_reason=DEFERRED_PUBLISH_REASON,
+        published_target_ref=PUBLISH_TARGET_REF,
+        evidence_refs=[
+            PLAN_005_MANIFEST_REF,
+            inputs.release_proof_ref,
+            inputs.release_candidate_ref,
+            V2_VERIFICATION_REF,
+            PUBLISH_TARGET_REF,
+        ],
+    )
+    validate_publication_attempt(attempt)
+    if attempt["outcome"] != "prepared":
+        raise DemoError("publication_attempt_invalid", f"expected prepared, resolved to {attempt['outcome']}")
+    path = root / PUBLISH_DIR / "publication-prepared-attempt.json"
+    _write_sealed(path, attempt)
+    return 0, _relative(path)
+
+
 def _persist_owned_branch_run(invocation_dir: Path, summary: dict[str, Any]) -> dict[str, Any]:
     """Copy a fresh run into the invocation dir and rewrite refs to owned paths."""
 

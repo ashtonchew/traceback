@@ -238,6 +238,68 @@ def test_publication_blocked_with_proof_uses_real_proof():
     validate_publication_attempt(attempt)
 
 
+def _prepared_attempt(inputs):
+    return publication_preflight(
+        release_proof=inputs.release_proof,
+        target_id=inputs.target_id,
+        trusted_context_ref="docs/plans/repo-map/COMMANDS.json:integration-publication",
+        publish_binding_ref="docs/plans/repo-map/COMMANDS.json:integration-publication",
+        publisher_capability_label="hud-environment-deploy",
+        release_candidate_ref=inputs.release_candidate_ref,
+        deferred_deploy_command_ref="docs/plans/repo-map/COMMANDS.json:hud-deploy",
+        deferred_reason="maintainer deferred the registry upload; binding and verified v2 ready",
+        evidence_refs=["docs/plans/evidence/005/MANIFEST.json", inputs.release_proof_ref, inputs.release_candidate_ref],
+    )
+
+
+def test_prepared_outcome_validates_with_real_proof_and_binding():
+    inputs = load_demo_inputs()
+    attempt = _prepared_attempt(inputs)
+    assert attempt["outcome"] == "prepared"
+    assert not attempt.get("normalized_error_class")
+    assert attempt["release_proof_gate_status"] == "pass"
+    assert attempt["deferred_deploy_command_ref"].endswith("COMMANDS.json:hud-deploy")
+    assert "published_environment_ref" not in attempt
+    validate_publication_attempt(attempt)
+
+
+def test_prepared_falls_back_to_failed_without_deferred_intent():
+    # Binding present but no deferred command/reason: not a prepared claim.
+    inputs = load_demo_inputs()
+    attempt = publication_preflight(
+        release_proof=inputs.release_proof,
+        target_id=inputs.target_id,
+        trusted_context_ref="docs/plans/repo-map/COMMANDS.json:integration-publication",
+        publish_binding_ref="docs/plans/repo-map/COMMANDS.json:integration-publication",
+        publisher_capability_label="hud-environment-deploy",
+        release_candidate_ref=inputs.release_candidate_ref,
+        evidence_refs=[inputs.release_proof_ref],
+    )
+    assert attempt["outcome"] == "failed"
+
+
+def test_prepared_rejects_untrusted_deploy_command_ref():
+    from forkproof.demo.models import with_content_digest
+
+    inputs = load_demo_inputs()
+    attempt = dict(_prepared_attempt(inputs))
+    attempt["deferred_deploy_command_ref"] = "artifacts/forkproof/demo/publish/hud-deploy.json"
+    with pytest.raises(DemoError) as exc:
+        validate_publication_attempt(with_content_digest(attempt))
+    assert "deferred_deploy_command_ref" in str(exc.value)
+
+
+def test_prepared_rejects_published_environment_ref():
+    from forkproof.demo.models import with_content_digest
+
+    inputs = load_demo_inputs()
+    attempt = dict(_prepared_attempt(inputs))
+    attempt["published_environment_ref"] = "hud-registry:mongodb-sales-aggregation-engine@v3"
+    with pytest.raises(DemoError) as exc:
+        validate_publication_attempt(with_content_digest(attempt))
+    assert "published environment ref" in str(exc.value)
+
+
 def test_publication_rejects_untrusted_candidate_ref():
     inputs = load_demo_inputs()
     attempt = publication_preflight(
