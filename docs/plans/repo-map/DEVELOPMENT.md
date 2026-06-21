@@ -54,6 +54,19 @@ scripts/bootstrap_external_deps.sh
 
 This creates ignored checkouts under `.external/`.
 
+Plan 004 mapped commands require the pinned Terminal Wrench task source. Because
+`.external/` is gitignored, fresh worktrees do not inherit it automatically. Run
+the bootstrap command in each worktree, symlink `.external/terminal-wrench` to a
+verified local checkout, or set `H2F2H_TERMINAL_WRENCH_PATH` before running:
+
+```sh
+python docs/plans/scripts/run_mapped.py plan-004-tests
+python docs/plans/scripts/run_mapped.py integration-controls
+```
+
+Those commands fail fast with the missing prerequisite path when the checkout is
+absent.
+
 ## Dependency map
 
 See `docs/plans/repo-map/DEPENDENCIES.md` for exact versions, source revisions,

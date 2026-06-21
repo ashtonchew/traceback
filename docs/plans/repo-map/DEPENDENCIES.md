@@ -42,6 +42,12 @@ scripts/bootstrap_external_deps.sh
 
 The script writes ignored checkouts under `.external/`.
 
+Plan 004 uses the Terminal Wrench checkout as pinned source evidence, not as a
+committed dependency. `python docs/plans/scripts/run_mapped.py plan-004-tests`
+and `python docs/plans/scripts/run_mapped.py integration-controls` preflight the
+required task files and print the bootstrap or `H2F2H_TERMINAL_WRENCH_PATH`
+remedy before running pytest or Docker baselines.
+
 | Dependency | Source | Revision | Local path | Verification |
 |---|---|---:|---|---|
 | harden-v0 | `https://github.com/few-sh/harden-v0.git` | `b9dd28c732e7e5435da4a2ac90ae92ac6ea65007` | `.external/harden-v0` | `env PYTHONPATH=.external/harden-v0 uv run python -m harden --help` exits 0 |
