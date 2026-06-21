@@ -2,7 +2,10 @@
 .env
 .env.*
 !.env.example
-.external/
+.external/*
+!.external/harden-v0
+!.external/hud-trace-explorer
+!.external/terminal-wrench
 .venv/
 .ruff_cache/
 .codex-worktrees/

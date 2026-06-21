@@ -1,0 +1,9 @@
+[submodule ".external/harden-v0"]
+	path = .external/harden-v0
+	url = https://github.com/few-sh/harden-v0.git
+[submodule ".external/terminal-wrench"]
+	path = .external/terminal-wrench
+	url = https://github.com/few-sh/terminal-wrench.git
+[submodule ".external/hud-trace-explorer"]
+	path = .external/hud-trace-explorer
+	url = https://github.com/hud-evals/hud-trace-explorer.git

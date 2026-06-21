@@ -20,10 +20,10 @@ are either verified-present with evidence or located-owned by a later plan in
 | Modal Memory/VM capability probe | Not present | `Sandbox._experimental_snapshot` exists in SDK | Alpha. Not probed; core path does not depend on it (A-018). | blocked |
 | Agent/model gateway | `envs/mongodb-sales-aggregation-engine/env.py`; branch runner not present | `ClaudeAgent(model="claude-haiku-4-5")` for Plan 001 live trace | Live trace used the gateway with `claude-haiku-4-5`. Seeded stochastic branch runner and sampling metadata are Plan 003 scope. | verified (Gate 1 run); located-owned:003 |
 | Grader/verifier run and digest | `envs/mongodb-sales-aggregation-engine/task_assets/test_outputs.py`; `env.py` | `BashGrader.grade`, `GRADE_CMD` | Real grader digest `ecaf12227976729261555ba1c5c229ad89487fc1beb945b4b8ae52509b56f61f`; stub=0, reference=1, force-pass hack=1 in-container; live legitimate solve reward=1. | verified |
-| harden-v0 fixer | `.external/harden-v0` via `scripts/bootstrap_external_deps.sh` | `python -m harden` | Pinned revision `b9dd28c...`; `env PYTHONPATH=.external/harden-v0 uv run python -m harden --help` exits 0. No repository adapter exists yet. | partial |
-| harden-v0 replay/dedup/legitimate handling | `.external/harden-v0` via `scripts/bootstrap_external_deps.sh` | `python -m harden`, `dedup_hacks.py` | Help output exposes `--replay-enabled`, `.legitimate` behavior, and pool flags. No adapter or task binding exists yet. | partial |
+| harden-v0 fixer | `.external/harden-v0` git submodule | `python -m harden` | Pinned revision `b9dd28c...`; `env PYTHONPATH=.external/harden-v0 uv run python -m harden --help` exits 0. No repository adapter exists yet. | partial |
+| harden-v0 replay/dedup/legitimate handling | `.external/harden-v0` git submodule | `python -m harden`, `dedup_hacks.py` | Help output exposes `--replay-enabled`, `.legitimate` behavior, and pool flags. No adapter or task binding exists yet. | partial |
 | Persistence/artifact store | Not present | Not present | No database, object store, manifest store, or artifact retention implementation is checked in. Durable Witness and ReleaseProof storage are later-wave scope. | located-owned:003+005 |
-| MongoDB task materialization | `.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine` via `scripts/bootstrap_external_deps.sh` | Dataset task directory | Pinned revision `d8a2961...`; task source exists for `claude-opus-4.6` and `gemini-3.1-pro`. No repository-native fixture materialization command exists yet. | partial |
+| MongoDB task materialization | `.external/terminal-wrench/tasks/mongodb-sales-aggregation-engine` git submodule path | Dataset task directory | Pinned revision `d8a2961...`; task source exists for `claude-opus-4.6` and `gemini-3.1-pro`. No repository-native fixture materialization command exists yet. | partial |
 | Legitimate solver/reference hints | Terminal Wrench source checkout; controls not frozen | Candidate attacker-legitimate solves in source checkout | Plan 004 owns freezing at least three path-diverse controls on the real task. | located-owned:004 |
 | Secrets/network/resource isolation | `env.workspace(..., network=True)` for Plan 001 env; full policy not present | HUD/bwrap workspace isolation for live env | Plan 003 owns branch isolation, secret scoping, egress, resource, and negative security checks before adversarial branch execution. | located-owned:003 |
 
@@ -47,8 +47,8 @@ and mutable state outside the workspace before choosing the HUD
 | Repo-bound ownership validation | `docs/plans/scripts/validate_ownership.py` | CLI | `python -B docs/plans/scripts/validate_ownership.py --repo-bound` exits 0 with `STATUS.json` accepted and all owned non-doc globs bound. | verified |
 | Mapped command runner | `docs/plans/scripts/run_mapped.py` | CLI | `python docs/plans/scripts/run_mapped.py baseline` exits 0 using `COMMANDS.json`. | verified |
 | Dependency sync | `pyproject.toml`, `uv.lock` | CLI | `uv sync --all-extras --all-groups` exits 0. | verified |
-| External dependency checkout | `scripts/bootstrap_external_deps.sh` | CLI | Fetches harden-v0 and a sparse Terminal Wrench MongoDB-task checkout pinned under `.external/`. | verified |
-| Local environment config | `.env.example`, root `.env` | dotenv-compatible env file | `.env.example` is committed; `.env` is ignored and loaded by `scripts/bootstrap_external_deps.sh` when present. | verified |
+| External dependency checkout | `git submodule update --init --recursive`; `scripts/bootstrap_external_deps.sh` | CLI | Initializes harden-v0, Terminal Wrench, and HUD Trace Explorer submodules pinned under `.external/`, then verifies required files. | verified |
+| Local environment config | `.env.example`, root `.env` | dotenv-compatible env file | `.env.example` is committed; `.env` is ignored and not required for submodule initialization. | verified |
 
 ## Required next inputs
 

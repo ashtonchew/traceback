@@ -49,15 +49,19 @@ symlink to the canonical `.agents` skill folder.
 Fetch pinned source-only dependencies:
 
 ```sh
+git submodule update --init --recursive
+scripts/verify_external_deps.sh
+```
+
+The compatibility bootstrap command performs the same steps:
+
+```sh
 scripts/bootstrap_external_deps.sh
 ```
 
-This creates ignored checkouts under `.external/`.
-
-Plan 004 mapped commands require the pinned Terminal Wrench task source. Because
-`.external/` is gitignored, fresh worktrees do not inherit it automatically. Run
-the bootstrap command in each worktree, symlink `.external/terminal-wrench` to a
-verified local checkout, or set `H2F2H_TERMINAL_WRENCH_PATH` before running:
+Plan 004 mapped commands require the pinned Terminal Wrench task source. Plan
+003 canonical Reward Hacking QA requires the pinned HUD Trace Explorer source.
+Fresh worktrees initialize both through git submodules before running:
 
 ```sh
 python docs/plans/scripts/run_mapped.py plan-004-tests
