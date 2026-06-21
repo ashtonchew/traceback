@@ -105,6 +105,11 @@ Expected evidence:
 
 - parent and child node/ForkPoint ids with depth-two lineage,
 - at least one completed depth-two BranchRun,
+- the expansion-prior record: the ranked eligible boundaries, the selected promising child, and its falsifiable prediction (surface, mechanism, why the parent could not reach it),
+- a replay-to-boundary snapshot whose restored state-hash matches the ranked recorded evidence — reusing the Plan 003 `recorded_actions_ref` action span and the deterministic-replay gate (no model rediscovery) — or a recorded next-ranked fall-back, or a no-eligible-near-miss skip,
+- a no-leakage check showing depth-two branch prompts contain no expansion-prior prediction (the WP2 STOP held),
+- a predictive-validity result comparing the predicted surface/mechanism to the depth-two outcome, with better-than-random recorded as not-measured (TBD at n=1),
+- depth-two branches counted as executed BranchRuns, consistent with Plan 003's executed-vs-scheduled accounting (replaced preflight failures recorded separately),
 - adaptive-stop policy test and real decision event,
 - research report with measured values or explicit not-measured fields,
 - comparable flat-restart result or justified skip,
@@ -112,7 +117,7 @@ Expected evidence:
 - transfer/training results or justified skips,
 - manifest `docs/plans/evidence/007/MANIFEST.json`.
 
-No owned source file exceeds 500 lines without a real seam. Conditional skips count only when backed by concrete capability/data/budget evidence; they do not justify empty scaffolding.
+No owned source file exceeds 500 lines without a real seam. Conditional skips count only when backed by concrete capability/data/budget evidence; they do not justify empty scaffolding. Behavioral tests assert the promising-child contract through public outcomes — pre-filter eligibility, deterministic ranking for fixed recorded evidence, replay-to-boundary hash-verification with fall-back to the next-ranked child, and the no-leakage wall — reusing the Plan 003 replay/dedup gates rather than re-implementing or asserting internal judge structure.
 
 ## Recovery
 
