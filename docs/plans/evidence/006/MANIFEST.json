@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T14:15:00Z",
+  "updated_at": "2026-06-21T11:19:34Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -56,7 +56,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: repo-bound ownership is collision-free for 8 plans.",
-      "recorded_at": "2026-06-21T11:02:44Z"
+      "recorded_at": "2026-06-21T11:19:34Z"
     },
     {
       "key": "validate-traceability",
@@ -88,7 +88,7 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "Mapped publication idempotency check passed: 1 passed.",
-      "recorded_at": "2026-06-21T10:21:09Z"
+      "recorded_at": "2026-06-21T11:19:34Z"
     },
     {
       "key": "publication-permission-denied",
@@ -119,8 +119,8 @@
       "command": "python docs/plans/scripts/run_mapped.py demo-report-replay",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Demo Report Replay audit-only check passed after preserving source discovery mode: 1 passed.",
-      "recorded_at": "2026-06-21T10:32:18Z"
+      "observed_behavior": "Mapped Demo Report Replay audit-only check passed after adversarial hardening: 1 passed.",
+      "recorded_at": "2026-06-21T11:19:34Z"
     },
     {
       "key": "demo",
@@ -199,8 +199,8 @@
       "command": "git rev-parse HEAD origin/codex/plan-005-release-proof origin/codex/plan-006-demo-stack && git merge-base --is-ancestor origin/codex/plan-005-release-proof HEAD",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "HEAD and origin/codex/plan-006-demo-stack are ea0e913732e71e9a189ce0ba430d023d336db99e; origin/codex/plan-005-release-proof is 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head is an ancestor of Plan 006 HEAD.",
-      "recorded_at": "2026-06-21T14:15:00Z"
+      "observed_behavior": "Latest checked Plan 006 branch head before this evidence-correction commit was b4a2cebe982afea7036c850d845f29797abaec47; origin/codex/plan-005-release-proof was 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head was an ancestor of Plan 006 HEAD.",
+      "recorded_at": "2026-06-21T11:19:34Z"
     }
   ],
   "rechecks": [
@@ -234,7 +234,7 @@
     {
       "name": "Stack base",
       "status": "pass",
-      "evidence": "Worktree branch codex/plan-006-demo-stack remains targeted at codex/plan-005-release-proof, not main. Current stack check: Plan 006 HEAD/origin branch ea0e913732e71e9a189ce0ba430d023d336db99e; origin/codex/plan-005-release-proof 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head is an ancestor of Plan 006 HEAD."
+      "evidence": "Worktree branch codex/plan-006-demo-stack remains targeted at codex/plan-005-release-proof, not main. Latest recorded stack check before this evidence-correction commit saw Plan 006 branch head b4a2cebe982afea7036c850d845f29797abaec47; origin/codex/plan-005-release-proof 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head was an ancestor of Plan 006 HEAD. Final branch-tip stack is rechecked outside the committed manifest."
     },
     {
       "name": "Gate 4 / Plan 005 dependency",
@@ -470,6 +470,7 @@
     "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist.",
     "2026-06-21T11:02:44Z — Restacked Plan 006 over updated PR #27 head 3105a44. The rebase completed cleanly and mapped Plan 006 tests still pass with 38 tests. Plan 005 remains blocked on harden_fixer_artifact_layout_drift/fix_failed, with no sealed ReleaseProof or release candidate.",
     "2026-06-21T11:12:36Z — Added core metrics validation. Reports must include branch_count, clusters, time_to_witness, reward_before, reward_after, control_retention, replay_rate, restore_latency, and setup_avoided, while allowing not-measured/not-applicable values with reasons before full Acceptance Demo evidence exists. Mapped plan-006-tests passed with 39 tests.",
-    "2026-06-21T14:15:00Z — Adversarial subagent hardening pass completed. Report validators now reject pass reports with failed steps, blocked proof/publication refs shown as completed steps, acceptance pass without launched live branches, unrelated fallback labels, malformed metric shape, and natural-language single-run overclaims. Publication/readiness/redaction validators now reject forged published attempts without trusted publication evidence, temp/branch-writable publication refs, untrusted command refs, broader secret formats, and pass readiness packs that still point at blocked/missing artifacts. Mapped plan-006-tests passed with 54 tests; demo-presentation-timeout passed with 1 test; stack-base evidence now cites Plan 005 head 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5."
+    "2026-06-21T14:15:00Z — Adversarial subagent hardening pass completed. Report validators now reject pass reports with failed steps, blocked proof/publication refs shown as completed steps, acceptance pass without launched live branches, unrelated fallback labels, malformed metric shape, and natural-language single-run overclaims. Publication/readiness/redaction validators now reject forged published attempts without trusted publication evidence, temp/branch-writable publication refs, untrusted command refs, broader secret formats, and pass readiness packs that still point at blocked/missing artifacts. Mapped plan-006-tests passed with 54 tests; demo-presentation-timeout passed with 1 test; stack-base evidence now cites Plan 005 head 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5.",
+    "2026-06-21T11:19:34Z — Corrected stack-base evidence after pushing the adversarial hardening commit. Latest checked Plan 006 branch head before this evidence-correction commit was b4a2cebe982afea7036c850d845f29797abaec47; origin/codex/plan-005-release-proof remained 7d8c75fca0d967acbcbc84e01dff9b7b87859ca5; Plan 005 head was an ancestor of Plan 006 HEAD. Refreshed repo-bound ownership, demo-report-replay, and publication-idempotency command rows."
   ]
 }
