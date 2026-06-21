@@ -1,39 +1,86 @@
 import { useNavigate } from 'react-router-dom'
-import { RunCanvas } from '../components/RunCanvas'
+import { clsx } from 'clsx'
+import { HomeBackdrop } from '../components/HomeBackdrop'
 import { Button } from '../components/primitives'
-import { rootGraph } from '../data/graphs'
-import { FileCheck2, GitFork, Play, ShieldCheck } from '../components/icons'
+import { ArrowRight, FolderOpen, Play, ShieldCheck } from '../components/icons'
+
+type Step = { title: string; detail: string; dest: string; route: string }
+
+const STEPS: Step[] = [
+  { title: 'Open the suspicious HUD trace', detail: 'Inspect the flagged reward-1 trace and its QA ForkPoint.', dest: 'Runs', route: '/runs' },
+  { title: 'Confirm the exploit witnesses', detail: 'Walk the seeded branches; verify each deterministic replay.', dest: 'Witness', route: '/witness?focus=confirmed' },
+  { title: 'Seal the ProofSet', detail: 'Witnesses that must fail, legitimate controls that must pass.', dest: 'ProofSet', route: '/proofset' },
+  { title: 'Replay against the patch', detail: 'Run the release gate — every witness 0, every control 1.', dest: 'Gate', route: '/gate' },
+  { title: 'Read the ReleaseProof', detail: 'Before/after evidence, committed and digest-pinned.', dest: 'Release', route: '/releaseproof' },
+]
 
 export function HomeView() {
   const navigate = useNavigate()
 
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden bg-background">
-      <div className="absolute inset-0 opacity-35">
-        <RunCanvas nodes={rootGraph.nodes} edges={rootGraph.edges} fitPadding={0.22} fitMaxZoom={0.72} showZoomBar={false} interactive={false} />
-      </div>
-      <div className="relative z-10 flex h-full items-center justify-center px-8">
-        <section className="max-w-2xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-xs font-medium text-ink-secondary shadow-sm">
-            <ShieldCheck size={14} className="text-accent-text" />
-            Real execution evidence, replayed into a release proof
-          </div>
-          <h1 className="font-display text-5xl leading-tight tracking-tight text-ink-primary">Traceback turns reward-hacking traces into release evidence.</h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
-            Start with the suspicious HUD trace, open its QA ForkPoint, inspect candidate branches, then seal a ProofSet that must kill the exploit witness while preserving legitimate controls. The visible IDs, digests, replay results, and ReleaseProof are sourced from committed artifacts rather than placeholder demo state.
-          </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Button variant="primary" size="md" icon={<Play size={15} />} onClick={() => navigate('/runs')}>
-              Open runs
-            </Button>
-            <Button variant="secondary" size="md" icon={<GitFork size={15} />} onClick={() => navigate('/witness?focus=confirmed')}>
-              View witness
-            </Button>
-            <Button variant="secondary" size="md" icon={<FileCheck2 size={15} />} onClick={() => navigate('/proofset')}>
-              Check proofset
-            </Button>
-          </div>
-        </section>
+      <HomeBackdrop />
+      <div className="scrollbar-thin absolute inset-0 z-10 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center px-8 py-12">
+          <section className="w-full max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-xs font-medium text-ink-secondary shadow-sm">
+              <ShieldCheck size={14} className="text-accent-text" />
+              Real run artifacts — not demo state
+            </div>
+            <h1 className="mt-4 font-display text-5xl leading-tight tracking-tight text-ink-primary">
+              Turn a suspected reward hack into a release proof.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-secondary-strong">
+              Traceback opens one flagged HUD trace at its QA ForkPoint, runs seeded branches to surface exploit witnesses, and proves a patch kills every witness
+              while every legitimate control still passes. Work the five steps in order.
+            </p>
+
+            <ol className="mt-7 overflow-hidden rounded-xl border border-hairline bg-surface-raised shadow-sm">
+              {STEPS.map((step, i) => (
+                <li key={step.route}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(step.route)}
+                    className={clsx(
+                      'group flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors duration-150 ease-out hover:bg-surface active:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      i > 0 && 'border-t border-hairline',
+                    )}
+                  >
+                    <span
+                      className={clsx(
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
+                        i === 0 ? 'bg-fill-accent text-ink-inverse' : 'border border-hairline bg-surface text-ink-secondary',
+                      )}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-ink-primary">{step.title}</span>
+                      <span className="mt-0.5 block text-xs leading-snug text-ink-secondary">{step.detail}</span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-ink-tertiary transition-colors duration-150 group-hover:text-ink-secondary-strong">
+                      {step.dest}
+                      <ArrowRight size={14} className="transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Button variant="primary" size="md" icon={<Play size={15} />} onClick={() => navigate('/runs')}>
+                Start at step 1
+              </Button>
+              <Button variant="secondary" size="md" icon={<FolderOpen size={15} />} onClick={() => navigate('/artifacts')}>
+                Browse evidence artifacts
+              </Button>
+            </div>
+
+            <p className="mt-6 max-w-xl text-2xs leading-relaxed text-ink-tertiary">
+              Every ID, grader digest, replay result, and release verdict on these screens is read from committed run artifacts.
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   )
