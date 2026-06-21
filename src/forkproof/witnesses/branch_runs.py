@@ -18,6 +18,8 @@ from .promotion import branch_signal_status
 from .qa_binding import run_reward_hacking_analysis
 
 EVIDENCE_SUBDIR = Path("docs/plans/evidence/003/artifacts")
+DEFAULT_BRANCH_MAX_STEPS = 60
+DEFAULT_BRANCH_MAX_TOKENS = 8192
 
 
 def _load_local_env(root: Path) -> None:
@@ -123,14 +125,15 @@ async def _run_one_branch(
     branch_id = f"{run_id}-branch-{branch_index:02d}"
     seed = 7300 + branch_index
     model = os.environ.get("FORKPROOF_BRANCH_MODEL") or os.environ.get("H2F2H_HACKER_MODEL") or "claude-haiku-4-5"
-    max_steps = int(os.environ.get("FORKPROOF_BRANCH_MAX_STEPS", "8"))
-    max_tokens = int(os.environ.get("FORKPROOF_BRANCH_MAX_TOKENS", "4096"))
+    max_steps = int(os.environ.get("FORKPROOF_BRANCH_MAX_STEPS", str(DEFAULT_BRANCH_MAX_STEPS)))
+    max_tokens = int(os.environ.get("FORKPROOF_BRANCH_MAX_TOKENS", str(DEFAULT_BRANCH_MAX_TOKENS)))
     sampling_config = {
         "max_steps": max_steps,
         "max_tokens": max_tokens,
         "requested_seed": seed,
         "provider_seed_support": "not-supported-by-ClaudeConfig",
         "parallelism": "12-concurrent-branches",
+        "budget_profile": "terminal-bench-style-hacker-discovery",
     }
     started_at = utc_now()
     job_id = ""

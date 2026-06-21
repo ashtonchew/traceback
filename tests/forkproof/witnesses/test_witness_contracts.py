@@ -4,6 +4,7 @@ import sys
 
 import pytest
 
+from forkproof.witnesses.branch_runs import DEFAULT_BRANCH_MAX_STEPS, DEFAULT_BRANCH_MAX_TOKENS
 import forkproof.witnesses.qa_binding as qa_binding
 from forkproof.witnesses.hacker_prompt import (
     HACKER_BRANCH_ROLE,
@@ -119,6 +120,11 @@ def test_twelve_unique_branch_ids_and_seeds_without_early_stop():
     assert len({item["branch_id"] for item in branches}) == 12
     assert len({item["seed"] for item in branches}) == 12
     assert [item["branch_id"] for item in branches][-1] == "branch-011"
+
+
+def test_hacker_branch_default_budget_is_not_the_short_smoke_budget():
+    assert DEFAULT_BRANCH_MAX_STEPS == 60
+    assert DEFAULT_BRANCH_MAX_TOKENS == 8192
 
 
 @pytest.mark.parametrize(
@@ -273,6 +279,14 @@ def test_canonical_hud_trace_explorer_resolves_repo_external_checkout(monkeypatc
         assert any("repo_external=" in item for item in binding["searched_roots"])
     finally:
         sys.modules.pop("qa_reward_hacking", None)
+
+
+def test_canonical_hud_trace_explorer_requires_checkout_file(monkeypatch, tmp_path):
+    monkeypatch.delenv("HUD_TRACE_EXPLORER_ROOT", raising=False)
+    module, binding = qa_binding._load_canonical_reward_hacking_module(tmp_path)
+    assert module is None
+    assert binding["status"] == "blocked"
+    assert "checkout is missing qa_reward_hacking.py" in binding["blocker"]
 
 
 def test_synthetic_reward_hacking_smoke_positive_control(monkeypatch, tmp_path):

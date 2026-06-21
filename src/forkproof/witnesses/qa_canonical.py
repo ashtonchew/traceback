@@ -67,7 +67,7 @@ def load_canonical_reward_hacking_module(root: Path) -> tuple[Any | None, dict[s
     searched_roots: list[str] = []
     for source, root_path in candidate_roots:
         searched_roots.append(f"{source}={root_path}")
-        if root_path.exists():
+        if (root_path / "qa_reward_hacking.py").exists():
             selected_root = root_path
             if str(root_path) not in sys.path:
                 sys.path.insert(0, str(root_path))
@@ -79,6 +79,13 @@ def load_canonical_reward_hacking_module(root: Path) -> tuple[Any | None, dict[s
                 "blocker": f"HUD_TRACE_EXPLORER_ROOT does not exist: {configured_root}",
                 "searched_roots": searched_roots,
             }
+    if selected_root is None:
+        return None, {
+            "status": "blocked",
+            "source_adapter": SOURCE_ADAPTER,
+            "blocker": "canonical hud-evals/hud-trace-explorer checkout is missing qa_reward_hacking.py",
+            "searched_roots": searched_roots,
+        }
     try:
         module = importlib.import_module("qa_reward_hacking")
     except Exception as exc:  # noqa: BLE001 - import failures are binding evidence.
