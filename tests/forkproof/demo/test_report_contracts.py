@@ -102,6 +102,15 @@ def test_report_replay_is_audit_only():
             )
         )
 
+    with pytest.raises(DemoError, match="cannot claim new evidence"):
+        validate_demo_report(
+            report(
+                demo_mode="report-replay",
+                source_invocation_id="demo-source",
+                new_replay_ref="replay-new.json",
+            )
+        )
+
 
 def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
     with pytest.raises(DemoError, match="bounded budget"):

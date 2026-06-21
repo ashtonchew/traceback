@@ -69,6 +69,22 @@ def test_preflight_fails_missing_or_bad_proof_instead_of_claiming_blocked_with_p
     validate_publication_attempt(record)
 
 
+def test_preflight_records_blocked_with_proof_only_after_passing_proof():
+    record = publication_preflight(
+        release_proof=release_proof(),
+        target_id="target-prod",
+        trusted_context_ref="trusted-ci",
+        publish_binding_ref=None,
+        publisher_capability_label=None,
+        release_candidate_ref="candidate.json",
+        evidence_refs=["release-proof.json", "candidate.json"],
+    )
+
+    assert record["outcome"] == "blocked-with-proof"
+    assert record["release_proof_gate_status"] == "pass"
+    validate_publication_attempt(record)
+
+
 def test_preflight_records_permission_blocked_with_stable_idempotency():
     first = publication_preflight(
         release_proof=release_proof(),

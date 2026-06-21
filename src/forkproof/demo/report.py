@@ -137,6 +137,7 @@ def _validate_report_replay(record: dict[str, Any]) -> None:
     require_fields(record, {"source_invocation_id"}, error_class="report_replay_incomplete")
     forbidden = {
         "created_branch_refs",
+        "new_replay_ref",
         "new_release_proof_ref",
         "new_publication_attempt_ref",
         "published_environment_ref",

@@ -118,6 +118,7 @@ def publication_preflight(
                 "outcome": "blocked-with-proof",
                 "normalized_error_class": "publish_binding_missing",
                 "release_candidate_ref": release_candidate_ref,
+                "release_proof_gate_status": release_proof.get("gate_status"),
             }
         )
         return with_content_digest(base)
