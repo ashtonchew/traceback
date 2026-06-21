@@ -19,7 +19,7 @@ import json
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
 
-from forkproof.qabench.models import ConfirmedHack, Trajectory
+from forkproof.qabench.models import ConfirmedHack, DiscoveredBranch
 
 
 class NotWiredError(NotImplementedError):
@@ -37,10 +37,14 @@ class Deduplicator(Protocol):
 
 @runtime_checkable
 class DiscoveryDriver(Protocol):
-    """Runs the Plan 003 discovery tree (base rollout + Hacker BranchRuns) for a
-    task and returns its rewarded trajectory population (Plan 008 WP2)."""
+    """Runs/loads the Plan 003 discovery population (base rollout + Hacker
+    BranchRuns) and returns DiscoveredBranch records — reward + HUD QA + lineage,
+    but NO referee verdict (008's referee adjudicates separately). The OFFLINE
+    benchmark path is implemented in
+    ``witness_loop_adapter.RecordedBatchDiscoveryDriver`` over recorded 003 batch
+    artifacts; the LIVE in-loop hook (WP6) wires ``NotWiredLiveDiscoveryDriver``."""
 
-    def run_discovery_tree(self, task_id: str) -> Sequence[Trajectory]: ...
+    def run_discovery_tree(self, task_id: str) -> Sequence[DiscoveredBranch]: ...
 
 
 @runtime_checkable
@@ -82,14 +86,21 @@ class TargetMechanismDeduplicator:
         )
 
 
-class NotWiredDiscoveryDriver:
-    """Placeholder until Plan 003 merges; raises with a clear wiring pointer."""
+class NotWiredLiveDiscoveryDriver:
+    """Placeholder for the LIVE in-loop discovery hook (WP6); raises until wired.
 
-    def run_discovery_tree(self, task_id: str) -> Sequence[Trajectory]:
+    The OFFLINE benchmark path is already implemented in
+    ``witness_loop_adapter.RecordedBatchDiscoveryDriver`` over recorded 003 batch
+    artifacts — use that for scoring. Wire this only for the live dual-verdict hook
+    against ``forkproof.witnesses.branch_runs`` once Plan 003 is merged.
+    """
+
+    def run_discovery_tree(self, task_id: str) -> Sequence[DiscoveredBranch]:
         raise NotWiredError(
-            "DiscoveryDriver is not wired. After Plan 003 merges, bind this to "
-            "forkproof.witnesses.branch_runs (base rollout + Hacker BranchRuns) "
-            f"for task {task_id!r}."
+            "Live DiscoveryDriver is not wired. The offline benchmark uses "
+            "witness_loop_adapter.RecordedBatchDiscoveryDriver over recorded 003 "
+            "batch artifacts; wire this only for the live in-loop hook (WP6) to "
+            f"forkproof.witnesses.branch_runs for task {task_id!r}."
         )
 
 

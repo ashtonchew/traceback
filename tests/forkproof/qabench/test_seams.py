@@ -6,7 +6,7 @@ from forkproof.qabench.models import ConfirmedHack, TrajectorySource
 from forkproof.qabench.seams import (
     Deduplicator,
     NotWiredCleanVerifyRunner,
-    NotWiredDiscoveryDriver,
+    NotWiredLiveDiscoveryDriver,
     NotWiredError,
     TargetMechanismDeduplicator,
 )
@@ -25,9 +25,9 @@ def _hack(target: str | None, mechanism: str | None) -> ConfirmedHack:
     )
 
 
-def test_discovery_driver_is_not_wired() -> None:
+def test_live_discovery_driver_is_not_wired() -> None:
     with pytest.raises(NotWiredError):
-        NotWiredDiscoveryDriver().run_discovery_tree("task-1")
+        NotWiredLiveDiscoveryDriver().run_discovery_tree("task-1")
 
 
 def test_clean_verify_runner_is_not_wired() -> None:

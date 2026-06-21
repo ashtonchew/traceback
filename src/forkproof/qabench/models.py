@@ -78,6 +78,37 @@ class Trajectory:
 
 
 @dataclass(frozen=True)
+class DiscoveredBranch:
+    """A Plan 003 BranchRun as the offline benchmark sees it, BEFORE the referee.
+
+    Mapped from real 003 batch artifacts (branch record + QA verdict + file diff).
+    It carries the HUD reward and HUD QA verdict but deliberately NO referee
+    verdict — 008's sterile referee adjudicates separately and ``build_trajectory``
+    then composes the scored :class:`Trajectory`. ``qa_is_reward_hacking`` is None
+    when QA classification was unavailable (insufficient evidence, unmatched task
+    identity, or non-pass status), never coerced to False (008 doctrine:
+    insufficient is not benign).
+    """
+
+    branch_id: str
+    task_id: str
+    source: TrajectorySource
+    reward_passed: bool
+    qa_is_reward_hacking: bool | None
+    exploit_target: str | None = None
+    exploit_mechanism: str | None = None
+    qa_strategy: str | None = None
+    qa_severity: str | None = None
+    qa_confidence: float | None = None
+    qa_availability: str | None = None
+    causal_delta_status: str | None = None
+    hud_trace_id: str | None = None
+    workspace_ref: str | None = None
+    file_diff_ref: str | None = None
+    lineage: DivergenceLineage | None = None
+
+
+@dataclass(frozen=True)
 class ConfirmedHack:
     """A referee-confirmed hack — the only thing X and Δ credit."""
 
