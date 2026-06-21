@@ -12,6 +12,17 @@ REPORT_STATUSES = {"pass", "blocked", "failed"}
 LIVE_ATTEMPT_RESULTS = {"new-witness", "branches-launched", "timeout", "blocked", "failed", "audit-only"}
 STEP_STATUSES = {"passed", "displayed", "fallback", "blocked-with-proof", "failed"}
 METRIC_ABSENT_KEYS = {"not-measured", "not-applicable"}
+REQUIRED_METRICS = {
+    "branch_count",
+    "clusters",
+    "time_to_witness",
+    "reward_before",
+    "reward_after",
+    "control_retention",
+    "replay_rate",
+    "restore_latency",
+    "setup_avoided",
+}
 FORBIDDEN_SINGLE_RUN_CLAIMS = {
     "discovery_probability",
     "success_rate",
@@ -145,10 +156,12 @@ def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
 def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
     if not isinstance(metrics, list):
         raise DemoError("metric_invalid", "metrics must be a list")
+    seen = set()
     for metric in metrics:
         if not isinstance(metric, dict):
             raise DemoError("metric_invalid", "each metric must be an object")
         require_fields(metric, {"name"}, error_class="metric_incomplete")
+        seen.add(metric["name"])
         present = "value" in metric
         absent = [key for key in METRIC_ABSENT_KEYS if key in metric]
         if present and absent:
@@ -161,6 +174,9 @@ def _validate_metrics(metrics: list[dict[str, Any]]) -> None:
             raise DemoError("metric_invalid", f"metric {metric['name']} lacks evidence_ref")
         if absent and not metric.get("reason"):
             raise DemoError("metric_invalid", f"metric {metric['name']} lacks reason for absent value")
+    missing = sorted(REQUIRED_METRICS - seen)
+    if missing:
+        raise DemoError("metric_incomplete", f"report missing required metric(s): {missing}")
 
 
 def _validate_report_replay(record: dict[str, Any]) -> None:

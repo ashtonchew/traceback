@@ -183,6 +183,7 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T10:32:18Z — Hardened report status/source/live consistency. The validator now rejects invalid top-level report status, invalid live attempt results, `live-new-witness` without a new Witness result, `live-no-witness` that claims a new Witness, non-audit report replay, and Prior-Run Witness Replay without a bounded live attempt result. `plan-006-tests` now passes with 32 behavior tests.
 - 2026-06-21T10:47:12Z — Added demo readiness pack validation and CLI support. The pack validates evidence-backed auth/network/quota/artifact statuses, expected blocks, artifact refs, digest, and redaction without probing live systems or reading secrets. `plan-006-tests` now passes with 38 behavior tests.
 - 2026-06-21T11:02:44Z — Restacked this Plan 006 branch over the updated PR #27 / Plan 005 head `3105a44`. The rebase completed without conflicts, and `plan-006-tests` still passes with 38 behavior tests. Plan 005 remains blocked: harden-v0 found the rewarded hack but the fixer path ended with `harden_fixer_artifact_layout_drift` / `fix_failed`, so no validated patch, v1/v2 release results, release candidate, or sealed ReleaseProof exists.
+- 2026-06-21T11:12:36Z — Added core metrics validation. Reports must include branch count, clusters, time to Witness, before/after rewards, control retention, replay rate, restore latency, and setup avoided; unmeasured values remain allowed only as `not-measured`/`not-applicable` with reasons. `plan-006-tests` now passes with 39 behavior tests.
 - [ ] Demo command/orchestration complete.
 - [ ] Live discovery surface complete.
 - [x] Report/demo mode contract validation complete.
@@ -213,6 +214,7 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T10:32:18Z — Contract decision: Demo Report Replay must be audit-only, but it does not have to be Prior-Run Witness Replay. It preserves the source report's discovery mode and rejects only new branch/replay/proof/publication claims.
 - 2026-06-21T10:47:12Z — Implementation decision: readiness pack validation is static and artifact-backed before Plan 005 merges. It records `expected-block` for missing proof/candidate/publish authority instead of probing credentials, network, HUD, Modal, or reading secrets.
 - 2026-06-21T11:02:44Z — Stack decision: keep PR #29 based on `codex/plan-005-release-proof` after PR #27 advanced. Because Plan 005 is still draft/open and blocked, this branch remains a draft stacked PR rather than retargeting to `main`.
+- 2026-06-21T11:12:36Z — Contract decision: the core metrics list is required even before the full demo runs, but absent values must be explicitly labelled `not-measured` or `not-applicable` with reasons instead of omitted or marked `TBD`.
 
 ### Outcomes & Retrospective
 
@@ -228,3 +230,4 @@ The demo command is resumable by immutable artifact ids and never mutates sealed
 - 2026-06-21T10:32:18Z — Report status/source/live hardening complete. Remaining missing pieces are unchanged: sealed Plan 005 proof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
 - 2026-06-21T10:47:12Z — Readiness pack validation pass complete. Remaining missing pieces are unchanged: sealed Plan 005 proof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
 - 2026-06-21T11:02:44Z — Restack pass complete. Remaining missing pieces are unchanged after the updated Plan 005 base: sealed ReleaseProof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.
+- 2026-06-21T11:12:36Z — Core metrics contract pass complete. Remaining missing pieces are unchanged: sealed ReleaseProof/candidate, real Acceptance Demo execution, and trusted publication binding/authorized target.

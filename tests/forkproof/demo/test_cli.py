@@ -12,7 +12,7 @@ from forkproof.demo.cli import (
 from forkproof.demo.models import with_content_digest
 from forkproof.demo.publication import idempotency_key
 from forkproof.demo.readiness import REQUIRED_CHECKS
-from forkproof.demo.report import STEP_LABELS
+from forkproof.demo.report import REQUIRED_METRICS, STEP_LABELS
 from forkproof.releases.models import digest_json
 
 
@@ -29,6 +29,15 @@ def step(number: int, *, refs: list[str] | None = None):
 
 
 def report(**overrides):
+    metrics = [{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}]
+    metrics.extend(
+        {
+            "name": name,
+            "not-measured": True,
+            "reason": "Not measured before full Acceptance Demo Run evidence exists",
+        }
+        for name in sorted(REQUIRED_METRICS - {"branch_count"})
+    )
     record = {
         "schema_version": 1,
         "invocation_id": "demo-cli-source",
@@ -44,7 +53,7 @@ def report(**overrides):
         "live_branch_refs": ["branch-run-001.json"],
         "proof_source": "release-proof-pending",
         "steps": [step(i) for i in range(1, 14)],
-        "metrics": [{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}],
+        "metrics": metrics,
         "release_proof_ref": "blocked:plan-005",
         "publication_attempt_ref": "blocked:publish-binding",
         "accepted_branch_budget": 12,
@@ -175,7 +184,9 @@ def test_validate_report_cli_writes_pass_artifact(tmp_path):
 def test_validate_report_cli_writes_failure_artifact(tmp_path):
     source = tmp_path / "report.json"
     output = tmp_path / "validation.json"
-    bad = report(metrics=[{"name": "restore_latency", "value": "TBD", "evidence_ref": "metrics.json"}])
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics[0] = {"name": metrics[0]["name"], "value": "TBD", "evidence_ref": "metrics.json"}
+    bad = report(metrics=metrics)
     write_json(source, bad)
 
     assert validate_report(report=source, output=output) == 2

@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T11:02:44Z",
+  "updated_at": "2026-06-21T11:12:36Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -71,8 +71,8 @@
       "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after restacking over updated Plan 005 head: 38 passed.",
-      "recorded_at": "2026-06-21T11:02:44Z"
+      "observed_behavior": "Mapped Plan 006 tests passed after adding required core metrics validation: 39 passed.",
+      "recorded_at": "2026-06-21T11:12:36Z"
     },
     {
       "key": "integration-publication",
@@ -135,8 +135,8 @@
       "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after readiness pack validation.",
-      "recorded_at": "2026-06-21T10:47:12Z"
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after core metrics validation.",
+      "recorded_at": "2026-06-21T11:12:36Z"
     },
     {
       "key": "lint",
@@ -286,6 +286,11 @@
       "name": "Demo readiness pack validation",
       "status": "pass",
       "evidence": "Plan 006 now validates a digest-checked demo readiness pack for presentation/acceptance modes without probing live systems or reading secrets. The pack requires evidence-backed checks for HUD auth, Modal auth, model gateway auth, network, quota, source trace, ForkPoint, prior Witness, replay entrypoint, ProofSet, ReleaseProof, release candidate, publication attempt or expected block, and local artifact paths. Blocked packs require explicit blocked/expected-block reasons; passing packs cannot include blockers; secret-like content is rejected."
+    },
+    {
+      "name": "Core metrics validation",
+      "status": "pass",
+      "evidence": "Plan 006 report validation now requires the core metrics set: branch_count, clusters, time_to_witness, reward_before, reward_after, control_retention, replay_rate, restore_latency, and setup_avoided. Each metric may be measured with evidence_ref or absent as not-measured/not-applicable with reason, preserving honest pre-Gate-4 reporting."
     }
   ],
   "artifacts": [
@@ -394,6 +399,7 @@
     "2026-06-21T10:35:06Z — Compacted superseded command rows in this evidence manifest after latest validation results made earlier duplicate command rows redundant; the Plan 006 living-doc log retains the chronological history.",
     "2026-06-21T10:47:12Z — Added demo readiness pack validation and CLI support. This validates a digest-checked readiness pack with evidence-backed auth/network/quota/artifact statuses without probing live systems or reading secrets. Mapped plan-006-tests passed with 38 tests.",
     "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist.",
-    "2026-06-21T11:02:44Z — Restacked Plan 006 over updated PR #27 head 3105a44. The rebase completed cleanly and mapped Plan 006 tests still pass with 38 tests. Plan 005 remains blocked on harden_fixer_artifact_layout_drift/fix_failed, with no sealed ReleaseProof or release candidate."
+    "2026-06-21T11:02:44Z — Restacked Plan 006 over updated PR #27 head 3105a44. The rebase completed cleanly and mapped Plan 006 tests still pass with 38 tests. Plan 005 remains blocked on harden_fixer_artifact_layout_drift/fix_failed, with no sealed ReleaseProof or release candidate.",
+    "2026-06-21T11:12:36Z — Added core metrics validation. Reports must include branch_count, clusters, time_to_witness, reward_before, reward_after, control_retention, replay_rate, restore_latency, and setup_avoided, while allowing not-measured/not-applicable values with reasons before full Acceptance Demo evidence exists. Mapped plan-006-tests passed with 39 tests."
   ]
 }

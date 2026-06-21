@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from forkproof.demo.models import DemoError, with_content_digest
-from forkproof.demo.report import STEP_LABELS, validate_demo_report
+from forkproof.demo.report import REQUIRED_METRICS, STEP_LABELS, validate_demo_report
 
 
 def step(number: int, *, status: str = "passed", refs: list[str] | None = None):
@@ -19,6 +19,15 @@ def step(number: int, *, status: str = "passed", refs: list[str] | None = None):
 
 
 def report(**overrides):
+    metrics = [{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}]
+    metrics.extend(
+        {
+            "name": name,
+            "not-measured": True,
+            "reason": "Not measured before full Acceptance Demo Run evidence exists",
+        }
+        for name in sorted(REQUIRED_METRICS - {"branch_count"})
+    )
     record = {
         "schema_version": 1,
         "invocation_id": "demo-001",
@@ -34,10 +43,7 @@ def report(**overrides):
         "live_branch_refs": ["branch-run-001.json"],
         "proof_source": "release-proof-pending",
         "steps": [step(i) for i in range(1, 14)],
-        "metrics": [
-            {"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"},
-            {"name": "time_to_witness", "not-measured": True, "reason": "No fresh Witness in this run"},
-        ],
+        "metrics": metrics,
         "release_proof_ref": "blocked:plan-005",
         "publication_attempt_ref": "blocked:publish-binding",
         "accepted_branch_budget": 12,
@@ -153,8 +159,15 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
 
 
 def test_metrics_reject_tbd_and_single_run_statistical_overclaims():
+    metrics = [{"name": name, "not-measured": True, "reason": "not measured"} for name in sorted(REQUIRED_METRICS)]
+    metrics[0] = {"name": metrics[0]["name"], "value": "TBD", "evidence_ref": "x"}
     with pytest.raises(DemoError, match="TBD"):
-        validate_demo_report(report(metrics=[{"name": "restore_latency", "value": "TBD", "evidence_ref": "x"}]))
+        validate_demo_report(report(metrics=metrics))
 
     with pytest.raises(DemoError, match="single-run"):
         validate_demo_report(report(claims=["success_rate"]))
+
+
+def test_metrics_require_core_metric_set():
+    with pytest.raises(DemoError, match="missing required metric"):
+        validate_demo_report(report(metrics=[{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}]))
