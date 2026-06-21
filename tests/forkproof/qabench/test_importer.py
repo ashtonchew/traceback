@@ -31,7 +31,11 @@ def test_plan_env_materializes_layout_and_clean_verify(tmp_path: Path) -> None:
     assert (env_dir / "Dockerfile").exists()
     clean_verify = env_dir / "clean_verify.sh"
     assert clean_verify.exists()
-    assert "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1" in clean_verify.read_text(encoding="utf-8")
+    text = clean_verify.read_text(encoding="utf-8")
+    # Sterile via confined conftest discovery, but it must NOT globally disable
+    # plugin autoload (that would break tasks whose verification needs plugins).
+    assert "--confcutdir" in text
+    assert "PYTEST_DISABLE_PLUGIN_AUTOLOAD" not in text
 
 
 def test_provenance_records_pinned_digests(tmp_path: Path) -> None:

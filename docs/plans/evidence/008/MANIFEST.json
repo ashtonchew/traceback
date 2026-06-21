@@ -12,7 +12,7 @@
     {
       "command": "uv run pytest tests/forkproof/qabench/ -q",
       "exit_code": 0,
-      "output": "22 passed",
+      "output": "24 passed",
       "scope": "decoupled scaffold unit behavior (NOT the plan-008-tests mapped Done-when command, which is still unbound in COMMANDS.json)"
     },
     {
@@ -45,6 +45,7 @@
   "skips": [],
   "blockers": [],
   "notes": [
+    "2026-06-21 code-review fixes (4 findings applied): (F1) TargetMechanismDeduplicator now JSON-encodes the (target, mechanism) key so '::'-containing or blank/None values cannot collide-merge distinct clusters; (F2) referee label-agreement maps an explicit legit-label vocabulary and surfaces unmapped labels instead of silently scoring them legitimate; (F3) the clean_verify template confines conftest discovery (--confcutdir) instead of globally disabling pytest plugin autoload, which would have broken tasks whose verification needs plugins; (F4) UNDECIDED referee verdicts are excluded from the agreement-rate denominator and reported separately. Tests added for each; 24 passing.",
     "STATUS in-progress reflects DECOUPLED SCAFFOLD ONLY, built ahead of Gate 6 on the unmerged branch feat/plan-008-qabench-scaffold. Gate 6 is NOT open (Plan 003 has no sealed Witness yet) and this work is NOT merged and NOT claimed complete. Only the 003-independent WP cores exist: WP1 importer planner, WP3 referee/label-validation logic, WP5 scorer math, and the WP2/WP3/dedup SEAMS as not-wired stubs.",
     "STILL TODO before COMPLETE (needs Plan 003 merged + qabench envs materialized): wire DiscoveryDriver to forkproof.witnesses.branch_runs (WP2), wire CleanVerifyRunner to a real sterile sandbox over materialized envs/qabench/** (WP1/WP3), bind the symmetric dedup to Plan 003 (or keep TargetMechanismDeduplicator), run the QA baseline on real traces (WP4), materialize 20 envs, add the live dual-verdict hook + sealed report (WP6), and bind plan-008-tests / integration-qabench / bench-qa-vs-forkproof in COMMANDS.json.",
     "2026-06-21 dependency relaxation (owner-approved): depends_on is now [stochastic-witness-loop (003), legitimate-control-fixtures (004)]; the verifier-fix-and-release-proof (005) edge was removed and wave dropped 5 -> 4. 008 grounds hack-or-not on its own sterile referee plus the v1 grader (digest ecaf1222...b56f61f from Plans 001/004), and explicitly does not consume Plan 005's v2 grader or ReleaseProof. See the 008 Decision Log (2026-06-21) and 000-index.md.",

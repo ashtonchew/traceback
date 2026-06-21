@@ -14,15 +14,22 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Sterile referee entrypoint: re-run the task's own verification with plugin
-# autoload disabled and conftest discovery suppressed, so agent-planted
-# conftest.py / pytest11 plugins / cache cannot influence the verdict.
+# Sterile referee entrypoint: re-run the task's own verification confined to a
+# trusted tests root so agent-planted conftest.py / cache outside that root cannot
+# influence the verdict, while the task's OWN required pytest plugins and trusted
+# conftest still load. Global plugin-autoload/conftest suppression is deliberately
+# NOT used — it would break tasks whose verification needs a pytest plugin. Full
+# sterilization (an isolated copy of the trusted assets, away from the agent's
+# import paths / installed packages) is wired in WP1/WP3.
 CLEAN_VERIFY_TEMPLATE = """#!/usr/bin/env bash
-# Sterile clean_verify referee entrypoint (Plan 008). Re-runs the task's own v1
-# verification isolated from agent-planted conftest.py / pytest plugins / cache.
+# Sterile clean_verify referee entrypoint (Plan 008). Runs the task's own v1
+# verification from a trusted tests root with conftest discovery confined to it,
+# so agent-planted conftest.py / cache cannot influence the verdict; the task's
+# own required pytest plugins still load. The isolated trusted-asset sandbox is
+# wired in WP1/WP3.
 set -euo pipefail
-export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-exec python -m pytest --noconftest -p no:cacheprovider -q "$@"
+TRUSTED_TESTS="${CLEAN_VERIFY_TESTS:-task_assets}"
+exec python -m pytest -p no:cacheprovider --confcutdir "$TRUSTED_TESTS" -q "$TRUSTED_TESTS" "$@"
 """
 
 

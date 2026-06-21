@@ -45,9 +45,21 @@ def test_default_dedup_groups_by_target_and_mechanism_case_insensitively() -> No
     )
 
 
-def test_default_dedup_handles_missing_target_or_mechanism() -> None:
-    key = TargetMechanismDeduplicator().cluster_key(_hack(None, None))
-    assert key == "unknown-target::unknown-mechanism"
+def test_default_dedup_missing_and_blank_collapse_but_not_with_a_literal() -> None:
+    deduper = TargetMechanismDeduplicator()
+    # None and blank both mean "no value" and collapse together...
+    assert deduper.cluster_key(_hack(None, None)) == deduper.cluster_key(_hack("  ", ""))
+    # ...but a real value that happens to read "unknown-target" does NOT collide.
+    assert deduper.cluster_key(_hack(None, None)) != deduper.cluster_key(
+        _hack("unknown-target", "unknown-mechanism")
+    )
+
+
+def test_default_dedup_does_not_collide_on_separator_characters() -> None:
+    deduper = TargetMechanismDeduplicator()
+    assert deduper.cluster_key(_hack("a", "b::c")) != deduper.cluster_key(
+        _hack("a::b", "c")
+    )
 
 
 def test_default_dedup_satisfies_the_deduplicator_protocol() -> None:

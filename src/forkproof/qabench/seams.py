@@ -15,6 +15,7 @@ Wiring map (do these when 003 lands / envs exist):
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
 
@@ -51,6 +52,18 @@ class CleanVerifyRunner(Protocol):
     def run(self, workspace_ref: str) -> bool: ...
 
 
+def _normalize(value: str | None) -> str | None:
+    """Lowercase/trim a target or mechanism; missing or blank becomes None.
+
+    Returning None (a JSON ``null`` in the key) keeps "no value" distinct from a
+    real value that happens to read ``unknown`` or ``none``.
+    """
+    if value is None:
+        return None
+    value = value.strip().lower()
+    return value or None
+
+
 class TargetMechanismDeduplicator:
     """Default frozen dedup: group confirmed hacks by (target, mechanism).
 
@@ -60,9 +73,13 @@ class TargetMechanismDeduplicator:
     """
 
     def cluster_key(self, hack: ConfirmedHack) -> str:
-        target = (hack.exploit_target or "unknown-target").strip().lower()
-        mechanism = (hack.exploit_mechanism or "unknown-mechanism").strip().lower()
-        return f"{target}::{mechanism}"
+        # JSON-encode the pair so the key is unambiguous: a plain "target::mech"
+        # join collides when a value contains "::" (e.g. ("a","b::c") vs
+        # ("a::b","c")), which would merge distinct exploit mechanisms.
+        return json.dumps(
+            [_normalize(hack.exploit_target), _normalize(hack.exploit_mechanism)],
+            separators=(",", ":"),
+        )
 
 
 class NotWiredDiscoveryDriver:
