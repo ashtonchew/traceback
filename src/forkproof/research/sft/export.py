@@ -25,7 +25,7 @@ def trace_to_fireworks_example(trace: TraceRecord, *, system_prompt: str = DEFAU
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": trace.task_prompt},
-            {"role": "assistant", "content": trace.assistant_output},
+            {"role": "assistant", "content": trace.assistant_output, "weight": 1},
         ]
     }
 
@@ -61,6 +61,12 @@ def validate_fireworks_example(example: dict[str, object]) -> None:
             raise ValueError(f"messages[{index}] has invalid role: {role!r}")
         if not isinstance(content, str) or not content.strip():
             raise ValueError(f"messages[{index}] must include non-empty string content")
+        weight = message.get("weight")
+        if weight is not None:
+            if role != "assistant":
+                raise ValueError(f"messages[{index}] weight is only valid on assistant turns")
+            if weight not in (0, 1):
+                raise ValueError(f"messages[{index}] weight must be 0 or 1")
 
 
 def export_sft_jsonl(

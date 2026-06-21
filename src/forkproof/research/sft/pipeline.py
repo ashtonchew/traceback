@@ -17,6 +17,7 @@ from forkproof.research.sft.loader import infer_source, load_traces
 from forkproof.research.sft.metrics import MetricsSummary
 from forkproof.research.sft.models import TraceRecord, TraceSource
 from forkproof.research.sft.report import write_phase2_report
+from forkproof.research.sft.training_recommendations import export_training_recommendations
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +67,12 @@ def run_sft_pipeline(
     export_metadata(filtered.hardened_sft, hardened_metadata_path, source_filter="hardened_sft")
     rejected_count = export_rejected_hacks_audit(filtered.rejected_hacks, rejected_audit_path)
 
+    training_recommendations_path = out / "training_recommendations.json"
+    export_training_recommendations(
+        training_recommendations_path,
+        hardened_example_count=hardened_count,
+    )
+
     manifest = {
         "input_path": str(resolved_input),
         "output_dir": str(out),
@@ -84,6 +91,7 @@ def run_sft_pipeline(
             "raw_verifier_sft_metadata": str(raw_metadata_path),
             "hardened_verifier_sft_metadata": str(hardened_metadata_path),
             "rejected_hacks_audit": str(rejected_audit_path),
+            "training_recommendations": str(training_recommendations_path),
         },
         "export_counts": {
             "raw_sft_examples": raw_count,

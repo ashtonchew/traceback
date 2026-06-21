@@ -19,6 +19,7 @@ from forkproof.research.sft.export import (
 )
 from forkproof.research.sft.filter import filter_traces
 from forkproof.research.sft.pipeline import run_sft_pipeline
+from forkproof.research.sft.training_recommendations import build_training_recommendations
 from mock_expectations import MOCK_METRICS
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -35,6 +36,8 @@ class ExportTests(unittest.TestCase):
         validate_fireworks_example(example)
         roles = [message["role"] for message in example["messages"]]  # type: ignore[index]
         self.assertEqual(roles, ["system", "user", "assistant"])
+        assistant = example["messages"][-1]  # type: ignore[index]
+        self.assertEqual(assistant["weight"], 1)
 
     def test_export_sft_jsonl_uses_shared_system_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -124,6 +127,7 @@ class PipelineTests(unittest.TestCase):
                 "raw_verifier_sft.metadata.jsonl",
                 "hardened_verifier_sft.metadata.jsonl",
                 "rejected_hacks_audit.jsonl",
+                "training_recommendations.json",
                 "run_manifest.json",
             ]
             for name in expected_files:
@@ -138,6 +142,27 @@ class PipelineTests(unittest.TestCase):
                 manifest["export_counts"]["hardened_sft_examples"],
                 MOCK_METRICS["hardened_reward_one_admitted"],
             )
+            self.assertIn("training_recommendations", manifest["artifacts"])
+
+            recommendations = json.loads(
+                (out / "training_recommendations.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                recommendations["hardened_example_count"],
+                MOCK_METRICS["hardened_reward_one_admitted"],
+            )
+            self.assertEqual(recommendations["sft"]["lora_target"], "all_layers")
+            self.assertEqual(recommendations["sft"]["learning_rate_multiplier_vs_full_ft"], 10)
+
+    def test_training_recommendations_scale_with_example_count(self) -> None:
+        small = build_training_recommendations(hardened_example_count=4)
+        self.assertEqual(small["sft"]["lora_rank"], 16)
+        self.assertEqual(small["sft"]["batch_size_max"], 4)
+        self.assertEqual(small["rft"]["lora_rank"], 16)
+
+        large = build_training_recommendations(hardened_example_count=150)
+        self.assertEqual(large["sft"]["lora_rank"], 64)
+        self.assertEqual(large["sft"]["batch_size_max"], 4)
 
     def test_cli_runs_successfully(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
