@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
+from .orchestration import run_acceptance_demo
 from .publication import publication_preflight, validate_publication_attempt
 from .readiness import validate_readiness_pack
 from .redaction import redact_record
@@ -397,10 +398,34 @@ def validate_readiness(*, pack: Path, output: Path | None) -> int:
     return 0
 
 
+def acceptance_demo_command(*, count: int, concurrency: int) -> int:
+    """Run the noninteractive Acceptance Demo Run and report its outcome."""
+
+    try:
+        outcome = run_acceptance_demo(count=count, concurrency=concurrency)
+    except DemoError as exc:
+        _print_failure(exc)
+        return 2
+    if outcome.report_ref:
+        print(f"WROTE {outcome.report_ref}")
+    if outcome.publication_attempt_ref:
+        print(f"WROTE {outcome.publication_attempt_ref}")
+    if outcome.readiness_pack_ref:
+        print(f"WROTE {outcome.readiness_pack_ref}")
+    if outcome.resource_stop_ref:
+        print(f"STOP: {outcome.resource_stop_ref}: {outcome.observed_behavior}")
+        return outcome.exit_code
+    print(f"PASS: acceptance-demo invocation={outcome.invocation_id}")
+    return outcome.exit_code
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("demo-preflight")
+    acceptance_parser = sub.add_parser("acceptance-demo")
+    acceptance_parser.add_argument("--count", type=int, default=12)
+    acceptance_parser.add_argument("--concurrency", type=int, default=12)
     validate_parser = sub.add_parser("validate-report")
     validate_parser.add_argument("--report", required=True, type=Path)
     validate_parser.add_argument("--output", type=Path)
@@ -426,6 +451,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.command == "demo-preflight":
         return demo_preflight()
+    if args.command == "acceptance-demo":
+        return acceptance_demo_command(count=args.count, concurrency=args.concurrency)
     if args.command == "validate-report":
         return validate_report(report=args.report, output=args.output)
     if args.command == "report-replay":

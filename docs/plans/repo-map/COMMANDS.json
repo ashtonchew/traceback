@@ -304,14 +304,15 @@
         "python",
         "-m",
         "forkproof.demo.cli",
-        "demo-preflight"
+        "acceptance-demo"
       ],
       "cwd": ".",
       "env": {
-        "PYTHONPATH": "src"
+        "PYTHONPATH": "src",
+        "FORKPROOF_ALLOW_EXTERNAL_QA": "1"
       },
-      "timeout_seconds": 120,
-      "reason": "Runs the Plan 006 demo preflight. Until Gate 4 and publish binding exist, it records blockers and exits nonzero rather than claiming an Acceptance Demo Run."
+      "timeout_seconds": 1800,
+      "reason": "Runs the Plan 006 noninteractive Acceptance Demo Run: launches the full 12-branch live budget from the accepted ForkPoint, persists the fresh branch run under Plan 006 ownership, and writes a validating 13-step report.json, readiness pack, and blocked-with-proof PublicationAttempt. Exits 0 only when report, publication, and readiness all validate; otherwise it records a resource STOP and exits nonzero. The 1800s budget matches the Plan 003 live integration command and leaves room for remote agent/QA jitter. Modal/HUD/Anthropic credentials come from the root .env via load_local_env; FORKPROOF_ALLOW_EXTERNAL_QA=1 authorizes the repo-bound Reward Hacking QA classification."
     },
     "demo-report-replay": {
       "status": "verified",
