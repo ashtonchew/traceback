@@ -80,6 +80,25 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+# Repo-relative top-level dirs. Source artifacts sometimes record an absolute or
+# worktree-local path (e.g. a harden-v0 run inside `.worktrees/<plan>/...`); the
+# exported JSON is published (and deployed) so it must not leak a local home dir.
+_REPO_TOPS = ("artifacts/", "docs/", "src/", "fixtures/", "envs/", "tests/", "scripts/")
+
+
+def _rel_path(path: str) -> str:
+    """Strip any absolute or worktree prefix, keeping the repo-relative tail."""
+    if not isinstance(path, str):
+        return path
+    for top in _REPO_TOPS:
+        idx = path.find("/" + top)
+        if idx != -1:
+            return path[idx + 1:]
+        if path.startswith(top):
+            return path
+    return path
+
+
 def _forkpoint_record() -> dict[str, Any]:
     return _load_json(FORKPOINT_RECORD)
 
@@ -349,7 +368,7 @@ def build_release_bundle() -> dict[str, Any]:
         if item.get("status") == "blocked"
     ]
     patch = {
-        "patchRef": proof["patch_ref"],
+        "patchRef": _rel_path(proof["patch_ref"]),
         "iteration": 1,
         "label": "Release candidate v2",
         "generatedBy": "harden-v0 fixer",

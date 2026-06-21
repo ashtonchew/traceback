@@ -6,6 +6,8 @@
 .venv/
 .ruff_cache/
 .codex-worktrees/
+.worktrees/
+workspace/
 __pycache__/
 *.py[cod]
 .hud_eval.toml
