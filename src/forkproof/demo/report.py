@@ -231,9 +231,13 @@ def _validate_presentation(record: dict[str, Any]) -> None:
 
 
 def _validate_acceptance(record: dict[str, Any]) -> None:
-    if record.get("accepted_branch_budget") and record.get("launched_branch_count") == record["accepted_branch_budget"]:
+    budget = record.get("accepted_branch_budget")
+    launched = record.get("launched_branch_count")
+    if isinstance(budget, int) and budget > 0 and launched == budget:
         return
     if record.get("resource_stop_ref"):
+        if record["status"] == "pass":
+            raise DemoError("acceptance_budget_incomplete", "passing acceptance report cannot use resource STOP")
         return
     raise DemoError("acceptance_budget_incomplete", "acceptance needs full branch budget or resource STOP evidence")
 

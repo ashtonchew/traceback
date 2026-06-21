@@ -58,6 +58,25 @@ def test_acceptance_report_requires_thirteen_evidence_backed_steps():
     validate_demo_report(report())
 
 
+def test_acceptance_report_requires_full_budget_or_nonpassing_resource_stop():
+    with pytest.raises(DemoError, match="full branch budget"):
+        validate_demo_report(report(accepted_branch_budget="12", launched_branch_count="12"))
+
+    validate_demo_report(report(accepted_branch_budget=None, launched_branch_count=None, resource_stop_ref="quota-stop.json"))
+
+    with pytest.raises(DemoError, match="resource STOP"):
+        validate_demo_report(
+            report(
+                status="pass",
+                accepted_branch_budget=None,
+                launched_branch_count=None,
+                release_proof_ref="release-proof.json",
+                publication_attempt_ref="publication-attempt.json",
+                resource_stop_ref="quota-stop.json",
+            )
+        )
+
+
 def test_report_rejects_invalid_status_and_live_attempt_result():
     with pytest.raises(DemoError, match="report status"):
         validate_demo_report(report(status="skipped"))
