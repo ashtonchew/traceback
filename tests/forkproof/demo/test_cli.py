@@ -28,6 +28,10 @@ def step(number: int, *, status: str = "passed", refs: list[str] | None = None):
     }
 
 
+def branch_refs(count: int = 12) -> list[str]:
+    return [f"branch-run-{index:03d}.json" for index in range(1, count + 1)]
+
+
 def report(**overrides):
     metrics = [{"name": "branch_count", "value": 12, "evidence_ref": "branch-run-batch.json"}]
     metrics.extend(
@@ -53,7 +57,7 @@ def report(**overrides):
         "discovery_source": "live-no-witness",
         "live_attempt_id": "live-001",
         "live_attempt_result": "branches-launched",
-        "live_branch_refs": ["branch-run-001.json"],
+        "live_branch_refs": branch_refs(),
         "proof_source": "release-proof-pending",
         "steps": steps,
         "metrics": metrics,

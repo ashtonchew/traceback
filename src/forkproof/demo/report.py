@@ -148,10 +148,13 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             raise DemoError("fallback_unlabeled", "prior-run replay requires fallback step and replay refs")
         if not any(step["step_number"] in {6, 7, 10} for step in fallback_steps):
             raise DemoError("fallback_unlabeled", "fallback status must be on replay-relevant demo steps")
-    if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not report.get("live_branch_refs"):
+    live_branch_refs = report.get("live_branch_refs")
+    if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not live_branch_refs:
         raise DemoError("fake_live_branch", "live discovery claims require persisted branch refs")
-    if report.get("live_branch_refs") is not None and not _is_string_list(report["live_branch_refs"]):
+    if live_branch_refs is not None and not _is_string_list(live_branch_refs):
         raise DemoError("fake_live_branch", "live_branch_refs must be non-empty strings")
+    if isinstance(live_branch_refs, list) and len(set(live_branch_refs)) != len(live_branch_refs):
+        raise DemoError("fake_live_branch", "live_branch_refs must be unique persisted branch refs")
     if report["discovery_source"] == "live-new-witness":
         if (
             not report.get("live_witness_ref")
@@ -292,6 +295,8 @@ def _validate_presentation(record: dict[str, Any]) -> None:
         raise DemoError("fallback_unlabeled", "presentation timeout must switch to Prior-Run Witness Replay")
     if record["discovery_source"] == "prior-run-replay" and not record.get("fallback_reason"):
         raise DemoError("fallback_unlabeled", "presentation fallback needs fallback_reason")
+    if record["live_attempt_result"] == "timeout" and not record.get("live_branch_refs"):
+        raise DemoError("fake_live_branch", "presentation timeout needs persisted branch refs before fallback")
 
 
 def _validate_acceptance(record: dict[str, Any]) -> None:
@@ -300,6 +305,13 @@ def _validate_acceptance(record: dict[str, Any]) -> None:
     if isinstance(budget, int) and budget > 0 and launched == budget:
         if record["status"] == "pass" and record["live_attempt_result"] not in {"branches-launched", "new-witness"}:
             raise DemoError("acceptance_budget_incomplete", "passing acceptance requires launched live branches")
+        if record["live_attempt_result"] in {"branches-launched", "new-witness"}:
+            live_branch_refs = record.get("live_branch_refs")
+            if not isinstance(live_branch_refs, list) or len(live_branch_refs) != launched:
+                raise DemoError(
+                    "fake_live_branch",
+                    "acceptance launched_branch_count must match persisted live_branch_refs",
+                )
         if record["live_attempt_result"] in {"blocked", "failed", "timeout"} and not record.get("resource_stop_ref"):
             raise DemoError("acceptance_budget_incomplete", "blocked acceptance attempt needs STOP evidence")
         return

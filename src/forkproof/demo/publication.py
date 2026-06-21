@@ -111,7 +111,7 @@ def publication_preflight(
         "target_id": target_id or "missing-target",
         "publisher_capability_label": publisher_capability_label or "missing-capability",
         "command_key": PUBLICATION_COMMAND_KEY,
-        "command_argv_ref": publish_binding_ref or "missing-publish-binding",
+        "command_argv_ref": publish_binding_ref or f"docs/plans/repo-map/{COMMAND_REF_SUFFIX}",
         "trusted_context_ref": trusted_context_ref or "missing-trusted-context",
         "evidence_refs": evidence,
         "redaction_status": "redacted",
@@ -237,17 +237,17 @@ def _require_trusted_publication_context(record: dict[str, Any], *, require_publ
             raise DemoError("publication_attempt_invalid", f"{field} is not available")
         if _is_untrusted_ref(record.get(field)):
             raise DemoError("publication_attempt_invalid", f"{field} is not trusted")
+    command_ref = record.get("command_argv_ref")
+    if str(command_ref).startswith("missing-"):
+        raise DemoError("publication_attempt_invalid", "command_argv_ref is not available")
+    if not _trusted_command_ref(command_ref):
+        raise DemoError("publication_attempt_invalid", "command_argv_ref must reference integration-publication")
     if require_publish_binding:
         for field in ("publisher_capability_label",):
             if str(record.get(field, "")).startswith("missing-"):
                 raise DemoError("publication_attempt_invalid", f"{field} is not available")
             if _is_untrusted_ref(record.get(field)):
                 raise DemoError("publication_attempt_invalid", f"{field} is not trusted")
-        command_ref = record.get("command_argv_ref")
-        if str(command_ref).startswith("missing-"):
-            raise DemoError("publication_attempt_invalid", "command_argv_ref is not available")
-        if not _trusted_command_ref(command_ref):
-            raise DemoError("publication_attempt_invalid", "command_argv_ref must reference integration-publication")
 
 
 def _trusted_command_ref(value: Any) -> bool:

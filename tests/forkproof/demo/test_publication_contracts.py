@@ -103,6 +103,7 @@ def test_preflight_records_blocked_with_proof_only_after_passing_proof():
 
     assert record["outcome"] == "blocked-with-proof"
     assert record["release_proof_gate_status"] == "pass"
+    assert record["command_argv_ref"] == "docs/plans/repo-map/COMMANDS.json:integration-publication"
     validate_publication_attempt(record)
 
 
@@ -234,6 +235,9 @@ def test_publication_attempt_rejects_wrong_command_and_duplicate_evidence_refs()
                 command_argv_ref="tmp/untrusted_publish.py",
             )
         )
+
+    with pytest.raises(DemoError, match="command_argv_ref must reference integration-publication"):
+        validate_publication_attempt(attempt(command_argv_ref="tmp/untrusted_publish.py"))
 
     with pytest.raises(DemoError, match="trusted_context_ref is not trusted"):
         validate_publication_attempt(attempt(trusted_context_ref="artifacts/forkproof/demo/branch-owned.json"))

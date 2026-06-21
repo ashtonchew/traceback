@@ -6,6 +6,10 @@ from forkproof.demo.models import DemoError, with_content_digest
 from forkproof.demo.report import REQUIRED_METRICS, STEP_LABELS, validate_demo_report
 
 
+def branch_refs(count: int = 12) -> list[str]:
+    return [f"branch-run-{index:03d}.json" for index in range(1, count + 1)]
+
+
 def step(number: int, *, status: str = "passed", refs: list[str] | None = None):
     return {
         "step_number": number,
@@ -46,7 +50,7 @@ def report(**overrides):
         "discovery_source": "live-no-witness",
         "live_attempt_id": "live-001",
         "live_attempt_result": "branches-launched",
-        "live_branch_refs": ["branch-run-001.json"],
+        "live_branch_refs": branch_refs(),
         "proof_source": "release-proof-pending",
         "steps": steps,
         "metrics": metrics,
@@ -127,14 +131,20 @@ def test_report_rejects_malformed_step_and_branch_refs():
     with pytest.raises(DemoError, match="live_branch_refs"):
         validate_demo_report(report(live_branch_refs=["branch-run-001.json", ""]))
 
+    with pytest.raises(DemoError, match="unique"):
+        validate_demo_report(report(live_branch_refs=["branch-run-001.json"] * 12))
+
     steps[0] = {**step(1), "step_number": "1"}
     with pytest.raises(DemoError, match="step numbers must be integers"):
         validate_demo_report(report(steps=steps))
 
 
 def test_acceptance_report_rejects_fake_live_branch_claims():
-    with pytest.raises(DemoError, match="live discovery claims"):
+    with pytest.raises(DemoError, match="launched_branch_count"):
         validate_demo_report(report(live_branch_refs=[]))
+
+    with pytest.raises(DemoError, match="launched_branch_count"):
+        validate_demo_report(report(live_branch_refs=branch_refs(1)))
 
     with pytest.raises(DemoError, match="live-new-witness"):
         validate_demo_report(report(discovery_source="live-new-witness", live_attempt_result="branches-launched"))
@@ -290,6 +300,22 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
                 discovery_source="live-no-witness",
                 live_attempt_result="timeout",
                 presentation_budget_seconds=30,
+            )
+        )
+
+    with pytest.raises(DemoError, match="persisted branch refs before fallback"):
+        validate_demo_report(
+            report(
+                demo_mode="presentation",
+                discovery_source="prior-run-replay",
+                live_attempt_result="timeout",
+                presentation_budget_seconds=30,
+                fallback_reason="presentation timeout",
+                live_branch_refs=[],
+                prior_run_id="run-001",
+                prior_run_witness_ref="wit-001.json",
+                prior_run_witness_digest="sha256:wit-001",
+                new_replay_ref="replay-001.json",
             )
         )
 
