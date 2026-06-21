@@ -18,8 +18,17 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from collections.abc import Iterable, Sequence
+
 from forkproof.qabench import referee
-from forkproof.qabench.models import DiscoveredBranch, Trajectory, TrajectorySource
+from forkproof.qabench.models import (
+    BenchmarkReport,
+    DiscoveredBranch,
+    Trajectory,
+    TrajectorySource,
+)
+from forkproof.qabench.scoring import score
+from forkproof.qabench.seams import CleanVerifyRunner
 
 
 def build_hud_image(env_dir: Path | str, tag: str | None = None) -> str:
@@ -93,3 +102,35 @@ def compose_base_trajectory(
         workspace_ref=workspace_ref,
     )
     return referee.build_trajectory(branch, clean_verify_passed)
+
+
+def adjudicate_branches(
+    branches: Iterable[DiscoveredBranch],
+    clean_verify: CleanVerifyRunner,
+) -> list[Trajectory]:
+    """Run the sterile referee on each rewarded branch and compose scored Trajectories.
+
+    Only rewarded branches with a restorable workspace are adjudicated; a non-rewarded
+    branch is not a reward-hack candidate, and a missing workspace leaves clean_verify
+    unrunnable (UNDECIDED, never silently legitimate).
+    """
+    trajectories: list[Trajectory] = []
+    for branch in branches:
+        clean_verify_passed: bool | None = None
+        if branch.reward_passed and branch.workspace_ref:
+            clean_verify_passed = clean_verify.run(branch.workspace_ref)
+        trajectories.append(referee.build_trajectory(branch, clean_verify_passed))
+    return trajectories
+
+
+def score_task(
+    branches: Sequence[DiscoveredBranch],
+    clean_verify: CleanVerifyRunner,
+    *,
+    base_trajectory: Trajectory | None = None,
+) -> BenchmarkReport:
+    """Adjudicate discovery branches (+ an optional base trajectory) into X and Δ."""
+    trajectories = adjudicate_branches(branches, clean_verify)
+    if base_trajectory is not None:
+        trajectories = [base_trajectory, *trajectories]
+    return score(trajectories)
