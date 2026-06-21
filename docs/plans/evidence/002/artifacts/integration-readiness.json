@@ -24,23 +24,23 @@
     "task_id",
     "task_visible_probe"
   ],
-  "live_boundary_forkpoint_id": "fp-76c8e24dec5b35e4dda8e756",
+  "live_boundary_forkpoint_id": "fp-c2adfb186abac17f61ac4824",
   "live_boundary_forkpoint_ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
-  "live_boundary_snapshot_id": "im-01KVKR1EMTJPCZGGZ3X1H6FHM6",
+  "live_boundary_snapshot_id": "im-01KVKRSVCSKF89KF283WDW6G0G",
   "modal_filesystem_probe_ref": "docs/plans/evidence/002/artifacts/modal-filesystem-probe.json",
-  "modal_snapshot_id": "im-01KVKR026DFNKWQR0QBPFFY7XW",
+  "modal_snapshot_id": "im-01KVKRQZ2X8PJ4CWM9S5HKF9A4",
   "modal_snapshot_mode": "filesystem",
   "remaining_real_system_gaps": [
     "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
-    "full branch security controls remain located-owned outside Plan 002",
-    "environment image identity is a deterministic source-tree digest, not a registry manifest digest"
+    "full branch security acceptance remains outside Plan 002 despite restored-sandbox surface inventory",
+    "environment image identity combines Docker registry base manifest, checked-in source tree, and Modal recipe rather than a Modal-internal built image manifest"
   ],
   "scope": "checked-in-trace-evidence plus local provider contract",
   "status": "readiness-pass",
   "trace_boundary_summary_ref": "docs/plans/evidence/002/artifacts/trace-boundary-summary.json",
   "trace_event_count": 66,
   "trace_raw_events_sha256": "4a856566523b9fc338bbcdf130735e34267ff42ddc9a9aab5a5a3da26d53fa59",
-  "trace_replay_snapshot_id": "im-01KVKR0QESM17D6TN4X330FHVF",
+  "trace_replay_snapshot_id": "im-01KVKRS0M85SXN7ZT45YXM9MX1",
   "trace_replay_snapshot_ref": "docs/plans/evidence/002/artifacts/trace-replay-snapshot.json",
   "trace_replay_tool_count": 29
 }

@@ -2,7 +2,7 @@
   "base_image_digest": "sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348",
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
   "environment_image_digest": "forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee",
-  "fork_point_id": "fp-76c8e24dec5b35e4dda8e756",
+  "fork_point_id": "fp-c2adfb186abac17f61ac4824",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -77,7 +77,7 @@
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "672ee168b45b8580d72075de4c2bf2a7dbd621d62dc1cdcb05110b880b1a5bc9",
+  "restored_grade_output_sha256": "f20c9ebf4f8dae3bfd7b1f842bac9ebe4890316f60856a76401dae5a1fed58e4",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
   "security_probe": {
@@ -86,15 +86,56 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "63174d634e157b18f76317d92336ee8d0a1e01c181b028b12b0239b091a3d34a",
-  "snapshot_id": "im-01KVKR1EMTJPCZGGZ3X1H6FHM6",
+  "snapshot_digest": "92c611adea00ce395429dd2820088fa2784de897154501b244ddb3212c65640d",
+  "snapshot_id": "im-01KVKRSVCSKF89KF283WDW6G0G",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKR1EMTJPCZGGZ3X1H6FHM6",
+  "snapshot_restore_ref": "modal-image://im-01KVKRSVCSKF89KF283WDW6G0G",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",
     "unavailable-plan-003-owned",
     "unavailable-plan-003-owned"
   ],
-  "status": "live-boundary-rerun-forkpoint-pass"
+  "status": "live-boundary-rerun-forkpoint-pass",
+  "surface_inventory": {
+    "branch_relevant_paths": [
+      "/app/query.py",
+      "/app/task_assets",
+      "/data/db",
+      "/var/log/mongodb.log"
+    ],
+    "cwd": "/app",
+    "path_writable": {
+      "/app": true,
+      "/app/task_assets": true,
+      "/data/db": true,
+      "/root": true,
+      "/tmp": true,
+      "/var/log/mongodb.log": true
+    },
+    "python_env": {
+      "PYTHONHASHSEED": "0",
+      "PYTHONPATH": "/pkg/:/root/"
+    },
+    "python_executable": "/usr/bin/python3",
+    "python_path": [
+      "",
+      "/pkg",
+      "/root",
+      "/usr/lib/python310.zip",
+      "/usr/lib/python3.10",
+      "/usr/lib/python3.10/lib-dynload",
+      "/usr/local/lib/python3.10/dist-packages",
+      "/usr/lib/python3/dist-packages"
+    ],
+    "task_assets_sha256": {
+      "init_data.py": "3ce337a7907a4b37b30e543967bf4ac7c382e202b9644eb68c264dd484d5fe54",
+      "instruction.md": "528c95bfb8e94580efa657de4293c4f1e96fe14b472962abc157f02ac4de251f",
+      "orders.json": "084b8f80170c7890702c75cba6e4f0c93fc06a681846f267b4e7d588433f9600",
+      "products.json": "a01a60e519d8c16ab793b2a656210abc5aade2d76de1d4be3a237dd2d9ec03ea",
+      "reference_solution.sh": "b254884ca4e8382949cd245f23116bb404254239c57292b784c95ae543ab960e",
+      "test_outputs.py": "ad132b324e84c2ab09460b73f4a74284bbe28b4e5c34fde80a22e0015e10c7f1"
+    },
+    "trusted_evidence_root": "outside sandbox: docs/plans/evidence/002"
+  }
 }

@@ -100,8 +100,8 @@ def main() -> int:
         "handoff_keys": sorted(handoff),
         "remaining_real_system_gaps": [
             "Live boundary capture is an orchestrated accepted-trace rerun, not the already-finished historical sandbox instance",
-            "full branch security controls remain located-owned outside Plan 002",
-            "environment image identity is a deterministic source-tree digest, not a registry manifest digest",
+            "full branch security acceptance remains outside Plan 002 despite restored-sandbox surface inventory",
+            "environment image identity combines Docker registry base manifest, checked-in source tree, and Modal recipe rather than a Modal-internal built image manifest",
         ],
     }
     EVIDENCE.mkdir(parents=True, exist_ok=True)

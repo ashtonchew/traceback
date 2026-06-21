@@ -89,6 +89,36 @@ def _security_probe(sb: Any) -> dict[str, str]:
     return json.loads(_exec(sb, script, timeout=20).strip())
 
 
+def _surface_inventory(sb: Any) -> dict[str, Any]:
+    script = (
+        "python3 - <<'PY'\n"
+        "from pathlib import Path\n"
+        "import hashlib, json, os, sys\n"
+        "paths = ['/app', '/app/task_assets', '/data/db', '/var/log/mongodb.log', '/tmp', '/root']\n"
+        "def writable(path):\n"
+        "    p = Path(path)\n"
+        "    return p.exists() and os.access(path, os.W_OK)\n"
+        "env_allowlist = {'PYTHONHASHSEED', 'PYTHONPATH'}\n"
+        "task_assets = {}\n"
+        "for path in sorted(Path('/app/task_assets').glob('*')):\n"
+        "    if path.is_file():\n"
+        "        task_assets[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()\n"
+        "result = {\n"
+        "  'cwd': os.getcwd(),\n"
+        "  'python_executable': sys.executable,\n"
+        "  'python_path': sys.path,\n"
+        "  'python_env': {k: os.environ[k] for k in sorted(env_allowlist) if k in os.environ},\n"
+        "  'path_writable': {p: writable(p) for p in paths},\n"
+        "  'task_assets_sha256': task_assets,\n"
+        "  'branch_relevant_paths': ['/app/query.py', '/app/task_assets', '/data/db', '/var/log/mongodb.log'],\n"
+        "  'trusted_evidence_root': 'outside sandbox: docs/plans/evidence/002',\n"
+        "}\n"
+        "print(json.dumps(result, sort_keys=True))\n"
+        "PY"
+    )
+    return json.loads(_exec(sb, script, timeout=30).strip())
+
+
 class ModalForkPointProvider:
     def __init__(self, sandbox: Any, app: Any):
         self._sandbox = sandbox
@@ -145,12 +175,14 @@ class ModalForkPointProvider:
             timeout=180,
         )
         security = _security_probe(self._restored)
+        inventory = _surface_inventory(self._restored)
         return {
             "task_state_root": "/",
             "query_py_sha256": query_sha,
             "restored_grade_output_sha256": digest_json(grader),
             "restored_sandbox_probe": "query hash and pytest grader executed after restore",
             "security_probe": security,
+            "surface_inventory": inventory,
         }
 
     def cleanup(self, snapshot_id: str) -> None:
@@ -318,6 +350,7 @@ def run_live_boundary_probe() -> dict[str, Any]:
             "resource_policy": record["resource_policy"],
             "source_evidence_refs": record["source_evidence_refs"],
             "security_probe": handoff["task_visible_probe"]["security_probe"],
+            "surface_inventory": handoff["task_visible_probe"]["surface_inventory"],
             "negative_restore_checks": negative_checks,
             "limitations": [
                 "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",

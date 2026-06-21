@@ -5,7 +5,7 @@
   "wave": 2,
   "status": "in-progress",
   "started_at": "2026-06-20T22:58:25Z",
-  "updated_at": "2026-06-21T00:07:28Z",
+  "updated_at": "2026-06-21T00:20:48Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -16,7 +16,7 @@
         "plan-002-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-002-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'not integration']; 8 passed, 1 deselected in 0.03s"
+      "observed": "RUN: plan-002-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'not integration']; 8 passed, 1 deselected in 0.02s"
     },
     {
       "argv": [
@@ -25,7 +25,7 @@
         "integration-forkpoint"
       ],
       "exit_code": 0,
-      "observed": "RUN: integration-forkpoint: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'integration']; 1 passed, 8 deselected in 54.90s. This exports the real HUD trace boundary, resolves Docker registry base-image identity, runs a real Modal Filesystem Snapshot round-trip over task-relevant paths, replays 29 accepted trace tool calls into a fresh Modal Mongo sandbox, then creates/restores an orchestrated live-boundary ForkPoint, persists its immutable record, and verifies negative restore rejection cases without provider fallback."
+      "observed": "RUN: integration-forkpoint: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/forkpoints', '-q', '-m', 'integration']; 1 passed, 8 deselected in 70.80s (0:01:10). This exports the real HUD trace boundary, resolves Docker registry base-image identity, runs a real Modal Filesystem Snapshot round-trip over task-relevant paths, replays 29 accepted trace tool calls into a fresh Modal Mongo sandbox, then creates/restores an orchestrated live-boundary ForkPoint, persists its immutable record, verifies negative restore rejection cases without provider fallback, and records allowlisted restored-sandbox surface inventory."
     },
     {
       "argv": [
@@ -89,22 +89,22 @@
     {
       "name": "Real HUD/Modal ForkPoint completion",
       "status": "skipped",
-      "evidence": "Not complete: evidence now has a redacted HUD trace boundary export, a real Modal Filesystem Snapshot round-trip, replay-derived snapshot/restore evidence, an orchestrated live-boundary ForkPoint created from a retained Modal sandbox handle, combined source/base image identity evidence, restored-sandbox negative security probes, and live negative restore checks. The already-finished historical HUD trace still has no live executable sandbox handle attached, and full branch security proof remains outside Plan 002."
+      "evidence": "Not complete: evidence now has a redacted HUD trace boundary export, a real Modal Filesystem Snapshot round-trip, replay-derived snapshot/restore evidence, an orchestrated live-boundary ForkPoint created from a retained Modal sandbox handle, combined source/base image identity evidence, restored-sandbox negative security probes, writable/import surface inventory, and live negative restore checks. The already-finished historical HUD trace still has no live executable sandbox handle attached, and full branch security acceptance remains outside Plan 002."
     },
     {
       "name": "Orchestrated live-boundary ForkPoint",
       "status": "pass",
-      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json records fork point fp-76c8e24dec5b35e4dda8e756, Modal Filesystem Snapshot im-01KVKR1EMTJPCZGGZ3X1H6FHM6, boundary token/history hash, combined image digest forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee, MongoDB fsync quiescence, query hash equality after restore, grader-output hash after restore, and block_network/no-secrets/resource labels with /root/.env, Docker socket, and metadata network negative probes. It also records boundary, history, grader, and unsupported-mode restore rejections with no provider restore fallback. docs/plans/evidence/002/artifacts/forkpoint-record.json persists the immutable ForkPoint record with content digest 636501d2ab2e7ce6954268b2112bc6e24bf6f35120ee553e1177badd1a3329f1."
+      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json records fork point fp-c2adfb186abac17f61ac4824, Modal Filesystem Snapshot im-01KVKRSVCSKF89KF283WDW6G0G, boundary token/history hash, combined image digest forkpoint-image-sha256:bd0a13edfd43cff2f866325ea5eb81d22d87fd09dc1db29f356231088a17c4ee, MongoDB fsync quiescence, query hash equality after restore, grader-output hash after restore, and block_network/no-secrets/resource labels with /root/.env, Docker socket, and metadata network negative probes. It also records writable/import surface inventory with allowlisted Python environment keys and boundary, history, grader, and unsupported-mode restore rejections with no provider restore fallback. docs/plans/evidence/002/artifacts/forkpoint-record.json persists the immutable ForkPoint record with content digest f1018091028ec243f9448c8485b5e5c5a845f9c33097323f441b70412a27bfec."
     }
   ],
   "artifacts": [
     {
       "ref": "docs/plans/evidence/002/MANIFEST.json",
-      "description": "Blocked Plan 002 evidence manifest recording the precondition failure and exact Done-when command observations."
+      "description": "In-progress Plan 002 evidence manifest recording exact Done-when command observations, real Modal/HUD evidence, retained-handle ForkPoint artifacts, and remaining STOP conditions."
     },
     {
       "ref": "docs/plans/002-atomic-forkpoint-seam.md",
-      "description": "Living-doc log updated with the Plan 002 STOP."
+      "description": "Living-doc log updated with Plan 002 progress, surprises, decisions, outcomes, best-practice fix discussion, and remaining STOP conditions."
     },
     {
       "ref": "src/forkproof/forkpoints/**",
@@ -132,7 +132,7 @@
     },
     {
       "ref": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json",
-      "description": "Orchestrated accepted-trace rerun ForkPoint from a retained Modal sandbox handle: ForkPoint id, boundary token, history hash, combined image digest, Filesystem Snapshot id, restore handoff keys, MongoDB quiescence, query hash, grader hash, policy labels, restored-sandbox negative security probes, and negative restore checks."
+      "description": "Orchestrated accepted-trace rerun ForkPoint from a retained Modal sandbox handle: ForkPoint id, boundary token, history hash, combined image digest, Filesystem Snapshot id, restore handoff keys, MongoDB quiescence, query hash, grader hash, policy labels, restored-sandbox negative security probes, writable/import surface inventory, and negative restore checks."
     },
     {
       "ref": "docs/plans/evidence/002/artifacts/forkpoint-record.json",
@@ -151,18 +151,18 @@
     },
     {
       "name": "Full branch security proof",
-      "reason": "The Modal probes record block_network, no secrets, resource labels, prohibited mount checks, absent /root/.env, absent Docker socket, and blocked metadata network. Full adversarial branch isolation remains Plan 003-owned."
+      "reason": "The Modal probes record block_network, no secrets, resource labels, prohibited mount checks, absent /root/.env, absent Docker socket, blocked metadata network, Python path, allowlisted Python env, writable path map, and task asset hashes. Full adversarial branch isolation remains Plan 003-owned or acceptance-gated."
     }
   ],
   "blockers": [
     {
       "name": "No live executable state for accepted historical boundary",
-      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json proves an orchestrated accepted-trace rerun can pause with a retained Modal sandbox handle, create a repo-native ForkPoint, snapshot the filesystem, restore it, and run task-visible, negative security, and negative restore probes. docs/plans/evidence/002/artifacts/image-identity.json binds Docker registry base manifest sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348 plus source tree and Modal recipe. The ForkPoint is still not the already-finished historical sandbox instance from the original HUD run, and full adversarial branch security proof remains outside Plan 002.",
-      "required_next_step": "Either accept the orchestrated rerun as the canonical source ForkPoint for later plans, or obtain provider-level access to the original historical sandbox instance. Also accept or complete the full branch security proof before setting the manifest complete."
+      "evidence": "docs/plans/evidence/002/artifacts/live-boundary-forkpoint.json proves an orchestrated accepted-trace rerun can pause with a retained Modal sandbox handle, create a repo-native ForkPoint, snapshot the filesystem, restore it, and run task-visible, negative security, surface inventory, and negative restore probes. docs/plans/evidence/002/artifacts/image-identity.json binds Docker registry base manifest sha256:8ecb514b00bdcc0bde67ef4e6c330385377a9dc68e24ee94e28c07c891647348 plus source tree and Modal recipe. The ForkPoint is still not the already-finished historical sandbox instance from the original HUD run, and full adversarial branch security acceptance remains outside Plan 002.",
+      "required_next_step": "Either accept the orchestrated rerun as the canonical source ForkPoint for later plans, or obtain provider-level access to the original historical sandbox instance. Also accept the recorded security inventory/probes as sufficient for Plan 002 or add the remaining adversarial branch-isolation proof before setting the manifest complete."
     }
   ],
   "notes": [
     "The previous COMMANDS.json start blocker is unblocked in this PR under a user-approved narrow ownership exception.",
-    "No final real ForkPoint, Modal snapshot, or restore fidelity completion claim is made from this in-progress manifest."
+    "No final Plan-002-complete claim is made, and the real orchestrated ForkPoint is not claimed to be the original historical sandbox instance."
   ]
 }
