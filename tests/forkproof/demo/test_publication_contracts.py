@@ -200,6 +200,25 @@ def test_publication_attempt_validation_rejects_self_attested_redaction_and_bran
         validate_publication_attempt(attempt(branch_writable_evidence=True))
 
 
+def test_publication_attempt_rejects_wrong_command_and_duplicate_evidence_refs():
+    with pytest.raises(DemoError, match="integration-publication"):
+        validate_publication_attempt(attempt(command_key="demo"))
+
+    with pytest.raises(DemoError, match="unique"):
+        validate_publication_attempt(attempt(evidence_refs=["release-proof.json", "release-proof.json"]))
+
+
+def test_failed_publication_attempt_cannot_carry_success_refs():
+    with pytest.raises(DemoError, match="published environment"):
+        validate_publication_attempt(
+            attempt(
+                outcome="failed",
+                normalized_error_class="trusted_context_unavailable",
+                published_environment_ref="hud-env-version://env-v2",
+            )
+        )
+
+
 def test_proof_backed_outcomes_reject_missing_context_placeholders():
     with pytest.raises(DemoError, match="trusted_context_ref"):
         validate_publication_attempt(attempt(trusted_context_ref="missing-trusted-context"))

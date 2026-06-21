@@ -11,6 +11,7 @@ from .models import DemoError, assert_content_digest, content_digest, require_fi
 from .redaction import redact_record
 
 OUTCOMES = {"published", "permission-blocked", "blocked-with-proof", "failed"}
+PUBLICATION_COMMAND_KEY = "integration-publication"
 FAILURE_CLASSES = {
     "proof_mismatch",
     "unauthorized_target",
@@ -53,6 +54,8 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
         raise DemoError("secret_exposure", "publication attempt contains unredacted secret-like content")
     if record["outcome"] not in OUTCOMES:
         raise DemoError("publication_attempt_invalid", "publication outcome is invalid")
+    if record["command_key"] != PUBLICATION_COMMAND_KEY:
+        raise DemoError("publication_attempt_invalid", "publication attempt must use integration-publication command")
     expected_key = idempotency_key(
         release_proof_digest=record["release_proof_digest"],
         target_id=record["target_id"],
@@ -65,6 +68,8 @@ def validate_publication_attempt(record: dict[str, Any]) -> None:
         raise DemoError("publication_attempt_incomplete", "publication attempt lacks evidence refs")
     if not all(isinstance(ref, str) and ref for ref in record["evidence_refs"]):
         raise DemoError("publication_attempt_invalid", "publication evidence refs must be non-empty strings")
+    if len(record["evidence_refs"]) != len(set(record["evidence_refs"])):
+        raise DemoError("publication_attempt_invalid", "publication evidence refs must be unique")
     if record.get("branch_writable_evidence"):
         raise DemoError("branch_writable_evidence", "publication attempt references branch-writable evidence")
     _validate_outcome(record)
@@ -94,7 +99,7 @@ def publication_preflight(
         else "missing-release-proof-digest",
         "target_id": target_id or "missing-target",
         "publisher_capability_label": publisher_capability_label or "missing-capability",
-        "command_key": "integration-publication",
+        "command_key": PUBLICATION_COMMAND_KEY,
         "command_argv_ref": publish_binding_ref or "missing-publish-binding",
         "trusted_context_ref": trusted_context_ref or "missing-trusted-context",
         "evidence_refs": evidence,
@@ -201,11 +206,14 @@ def _validate_outcome(record: dict[str, Any]) -> None:
         }[outcome]
         if record.get("normalized_error_class") != expected_error:
             raise DemoError("publication_attempt_invalid", f"{outcome} needs {expected_error}")
-    if outcome == "failed" and record.get("normalized_error_class") not in FAILURE_CLASSES | {
-        "proof_mismatch",
-        "publish_api_not_invoked_by_contract_layer",
-    }:
-        raise DemoError("publication_attempt_invalid", "failed outcome needs normalized failure class")
+    if outcome == "failed":
+        if record.get("normalized_error_class") not in FAILURE_CLASSES | {
+            "proof_mismatch",
+            "publish_api_not_invoked_by_contract_layer",
+        }:
+            raise DemoError("publication_attempt_invalid", "failed outcome needs normalized failure class")
+        if record.get("published_environment_ref"):
+            raise DemoError("publication_attempt_invalid", "failed outcome cannot carry published environment ref")
 
 
 def _require_trusted_publication_context(record: dict[str, Any], *, require_publish_binding: bool) -> None:
