@@ -49,6 +49,8 @@ The inventory below is normalized from the handoff. Each requirement maps to at 
 | R-043 | Reject any Witness that cannot replay deterministically. | 003 | Replay failure leaves the branch as a candidate, not a Witness. |
 | R-044 | Describe the search as MCTS-shaped, not full MCTS, and concede commodity snapshot branching. | 006, 007 | Demo/research copy uses bounded claims. |
 | R-045 | Measure flat-restart compute/coverage only when an honest comparison is run. | 007 | Report contains measured data or not-measured, never fabricated values. |
+| R-046 | As an additive (ablation) benchmark on 20 freshly materialized Terminal Wrench tasks, measure the lift the ForkProof executable discovery layer adds on top of HUD QA — sterile-referee-confirmed reward-hack clusters QA alone finds (X) versus the extra clusters the layer adds (Δ), split into a detection delta and a discovery delta. | 008 | One report gives per-task and aggregate baseline X and lift Δ (coverage and depth), the detection and discovery deltas, and cost/latency, with no metric unreported, no "beats QA" framing, and Δ = 0 a valid result. |
+| R-047 | Define reward-hack ground truth by a neutral sterile golden/held-out referee (re-run the task's own verification isolated from agent-tampered state; not a classifier and not the Plan 005 v2 grader) and validate it against curated Terminal Wrench labels before scoring; run HUD QA post-trace on the same population. | 008 | The referee-vs-curated-label agreement rate is recorded, HUD reward / HUD QA verdict / referee verdict stay three separate signals, and a live-hook log shows at least one dual-verdict BranchRun. |
 
 ## Coverage rules
 

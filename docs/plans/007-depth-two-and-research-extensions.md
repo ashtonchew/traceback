@@ -30,17 +30,17 @@ The plan is parallel with release proof after a core Witness exists. It may cons
 - Cross-task transfer requires real additional tasks. Training analysis begins with raw-vs-hardened filtering; no live RL.
 - Flat-restart comparison is reported only when both strategies run under comparable measured budgets.
 - STOP on insufficient time/budget, unavailable real data, unsafe capability, or inability to define an honest comparison. Record skips.
-- Keep research code isolated and removable. Split files over 500 lines by tree policy/capability/analysis.
+- Keep research code isolated and removable: no symbol in `src/forkproof/research/**` may be imported by any other feature folder, and deleting `src/forkproof/research/**`, `tests/forkproof/research/**`, and `artifacts/forkproof/research/**` must leave the core build and all other plan tests passing. Split files over 500 lines by tree policy/capability/analysis.
 - Tests assert policy and measured outputs, not claims of universal superiority.
 
 ## Work packets
 
 ### WP1 — Select and re-snapshot one promising child
 
-Use trace/file/grader/cluster evidence to select a completed child state that changes the attack surface. Capture a new atomic node with parent lineage and restore it independently.
+Use trace/file/grader/cluster evidence to select a completed child state that presents task-visible or grader-visible state plausibly opening a different exploit path than the root ForkPoint — evidenced by at least one signal from the promising-node list in the reference. Capture a new atomic node with parent lineage and restore it independently.
 
 **Pass:** One child snapshot restores with valid lineage and a documented reason it is more promising than random.  
-**Fail:** The node is chosen only from exposed reasoning or cannot be distinguished from its parent.
+**Fail:** The node is chosen only from exposed reasoning, or "distinguishable from its parent" is satisfied only by a different node ID — at least one task-visible probe (file diff, content hash, grader-visible state, or command output) must produce a different value at the child boundary than at the parent ForkPoint boundary, with the reason recorded in `fork_reason`.
 
 ### WP2 — Run depth-two branches
 
@@ -51,24 +51,32 @@ Launch up to eight seeded agentic branches from the child node using the core Wi
 
 ### WP3 — Implement and prove adaptive stopping
 
-Track new exploit clusters in completion order and stop a node after four consecutive completed branches add none, while respecting concurrency already in flight.
+The research scheduler in this plan owns the stop policy and concurrency model; it calls core Witness machinery through public interfaces but does not borrow or fork the Plan 003 scheduler. Track new exploit clusters in completion order and stop scheduling new branches after four consecutive completed branches add none, while allowing branches already in flight to finish. If an in-flight branch completes after the stop count reached 4 and it confirms a new cluster, reset the consecutive count to zero — but only schedule additional branches if the 8-branch budget is not yet exhausted.
 
-**Pass:** Deterministic policy tests cover reset-on-new-cluster, stop-at-four, concurrency, and maximum budget; a real run records the decision.  
-**Fail:** Stop is based on raw reward count or wording variants.
+**Pass:** Deterministic policy tests cover reset-on-new-cluster, stop-at-four, in-flight-late-reset, budget-exhausted-no-new-schedule, and concurrency; a real run records the decision.  
+**Fail:** Stop is based on raw reward count or wording variants, or the policy borrows internal state from the Plan 003 scheduler.
 
 ### WP4 — Measure state branching versus flat restarts
 
 When budget permits, run comparable state-branch and from-scratch attempts with common task/model constraints. Measure setup work, branch count, time/compute, and distinct confirmed clusters.
 
-**Pass:** Report states protocol, raw observations, limits, and no causal overclaim.  
+**Pass:** Report states protocol, raw observations, limits, and no causal overclaim. A result where flat restarts find equal or more distinct confirmed clusters is a valid honest output; record raw counts and state the limitation explicitly. This plan merges independently of that outcome.  
 **Fail:** One strategy is estimated, uses a different task/model budget, or illustrative probabilities are presented as measurements.
 
 ### WP5 — Capability-gate Memory and VM profiles
 
-Probe installed SDK/account capability and inspect whether process state or Docker-in-sandbox is genuinely required. Implement only a real consumed path and convert every successful memory discovery to durable replay state.
+For each profile, the executor must arrive at exactly one of three honest outcomes, evidenced in the manifest:
+
+1. **Capability unavailable** — probe returns error or unauthorized; record probe output, mark `skipped`, create no scaffold.
+2. **Capability available but unnecessary** — probe succeeds but the task does not require the profile's unique behavior (Docker/Harbor/kernel for VM; process-resident state irreproducible from filesystem for Memory); record probe output and task evidence, mark `skipped`, create no scaffold.
+3. **Capability available and necessary** — probe succeeds AND task evidence confirms the need; implement only the real consumed path and complete the full evidence matrix in the reference.
+
+VM Sandbox is a conditional research path for tasks that genuinely require a full Linux kernel, Docker-in-Sandbox, systemd, eBPF, cgroups, or loopback mounts. It is not a replacement for Plan 002's Directory or Filesystem Snapshot mode selection.
+
+Memory Snapshot is a search accelerator only. Any successful Memory discovery must be immediately converted to a durable replay artifact: a Directory or Filesystem Snapshot plus recorded actions, history prefix, environment image digest, grader digest, and restore command. A Memory Snapshot alone cannot satisfy Witness durability and must not be the `pre_attack_snapshot_ref`.
 
 **Pass:** Each profile has either a real integration result or a concise skip backed by probe/task evidence, with no unused production scaffold.  
-**Fail:** Alpha APIs are mocked into existence or become core dependencies.
+**Fail:** Alpha APIs are mocked into existence, become core dependencies, or VM is used as a substitute for Directory/Filesystem mode rather than because real-kernel behavior is required.
 
 ### WP6 — Evaluate transfer and training consequences conditionally
 

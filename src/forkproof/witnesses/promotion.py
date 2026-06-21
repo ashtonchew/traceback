@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .causal_evidence import require_causal_evidence_bundle
 from .models import (
     REQUIRED_WITNESS_FIELDS,
     WitnessError,
@@ -65,11 +66,18 @@ def promotion_result(
     branch: dict[str, Any],
     qa: dict[str, Any] | None,
     dedup: dict[str, Any] | None,
+    causal_evidence: dict[str, Any] | None = None,
     replay_passes: bool,
 ) -> str:
     status = branch_signal_status(branch, qa)
     if status != "candidate":
         return status
+    try:
+        require_causal_evidence_bundle(causal_evidence, require_minimized=True)
+    except WitnessError as exc:
+        if "causal delta" in str(exc):
+            return "unreduced-causal-evidence"
+        return "missing-causal-evidence"
     if dedup is None or not dedup.get("cluster_id"):
         return "missing-dedup"
     return "seal-witness" if replay_passes else "unproven-candidate"

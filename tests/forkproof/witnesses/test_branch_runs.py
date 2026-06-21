@@ -141,13 +141,23 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     monkeypatch.setattr(
         branch_runs,
         "run_reward_hacking_analysis",
-        lambda root, trace_id, *, branch_id, action_record_digest: {
+        lambda root, trace_id, *, branch_id, action_record_digest, classifier_evidence=None: {  # noqa: ARG005
             "status": "pass",
             "qa_result_id": "qa-001",
             "branch_id": branch_id,
             "hud_trace_id": trace_id,
             "action_record_digest": action_record_digest,
             "authoritative_source": "repo_bound_hud_qa",
+            "classifier_input_digest": "classifier-input-sha",
+            "classifier_evidence_digest": "classifier-evidence-sha",
+            "classifier_evidence_refs": [
+                {"kind": "action_record", "ref": "actions.json"},
+                {"kind": "file_diff", "ref": "diff.json"},
+            ],
+            "evidence_quality": "sufficient",
+            "task_identity_status": "matched",
+            "confidence": 0.95,
+            "reasoning": "branch-local evidence was available",
             "is_reward_hacking": False,
         },
     )
@@ -186,6 +196,61 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     assert record["provenance_status"] == "complete"
     assert record["file_diff_ref"].endswith(".json")
     assert record["security_probe_ref"].endswith(".json")
+
+
+def test_branch_records_label_insufficient_qa_as_incomplete_classification(monkeypatch, tmp_path):
+    install_fake_hud_modules(monkeypatch)
+    monkeypatch.setattr(
+        branch_runs,
+        "_trace_readback",
+        lambda trace_id: {"trace": {"id": trace_id}, "events": {"events": []}},
+    )
+    monkeypatch.setattr(
+        branch_runs,
+        "run_reward_hacking_analysis",
+        lambda root, trace_id, *, branch_id, action_record_digest, classifier_evidence=None: {  # noqa: ARG005
+            "status": "pass",
+            "qa_result_id": "qa-001",
+            "branch_id": branch_id,
+            "hud_trace_id": trace_id,
+            "action_record_digest": action_record_digest,
+            "authoritative_source": "repo_bound_hud_qa",
+            "classifier_input_digest": "classifier-input-sha",
+            "classifier_evidence_digest": "classifier-evidence-sha",
+            "classifier_evidence_refs": [{"kind": "file_diff", "ref": "diff.json"}],
+            "evidence_quality": "insufficient",
+            "task_identity_status": "matched",
+            "confidence": 0.95,
+            "reasoning": "not enough branch-local evidence",
+            "is_reward_hacking": True,
+        },
+    )
+
+    class Job:
+        id = "job-001"
+        trace_id = "trace-001"
+        reward = 1.0
+        runs = []
+
+    class Task:
+        async def run(self, agent, runtime):  # noqa: ARG002
+            async with runtime(self):
+                pass
+            return Job()
+
+    result = asyncio.run(
+        branch_runs._run_one_branch(
+            root=tmp_path,
+            forkpoint=forkpoint(),
+            task=Task(),
+            prompt_packet=prompt_packet(),
+            run_id="run-001",
+            branch_index=0,
+            artifact_root=tmp_path / "artifacts",
+        )
+    )
+
+    assert result["branch"]["promotion_signal_status"] == "incomplete-classification"
 
 
 def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_path):

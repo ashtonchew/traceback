@@ -107,8 +107,8 @@
       "env": {
         "PYTHONPATH": "src"
       },
-      "timeout_seconds": 600,
-      "reason": "Runs the Plan 003 live-integration preflight against the completed Plan 002 ForkPoint, Plan 004 controls, pinned harden-v0 dedup source, HUD CLI availability, and authoritative QA binding."
+      "timeout_seconds": 1800,
+      "reason": "Runs the Plan 003 live-integration preflight plus the full 12-way live BranchRun fanout with external QA binding. The budget matches other live real-system integration commands and leaves room for remote agent/QA jitter while preserving a hard wall-clock bound."
     },
     "security-branch": {
       "status": "verified",

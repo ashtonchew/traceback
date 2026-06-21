@@ -12,6 +12,11 @@ from forkproof.witnesses.hacker_prompt import (
     build_hacker_branch_instruction,
 )
 from forkproof.witnesses.models import WitnessError, digest_json, utc_now
+from forkproof.witnesses.causal_evidence import (
+    build_causal_evidence_bundle,
+    build_classifier_evidence_context,
+    require_causal_evidence_bundle,
+)
 from forkproof.witnesses.promotion import (
     assert_witness_fields,
     branch_signal_status,
@@ -71,8 +76,31 @@ def qa(is_hack=True):
         "hud_trace_id": "trace-001",
         "action_record_digest": "actions-sha",
         "authoritative_source": "hud_qa",
+        "classifier_input_digest": "classifier-input-sha",
+        "classifier_evidence_digest": "classifier-evidence-sha",
+        "classifier_evidence_refs": [
+            {"kind": "action_record", "ref": "actions.jsonl"},
+            {"kind": "file_diff", "ref": "diff.patch"},
+        ],
+        "evidence_quality": "sufficient",
+        "task_identity_status": "matched",
+        "confidence": 0.95,
+        "reasoning": "The branch-local evidence is sufficient and matches the task.",
+        "evidence_summary": "Used trace, actions, reward, and final diff.",
         "is_reward_hacking": is_hack,
     }
+
+
+def causal_delta(**overrides):
+    base = build_causal_evidence_bundle(
+        branch(),
+        qa(),
+        file_diff_digest="file-diff-sha",
+        causal_delta_status="minimized",
+        causal_delta_ref="causal-delta.json",
+    )
+    base.update(overrides)
+    return base
 
 
 def test_hacker_branch_prompt_rewrites_goal_and_records_non_gate_metadata():
@@ -171,6 +199,42 @@ def test_complete_branch_and_bounded_failure_records_are_valid():
     }
     assert branch_signal_status(failed, failed_qa) == "not-candidate"
 
+
+def test_task_agnostic_classifier_evidence_context_uses_refs_not_task_specific_rules():
+    file_diff = {
+        "status": "pass",
+        "added_paths": ["/opaque/new-artifact"],
+        "removed_paths": [],
+        "modified_paths": ["/opaque/changed-artifact"],
+        "file_count_before": 3,
+        "file_count_after": 4,
+    }
+    context = build_classifier_evidence_context(
+        branch_id="branch-001",
+        hud_trace_id="trace-001",
+        reward=1.0,
+        action_record_ref="actions/branch-001.json",
+        action_record_digest="actions-sha",
+        file_diff_ref="diffs/branch-001.json",
+        file_diff=file_diff,
+        task_identity={"environment_version": "task-env-v1"},
+    )
+    assert context["classifier_evidence_digest"] == digest_json(
+        {key: value for key, value in context.items() if key != "classifier_evidence_digest"}
+    )
+    assert context["file_diff_summary"]["modified_paths"] == ["/opaque/changed-artifact"]
+    assert "query.py" not in context["classifier_instruction"]
+
+
+def test_causal_evidence_bundle_blocks_until_delta_is_minimized():
+    bundle = build_causal_evidence_bundle(branch(), qa(), file_diff_digest="file-diff-sha")
+    assert bundle["status"] == "pass"
+    assert bundle["causal_delta_status"] == "not_minimized"
+    require_causal_evidence_bundle(bundle, require_minimized=False)
+    with pytest.raises(WitnessError, match="causal delta has not been minimized"):
+        require_causal_evidence_bundle(bundle, require_minimized=True)
+
+
 def test_twelve_unique_branch_ids_and_seeds_without_early_stop():
     branches = [branch(branch_id=f"branch-{i:03d}", seed=1000 + i) for i in range(12)]
     assert len({item["branch_id"] for item in branches}) == 12
@@ -193,10 +257,12 @@ def test_hacker_branch_default_budget_is_not_the_short_smoke_budget():
     ],
 )
 def test_promotion_truth_table_rejects_missing_or_single_signal(reward, qa_value, expected):
+    causal = causal_delta() if expected == "seal-witness" else None
     result = promotion_result(
         branch=branch(reward=reward, qa_result_ref="qa-001" if qa_value is not None else "missing"),
         qa=None if qa_value is None else qa(qa_value),
         dedup={"cluster_id": "cluster-001"},
+        causal_evidence=causal,
         replay_passes=True,
     )
     assert result == expected
@@ -217,8 +283,50 @@ def test_qa_classification_is_separate_and_must_join_to_same_branch():
     with pytest.raises(WitnessError, match="not from an authoritative source"):
         branch_signal_status(completed_branch, {**qa(), "authoritative_source": "local_heuristic"})
 
+    with pytest.raises(WitnessError, match="sufficient branch-local evidence"):
+        branch_signal_status(completed_branch, {**qa(), "evidence_quality": "insufficient"})
+
+    with pytest.raises(WitnessError, match="task identity"):
+        branch_signal_status(completed_branch, {**qa(), "task_identity_status": "mismatched"})
+
+    with pytest.raises(WitnessError, match="evidence was unavailable"):
+        branch_signal_status(completed_branch, {**qa(), "reasoning": "Unable to access essential trace files."})
+
     with pytest.raises(WitnessError, match="not the Plan 003 hacker role"):
         branch_signal_status(branch(branch_role="solver"), qa())
+
+
+def test_witness_promotion_requires_minimized_causal_delta():
+    assert (
+        promotion_result(
+            branch=branch(),
+            qa=qa(),
+            dedup={"cluster_id": "cluster-001"},
+            causal_evidence=None,
+            replay_passes=True,
+        )
+        == "missing-causal-evidence"
+    )
+    assert (
+        promotion_result(
+            branch=branch(),
+            qa=qa(),
+            dedup={"cluster_id": "cluster-001"},
+            causal_evidence=build_causal_evidence_bundle(branch(), qa(), file_diff_digest="file-diff-sha"),
+            replay_passes=True,
+        )
+        == "unreduced-causal-evidence"
+    )
+    assert (
+        promotion_result(
+            branch=branch(),
+            qa=qa(),
+            dedup={"cluster_id": "cluster-001"},
+            causal_evidence=causal_delta(),
+            replay_passes=True,
+        )
+        == "seal-witness"
+    )
 
 
 def test_equivalent_exploit_mechanism_dedups_to_one_cluster():

@@ -11,19 +11,30 @@ Rank candidate child states from observable evidence:
 - task logs or process state that materially differs,
 - optional exposed reasoning as one signal, never the sole dependency.
 
-Record the selected node, alternatives, evidence, and why the state merits reuse.
+Any single observable signal from this list is sufficient to select a child — a file change alone qualifies — provided the selector records that signal, the alternatives considered, and why no other signal was observable at selection time. Exposed reasoning alone is never sufficient. Record the selected node, alternatives, evidence, and why the state merits reuse.
 
 ## Adaptive policy
+
+Plan 007 owns the research scheduler. Plan 003 explicitly delegates adaptive stopping and depth-two expansion here (“Adaptive stopping and depth-two expansion belong to Plan 007”) and declares no core early stop.
 
 Per node:
 
 - initial child budget: at most 8,
 - maximum tree depth: 2,
 - count consecutive completed branches with no new target/mechanism cluster,
-- reset count to zero when a new cluster is confirmed,
+- reset count to zero when a new cluster is confirmed — including a cluster confirmed by a branch that was already in flight when the count reached 4,
 - stop scheduling new branches at count 4,
-- allow already-running branches to finish or cancel according to the real scheduler's safe policy,
+- if count resets from an in-flight result, resume scheduling only when budget remains (total scheduled branches must stay at most 8),
+- allow already-running branches to complete; cancel only when the core release needs resources and the scheduler's active branch list supports safe cancellation,
 - never classify a raw rewarded branch as “new cluster” before QA/dedup.
+
+## Depth-two replay anchor
+
+A depth-two Witness's `pre_attack_snapshot_ref` points to the **child node's snapshot**, not the root ForkPoint. The root ForkPoint is never re-traversed during replay.
+
+The child node snapshot must be a Directory or Filesystem artifact — a Memory Snapshot alone cannot satisfy Witness durability. The research scheduler records an explicit `retention/expiry` at child capture time sufficient to complete three consecutive replays.
+
+The research scheduler owns the seal-or-discard decision. Once a depth-two Witness is sealed, its `pre_attack_snapshot_ref` passes to the core persistence layer under the same indefinite-retention rule as core Witnesses. Expiry of the child snapshot before three replays complete is a hard failure; there is no research-tier exemption.
 
 ## Flat comparison protocol
 
@@ -50,6 +61,27 @@ A profile is implementable only when all are true:
 6. Time/budget remain after core gates.
 
 Otherwise record `skipped` with probe output and create no production adapter.
+
+## VM and Memory capability matrix
+
+Modal capability facts as of this plan's wave. Verify against the live SDK before implementing any path.
+
+**Directory Snapshot** — Beta. Captures and mounts a specific directory. Default retention 30 days; explicit TTL available to opt out of expiry. Core Plan 002 path when task-relevant mutable state is contained under a verified directory boundary.
+
+**Filesystem Snapshot** — captures the full Sandbox filesystem as an image. Default retention 30 days; explicit TTL available. Core Plan 002 fallback when directory containment is not honest.
+
+**Memory Snapshot** — Alpha/experimental. 7-day expiry; cannot be extended. Source sandbox is terminated on snapshot. Cannot snapshot while `Sandbox.exec` is running. Background processes launched by `Sandbox.exec` are not reliably restored. Must never be the durable Witness system of record or `pre_attack_snapshot_ref`. VM Sandboxes do not support Memory Snapshots.
+
+**VM Sandbox** — Alpha. Full VM with a real Linux kernel. Useful for Docker-in-Sandbox, Harbor, systemd/custom init, eBPF, cgroups/resource isolation, and loopback mounts. Supports Filesystem Snapshots; does not support Memory Snapshots. Not a replacement for Plan 002 Directory/Filesystem mode — use only when the real task cannot be honestly executed without kernel-level behavior.
+
+| Evidence dimension | VM Sandbox | Memory Snapshot |
+|---|---|---|
+| **Availability** | Account/SDK probe succeeds for `vm` capability | Account/SDK probe succeeds for `memory` snapshot |
+| **Task need** | Task genuinely requires Docker/Harbor, systemd, eBPF, cgroups, or loopback — not merely "more powerful" | Attack-relevant state is process-resident and cannot be reproduced from filesystem-class state plus recorded actions |
+| **Security** | Isolation at least as strong as core; minimum secrets and scoped network | Same as core; no additional secrets passed to Alpha path |
+| **Cleanup** | Record all created sandbox/snapshot ids; clean up after research run completes or is cancelled | Memory snapshot expires in 7 days regardless; successful discovery converted to durable artifact immediately |
+| **Consumed path** | Real consumer exists in a research work packet before any adapter code is written | Durable conversion artifact exists (Directory/Filesystem snapshot + recorded actions + history prefix + env image digest + grader digest + restore command) before any Witness promotion |
+| **Skip evidence** | Core Directory/Filesystem sandbox honestly executes the task without kernel-level behavior | No process-resident attack surface; filesystem-class capture plus recorded actions is sufficient to reproduce the attack |
 
 ## Transfer gate
 

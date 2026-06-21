@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-06-21T05:28:46Z",
+  "checked_at": "2026-06-21T06:23:04Z",
   "counted_branch_run": false,
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
@@ -8,12 +8,12 @@
     "MODAL_TOKEN_SECRET": "present"
   },
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
-  "job_id": "69bb850a3b944c3d9f5a2f3d8b88bcd1",
+  "job_id": "06585c66aedb49ccb14363781063f87a",
   "max_steps": 2,
   "model": "claude-haiku-4-5",
   "observed_behavior": "Diagnostic BranchGateway smoke produced a HUD job/trace from the corrected ForkPoint snapshot. It is not counted as a Plan 003 BranchRun because it does not run the full branch budget, does not join HUD QA, and starts from an already reward-1 accepted state.",
   "reward": 1.0,
   "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "pass",
-  "trace_id": "6b39d3b56f924a24ac4ffaefbca058cb"
+  "trace_id": "bcdabbac63ce45c8aa285c67446ecfd7"
 }
