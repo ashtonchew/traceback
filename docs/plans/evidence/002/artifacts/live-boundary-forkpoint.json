@@ -1,7 +1,7 @@
 {
   "boundary_token": "29d614c21ab3c0754c4b815ad00bfec4f4088a6b9b4b6a22e7f524071bc0599b",
   "environment_image_digest": "source-tree-sha256:096553906debb6a42351935b800823451ef23c5e5bc4bfc20138e8684f1bd377",
-  "fork_point_id": "fp-b52dd434be5f43b9db0f0f67",
+  "fork_point_id": "fp-f1b3d319693c089ff4a63c4b",
   "handoff_keys": [
     "boundary_token",
     "branch_tag_inputs",
@@ -36,6 +36,35 @@
     "Raw tool commands and outputs are not committed; history and replay evidence are hash-only.",
     "Environment image identity is a deterministic source-tree digest, not a registry manifest digest."
   ],
+  "negative_restore_checks": {
+    "checks": [
+      {
+        "case": "boundary_mismatch",
+        "error_class": "boundary_mismatch",
+        "handoff_created": false,
+        "provider_restore_called": false
+      },
+      {
+        "case": "history_mismatch",
+        "error_class": "history_mismatch",
+        "handoff_created": false,
+        "provider_restore_called": false
+      },
+      {
+        "case": "grader_mismatch",
+        "error_class": "grader_mismatch",
+        "handoff_created": false,
+        "provider_restore_called": false
+      },
+      {
+        "case": "state_restore_failed",
+        "error_class": "state_restore_failed",
+        "handoff_created": false,
+        "provider_restore_called": false
+      }
+    ],
+    "status": "pass"
+  },
   "network_policy": "block_network=True",
   "query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "quiesce": {
@@ -46,7 +75,7 @@
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "f20c9ebf4f8dae3bfd7b1f842bac9ebe4890316f60856a76401dae5a1fed58e4",
+  "restored_grade_output_sha256": "7214805abc55fe66b80223e209c5fce7aa0b756fcf15079562e678a7bf175711",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
   "security_probe": {
@@ -55,10 +84,10 @@
     "root_env": "absent"
   },
   "skipped_tool_count": 2,
-  "snapshot_digest": "a084f342dd43e6398bc72b56008ff4a5eddfa7538b1c34796e6bc4449f9ea4e1",
-  "snapshot_id": "im-01KVKQA05SQGQ3KA4W1D8TK5YN",
+  "snapshot_digest": "040ac6cdb65cde874e53d94c9ec9ccf8698773a87f395472c9a56931fb2cedd9",
+  "snapshot_id": "im-01KVKQN7WAMWCJGCGF3D1X9RXZ",
   "snapshot_mode": "filesystem",
-  "snapshot_restore_ref": "modal-image://im-01KVKQA05SQGQ3KA4W1D8TK5YN",
+  "snapshot_restore_ref": "modal-image://im-01KVKQN7WAMWCJGCGF3D1X9RXZ",
   "snapshot_retention": "modal-default-ttl",
   "source_evidence_refs": [
     "docs/plans/repo-map/STATUS.json:live_trace.grader_digest_sha256",

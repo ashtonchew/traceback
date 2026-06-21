@@ -1,6 +1,6 @@
 {
   "boundary": "after last replayed tool_call before scenario_evaluate",
-  "grade_output_sha256": "3354262bf5db1cf7ca3d677098f6708bb3ee3ce02b93a995f576ef083ab34407",
+  "grade_output_sha256": "f551269ff9a32fde4015ed4184f8a0f3c9f454fd7fc713c148288a73e6a3bc22",
   "hud_trace_id": "92b654c6-cdde-43cf-9096-3681df6df2e1",
   "limitations": [
     "Replay uses exported accepted trace actions in a fresh Modal sandbox, not the original historical sandbox handle.",
@@ -11,12 +11,12 @@
   "replayed_tool_count": 29,
   "replayed_tools_sha256": "6fbc0d5802d1aa175de7a65ee03167793365930e6cb4788b3c84a22b53336fb3",
   "resource_policy": "cpu=0.5,memory=1024,timeout=900",
-  "restored_grade_output_sha256": "1e08ee66de5554704f439dd1bdbd37e6a0d3ea640000b1bfa0a919116d80a461",
+  "restored_grade_output_sha256": "ec38f0e0a0b5360eb1819e2030d0b0b900759236576ce1c6ee144e50fb3f2d18",
   "restored_query_py_sha256": "ff2fa1498bfb77d18f5b6fda717f90b6b9075b454304192c130f48e93787f5ad",
   "secret_policy": "secrets=[]",
   "skipped_tool_count": 2,
-  "snapshot_digest": "df48d7cfb07d0beef46bfd57e2cb4d1dea4d082d36fba3605a462b8aac3b7677",
-  "snapshot_id": "im-01KVKQ97QJ5FXHXACAD687BA9X",
+  "snapshot_digest": "fc9ec422211e407d4bbdb3648db3697adc906410e546fda11748f895d7c8c9c1",
+  "snapshot_id": "im-01KVKQM3GGEX8RBK69KAZKVQDN",
   "snapshot_mode": "filesystem",
   "status": "trace-replay-filesystem-roundtrip-pass"
 }

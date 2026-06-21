@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .core import (
+    ForkPointError,
     ForkPointStore,
     boundary_token,
     capture_forkpoint,
@@ -93,6 +94,7 @@ class ModalForkPointProvider:
         self._app = app
         self._snapshots: dict[str, Any] = {}
         self._restored: Any | None = None
+        self.restore_calls = 0
 
     def capture(self, state: dict[str, Any], mode: str) -> dict[str, Any]:
         if mode != "filesystem":
@@ -117,6 +119,7 @@ class ModalForkPointProvider:
         }
 
     def restore(self, snapshot_id: str) -> dict[str, Any]:
+        self.restore_calls += 1
         if snapshot_id not in self._snapshots:
             raise KeyError(snapshot_id)
         import modal
@@ -155,6 +158,75 @@ class ModalForkPointProvider:
     def close(self) -> None:
         if self._restored is not None:
             self._restored.terminate()
+
+
+def _negative_restore_checks(
+    *,
+    record: dict[str, Any],
+    provider: ModalForkPointProvider,
+    source: dict[str, Any],
+    history: list[dict[str, Any]],
+) -> dict[str, Any]:
+    checks = []
+    cases = [
+        (
+            "boundary_mismatch",
+            lambda: restore_forkpoint(
+                record=record,
+                provider=provider,
+                expected_boundary_token=boundary_token(source, "wrong-boundary"),
+                history_prefix=history,
+                grader_digest=source["grader_digest"],
+            ),
+        ),
+        (
+            "history_mismatch",
+            lambda: restore_forkpoint(
+                record=record,
+                provider=provider,
+                expected_boundary_token=record["boundary_token"],
+                history_prefix=[{"role": "assistant", "content": "different"}],
+                grader_digest=source["grader_digest"],
+            ),
+        ),
+        (
+            "grader_mismatch",
+            lambda: restore_forkpoint(
+                record=record,
+                provider=provider,
+                expected_boundary_token=record["boundary_token"],
+                history_prefix=history,
+                grader_digest="different",
+            ),
+        ),
+        (
+            "state_restore_failed",
+            lambda: restore_forkpoint(
+                record={**record, "snapshot_mode": "memory"},
+                provider=provider,
+                expected_boundary_token=record["boundary_token"],
+                history_prefix=history,
+                grader_digest=source["grader_digest"],
+            ),
+        ),
+    ]
+    for expected, call in cases:
+        before = provider.restore_calls
+        try:
+            call()
+        except ForkPointError as exc:
+            after = provider.restore_calls
+            checks.append(
+                {
+                    "case": expected,
+                    "error_class": exc.error_class,
+                    "handoff_created": False,
+                    "provider_restore_called": after != before,
+                }
+            )
+            continue
+        raise AssertionError(f"negative restore check did not fail: {expected}")
+    return {"status": "pass", "checks": checks}
 
 
 def run_live_boundary_probe() -> dict[str, Any]:
@@ -208,6 +280,12 @@ def run_live_boundary_probe() -> dict[str, Any]:
                 history_prefix=history,
                 grader_digest=source["grader_digest"],
             )
+            negative_checks = _negative_restore_checks(
+                record=record,
+                provider=provider,
+                source=source,
+                history=history,
+            )
         result = {
             "status": "live-boundary-rerun-forkpoint-pass",
             "hud_trace_id": source["hud_trace_id"],
@@ -235,6 +313,7 @@ def run_live_boundary_probe() -> dict[str, Any]:
             "resource_policy": record["resource_policy"],
             "source_evidence_refs": record["source_evidence_refs"],
             "security_probe": handoff["task_visible_probe"]["security_probe"],
+            "negative_restore_checks": negative_checks,
             "limitations": [
                 "This is an orchestrated rerun from the accepted trace export with a retained Modal sandbox handle.",
                 "It is not the already-finished historical sandbox instance from the original HUD run.",
