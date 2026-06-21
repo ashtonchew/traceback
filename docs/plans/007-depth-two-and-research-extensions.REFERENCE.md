@@ -94,7 +94,7 @@ This is one falsifiable `n=1` observation, not statistical predictive validation
 
 ### No-leakage wall
 
-The expansion record is trusted-orchestrator analysis and never enters an untrusted branch prompt. Build prompts from the approved core template and task input only. Persist template/prompt digests, forbidden-input refs, and an inspection result proving the prediction, judge rationale, ranking, golden material, and privileged grader knowledge were absent.
+The expansion record is trusted-orchestrator analysis and never enters an untrusted branch prompt. Build prompts from the approved core template — the canonical Plan 003 Hacker BranchRun profile (the generic harden-v0 reward-hacking rewrite) — and task input only. The shared generic adversarial profile is canonical 003 behavior; the judge's near-miss prediction is privileged selection knowledge. Persist template/prompt digests, forbidden-input refs, and an inspection result proving the prediction, judge rationale, ranking, golden material, and privileged grader knowledge were absent.
 
 ## Adaptive scheduler protocol
 
