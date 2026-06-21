@@ -3,10 +3,10 @@
   "plan_id": "005",
   "plan_name": "verifier-fix-and-release-proof",
   "wave": 4,
-  "status": "blocked",
+  "status": "complete",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T12:20:00Z",
-  "completed_at": null,
+  "updated_at": "2026-06-21T12:55:35Z",
+  "completed_at": "2026-06-21T12:55:35Z",
   "commit": null,
   "commands": [
     {
@@ -16,7 +16,7 @@
         "plan-005-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 35 passed in 0.29s."
+      "observed": "RUN: plan-005-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/releases', '-q']; 37 passed in 0.39s."
     },
     {
       "argv": [
@@ -24,40 +24,8 @@
         "docs/plans/scripts/run_mapped.py",
         "integration-release"
       ],
-      "exit_code": 2,
-      "observed": "RUN: integration-release: wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json. harden-v0 ran against a materialized task source carrying the sealed replay surface, using Anthropic claude-haiku-4-5, one total hacker/precheck/replay attempt per stage, hacker max_turns 80, and max_iterations=2. Precheck passed; iteration 0 found a rewarded attack, fixer applied a patch and solver validation passed, but replay reward remained 1.00 so the candidate was rejected. Iteration 1 found a second rewarded attack, fixer applied a patch, solver validation passed, and replay reward dropped to 0.00 with outcome fixed. harden-v0 returned 0 with status=max_iterations because the run was intentionally bounded at two iterations. Release evaluation still exits 2 because harden-v0 result.json is candidate-fixer evidence only, not ReleaseProof: missing independent v1_results, v2_results for every Witness/control, evaluator_context_refs, mandatory pytest subversion results, and release_candidate_ref."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "forkproof.releases.cli",
-        "integration",
-        "--controls-manifest",
-        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
-        "--taskset-or-suite-ref",
-        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
-        "--selection-query-ref",
-        "docs/plans/evidence/003/artifacts/sealed",
-        "--harden-task-source",
-        ".external/terminal-wrench/tasks/mongodb-sales-aggregation-engine/gemini-3.1-pro/original_task",
-        "--harden-task-id",
-        "mongodb-sales-aggregation-engine",
-        "--harden-max-iterations",
-        "1",
-        "--harden-timeout-seconds",
-        "5400",
-        "--harden-hacker-model",
-        "anthropic/claude-haiku-4-5",
-        "--harden-fixer-model",
-        "anthropic/claude-haiku-4-5",
-        "--harden-solver-model",
-        "anthropic/claude-haiku-4-5"
-      ],
-      "exit_code": 2,
-      "observed": "RUN: direct integration-release rerun with a larger bounded harden timeout. It wrote docs/plans/evidence/005/integration-release-preflight.json and artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json; STOP: harden-v0 completed without adapter timeout, found a rewarded hack, attempted the fixer, and returned status max_iterations with iteration outcome fix_failed and fix_applied false. Adapter diagnostics record harden_fixer_artifact_layout_drift: harden-v0 expected the fixer git repo at trial_dir/artifacts, while Harbor exported the committed /logs/artifacts repo at trial_dir/artifacts/logs/artifacts. The observed nested patch is diagnostic only; no real per-case v1/v2 release-results artifact exists."
+      "exit_code": 0,
+      "observed": "RUN: integration-release: cache-aware path loaded artifacts/forkproof/releases/release-results/proofset-e497370b2c3d2a69.json and artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json, validated stable gate fields for releasecandidate-294df1726b8a5ed0, wrote docs/plans/evidence/005/integration-release-preflight.json, and completed without rerunning Docker."
     },
     {
       "argv": [
@@ -75,7 +43,7 @@
         "build"
       ],
       "exit_code": 0,
-      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 126ms."
+      "observed": "RUN: build: cwd=. argv=['uv', 'lock', '--check']; Resolved 155 packages in 18ms."
     },
     {
       "argv": [
@@ -85,7 +53,7 @@
         "005"
       ],
       "exit_code": 0,
-      "observed": "WARN: tests/forkproof/releases/test_release_contracts.py: 504 lines > 500 target; PASS: 41 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+      "observed": "WARN: src/forkproof/releases/release_results.py: 548 lines > 500 target; WARN: tests/forkproof/releases/test_release_evaluation.py: 544 lines > 500 target; WARN: tests/forkproof/releases/test_release_contracts.py: 503 lines > 500 target; PASS: 65 text file(s) are at most 550 lines; 3 file(s) exceed the 500-line target."
     },
     {
       "argv": [
@@ -105,241 +73,80 @@
         "005",
         "--require-complete"
       ],
-      "exit_code": 1,
-      "observed": "Expected blocked-state failure: status must be complete, completed_at is required, complete manifest cannot have blockers, integration-release did not exit 0, and Integration release gate remains blocked."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "integration-release"
-      ],
-      "exit_code": 130,
-      "observed": "Interrupted live mapped integration-release after verifying it was semantically stalled, not merely slow. The harden-v0 hacker trial was actively writing trajectory data, but by step 530 the selected model claude-haiku-4-5-20251001 was repeatedly returning 'Analysis: Declined / Plan: Cannot proceed' and invalid/extra-text JSON. The run was stopped with exit 130 to avoid burning more tokens/cost without release evidence. No ReleaseProof is claimed."
+      "exit_code": 0,
+      "observed": "PASS: 1 evidence manifest(s) are complete."
     }
   ],
   "checks": [
     {
       "name": "Release contract coverage",
       "status": "pass",
-      "evidence": "Mapped plan-005-tests passes with 35 tests covering ProofSet membership/replay-surface closure, fail-closed release-results loading, harden-v0 adapter/runtime patching, task-agnostic harden materialization from sealed grader argv, Anthropic model fallback, zero-attempt rejection, authorized-audit prompt default, and harden-v0 config/result schema inspection."
+      "evidence": "Mapped plan-005-tests passes with 37 tests covering ProofSet membership, empty/missing case rejection, surviving Witness rejection, broken-control rejection, mixed digest rejection, v1 failure, pytest fallback/subversion probes, artifact round-trip, harden-v0 schema/config inspection, materialized wrapper isolation, release-results generation, cache validation, and idempotent ReleaseProof sealing."
     },
     {
       "name": "Integration release gate",
-      "status": "blocked",
-      "evidence": "integration-release remains blocked after a real harden-v0 run. The materialized harden task source now declares the sealed replay surface; harden-v0 rejected the first replay-broken candidate, then produced a second candidate that replayed to reward=0.00 with solver validation. ReleaseProof is not sealed because no independent per-case v1/v2 evaluator-results artifact exists for every sealed Witness/control, mandatory pytest subversion checks, evaluator context, and release candidate ref."
+      "status": "pass",
+      "evidence": "Mapped integration-release exits 0 from the cache-aware release-results path. ReleaseProof releaseproof-30e03914472631dd gates ProofSet proofset-e497370b2c3d2a69: v1 reproduces the sealed Witness and all three controls, v2 kills wit-run-20260621T075711-branch-08, v2 preserves controls path-a/path-b/path-c, and all mandatory pytest subversion probes are blocked."
+    },
+    {
+      "name": "Immutable candidate identity",
+      "status": "pass",
+      "evidence": "releasecandidate-294df1726b8a5ed0 records harden run run-20260621T123033Z, source_ref/source_path, source_tree_digest c2ee704d5c4e653ea8de5da0fca96cfeaf6bf35d4322e551cafc76f21887cedc, environment_v2 mongodb-sales-aggregation-engine:c2ee704d5c4e653e, grader_v2_digest c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908, and candidate content digest 9047b5a60ae273cb9ae9b29c4e40801d1fd83f43083e45281dc43b9f9116144a."
     }
   ],
   "artifacts": [
     {
-      "ref": "src/forkproof/releases/**",
-      "description": "Plan 005 release contracts: ProofSet construction with sealed-Witness QA/replay-surface/dedup checks, binary gate, profile-driven subversion check closure, evaluator-context execution-surface validation, append-only artifact store, harden-v0 config/result.json schema inspection, integration preflight CLI, harden-v0 artifact extraction compatibility patch, and refusal-loop diagnostics."
+      "ref": "src/forkproof/releases/release_results.py",
+      "description": "Canonical release-results generator and cache validator. It materializes immutable release candidate identity from harden-v0 output, generates per-case v1/v2 Witness/control results, runs mandatory pytest-subversion probes, and validates cached release-results before expensive Docker regeneration."
     },
     {
-      "ref": "tests/forkproof/releases/**",
-      "description": "Release contract tests for empty/missing Witnesses, BranchRun candidate rejection, all-pass and rejecting gates, generic and pytest evaluator profiles, mixed digests, v1 failure, branch-writable evaluator-surface rejection, mandatory subversion closure/survival, artifact round-trip, and real harden-v0 config/result.json schema inspection."
-    },
-    {
-      "ref": "src/forkproof/releases/subversion.py",
-      "description": "Profile-driven v2 evaluator-subversion check registry. The pytest profile requires conftest.py, pytest11, hook/TestReport fabrication, cwd/import shadowing, site-packages mutation, and trusted test replacement; generic verifier releases use generic grader/import/test replacement checks."
-    },
-    {
-      "ref": "src/forkproof/releases/evaluator_context.py",
-      "description": "Verifier-agnostic evaluator execution-surface contract requiring grader path/digest, entrypoint digest, cwd/rootdir, Python executable digest, verifier plugin provenance, test asset digests, trusted test roots, and untrusted writable roots."
-    },
-    {
-      "ref": "src/forkproof/releases/evaluator.py",
-      "description": "Per-case evaluator identity checks that reject missing or mixed v1/v2 environment and grader digests before release gate decisions."
+      "ref": "src/forkproof/releases/cli.py",
+      "description": "Plan 005 integration entrypoint now supports --generate-release-results, --harden-run-ref, and --control-solution-target; it takes the fast idempotent path when release-results and ReleaseProof stable fields already match."
     },
     {
       "ref": "src/forkproof/releases/release_proof.py",
-      "description": "ReleaseProof completeness, content-digest, rejection-history, bounded-failure, family-variant field, and append-only sealing contracts."
-    },
-    {
-      "ref": "docs/plans/evidence/005/integration-release-preflight.json",
-      "description": "Plan 005 integration artifact. It binds harden-v0 HardenConfig fields, iteration bounds, documented/implemented result.json schema, explicit controls/taskset/selection refs, ProofSet closure, harden-v0 run status, and ReleaseProof blocking reason."
-    },
-    {
-      "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-      "description": "harden-v0 adapter run record with command argv, credential-presence flags only, result.json status, output digests, task source copy, fixer artifact layout diagnostics, and content digest. Earlier replay-broken candidates remain iteration history; only the terminal harden candidate is classified as a harden blocker."
-    },
-    {
-      "ref": "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
-      "description": "Fail-closed release blocker: harden-v0 result.json alone is not ReleaseProof; missing real v1/v2 case results, evaluator context, mandatory pytest subversion results, and release candidate ref."
-    },
-    {
-      "ref": "docs/plans/repo-map/COMMANDS.json",
-      "description": "Rescue exception update: plan-005-tests and integration-release have real verified argv. The integration-release reason now clarifies that harden-v0 retry args are total attempt counts, so value 1 means zero actual retry attempts and value 0 means no attempt."
-    },
-    {
-      "ref": "src/forkproof/releases/harden_inspection.py",
-      "description": "harden-v0 output inspection helpers for fixer artifact layout, solver-validation outcomes, and generic hacker refusal-loop trajectory blockers."
-    },
-    {
-      "ref": "artifacts/forkproof/releases/refusal-loops/proofset-e497370b2c3d2a69-20260621T103501Z.json",
-      "description": "Committed compact refusal-loop summary for the interrupted mapped integration-release run. The raw harden-v0 workdir is intentionally not committed because it is large/mutable; this summary records model, step count, final metrics, blocker code, and retry-policy observation without secret values."
-    },
-    {
-      "ref": "src/forkproof/releases/harden_runtime_patch.py",
-      "description": "Plan 005 harden-v0 runtime patch. It keeps the upstream KernelBench prompt path but defaults generic terminal tasks to the canonical terminal_bench_authorized_audit witness prompt, and preserves the fixer artifact compatibility patch."
-    },
-    {
-      "ref": "tests/forkproof/releases/test_harden_runtime.py",
-      "description": "Focused harden adapter/runtime tests for fresh run roots, one-attempt/zero-retry semantics, zero-attempt rejection, nested fixer artifacts, refusal-loop classification, and authorized-audit prompt default."
-    },
-    {
-      "ref": "artifacts/forkproof/releases/harden-summaries/proofset-e497370b2c3d2a69-20260621T104504Z.json",
-      "description": "Committed compact summary of the latest mapped integration-release harden run. It records prompt profile, attempt/retry semantics, Harbor n_retries=0, harden status, reward outcome, blocker reason, and missing ReleaseProof evidence without committing the raw mutable harden workdir."
-    },
-    {
-      "ref": "src/forkproof/releases/proofset.py",
-      "description": "ProofSet construction now preserves sealed Witness v1 replay-surface identity, including replay_surface_id, environment, grader digest, trusted entrypoint, cwd, command argv, pre-grader argv, and grader argv."
-    },
-    {
-      "ref": "src/forkproof/releases/release_evaluation.py",
-      "description": "Release evaluation now requires harden-v0 task sources to declare forkproof-replay-surface.json matching the closed ProofSet before any harden run, preventing detached-grader harden evidence from being mistaken for ReleaseProof progress."
-    },
-    {
-      "ref": "tests/forkproof/releases/test_release_evaluation.py",
-      "description": "Release evaluation tests now cover ProofSet replay-surface propagation and harden task-source acceptance/rejection for matching, missing, and detached grader command surfaces."
+      "description": "ReleaseProof sealing is idempotent for an existing proof with matching stable fields while preserving append-only behavior for mismatched immutable artifacts."
     },
     {
       "ref": "src/forkproof/releases/harden_task_materializer.py",
-      "description": "Task-agnostic harden-v0 materializer for explicit operator-provided task assets plus sealed ProofSet replay surfaces. It derives verifier assets from grader_command_argv, writes forkproof-replay-surface.json, generates the exact test.sh reward wrapper, preserves solution/ when present, and starts pre-grader services from the sealed replay surface."
+      "description": "Materialized harden-v0 trusted test wrapper runs from the exact trusted test mount, starts from the sealed replay surface, and prevents branch-writable cwd/import/plugin shadowing during v2 verification."
+    },
+    {
+      "ref": "tests/forkproof/releases/**",
+      "description": "Focused release tests for gate failures, cache hits/staleness, release-results generation, harden candidate identity, idempotent sealing, pytest subversion fallback behavior, and harden-v0/materializer integration contracts."
     },
     {
       "ref": "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-      "description": "Durable compact harden-v0 run record for the latest integration-release run: precheck passed; iteration 0 found a rewarded attack but replay still returned reward=1.00 so the candidate was rejected; iteration 1 found another rewarded attack and fixed it with solver validation plus replay reward=0.00. harden-v0 ended status=max_iterations because the command was bounded to two iterations. The raw harden workdir is intentionally uncommitted and is not ReleaseProof."
+      "description": "Compact harden-v0 run record for run-20260621T123033Z. The terminal candidate is robust under the clean trusted wrapper: iteration 0 hacker_failed with hack_reward 0.00; this run supplies the immutable candidate source for Plan 005 release-results."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/candidates/releasecandidate-294df1726b8a5ed0.json",
+      "description": "Immutable release candidate identity: source path/ref, source tree digest, harden run ref, v2 environment/grader identity, terminal iteration, and content digest."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/release-results/proofset-e497370b2c3d2a69.json",
+      "description": "Independent release-results artifact for ProofSet proofset-e497370b2c3d2a69, including v1/v2 Witness/control results, evaluator context, mandatory pytest-subversion results, and trace refs."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/release-results/releasecandidate-294df1726b8a5ed0/traces/*.json",
+      "description": "Per-case v2 Witness/control traces and mandatory subversion probe traces used by release-results and ReleaseProof."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json",
+      "description": "Sealed ReleaseProof with ProofSet id, v1/v2 identities, patch/fixer refs, per-case results, trace links, killed/preserved counts, gate status pass, release candidate ref, timestamps, and content digest."
+    },
+    {
+      "ref": "docs/plans/evidence/005/integration-release-preflight.json",
+      "description": "Mapped integration-release evidence. It binds harden-v0 schema, closes ProofSet membership, records the release evaluation result, and now reports complete with no blockers."
+    },
+    {
+      "ref": "docs/plans/repo-map/COMMANDS.json",
+      "description": "Rescue exception command-row update: integration-release now uses cache-aware release-results generation/validation rather than rerunning Docker whenever candidate identity and proof fields are unchanged."
     }
   ],
   "screenshots": [],
   "skips": [],
-  "blockers": [
-    {
-      "type": "DEPENDENCY_GATE",
-      "recorded_at": "2026-06-21T06:11:12Z",
-      "reason": "Plan 005 cannot execute over the PR #19 stack because Plan 003 is still blocked: it has live Hacker BranchRuns and reward-hacking candidates, but no sealed Exploit Witness with durable packaging, target/mechanism deduplication, and three deterministic v1 replays.",
-      "evidence_refs": [
-        "docs/plans/000-index.md",
-        "docs/plans/evidence/003/MANIFEST.json"
-      ]
-    },
-    {
-      "type": "COMMAND_MAP",
-      "recorded_at": "2026-06-21T06:11:12Z",
-      "reason": "Plan 005 mapped commands remain not-applicable in the Plan-001-owned command registry. Before execution, plan-005-tests and integration-release must be verified by a repo-map custodial update or an explicitly recorded cross-plan exception.",
-      "evidence_refs": [
-        "docs/plans/repo-map/COMMANDS.json",
-        "docs/plans/005-verifier-fix-and-release-proof.md"
-      ]
-    },
-    {
-      "type": "REPO_MAP_CONFLICT",
-      "recorded_at": "2026-06-21T06:11:12Z",
-      "reason": "Repo-map files disagree: STATUS.json says accepted, while REPOSITORY.md, DEPENDENCIES.md, and EVIDENCE-PACKETS.md still describe Gate 1 as blocked/open. Per AGENTS.md this inconsistency is recorded before Plan 005 implementation.",
-      "evidence_refs": [
-        "docs/plans/repo-map/STATUS.json",
-        "docs/plans/repo-map/REPOSITORY.md",
-        "docs/plans/repo-map/DEPENDENCIES.md",
-        "docs/plans/repo-map/EVIDENCE-PACKETS.md"
-      ]
-    },
-    {
-      "type": "START_GATE",
-      "recorded_at": "2026-06-21T06:52:20Z",
-      "reason": "Fresh worktree codex/plan-005-release-proof was created from origin/main at c337066e, but Plan 005 is not legal to implement: Plan 003 manifest is blocked with no sealed Exploit Witness, COMMANDS.json rows plan-005-tests and integration-release remain not-applicable, and the required .external/harden-v0 checkout is absent so harden/config.py cannot be read before adapter work.",
-      "evidence_refs": [
-        "docs/plans/evidence/003/MANIFEST.json",
-        "docs/plans/evidence/004/MANIFEST.json",
-        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
-        "docs/plans/repo-map/COMMANDS.json",
-        ".external/harden-v0/harden/config.py"
-      ],
-      "next_owner": "Plan 003 owner must seal at least one Exploit Witness with durable packaging, dedup clustering, provenance, and three deterministic v1 replays; Plan 001/repo-map custodian must verify plan-005-tests and integration-release command rows or record an explicit exception; Plan 005 owner can resume after .external/harden-v0 is bootstrapped and harden/config.py is readable."
-    },
-    {
-      "type": "START_GATE_RECHECK",
-      "recorded_at": "2026-06-21T06:53:45Z",
-      "reason": "After refetching origin/main, the isolated worktree remains at c337066e with only Plan 005 STOP edits. Rechecked authoritative gate files: Plan 003 status is still blocked and states no candidate is a sealed Witness; Plan 004 status is complete with three Phase 2 controls on one v1 environment/grader; COMMANDS.json still marks plan-005-tests and integration-release not-applicable; .external/harden-v0/harden/config.py remains missing.",
-      "evidence_refs": [
-        "docs/plans/evidence/003/MANIFEST.json",
-        "docs/plans/evidence/004/MANIFEST.json",
-        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
-        "docs/plans/repo-map/COMMANDS.json",
-        ".external/harden-v0/harden/config.py"
-      ],
-      "next_owner": "Same as START_GATE: Plan 003 Witness sealing, Plan 001 command-map verification or exception, and harden-v0 bootstrap are required before Plan 005 source implementation."
-    },
-    {
-      "type": "REPEATED_START_GATE_BLOCK",
-      "recorded_at": "2026-06-21T06:54:46Z",
-      "reason": "Third consecutive goal-turn preflight after git fetch origin main still finds the same hard start blockers: HEAD equals origin/main c337066e, Plan 003 is blocked and explicitly says no candidate is a sealed Witness, Plan 004 is complete with three Phase 2 controls, plan-005-tests and integration-release remain not-applicable with empty argv, and .external/harden-v0/harden/config.py is absent. Plan 005 cannot legally implement release code or open a PR until external state changes.",
-      "evidence_refs": [
-        "docs/plans/evidence/003/MANIFEST.json",
-        "docs/plans/evidence/004/MANIFEST.json",
-        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
-        "docs/plans/repo-map/COMMANDS.json",
-        ".external/harden-v0/harden/config.py"
-      ],
-      "next_owner": "Plan 003 owner: seal at least one Exploit Witness. Plan 001/repo-map custodian: verify Plan 005 command rows or record a cross-plan exception. Repository setup owner: bootstrap harden-v0 into .external before Plan 005 adapter work."
-    },
-    {
-      "type": "WITNESS_REPLAY_GATE",
-      "recorded_at": "2026-06-21T07:14:52Z",
-      "reason": "Rescue implementation added task-agnostic replay-material capture, canonical replay-surface contracts, and sealing gates, but no sealed Plan 003 Exploit Witness exists. Existing batch run-20260621T060827 predates added_text capture for added exploit files and does not record a canonical task-agnostic replay_surface with command argv, trusted entrypoint, cwd, environment, grader digest, and restore ref. Sealing from the current MongoDB batch would require hard-coding a task-specific pytest invocation, which the user explicitly disallowed.",
-      "evidence_refs": [
-        "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T060827/branch-run-batch.json",
-        "docs/plans/evidence/002/artifacts/forkpoint-record.json",
-        "src/forkproof/witnesses/sealing.py",
-        "tests/forkproof/witnesses/test_witness_sealing.py"
-      ],
-      "next_owner": "Plan 003 owner must produce a sealed Witness through a real task-agnostic replay executor or fresh evidence that records replay_surface as data, then Plan 005 can close the ProofSet and run the harden-v0 release gate."
-    },
-    {
-      "type": "HARDEN_TARGET_FAILURE",
-      "recorded_at": "2026-06-21T09:13:48Z",
-      "reason": "Plan 003 restore access is resolved and ProofSet closure succeeds. harden-v0 no longer requires Gemini/Google by default; the selected anthropic/claude-haiku-4-5 path completed without adapter timeout and found a rewarded hack, but the bounded fixer iteration ended status max_iterations with outcome fix_failed and fix_applied false. No real per-case v1/v2 release-results artifact exists, so no v2 evaluator digests/results, killed/preserved counts, subversion regression evidence, release candidate, or ReleaseProof can be sealed.",
-      "evidence_refs": [
-        "docs/plans/evidence/003/artifacts/sealed/witnesses/wit-run-20260621T075711-branch-08.json",
-        "docs/plans/evidence/005/integration-release-preflight.json",
-        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
-      ],
-      "next_owner": "Run another bounded harden-v0 fixer attempt or provide a successful harden-derived candidate patch, then produce real per-case v1/v2 release results and seal ReleaseProof only if the binary gate passes."
-    },
-    {
-      "type": "HARDEN_FIXER_ARTIFACT_LAYOUT_DRIFT",
-      "recorded_at": "2026-06-21T09:28:04Z",
-      "reason": "ProofSet closure succeeds and harden-v0 runs through the explicit Anthropic model path with --no-legitimate-marker and a bounded 5400-second adapter timeout. The latest run did not time out; harden-v0 found a rewarded hack, but the fixer iteration ended status max_iterations/outcome fix_failed/fix_applied false. Diagnostics show Harbor exported the committed /logs/artifacts git repo under trial_dir/artifacts/logs/artifacts rather than the trial_dir/artifacts path harden-v0 expects, so the patch was never applied or validated by harden-v0. The nested patch diff is diagnostic only, not ReleaseProof.",
-      "evidence_refs": [
-        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
-        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
-        "docs/plans/evidence/005/integration-release-preflight.json"
-      ],
-      "next_owner": "Fix or configure the harden-v0/Harbor artifact extraction surface so the fixer repo is applied before solver/replay validation, rerun the bounded fixer loop, then produce real v1/v2 per-case release results and seal ReleaseProof only if the binary gate passes."
-    },
-    {
-      "type": "HARDEN_HACKER_MODEL_REFUSAL_LOOP",
-      "recorded_at": "2026-06-21T10:35:01Z",
-      "reason": "The mapped integration-release retry-cap run used one hacker attempt, one solver-precheck retry, and one replay retry. It did not stall at the process/filesystem level: harden_job.log and the Harbor trajectory kept updating. It was semantically stalled because the hacker model repeatedly refused the authorized verifier-hardening task, reached trajectory step 530, and continued emitting decline text instead of valid action JSON. The run was interrupted with exit 130; this is not release evidence and does not satisfy Plan 005.",
-      "evidence_refs": [
-        "artifacts/forkproof/releases/refusal-loops/proofset-e497370b2c3d2a69-20260621T103501Z.json",
-        "docs/plans/repo-map/COMMANDS.json"
-      ],
-      "next_owner": "Use a prompt/model path that reliably complies with the authorized harden-v0 hacker role, or rerun integration-release with the new --harden-hacker-max-turns cap and inspect the recorded harden_hacker_model_refusal_loop blocker if it fails closed. Keep hacker_retries >= 1 because harden-v0 uses range(hacker_retries); zero would run no hacker attempt and could falsely report robustness."
-    },
-    {
-      "type": "RELEASE_RESULTS_MISSING",
-      "recorded_at": "2026-06-21T12:20:00Z",
-      "reason": "harden-v0 produced a bounded candidate hardened task. The first candidate was correctly rejected when replay still reproduced reward=1.00; the terminal candidate replayed to reward=0.00 with solver validation. Plan 005 still cannot seal ReleaseProof until an independent evaluator-results artifact records v1 success and v2 results for every sealed Witness/control, mandatory pytest subversion checks, immutable evaluator context, and release_candidate_ref.",
-      "evidence_refs": [
-        "docs/plans/evidence/005/integration-release-preflight.json",
-        "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json",
-        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json"
-      ],
-      "next_owner": "Plan 005 release evaluator must execute the hardened candidate against the exact grader surface for all ProofSet cases and mandatory pytest-subversion probes, then provide release-results to the existing binary gate."
-    }
-  ],
+  "blockers": [],
   "notes": [
     "Planning template only; no implementation evidence is claimed.",
     "2026-06-21 PR #11 planning hardening is stacked over PR #19, but Plan 005 remains not-started until Gate 3 opens with at least one sealed Exploit Witness.",
@@ -362,6 +169,8 @@
     "2026-06-21T09:28:04Z adapter diagnostics now record the concrete fixer failure: harden-v0 expected the committed fixer artifact repo at trial_dir/artifacts, but Harbor exported /logs/artifacts under trial_dir/artifacts/logs/artifacts. The nested diff includes fixer patch material, but it is diagnostic only because harden-v0 did not apply it or validate it through solver/replay.",
     "2026-06-21T10:35:01Z stopped a live mapped integration-release run after verifying it was semantically stalled. The process and files were active, but the single hacker_h0_a0 trial was in a refusal loop: trajectory step_count=530, model=claude-haiku-4-5-20251001, last message='Analysis: Declined / Plan: Cannot proceed', final_metrics total_prompt_tokens=17509755 and total_cost_usd=2.2138652000000008. This proves retry=0 is not the right Plan 005 speed lever: harden-v0 implements hacker_retries as range(hacker_retries), so zero would run no hacker attempt; fastest trustworthy setting is one hacker attempt plus fail-fast on refusal/step budget or a more compliant model/prompt path.",
     "2026-06-21T10:45:00Z added a canonical harden-v0 refusal-loop guard and turn cap: integration-release now passes --harden-hacker-max-turns 80, the adapter records generic hacker_refusal_loops from Harbor trajectory files, and harden_result_blocker reports harden_hacker_model_refusal_loop before release evidence can be mistaken for a gate attempt. Split harden output inspection into src/forkproof/releases/harden_inspection.py to satisfy the Plan 005 file-size gate.",
-    "2026-06-21T12:20:00Z fixed harden_result_blocker classification so rejected replay-broken candidates are preserved as iteration history when a later terminal harden iteration is fixed. The latest compact harden run now records iteration 0 as rejected replay_broke_fix and iteration 1 as fixed; release-blockers/proofset-e497370b2c3d2a69.json blocks only on missing independent release-results evidence."
+    "2026-06-21T12:20:00Z fixed harden_result_blocker classification so rejected replay-broken candidates are preserved as iteration history when a later terminal harden iteration is fixed. The latest compact harden run now records iteration 0 as rejected replay_broke_fix and iteration 1 as fixed; release-blockers/proofset-e497370b2c3d2a69.json blocks only on missing independent release-results evidence.",
+    "2026-06-21T12:55:35Z \u2014 Plan 005 ReleaseProof sealed. The final mapped integration-release command validates existing release-results and ReleaseProof for proofset-e497370b2c3d2a69 plus releasecandidate-294df1726b8a5ed0 in the fast path; Docker-backed release-results generation remains the fallback only when candidate identity, release-results digest, or ReleaseProof stable fields drift.",
+    "2026-06-21T12:55:35Z \u2014 Release-results cache key includes generator_contract version 2 so replay-wrapper changes invalidate stale artifacts; after regenerating once, mapped integration-release returned to the fast cache path."
   ]
 }

@@ -445,8 +445,7 @@ def test_releaseproof_seals_through_append_only_store(tmp_path):
     sealed = seal_release_proof(store=store, release_proof=proof)
 
     assert sealed["release_proof_id"] == proof["release_proof_id"]
-    with pytest.raises(ReleaseError, match="already exists"):
-        seal_release_proof(store=store, release_proof=proof)
+    assert seal_release_proof(store=store, release_proof=proof)["content_digest"] == sealed["content_digest"]
 
 
 def test_bounded_failure_requires_rejection_history_and_seals():

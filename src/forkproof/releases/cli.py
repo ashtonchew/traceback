@@ -11,6 +11,7 @@ from .harden_task_materializer import materialize_harden_task_source
 from .models import ReleaseError
 from .proofset import build_proofset, load_controls_manifest
 from .release_evaluation import run_release_evaluation
+from .release_results import cached_release_results_valid, generate_release_results
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -42,6 +43,9 @@ def integration(
     harden_task_assets_source: Path | None = None,
     harden_task_id: str | None = None,
     release_results_ref: Path | None = None,
+    generate_results: bool = False,
+    harden_run_ref: Path | None = None,
+    control_solution_target: str | None = None,
     harden_max_iterations: int = 1,
     harden_timeout_seconds: int = 5400,
     harden_hacker_retries: int = 1,
@@ -98,11 +102,44 @@ def integration(
             }
         else:
             try:
+                if generate_results and release_results_ref is None:
+                    selected_harden_run_ref = (
+                        harden_run_ref
+                        or ROOT / "artifacts/forkproof/releases/harden-runs" / f"{proofset['proof_set_id']}.json"
+                    )
+                    if control_solution_target is None:
+                        raise ReleaseError(
+                            "release_results_incomplete",
+                            "control solution target is required when generating release results",
+                        )
+                    try:
+                        release_results_ref = cached_release_results_valid(
+                            proof_set=proofset,
+                            harden_run_ref=selected_harden_run_ref,
+                            artifact_root=ROOT / "artifacts/forkproof/releases",
+                        )
+                    except ReleaseError as exc:
+                        if exc.error_class not in {"release_results_stale", "digest_mismatch"}:
+                            raise
+                        release_results_ref = None
+                    if release_results_ref is None:
+                        generate_release_results(
+                            repo_root=ROOT,
+                            proof_set=proofset,
+                            witnesses=witnesses,
+                            controls=controls,
+                            harden_run_ref=selected_harden_run_ref,
+                            artifact_root=ROOT / "artifacts/forkproof/releases",
+                            control_solution_target=control_solution_target,
+                        )
+                        release_results_ref = (
+                            ROOT / "artifacts/forkproof/releases/release-results" / f"{proofset['proof_set_id']}.json"
+                        )
                 release_evaluation = run_release_evaluation(
                     repo_root=ROOT,
                     proof_set=proofset,
-                    harden_task_source=harden_task_source,
-                    harden_task_id=harden_task_id,
+                    harden_task_source=None if generate_results else harden_task_source,
+                    harden_task_id=None if generate_results else harden_task_id,
                     release_results_ref=release_results_ref,
                     artifact_root=ROOT / "artifacts/forkproof/releases",
                     harden_max_iterations=harden_max_iterations,
@@ -172,6 +209,9 @@ def main() -> int:
     integration_parser.add_argument("--harden-task-assets-source", type=Path)
     integration_parser.add_argument("--harden-task-id")
     integration_parser.add_argument("--release-results-ref", type=Path)
+    integration_parser.add_argument("--generate-release-results", action="store_true")
+    integration_parser.add_argument("--harden-run-ref", type=Path)
+    integration_parser.add_argument("--control-solution-target")
     integration_parser.add_argument("--harden-max-iterations", type=int, default=1)
     integration_parser.add_argument("--harden-timeout-seconds", type=int, default=5400)
     integration_parser.add_argument("--harden-hacker-retries", type=int, default=1)
@@ -191,6 +231,9 @@ def main() -> int:
             harden_task_assets_source=args.harden_task_assets_source,
             harden_task_id=args.harden_task_id,
             release_results_ref=args.release_results_ref,
+            generate_results=args.generate_release_results,
+            harden_run_ref=args.harden_run_ref,
+            control_solution_target=args.control_solution_target,
             harden_max_iterations=args.harden_max_iterations,
             harden_timeout_seconds=args.harden_timeout_seconds,
             harden_hacker_retries=args.harden_hacker_retries,

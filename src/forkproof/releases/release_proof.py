@@ -7,6 +7,8 @@ from typing import Any
 from .artifact_store import ReleaseArtifactStore
 from .models import REQUIRED_RELEASE_PROOF_FIELDS, ReleaseError, assert_content_digest, missing_fields
 
+_VOLATILE_IDEMPOTENCY_FIELDS = {"content_digest", "created_at", "captured_at", "recorded_at"}
+
 
 def assert_release_proof(record: dict[str, Any]) -> None:
     """Verify the ReleaseProof artifact is complete and content-addressed."""
@@ -31,5 +33,24 @@ def seal_release_proof(
     """Persist a content-verified ReleaseProof through the append-only store."""
 
     assert_release_proof(release_proof)
-    store.create("release-proofs", release_proof["release_proof_id"], release_proof)
+    try:
+        store.create("release-proofs", release_proof["release_proof_id"], release_proof)
+    except ReleaseError as exc:
+        if exc.error_class != "artifact_immutable":
+            raise
+        existing = store.read("release-proofs", release_proof["release_proof_id"])
+        if _stable(existing) != _stable(release_proof):
+            raise
     return store.read("release-proofs", release_proof["release_proof_id"])
+
+
+def _stable(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: _stable(item)
+            for key, item in value.items()
+            if key not in _VOLATILE_IDEMPOTENCY_FIELDS
+        }
+    if isinstance(value, list):
+        return [_stable(item) for item in value]
+    return value

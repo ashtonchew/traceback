@@ -187,35 +187,18 @@
         "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
         "--selection-query-ref",
         "docs/plans/evidence/003/artifacts/sealed",
-        "--harden-task-assets-source",
-        "envs/mongodb-sales-aggregation-engine",
-        "--harden-task-id",
-        "mongodb-sales-aggregation-engine",
-        "--harden-max-iterations",
-        "2",
-        "--harden-timeout-seconds",
-        "5400",
-        "--harden-hacker-retries",
-        "1",
-        "--harden-solver-precheck-retries",
-        "1",
-        "--harden-replay-retries",
-        "1",
-        "--harden-hacker-max-turns",
-        "80",
-        "--harden-hacker-model",
-        "anthropic/claude-haiku-4-5",
-        "--harden-fixer-model",
-        "anthropic/claude-haiku-4-5",
-        "--harden-solver-model",
-        "anthropic/claude-haiku-4-5"
+        "--generate-release-results",
+        "--harden-run-ref",
+        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
+        "--control-solution-target",
+        "query.py"
       ],
       "cwd": ".",
       "env": {
         "PYTHONPATH": "src"
       },
-      "timeout_seconds": 7200,
-      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, materializes a harden-v0 generic task from explicit HUD task assets plus the sealed ProofSet replay-surface contract instead of a detached terminal-wrench verifier layout, runs the upstream harden-v0 adapter using the available Anthropic credential path rather than Gemini/Google defaults, gives the real hacker/fixer loop a bounded 5400-second adapter window, caps hacker, solver-precheck, and replay harden-v0 total-attempt counts at one each (zero actual retry attempts; harden-v0 value 0 means no attempt), caps hacker turns at 80 to fail fast on refusal loops, records a two-iteration bounded attempt, and fails closed until real per-case v1/v2 release results can seal a ReleaseProof."
+      "timeout_seconds": 1800,
+      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, treats artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json as the immutable harden-v0 candidate producer, generates real per-case v1/v2 release-results through Docker-backed verifier executions, checks the sealed Witness plus all three controls per case, runs the mandatory pytest-subversion probes, and seals ReleaseProof only if the binary gate passes."
     },
     "plan-006-tests": {
       "status": "not-applicable",

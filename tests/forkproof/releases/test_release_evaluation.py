@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import json
+import subprocess
 
 import pytest
 
 from forkproof.releases.models import ReleaseError, digest_json
 from forkproof.releases.proofset import build_proofset
+from forkproof.releases import release_results as release_results_module
 from forkproof.releases.release_evaluation import (
     load_release_results,
     run_release_evaluation,
     validate_harden_task_source_surface,
 )
+from forkproof.releases.release_results import generate_release_results, materialize_release_candidate
+from forkproof.releases.release_results import cached_release_results_valid
 from forkproof.releases.harden_adapter import (
     DEFAULT_ANTHROPIC_HARDEN_MODEL,
     require_selected_model_credentials,
@@ -51,7 +55,7 @@ def witness():
         "model": "model",
         "sampling_config": {"temperature": 0.8},
         "exploit_target": "reward-verifier:grader_exploitation",
-        "exploit_mechanism": "textual-causal-delta:/task/hook.py",
+        "exploit_mechanism": "textual-causal-delta:/app/conftest.py",
         "evaluator_profile": "pytest",
         "cluster_id": "cluster-001",
         "dedup_decision": {"cluster_id": "cluster-001", "decision": "new"},
@@ -192,6 +196,39 @@ def subversion_results():
     ]
 
 
+def fake_harden_run(tmp_path):
+    candidate = tmp_path / "candidate"
+    (candidate / "tests" / "task_assets").mkdir(parents=True)
+    (candidate / "environment" / "task_assets").mkdir(parents=True)
+    (candidate / "tests" / "test.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    (candidate / "tests" / "task_assets" / "test_outputs.py").write_text("def test_ok(): pass\n", encoding="utf-8")
+    (candidate / "environment" / "Dockerfile").write_text("FROM mongo:7.0\n", encoding="utf-8")
+    (candidate / "environment" / "task_assets" / "instruction.md").write_text("task\n", encoding="utf-8")
+    run_root = tmp_path / "run"
+    replay = run_root / "harden-output" / "task" / "jobs" / "replay_h1_a0__x" / "trial" / "result.json"
+    replay.parent.mkdir(parents=True)
+    replay.write_text(json.dumps({"verifier_result": {"rewards": {"reward": 0.0}}}), encoding="utf-8")
+    return {
+        "run_id": "run-fixed",
+        "run_root": str(run_root),
+        "task_id": "task",
+        "result_path": str(tmp_path / "result.json"),
+        "result_json": {
+            "hardened_dir": str(candidate),
+            "iterations": [
+                {"iteration": 0, "outcome": "replay_broke_fix", "replay_reward": 1.0},
+                {"iteration": 1, "outcome": "fixed", "replay_reward": 0.0},
+            ],
+        },
+        "fixer_artifact_layouts": [
+            {
+                "job_dir": str(tmp_path / "fixer_h1__x"),
+                "nested_logs_artifacts_path": str(tmp_path / "patch"),
+            }
+        ],
+    }
+
+
 def test_release_evaluation_fails_closed_without_per_case_results(tmp_path):
     ps = proofset()
 
@@ -254,6 +291,78 @@ def test_release_evaluation_seals_from_real_result_contract(tmp_path):
     assert record["status"] == "pass"
     assert record["release_proof"]["gate_status"] == "pass"
     assert record["release_proof_ref"].endswith(".json")
+
+
+def test_release_results_generator_materializes_candidate_and_cases(monkeypatch, tmp_path):
+    ps = proofset()
+    controls = [control("control-a"), control("control-b"), control("control-c")]
+    harden_run = fake_harden_run(tmp_path)
+    harden_run_path = tmp_path / "harden-run.json"
+    harden_run_path.write_text(json.dumps(harden_run), encoding="utf-8")
+    for item in controls:
+        solution = tmp_path / item["solution_ref"]
+        solution.parent.mkdir(parents=True, exist_ok=True)
+        solution.write_text("class SalesAnalyzer: pass\n", encoding="utf-8")
+        item["solution_ref"] = str(solution.relative_to(tmp_path))
+
+    def fake_run_docker(*, app, tests, image):
+        reward = "0\n" if (app / "conftest.py").exists() or (app / "pytest.py").exists() or (app / "sitecustomize.py").exists() or (app / "evil_pytest11_plugin.py").exists() else "1\n"
+        if (app / "task_assets" / "test_outputs.py").exists():
+            reward = "0\n"
+        return subprocess.CompletedProcess(["docker"], 0, stdout=reward, stderr="")
+
+    monkeypatch.setattr(release_results_module, "_run_docker", fake_run_docker)
+
+    record = generate_release_results(
+        repo_root=tmp_path,
+        proof_set=ps,
+        witnesses=[witness()],
+        controls=controls,
+        harden_run_ref=harden_run_path,
+        artifact_root=tmp_path / "artifacts",
+        control_solution_target="query.py",
+    )
+
+    assert record["release_candidate_ref"].endswith(".json")
+    assert record["environment_v2"].startswith("task:")
+    assert {item["case_id"] for item in record["v1_results"]} == {
+        "wit-001",
+        "control-a",
+        "control-b",
+        "control-c",
+    }
+    assert {item["case_id"] for item in record["v2_results"]} == {
+        "wit-001",
+        "control-a",
+        "control-b",
+        "control-c",
+    }
+    assert all(item["status"] == "blocked" for item in record["subversion_results"])
+    assert (tmp_path / "artifacts" / "release-results" / f"{ps['proof_set_id']}.json").is_file()
+
+    def fail_if_docker_runs(*, app, tests, image):
+        raise AssertionError("cached release-results should not rerun Docker")
+
+    monkeypatch.setattr(release_results_module, "_run_docker", fail_if_docker_runs)
+    assert cached_release_results_valid(
+        proof_set=ps,
+        harden_run_ref=harden_run_path,
+        artifact_root=tmp_path / "artifacts",
+    ) == tmp_path / "artifacts" / "release-results" / f"{ps['proof_set_id']}.json"
+
+
+def test_release_candidate_requires_terminal_fixed_iteration(tmp_path):
+    harden_run = fake_harden_run(tmp_path)
+    harden_run["result_json"]["iterations"][-1]["outcome"] = "replay_broke_fix"
+    harden_run_path = tmp_path / "harden-run.json"
+    harden_run_path.write_text(json.dumps(harden_run), encoding="utf-8")
+
+    with pytest.raises(ReleaseError, match="fixed or robust"):
+        materialize_release_candidate(
+            harden_run=harden_run,
+            harden_run_ref=harden_run_path,
+            artifact_root=tmp_path / "artifacts",
+        )
 
 
 def test_release_results_loader_requires_complete_case_contract(tmp_path):
@@ -345,7 +454,10 @@ def test_materialize_harden_task_source_from_explicit_assets(tmp_path):
     test_sh = (task_source / "tests/test.sh").read_text(encoding="utf-8")
     assert "bash -lc" in test_sh
     assert "service start" in test_sh
-    assert "cd /app" in test_sh
+    assert "cd /" in test_sh
+    assert "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1" in test_sh
+    assert "PYTHONSAFEPATH=1" in test_sh
+    assert "unset PYTHONPATH PYTHONHOME" in test_sh
     assert "/tests/task_assets/test_outputs.py" in test_sh
     assert "python3 -m pytest task_assets/test_outputs.py" not in test_sh
     assert "> .grade.log 2>&1; rc=$?; exit $rc" in test_sh
