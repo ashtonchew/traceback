@@ -1,0 +1,76 @@
+@import '@xyflow/react/dist/style.css';
+@import './styles/fonts.css';
+@import './styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background font-sans text-base text-ink-primary antialiased;
+  }
+
+  .font-display {
+    font-weight: var(--ds-font-display-weight, 500);
+  }
+
+  ::selection {
+    background: var(--ds-green-200);
+    color: var(--ds-ink-primary);
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-neutral-300) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--ds-neutral-300);
+    border-radius: 9999px;
+  }
+}
+
+:root {
+  /* edge cluster colors — derived from design tokens + the local warn token */
+  --fp-edge-witness: var(--ds-green-500);
+  --fp-edge-promising: #b07d22;
+  --fp-edge-control: var(--ds-neutral-700);
+  --fp-edge-default: var(--ds-neutral-400);
+  --fp-dot-witness: var(--ds-green-500);
+  --fp-dot-promising: #b07d22;
+  --fp-dot-control: var(--ds-neutral-700);
+}
+
+/* React Flow surface alignment with design system */
+.react-flow {
+  background: var(--ds-white);
+}
+
+.react-flow__node {
+  font-family: inherit;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__edge-path {
+  stroke-width: 1.5px;
+}
+
+.react-flow__handle {
+  opacity: 0;
+  border: none;
+}

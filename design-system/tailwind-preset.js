@@ -70,7 +70,7 @@ module.exports = {
       },
 
       fontFamily: {
-        display: ['"Inria Serif"', 'Georgia', '"Times New Roman"', 'serif'],
+        display: ['"EB Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
         sans: ['"Geist"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
