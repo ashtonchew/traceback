@@ -179,7 +179,7 @@ export const initialProofSet: ProofSet = {
   contentDigest: 'ps-001-digest',
 }
 
-/** harden-v0 patches per fix attempt. Outcomes are encoded in MockForkProofApi. */
+/** harden-v0 patches per fix attempt. Outcomes are encoded in MockTracebackApi. */
 export const patches: Record<number, Patch> = {
   1: {
     patchRef: 'patch-v2',

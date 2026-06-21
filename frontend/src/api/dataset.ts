@@ -1,4 +1,4 @@
-import type { ForkProofApi } from './ForkProofApi'
+import type { TracebackApi } from './TracebackApi'
 import type {
   BranchRun,
   ExploitWitness,
@@ -112,12 +112,12 @@ function discoveryBatches(source: BranchRun[]): BranchRun[][] {
 }
 
 /**
- * A `ForkProofApi` implementation over an (async-loaded) {@link RunDataset}.
+ * A `TracebackApi` implementation over an (async-loaded) {@link RunDataset}.
  * The mock supplies an in-memory dataset; the real backend supplies one fetched
  * from static JSON. All session mutation (proofset, gate evaluation) and staged
  * streaming live here so both modes are byte-for-byte identical in behavior.
  */
-export class DatasetForkProofApi implements ForkProofApi {
+export class DatasetTracebackApi implements TracebackApi {
   private datasetPromise?: Promise<RunDataset>
   private proofSet?: ProofSet
 

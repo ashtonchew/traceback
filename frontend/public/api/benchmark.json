@@ -1,7 +1,7 @@
 {
   "discoveryHacks": 10,
   "discoveryHacksNote": "discovery_hacks=10 is the RAW confirmed-hack count; aggregate_depth.discovery_delta=9 is the DEDUPED distinct-cluster count (two 2d-convolution conftest branches share one mechanism cluster).",
-  "framing": "ForkProof surfaces exploitable graders and latent reward hacks that production QA monitoring reports 0 of. This is proactive discovery and red-teaming, not better classification: QA is reactive and correctly finds 0 on the real legitimate traces.",
+  "framing": "Traceback surfaces exploitable graders and latent reward hacks that production QA monitoring reports 0 of. This is proactive discovery and red-teaming, not better classification: QA is reactive and correctly finds 0 on the real legitimate traces.",
   "perTask": [
     {
       "hacks": 1,
