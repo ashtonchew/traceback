@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Any
 
-from .models import WitnessError, utc_now
+from .models import WitnessError, digest_json, utc_now
 from .security import assert_branch_security
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -24,6 +25,116 @@ def _write_artifact(name: str, data: dict[str, Any]) -> Path:
     path = EVIDENCE / name
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _load_local_env() -> dict[str, str]:
+    env_path = ROOT / ".env"
+    loaded: dict[str, str] = {}
+    if not env_path.exists():
+        return loaded
+    for raw in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip().removeprefix("export ").strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
+            loaded[key] = "present"
+    return loaded
+
+
+def _credential_presence() -> dict[str, str]:
+    names = (
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HUD_API_KEY",
+        "ANTHROPIC_API_KEY",
+    )
+    return {name: "present" if os.environ.get(name) else "absent" for name in names}
+
+
+def _modal_restore_inspection(forkpoint: dict[str, Any]) -> dict[str, Any]:
+    _load_local_env()
+    presence = _credential_presence()
+    if any(value != "present" for value in presence.values()):
+        return {
+            "status": "blocked",
+            "credential_presence": presence,
+            "observed_behavior": "live restore inspection skipped because required local credentials were absent",
+        }
+
+    import modal
+
+    app = modal.App.lookup("forkproof-plan-003", create_if_missing=True)
+    sandbox = modal.Sandbox.create(
+        image=modal.Image.from_id(forkpoint["snapshot_id"]),
+        app=app,
+        block_network=True,
+        secrets=[],
+        cpu=0.5,
+        memory=1024,
+        timeout=300,
+        workdir="/app",
+        tags={"forkproof_plan": "003", "purpose": "branch_gateway_restore_inspection"},
+    )
+    try:
+        def run(command: str, timeout: int = 60) -> dict[str, Any]:
+            proc = sandbox.exec("bash", "-lc", command, workdir="/app", timeout=timeout)
+            proc.wait()
+            return {
+                "returncode": proc.returncode,
+                "stdout": proc.stdout.read(),
+                "stderr": proc.stderr.read(),
+            }
+
+        inventory = run(
+            "python3 - <<'PY'\n"
+            "from pathlib import Path\n"
+            "import json\n"
+            "paths=['/app','/app/query.py','/app/env.py','/app/tasks.py','/app/pyproject.toml','/app/task_assets','/data/db']\n"
+            "print(json.dumps({p:{'exists':Path(p).exists(),'is_file':Path(p).is_file(),'is_dir':Path(p).is_dir()} for p in paths}, sort_keys=True))\n"
+            "PY"
+        )
+        grade = run(
+            "pgrep -x mongod >/dev/null || "
+            "mongod --fork --logpath /var/log/mongodb.log --dbpath /data/db >/tmp/mongod-start.log 2>&1; "
+            "python3 -m pytest task_assets/test_outputs.py -q > /tmp/grade.log 2>&1; "
+            "rc=$?; tail -80 /tmp/grade.log; exit $rc",
+            timeout=180,
+        )
+        hud_server = run(
+            "test -f env.py && "
+            "(hud serve env.py --host 0.0.0.0 --port 8765 --help >/tmp/hud-help.log 2>&1; "
+            "echo env-server-present) || echo env-server-missing"
+        )
+        grade_output = grade["stdout"] + grade["stderr"]
+        grade_summary = "pass"
+        if "IndentationError" in grade_output:
+            grade_summary = "query.py IndentationError"
+        elif grade["returncode"] != 0:
+            grade_summary = "grader returned nonzero"
+        inventory_data = json.loads(inventory["stdout"])
+        return {
+            "status": "pass" if grade["returncode"] == 0 and hud_server["stdout"].strip() == "env-server-present" else "blocked",
+            "credential_presence": presence,
+            "sandbox_id": sandbox.object_id,
+            "network_policy": "block_network=True",
+            "secret_policy": "secrets=[]",
+            "inventory": inventory_data,
+            "grader_returncode": grade["returncode"],
+            "grader_output_sha256": digest_json(grade_output),
+            "grader_summary": grade_summary,
+            "hud_server_probe_stdout": hud_server["stdout"].strip(),
+            "observed_behavior": (
+                "Recorded Plan 002 snapshot restores as Modal task state. It currently lacks HUD server files "
+                "(`/app/env.py`, `/app/tasks.py`, `/app/pyproject.toml`) and the trusted grader does not pass "
+                "from the restored state."
+            ),
+        }
+    finally:
+        sandbox.terminate()
 
 
 def integration_witness() -> int:
@@ -48,6 +159,29 @@ def integration_witness() -> int:
     if command_status != "verified":
         branch_execution_blockers.append("integration-witness command is not yet verified in COMMANDS.json")
 
+    restore_inspection: dict[str, Any]
+    try:
+        restore_inspection = _modal_restore_inspection(forkpoint)
+    except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
+        restore_inspection = {
+            "status": "blocked",
+            "error_class": type(exc).__name__,
+            "observed_behavior": str(exc),
+        }
+    restore_path = _write_artifact(
+        "branch-gateway-restore-inspection.json",
+        {
+            "checked_at": utc_now(),
+            "fork_point_id": forkpoint.get("fork_point_id"),
+            "snapshot_id": forkpoint.get("snapshot_id"),
+            **restore_inspection,
+        },
+    )
+    if restore_inspection.get("status") != "pass":
+        branch_execution_blockers.append(
+            "accepted ForkPoint restore is not branch-ready for live BranchGateway execution"
+        )
+
     # These are distinct Plan 003 seams. Branch execution produces a completed
     # BranchRun; QA classification is a later same-branch promotion signal.
     branch_execution_blockers.append("repo-owned live BranchGateway adapter is not bound")
@@ -58,6 +192,7 @@ def integration_witness() -> int:
         "status": "blocked" if branch_execution_blockers or promotion_blockers else "ready",
         "fork_point_id": forkpoint.get("fork_point_id"),
         "snapshot_id": forkpoint.get("snapshot_id"),
+        "restore_inspection_ref": str(restore_path.relative_to(ROOT)),
         "branch_execution": {
             "status": "blocked" if branch_execution_blockers else "ready",
             "blockers": branch_execution_blockers,

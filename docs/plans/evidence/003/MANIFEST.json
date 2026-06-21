@@ -5,7 +5,7 @@
   "wave": 3,
   "status": "blocked",
   "started_at": "2026-06-21T01:21:47Z",
-  "updated_at": "2026-06-21T02:04:31Z",
+  "updated_at": "2026-06-21T01:42:58Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -34,7 +34,7 @@
         "integration-witness"
       ],
       "exit_code": 2,
-      "observed": "RUN: integration-witness: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'integration']; wrote docs/plans/evidence/003/artifacts/integration-witness-preflight.json and stopped before BranchRun execution because the repo-owned live BranchGateway adapter is not bound; also records that HUD QA is a separate post-run promotion classifier and no authoritative HUD QA reward-hacking classification API is bound."
+      "observed": "RUN: integration-witness: cwd=. argv=['uv', 'run', 'python', '-m', 'forkproof.witnesses.cli', 'integration']; wrote docs/plans/evidence/003/artifacts/integration-witness-preflight.json and docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json; stopped before BranchRun execution because the accepted ForkPoint restore is not branch-ready, the repo-owned live BranchGateway adapter is not bound, and no authoritative HUD QA reward-hacking classification API is bound."
     },
     {
       "argv": [
@@ -65,7 +65,7 @@
         "003"
       ],
       "exit_code": 0,
-      "observed": "PASS: 13 text file(s) are at most 500 lines"
+      "observed": "PASS: 14 text file(s) are at most 500 lines"
     },
     {
       "argv": [
@@ -151,7 +151,7 @@
     {
       "name": "Live integration readiness",
       "status": "skipped",
-      "evidence": "docs/plans/evidence/003/artifacts/integration-witness-preflight.json records separate STOPs: the repo-owned live BranchGateway adapter is not bound for BranchRun execution, and HUD QA remains a separate post-run promotion classifier with no authoritative same-branch API bound."
+      "evidence": "docs/plans/evidence/003/artifacts/integration-witness-preflight.json records separate STOPs. docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json shows the Plan 002 snapshot restores under no-secrets/block-network with credentials present, but `/app/env.py`, `/app/tasks.py`, and `/app/pyproject.toml` are absent and the trusted grader returns nonzero with `query.py IndentationError`; the repo-owned live BranchGateway adapter and authoritative HUD QA binding also remain unbound."
     }
   ],
   "artifacts": [
@@ -172,6 +172,10 @@
       "description": "Integration preflight artifact recording the missing live BranchGateway binding and separate missing authoritative HUD QA binding."
     },
     {
+      "ref": "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json",
+      "description": "Live Modal restore inspection for the accepted Plan 002 ForkPoint snapshot, with credential-presence flags, no-secrets/block-network policy, redacted inventory, grader result hash, and HUD server probe."
+    },
+    {
       "ref": "docs/plans/repo-map/COMMANDS.json",
       "description": "Verified mappings for plan-003-tests, integration-witness, and security-branch."
     }
@@ -180,11 +184,12 @@
   "skips": [],
   "blockers": [
     {
-      "recorded_at": "2026-06-21T02:04:31Z",
+      "recorded_at": "2026-06-21T01:42:58Z",
       "type": "STOP",
-      "reason": "Plan 003 cannot execute the 12 genuine BranchRuns until a repo-owned live BranchGateway adapter is bound, and it cannot promote a Witness until the supported HUD QA classifier returns authoritative reward-hacking verdicts joined to the same BranchRun trace/action digest. The installed HUD 0.6.4 CLI exposes eval/jobs/trace and the public docs describe QA Agents, but this repo has no checked-in command/API that returns same-branch reward-hacking verdicts.",
+      "reason": "Plan 003 cannot execute the 12 genuine BranchRuns because the accepted Plan 002 ForkPoint restore is not branch-ready: live restore inspection shows missing HUD server files and a non-passing trusted grader state (`query.py IndentationError`). Plan 003 also still needs a repo-owned live BranchGateway adapter and a supported HUD QA classifier that returns authoritative reward-hacking verdicts joined to the same BranchRun trace/action digest.",
       "evidence_refs": [
         "docs/plans/evidence/003/artifacts/integration-witness-preflight.json",
+        "docs/plans/evidence/003/artifacts/branch-gateway-restore-inspection.json",
         "src/forkproof/witnesses/cli.py",
         "docs/plans/repo-map/COMMANDS.json"
       ]
@@ -194,6 +199,6 @@
     "Plan 003 implementation has started but is not complete; no 12-branch run, QA classification, Witness promotion, or replay seal is claimed.",
     "2026-06-20 dependency audit made Plan 004 an explicit Plan 003 frontmatter dependency because Gate 2 requires frozen legitimate controls before Wave 3 may start.",
     "2026-06-21 Plan 002 dependency was completed in this branch and Plan 003 command mappings plus local contracts were added.",
-    "2026-06-21 integration-witness failed closed before attacker execution because the live BranchGateway adapter is not bound; it also records HUD QA as a separate post-run classifier required for Witness promotion. No fake QA verdict or scripted branch evidence was introduced."
+    "2026-06-21 integration-witness failed closed before attacker execution because the accepted ForkPoint restore is not branch-ready, the live BranchGateway adapter is not bound, and HUD QA remains a separate post-run classifier required for Witness promotion. No fake QA verdict, fresh-start branch, or scripted branch evidence was introduced."
   ]
 }
