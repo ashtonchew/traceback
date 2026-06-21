@@ -57,6 +57,115 @@ def _credential_presence() -> dict[str, str]:
     return {name: "present" if os.environ.get(name) else "absent" for name in names}
 
 
+def _hud_org_binding() -> dict[str, str | None]:
+    names = (
+        "HUD_ORGANIZATION_ID",
+        "HUD_ORG_ID",
+        "HUD_PROJECT_ID",
+        "HUD_WORKSPACE_ID",
+        "X_ORGANIZATION_ID",
+    )
+    for name in names:
+        value = os.environ.get(name)
+        if value:
+            return {"env_name": name, "status": "present", "value": value}
+    return {"env_name": None, "status": "absent", "value": None}
+
+
+def _summarize_api_payload(data: Any) -> dict[str, Any]:
+    if isinstance(data, dict):
+        return {
+            "shape": "object",
+            "keys": sorted(str(key) for key in data.keys())[:20],
+            "message": data.get("detail") or data.get("message") or data.get("error"),
+        }
+    if isinstance(data, list):
+        return {
+            "shape": "array",
+            "length": len(data),
+            "first_keys": sorted(str(key) for key in data[0].keys())[:20]
+            if data and isinstance(data[0], dict)
+            else [],
+        }
+    return {"shape": type(data).__name__}
+
+
+def _inspect_hud_qa_binding(trace_id: str | None) -> dict[str, Any]:
+    _load_local_env()
+    api_key = os.environ.get("HUD_API_KEY")
+    if not api_key:
+        return {
+            "status": "blocked",
+            "credential_presence": _credential_presence(),
+            "observed_behavior": "HUD QA binding inspection skipped because HUD_API_KEY is absent",
+        }
+
+    import httpx
+
+    base = os.environ.get("HUD_API_URL", "https://api.beta.hud.ai").rstrip("/")
+    org = _hud_org_binding()
+    headers = {"Authorization": f"Bearer {api_key}"}
+    org_headers = dict(headers)
+    if org["value"]:
+        org_headers["X-Organization-ID"] = str(org["value"])
+
+    def get(path: str, *, use_org: bool = False) -> dict[str, Any]:
+        request_headers = org_headers if use_org else headers
+        response = httpx.get(f"{base}{path}", headers=request_headers, timeout=20)
+        try:
+            payload: Any = response.json()
+        except ValueError:
+            payload = None
+        return {
+            "path": path,
+            "status_code": response.status_code,
+            "summary": _summarize_api_payload(payload),
+        }
+
+    openapi = get("/openapi.json")
+    openapi_paths: list[str] = []
+    try:
+        spec = httpx.get(f"{base}/openapi.json", headers=headers, timeout=20).json()
+        if isinstance(spec, dict) and isinstance(spec.get("paths"), dict):
+            openapi_paths = sorted(spec["paths"].keys())
+    except Exception:  # noqa: BLE001 - diagnostic only; endpoint status is recorded above.
+        openapi_paths = []
+
+    qa_without_org = get("/v2/qa-agents")
+    qa_with_org = get("/v2/qa-agents", use_org=True) if org["value"] else None
+    trace_events = get(f"/v2/trace/{trace_id}/events") if trace_id else None
+    qa_probe = qa_with_org or qa_without_org
+    message = str(qa_without_org["summary"].get("message") or "")
+    if qa_without_org["status_code"] == 401 and "X-Organization-ID" in message and org["status"] == "absent":
+        blocker = "HUD QA API requires X-Organization-ID and no repo-bound HUD organization env/config is present"
+    elif qa_probe["status_code"] == 200:
+        blocker = "HUD QA agent listing is reachable, but the repo has no bound run/result contract for the Reward Hacking Agent"
+    else:
+        blocker = "HUD QA reward-hacking classification API is not bound to this repo"
+
+    return {
+        "status": "blocked",
+        "credential_presence": _credential_presence(),
+        "api_base": base,
+        "organization_binding": {
+            "status": org["status"],
+            "env_name": org["env_name"],
+        },
+        "openapi_probe": openapi,
+        "openapi_has_qa_agents_path": "/v2/qa-agents" in openapi_paths,
+        "openapi_trace_paths": [path for path in openapi_paths if path.startswith("/v2/trace/")],
+        "qa_agents_without_org_probe": qa_without_org,
+        "qa_agents_with_org_probe": qa_with_org,
+        "trace_events_probe": trace_events,
+        "blocker": blocker,
+        "observed_behavior": (
+            "HUD trace readback is available through the authenticated API, and the hidden QA-agent router exists, "
+            "but Plan 003 still lacks the organization-scoped Reward Hacking Agent run/result binding needed to join "
+            "an authoritative QA verdict to the BranchRun trace and action digest."
+        ),
+    }
+
+
 def _modal_restore_inspection(forkpoint: dict[str, Any]) -> dict[str, Any]:
     _load_local_env()
     presence = _credential_presence()
@@ -271,7 +380,27 @@ def integration_witness() -> int:
 
     # These are distinct Plan 003 seams. Branch execution produces a completed
     # BranchRun; QA classification is a later same-branch promotion signal.
-    promotion_blockers.append("authoritative HUD QA reward-hacking classification API is not bound")
+    qa_binding: dict[str, Any]
+    try:
+        qa_binding = _inspect_hud_qa_binding(smoke.get("trace_id") if "smoke" in locals() else None)
+    except Exception as exc:  # noqa: BLE001 - integration command records provider failures.
+        qa_binding = {
+            "status": "blocked",
+            "error_class": type(exc).__name__,
+            "observed_behavior": str(exc),
+            "blocker": "HUD QA reward-hacking classification API is not bound to this repo",
+        }
+    qa_binding_path = _write_artifact(
+        "hud-qa-binding-inspection.json",
+        {
+            "checked_at": utc_now(),
+            "fork_point_id": forkpoint.get("fork_point_id"),
+            "snapshot_id": forkpoint.get("snapshot_id"),
+            **qa_binding,
+        },
+    )
+    if qa_binding.get("status") != "pass":
+        promotion_blockers.append(str(qa_binding.get("blocker") or "authoritative HUD QA reward-hacking classification API is not bound"))
 
     artifact = {
         "checked_at": utc_now(),
@@ -282,6 +411,7 @@ def integration_witness() -> int:
         "branch_gateway_smoke_ref": (
             str(smoke_path.relative_to(ROOT)) if "smoke_path" in locals() else None
         ),
+        "hud_qa_binding_ref": str(qa_binding_path.relative_to(ROOT)),
         "branch_execution": {
             "status": "blocked" if branch_execution_blockers else "ready",
             "blockers": branch_execution_blockers,
