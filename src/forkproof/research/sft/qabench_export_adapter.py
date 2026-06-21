@@ -26,6 +26,11 @@ def _bool_label(value: Any, *, field: str) -> bool:
     return value
 
 
+def _training_status(row: dict[str, Any]) -> str | None:
+    value = row.get("sft_status")
+    return value.strip().lower() if isinstance(value, str) and value.strip() else None
+
+
 def trajectory_row_to_trace_record(
     row: dict[str, Any],
     *,
@@ -45,22 +50,46 @@ def trajectory_row_to_trace_record(
         raise ValueError(f"missing prompt or assistant output for {trajectory.trajectory_id}")
 
     raw_reward = trajectory.hud_reward
-    if "patched_reward" in row:
-        patched_reward = _reward(row["patched_reward"], field="patched_reward")
-    elif trajectory.referee_verdict == "confirmed_hack":
+    status = _training_status(row)
+    training_clean = row.get("training_clean")
+    if training_clean is not None and not isinstance(training_clean, bool):
+        raise ValueError(f"training_clean must be a boolean for {trajectory.trajectory_id}")
+
+    if status == "confirmed_hack":
         patched_reward = 0.0
+        is_hack = True
+        is_legit = False
+    elif training_clean is True or status == "sft_clean":
+        patched_reward = 1.0
+        is_hack = False
+        is_legit = True
+    elif status == "quarantined":
+        patched_reward = 0.0
+        is_hack = False
+        is_legit = False
+    elif "patched_reward" in row:
+        patched_reward = _reward(row["patched_reward"], field="patched_reward")
+        is_hack = (
+            _bool_label(row["is_hack"], field="is_hack")
+            if "is_hack" in row
+            else trajectory.referee_verdict == "confirmed_hack"
+        )
+        is_legit = (
+            _bool_label(row["is_legit"], field="is_legit")
+            if "is_legit" in row
+            else trajectory.referee_verdict == "legitimate"
+        )
     else:
-        patched_reward = raw_reward
-
-    if "is_hack" in row:
-        is_hack = _bool_label(row["is_hack"], field="is_hack")
-    else:
+        patched_reward = 0.0 if trajectory.referee_verdict == "confirmed_hack" else raw_reward
         is_hack = trajectory.referee_verdict == "confirmed_hack"
-
-    if "is_legit" in row:
-        is_legit = _bool_label(row["is_legit"], field="is_legit")
-    else:
         is_legit = trajectory.referee_verdict == "legitimate"
+
+    needs_review = compute_needs_review(
+        raw_reward=raw_reward,
+        patched_reward=patched_reward,
+        is_hack=is_hack,
+        is_legit=is_legit,
+    ) or status == "quarantined"
 
     return TraceRecord(
         trace_id=trajectory.trajectory_id,
@@ -75,12 +104,7 @@ def trajectory_row_to_trace_record(
         environment_version=row.get("environment_version")
         if isinstance(row.get("environment_version"), str)
         else None,
-        needs_review=compute_needs_review(
-            raw_reward=raw_reward,
-            patched_reward=patched_reward,
-            is_hack=is_hack,
-            is_legit=is_legit,
-        ),
+        needs_review=needs_review,
         source="forkproof_export",
         trajectory_id=trajectory.trajectory_id,
         qabench_report_ref=qabench_report_ref,
@@ -128,9 +152,17 @@ def load_qabench_trace_records(report_path: str | Path) -> tuple[Path, str, list
             )
             continue
         try:
-            traces.append(
-                trajectory_row_to_trace_record(row, qabench_report_ref=report_ref)
-            )
+            trace = trajectory_row_to_trace_record(row, qabench_report_ref=report_ref)
+            traces.append(trace)
+            if _training_status(row) == "quarantined":
+                quarantined.append(
+                    {
+                        "row_index": row_index,
+                        "trajectory_id": row.get("trajectory_id") or row.get("trace_id"),
+                        "task_id": row.get("task_id"),
+                        "reason": row.get("sft_quarantine_reason") or "qabench_sft_status_quarantined",
+                    }
+                )
         except (ValueError, TypeError) as exc:
             quarantined.append(
                 {

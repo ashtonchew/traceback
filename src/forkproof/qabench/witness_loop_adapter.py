@@ -122,7 +122,7 @@ def to_discovered_branch(
         qa_availability=_qa_availability(qa),
         causal_delta_status=branch.get("causal_delta_status"),
         hud_trace_id=branch.get("hud_trace_id"),
-        workspace_ref=branch.get("snapshot_restore_ref"),
+        workspace_ref=branch.get("post_agent_snapshot_ref"),
         file_diff_ref=branch.get("file_diff_ref"),
         action_record_ref=branch.get("action_record_ref"),
         lineage=_lineage(branch),

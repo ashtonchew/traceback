@@ -24,16 +24,16 @@ class QABenchPipelineTests(unittest.TestCase):
             result = run_qabench_sft_pipeline(DEFAULT_REPORT, out)
 
             self.assertEqual(result.raw_sft_examples, 32)
-            self.assertEqual(result.hardened_sft_examples, 23)
-            self.assertEqual(result.rejected_hack_records, 9)
-            self.assertEqual(len(result.quarantined), 0)
+            self.assertEqual(result.hardened_sft_examples, 2)
+            self.assertEqual(result.rejected_hack_records, 10)
+            self.assertEqual(len(result.quarantined), 20)
 
             manifest = json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["mode"], "qabench_preliminary")
             self.assertIn("PRELIMINARY", manifest["claim_guard"])
 
             hardened_lines = (out / "hardened_verifier_sft.jsonl").read_text().strip().splitlines()
-            self.assertEqual(len(hardened_lines), 23)
+            self.assertEqual(len(hardened_lines), 2)
 
 
 if __name__ == "__main__":

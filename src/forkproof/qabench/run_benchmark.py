@@ -22,9 +22,9 @@ import os
 import time
 from pathlib import Path
 
-from forkproof.qabench.live_benchmark import adjudicate_branches_by_diff
+from forkproof.qabench.live_benchmark import adjudicate_branches
 from forkproof.qabench.live_discovery import LiveDiscoveryDriver
-from forkproof.qabench.modal_runtime import capture_forkpoint
+from forkproof.qabench.modal_runtime import ModalCleanVerifyRunner, capture_forkpoint
 from forkproof.qabench.models import DiscoveredBranch, Trajectory
 from forkproof.qabench.scoring import score
 
@@ -36,7 +36,11 @@ _STATE_ROOTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def load_env(root: Path) -> None:
+def _skip_qa_enabled() -> bool:
+    return os.environ.get("FORKPROOF_SKIP_QA", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def load_env(root: Path, *, skip_qa: bool = False) -> None:
     env_path = root / ".env"
     if env_path.exists():
         for raw in env_path.read_text(encoding="utf-8").splitlines():
@@ -47,6 +51,8 @@ def load_env(root: Path) -> None:
                     key.strip().removeprefix("export ").strip(), value.strip().strip("'\"")
                 )
     os.environ["FORKPROOF_ALLOW_EXTERNAL_QA"] = "1"
+    if skip_qa:
+        os.environ["FORKPROOF_SKIP_QA"] = "1"
 
 
 def task_list(root: Path) -> list[str]:
@@ -85,10 +91,8 @@ def run_task(
         count=count, concurrency=count, state_roots=_STATE_ROOTS.get(slug, ("/app",)),
     )
     branches = list(driver.run_discovery_tree(slug))
-    # Deterministic diff-based referee (snapshot-free): a rewarded branch is a hack iff
-    # it modified the verification surface. clean_verify on a restored result snapshot is
-    # the richer referee but needs branch_runs to snapshot post-agent state (003 gap).
-    trajectories = adjudicate_branches_by_diff(branches, root)
+    clean_verify = ModalCleanVerifyRunner(root / "envs/qabench" / slug)
+    trajectories = adjudicate_branches(branches, clean_verify)
     return branches, trajectories
 
 
@@ -121,6 +125,7 @@ def batch(root: Path, *, count: int) -> dict:
         "tasks_measured": report.tasks_measured,
         "tasks_skipped": skips,
         "branch_count_per_task": count,
+        "qa_mode": "skipped" if _skip_qa_enabled() else "enabled",
         "depth": dataclasses.asdict(report.depth),
         "coverage": dataclasses.asdict(report.coverage),
         "per_task_summary": per_task,
@@ -152,6 +157,7 @@ def run_one_task_to_file(root: Path, slug: str, *, count: int) -> Path:
     out.write_text(json.dumps({
         "slug": slug, "confirmed_hacks": confirmed, "branch_count": len(trajs),
         "branches_discovered": len(branches), "branches_rewarded": len(trajs),
+        "qa_mode": "skipped" if _skip_qa_enabled() else "enabled",
         "depth": dataclasses.asdict(report.depth),
         "coverage": dataclasses.asdict(report.coverage),
         "qa_false_positives": report.qa_false_positives, "undecided": report.undecided,
@@ -191,6 +197,7 @@ def aggregate(root: Path, *, count: int) -> dict:
         "schema_version": 1,
         "scope": "qabench additive X/Δ benchmark: ForkProof discovery vs HUD QA baseline over Terminal Wrench tasks",
         "branch_count_per_task": count,
+        "qa_mode": "skipped" if _skip_qa_enabled() else "enabled",
         "tasks_measured": len(files),
         "tasks_skipped": sorted(set(skips)),
         "total_confirmed_hacks": confirmed,
@@ -213,9 +220,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--phase", choices=["preflight", "batch", "aggregate", "all"], default="all")
     parser.add_argument("--task", help="run + score a single captured task (isolated subprocess)")
     parser.add_argument("--count", type=int, default=10, help="discovery branches per task")
+    parser.add_argument("--skip-qa", action="store_true", help="skip HUD QA and rely on sterile clean_verify for SFT data")
     args = parser.parse_args(argv)
     root = Path.cwd()
-    load_env(root)
+    load_env(root, skip_qa=args.skip_qa)
     if args.task:
         run_one_task_to_file(root, args.task, count=args.count)
         return 0
