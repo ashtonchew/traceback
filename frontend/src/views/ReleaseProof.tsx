@@ -60,7 +60,8 @@ export function ReleaseProof() {
   const cp = rp?.controlsPreserved ?? [run.proofSet?.legitimateControlIds.length ?? 3, run.proofSet?.legitimateControlIds.length ?? 3]
   const env = rp?.environmentV1 ?? 'mongodb-sales-aggregation-engine'
   const publishedRef = rp?.publishedEnvironmentRef ?? `${env} v2`
-  const commitId = rp?.commitId ?? 'rpf-20250508-102431'
+  const pubVersion = rp?.publishedVersion ? `v${rp.publishedVersion}` : 'v2'
+  const commitId = rp?.commitId ?? 'releaseproof-30e03914472631dd'
   const reward = (rp?.reward ?? 1.0).toFixed(2)
   const similarity = (rp?.similarity ?? 0.92).toFixed(2)
   const counts = getRunTreeCounts(run)
@@ -77,8 +78,8 @@ export function ReleaseProof() {
                 <ShieldCheck size={24} />
               </span>
               <h2 className="mt-3 font-display text-3xl tracking-tight text-ink-primary">Release proof committed</h2>
-              <p className="mt-1 text-base text-accent-text">Published {publishedRef}</p>
-              <p className="mt-1 text-sm text-ink-secondary">All witnesses were successfully killed and controls were preserved.</p>
+              <p className="mt-1 text-base text-accent-text">Published to HUD as {pubVersion}</p>
+              <p className="mt-1 text-sm text-ink-secondary">Every witness replays to reward 0 and every control stays at reward 1 under the hardened grader.</p>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4">
@@ -100,7 +101,7 @@ export function ReleaseProof() {
               <ArrowRight size={20} className="hidden text-ink-tertiary xl:block" />
               <EnvCard
                 when="After (published)"
-                version="v2"
+                version={pubVersion}
                 status="Published"
                 published
                 rows={[
@@ -114,12 +115,20 @@ export function ReleaseProof() {
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-lg border border-state-green-border bg-state-green-soft p-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-fill-accent text-ink-inverse"><Database size={18} /></span>
               <div className="min-w-0 flex-1">
-                <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Published</div>
-                <div className="truncate text-sm font-medium text-ink-primary">{publishedRef}</div>
-                <div className="text-xs text-ink-secondary">Environment successfully published and live.</div>
+                <div className="text-2xs uppercase tracking-wide text-ink-tertiary">Published environment</div>
+                <div className="truncate font-mono text-xs font-medium text-ink-primary">{publishedRef}</div>
+                <div className="text-xs text-ink-secondary">{rp?.buildStatus ? `HUD build ${rp.buildStatus.toLowerCase()}, append-only.` : 'Published to HUD, append-only.'}</div>
               </div>
               <Button variant="secondary" size="sm" icon={<ExternalLink size={14} />} onClick={() => navigate('/artifacts')}>View in HUD</Button>
             </div>
+
+            {rp?.graderHardeningNote && (
+              <div className="mt-3 rounded-lg border border-hairline bg-surface px-4 py-3 text-xs leading-relaxed text-ink-secondary">
+                <span className="font-medium text-ink-secondary-strong">Hardening note. </span>
+                {rp.graderHardeningNote}
+                {rp.residualLimitation && <span className="text-ink-tertiary"> Residual: {rp.residualLimitation}</span>}
+              </div>
+            )}
           </div>
         </div>
 
@@ -133,8 +142,8 @@ export function ReleaseProof() {
           <div className="flex-1 px-5 py-4">
             <div className="divide-y divide-hairline">
               <KV label="Environment" valueClass="text-xs">{env}</KV>
-              <KV label="Published version">v2</KV>
-              <KV label="Commit ID" valueClass="font-mono text-xs">
+              <KV label="Published version">{pubVersion}</KV>
+              <KV label="Release proof ID" valueClass="font-mono text-xs">
                 <button type="button" onClick={() => copyText(commitId)} className="inline-flex min-w-0 items-center gap-1 rounded-sm transition-[color,transform] duration-150 ease-out hover:text-accent-text active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="truncate">{commitId}</span> <Copy size={11} className="shrink-0 text-ink-tertiary" />
                 </button>

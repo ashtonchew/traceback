@@ -67,6 +67,10 @@ RELEASE_PROOF = ROOT / (
 # Plan 008 QA-classifier benchmark (PR #31, merged to main).
 QABENCH_REPORT = ROOT / "artifacts/forkproof/qabench/benchmark-report.json"
 
+# Plan 006 HUD publication receipt + residual-limitation record (PR #29).
+PUBLISH_RECEIPT = ROOT / "docs/plans/evidence/006/publish-receipt.json"
+PUBLISH_LIMITS = ROOT / "artifacts/forkproof/demo/publish/v2-security-limitations.json"
+
 SCHEMA = "1.0.0"
 TBD = "TBD"
 SAMPLING = {"temperature": 0.0, "topP": 1.0}
@@ -380,6 +384,38 @@ def build_release_bundle() -> dict[str, Any]:
         "patches": patches,
         "survivingWitnessByIteration": surviving_each,
         "brokenControlByIteration": broken_each,
+        "publication": _publication(proof),
+    }
+
+
+def _publication(proof: dict[str, Any]) -> dict[str, Any]:
+    """The real Plan 006 HUD publication outcome for the passing ReleaseProof.
+
+    Honest per AGENTS.md: the hardened environment was actually published to HUD
+    (``hud:registry/...@v5``, build SUCCEEDED), but the grader was iterated v3->v6
+    because each post-publish bug hunt found the prior version bypassable, and a
+    residual in-container limitation is still recorded. The view shows the real
+    published ref and the caveat rather than a fabricated "live" claim.
+    """
+    receipt = _load_json(PUBLISH_RECEIPT)
+    limits = _load_json(PUBLISH_LIMITS)
+    return {
+        "outcome": receipt["outcome"],
+        "publishedEnvironmentRef": receipt["published_environment_ref"],
+        "publishedVersion": receipt["published_version"],
+        "buildId": receipt["build_id"],
+        "buildStatus": receipt["build_status"],
+        "environmentUrl": receipt["environment_url"],
+        "team": receipt["team"],
+        "releaseProofId": proof["release_proof_id"],
+        "graderHardeningNote": (
+            "The published grader was hardened across iterations (v3 to v6) after each "
+            "post-publish bug hunt found the prior version bypassable by a root candidate. "
+            "The deployed grader runs the candidate out-of-process so the verdict never "
+            "imports it; the deploy-form kill proof re-confirms the witness killed at 0.0 "
+            "and all three controls preserved at 1.0."
+        ),
+        "residualLimitation": limits["remaining_to_fully_close"],
     }
 
 

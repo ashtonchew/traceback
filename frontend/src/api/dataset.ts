@@ -40,6 +40,20 @@ export interface ReleaseBlock {
   graderV2Digest: string
 }
 
+/** Real Plan 006 HUD publication outcome for a passing ReleaseProof. */
+export interface Publication {
+  outcome: string
+  publishedEnvironmentRef: string
+  publishedVersion: number
+  buildId: string
+  buildStatus: string
+  environmentUrl: string
+  team: string
+  releaseProofId: string
+  graderHardeningNote: string
+  residualLimitation: string
+}
+
 /**
  * The minimal set of base records a Traceback run is built from. Both the mock
  * and the real (HTTP/static) backend produce one of these; everything the views
@@ -63,6 +77,8 @@ export interface RunDataset {
   witnessOverlay?: Record<string, Partial<ExploitWitness>>
   /** Real blocked-release verdict; when present the gate cannot pass. */
   release?: ReleaseBlock
+  /** Real HUD publication outcome (Plan 006) for a passing release. */
+  publication?: Publication
 }
 
 function delay(ms: number) {
@@ -291,15 +307,24 @@ export class DatasetForkProofApi implements ForkProofApi {
   }
 
   async publishRelease(releaseProofId: string): Promise<ReleaseProof> {
+    const d = await this.data()
     await delay(200)
     const proof = await this.evaluateRelease(await this.getPatch(3))
+    const pub = d.publication
     return {
       ...proof,
-      releaseProofId,
+      releaseProofId: pub?.releaseProofId ?? releaseProofId,
       status: 'committed',
       gateStatus: 'pass',
-      commitId: 'rpf-20250508-102431',
-      publishedEnvironmentRef: proof.environmentV2,
+      commitId: pub?.releaseProofId ?? releaseProofId,
+      publishedEnvironmentRef: pub?.publishedEnvironmentRef ?? proof.environmentV2,
+      publishOutcome: pub?.outcome,
+      publishedVersion: pub?.publishedVersion,
+      environmentUrl: pub?.environmentUrl,
+      buildId: pub?.buildId,
+      buildStatus: pub?.buildStatus,
+      graderHardeningNote: pub?.graderHardeningNote,
+      residualLimitation: pub?.residualLimitation,
     }
   }
 

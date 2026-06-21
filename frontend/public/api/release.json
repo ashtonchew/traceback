@@ -122,6 +122,18 @@
       "summary": "ReleaseProof releaseproof-30e03914472631dd kills 1 witness and preserves 3 controls."
     }
   },
+  "publication": {
+    "buildId": "0290bbb9-0b29-4224-94ac-decff4b9110d",
+    "buildStatus": "SUCCEEDED",
+    "environmentUrl": "https://hud.ai/environments/b3409057-8fdd-4f6b-a78f-8754910c66c3",
+    "graderHardeningNote": "The published grader was hardened across iterations (v3 to v6) after each post-publish bug hunt found the prior version bypassable by a root candidate. The deployed grader runs the candidate out-of-process so the verdict never imports it; the deploy-form kill proof re-confirms the witness killed at 0.0 and all three controls preserved at 1.0.",
+    "outcome": "published",
+    "publishedEnvironmentRef": "hud:registry/b3409057-8fdd-4f6b-a78f-8754910c66c3@v5",
+    "publishedVersion": 5,
+    "releaseProofId": "releaseproof-30e03914472631dd",
+    "residualLimitation": "Deploy v6, then add randomised/hidden test data (or a non-root candidate / SEPARATE verifier environment) to close the answer-hardcoding residual.",
+    "team": "hud-hacks"
+  },
   "releaseProofId": "releaseproof-30e03914472631dd",
   "survivingWitnessByIteration": {
     "1": [],
