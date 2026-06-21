@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "not-started",
   "started_at": null,
-  "updated_at": "2026-06-20T17:37:36.163973+00:00",
+  "updated_at": "2026-06-21T06:11:12Z",
   "completed_at": null,
   "commit": null,
   "commands": [],
@@ -13,8 +13,40 @@
   "artifacts": [],
   "screenshots": [],
   "skips": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "type": "DEPENDENCY_GATE",
+      "recorded_at": "2026-06-21T06:11:12Z",
+      "reason": "Plan 005 cannot execute over the PR #19 stack because Plan 003 is still blocked: it has live Hacker BranchRuns and reward-hacking candidates, but no sealed Exploit Witness with durable packaging, target/mechanism deduplication, and three deterministic v1 replays.",
+      "evidence_refs": [
+        "docs/plans/000-index.md",
+        "docs/plans/evidence/003/MANIFEST.json"
+      ]
+    },
+    {
+      "type": "COMMAND_MAP",
+      "recorded_at": "2026-06-21T06:11:12Z",
+      "reason": "Plan 005 mapped commands remain not-applicable in the Plan-001-owned command registry. Before execution, plan-005-tests and integration-release must be verified by a repo-map custodial update or an explicitly recorded cross-plan exception.",
+      "evidence_refs": [
+        "docs/plans/repo-map/COMMANDS.json",
+        "docs/plans/005-verifier-fix-and-release-proof.md"
+      ]
+    },
+    {
+      "type": "REPO_MAP_CONFLICT",
+      "recorded_at": "2026-06-21T06:11:12Z",
+      "reason": "Repo-map files disagree: STATUS.json says accepted, while REPOSITORY.md, DEPENDENCIES.md, and EVIDENCE-PACKETS.md still describe Gate 1 as blocked/open. Per AGENTS.md this inconsistency is recorded before Plan 005 implementation.",
+      "evidence_refs": [
+        "docs/plans/repo-map/STATUS.json",
+        "docs/plans/repo-map/REPOSITORY.md",
+        "docs/plans/repo-map/DEPENDENCIES.md",
+        "docs/plans/repo-map/EVIDENCE-PACKETS.md"
+      ]
+    }
+  ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed."
+    "Planning template only; no implementation evidence is claimed.",
+    "2026-06-21 PR #11 planning hardening is stacked over PR #19, but Plan 005 remains not-started until Gate 3 opens with at least one sealed Exploit Witness.",
+    "2026-06-21 PR #11 updates Plan 005 start criteria, ProofSet membership checks, family-variant handling, command-map custody, and known pytest-subversion regression requirements; no source implementation or release evidence is claimed."
   ]
 }
