@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .models import DemoError, utc_now, with_content_digest
+from .publication import validate_publication_attempt
 from .report import validate_demo_report
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -125,6 +126,43 @@ def report_replay(*, source_report: Path, output: Path) -> int:
     return 0
 
 
+def validate_publication(*, attempt: Path, output: Path | None) -> int:
+    """Validate a PublicationAttempt artifact without invoking publish."""
+
+    record = _load_json(attempt)
+    try:
+        validate_publication_attempt(record)
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "source_publication_attempt_ref": attempt.as_posix(),
+            "error_class": exc.error_class,
+            "observed_behavior": str(exc),
+            "validated_at": utc_now(),
+        }
+        if output:
+            _write_json(output, result)
+            print(f"WROTE {output}")
+        print(f"FAIL: {exc.error_class}: {exc}")
+        return 2
+    result = {
+        "schema_version": 1,
+        "status": "pass",
+        "source_publication_attempt_ref": attempt.as_posix(),
+        "publication_attempt_id": record["publication_attempt_id"],
+        "outcome": record["outcome"],
+        "idempotency_key": record["idempotency_key"],
+        "observed_behavior": "PublicationAttempt validated without invoking a publish API.",
+        "validated_at": utc_now(),
+    }
+    if output:
+        _write_json(output, result)
+        print(f"WROTE {output}")
+    print(f"PASS: publication_attempt={attempt} outcome={record['outcome']}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -135,6 +173,9 @@ def main() -> int:
     replay_parser = sub.add_parser("report-replay")
     replay_parser.add_argument("--source-report", required=True, type=Path)
     replay_parser.add_argument("--output", required=True, type=Path)
+    pub_parser = sub.add_parser("validate-publication-attempt")
+    pub_parser.add_argument("--attempt", required=True, type=Path)
+    pub_parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.command == "demo-preflight":
         return demo_preflight()
@@ -142,6 +183,8 @@ def main() -> int:
         return validate_report(report=args.report, output=args.output)
     if args.command == "report-replay":
         return report_replay(source_report=args.source_report, output=args.output)
+    if args.command == "validate-publication-attempt":
+        return validate_publication(attempt=args.attempt, output=args.output)
     raise AssertionError(args.command)
 
 

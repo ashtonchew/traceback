@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T09:52:52Z",
+  "updated_at": "2026-06-21T09:55:24Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -138,7 +138,7 @@
         "plan-006-tests"
       ],
       "exit_code": 0,
-      "observed": "RUN: plan-006-tests via uv run pytest tests/forkproof/demo -q; 22 passed in 0.04s."
+      "observed": "RUN: plan-006-tests via uv run pytest tests/forkproof/demo -q; 24 passed in 0.04s."
     },
     {
       "argv": [
@@ -352,7 +352,7 @@
     {
       "name": "Plan 006 mapped tests",
       "status": "pass",
-      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 22 tests."
+      "evidence": "run_mapped.py plan-006-tests now executes the Plan 006 behavior tests and passes with 24 tests."
     },
     {
       "name": "Repeated blocker recheck",
@@ -373,6 +373,11 @@
       "name": "Report replay CLI",
       "status": "pass",
       "evidence": "Plan 006 CLI now validates existing report.json artifacts and writes audit-only report-replay validation artifacts without creating branch, replay, ReleaseProof, publication attempt, or publish evidence."
+    },
+    {
+      "name": "PublicationAttempt validation CLI",
+      "status": "pass",
+      "evidence": "Plan 006 CLI now validates PublicationAttempt artifacts and writes pass/fail validation artifacts without invoking a publish API."
     },
     {
       "name": "Demo preflight",
@@ -473,6 +478,7 @@
     "2026-06-21T09:47:08Z — At user direction, implemented Plan 006-owned pure contracts while preserving the full completion blockers. Local contract commands pass; the full demo command writes a blocker artifact and exits 2 until Plan 005/Gate 4 and publish binding are real.",
     "2026-06-21T09:50:27Z — Hardened pre-Gate-4 contracts: preflight-generated blocked-with-proof attempts now carry explicit passing ReleaseProof gate status, and Demo Report Replay rejects new replay claims. Plan 006 tests now pass with 19 tests.",
     "2026-06-21T09:52:52Z — Added report validation and audit-only report replay CLI entrypoints. Plan 006 tests now pass with 22 tests.",
+    "2026-06-21T09:55:24Z — Added PublicationAttempt validation CLI entrypoint. It writes validation artifacts without invoking publish. Plan 006 tests now pass with 24 tests.",
     "2026-06-20 planning hardening pass added deterministic self-validation, machine-readable report requirements, thin trusted publisher ownership, and publication-specific negative checks.",
     "2026-06-20 planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and audit-only Demo Report Replay semantics.",
     "2026-06-21 grill-with-docs decision limited blocked-with-proof to valid proof plus missing publish binding/authority; proof mismatch, unauthorized target, mixed identity, missing artifacts, and unavailable trusted context are failures.",

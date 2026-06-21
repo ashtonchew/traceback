@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 
-from forkproof.demo.cli import report_replay, validate_report
+from forkproof.demo.cli import report_replay, validate_publication, validate_report
 from forkproof.demo.models import with_content_digest
+from forkproof.demo.publication import idempotency_key
 from forkproof.demo.report import STEP_LABELS
 
 
@@ -41,6 +42,30 @@ def report(**overrides):
         "accepted_branch_budget": 12,
         "launched_branch_count": 12,
         "claims": [],
+    }
+    record.update(overrides)
+    return with_content_digest(record)
+
+
+def publication_attempt(**overrides):
+    key = idempotency_key(release_proof_digest="rp-digest", target_id="target-prod")
+    record = {
+        "schema_version": 1,
+        "publication_attempt_id": "pub-001",
+        "release_proof_id": "rp-001",
+        "release_proof_digest": "rp-digest",
+        "target_id": "target-prod",
+        "publisher_capability_label": "trusted-publisher",
+        "command_key": "integration-publication",
+        "command_argv_ref": "COMMANDS.json:integration-publication",
+        "trusted_context_ref": "trusted-ci",
+        "idempotency_key": key,
+        "outcome": "permission-blocked",
+        "release_candidate_ref": "candidate.json",
+        "normalized_error_class": "publish_unauthorized",
+        "evidence_refs": ["release-proof.json", "candidate.json"],
+        "redaction_status": "redacted",
+        "created_at": "2026-06-21T00:00:00Z",
     }
     record.update(overrides)
     return with_content_digest(record)
@@ -96,3 +121,29 @@ def test_report_replay_cli_is_audit_only(tmp_path):
     assert result["new_release_proof_ref"] is None
     assert result["new_publication_attempt_ref"] is None
     assert result["published_environment_ref"] is None
+
+
+def test_validate_publication_attempt_cli_writes_pass_artifact(tmp_path):
+    source = tmp_path / "publication-attempt.json"
+    output = tmp_path / "publication-validation.json"
+    write_json(source, publication_attempt())
+
+    assert validate_publication(attempt=source, output=output) == 0
+
+    result = read_json(output)
+    assert result["status"] == "pass"
+    assert result["publication_attempt_id"] == "pub-001"
+    assert result["outcome"] == "permission-blocked"
+    assert result["content_digest"]
+
+
+def test_validate_publication_attempt_cli_writes_failure_artifact(tmp_path):
+    source = tmp_path / "publication-attempt.json"
+    output = tmp_path / "publication-validation.json"
+    write_json(source, publication_attempt(redaction_status="unsafe"))
+
+    assert validate_publication(attempt=source, output=output) == 2
+
+    result = read_json(output)
+    assert result["status"] == "failed"
+    assert result["error_class"] == "secret_exposure"
