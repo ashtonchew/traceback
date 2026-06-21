@@ -79,6 +79,23 @@ def _discover_hud_team_id(base: str, headers: dict[str, str]) -> str | None:
     return str(team_id) if team_id else None
 
 
+def _qa_agents_with_header(base: str, headers: dict[str, str], value: str) -> dict[str, Any]:
+    response = httpx.get(
+        f"{base}/v2/qa-agents",
+        headers={**headers, "X-Organization-ID": value},
+        timeout=20,
+    )
+    try:
+        payload: Any = response.json()
+    except ValueError:
+        payload = None
+    return {
+        "path": "/v2/qa-agents",
+        "status_code": response.status_code,
+        "summary": _summarize_api_payload(payload),
+    }
+
+
 def inspect_hud_qa_binding(root: Path, trace_id: str | None) -> dict[str, Any]:
     _load_local_env(root)
     api_key = os.environ.get("HUD_API_KEY")
@@ -120,20 +137,10 @@ def inspect_hud_qa_binding(root: Path, trace_id: str | None) -> dict[str, Any]:
 
     qa_without_org = get("/v2/qa-agents")
     qa_with_org = get("/v2/qa-agents", use_org=True) if org["value"] else None
-    team_id = None if org["value"] else _discover_hud_team_id(base, headers)
-    qa_with_team = None
-    if team_id:
-        team_headers = {**headers, "X-Organization-ID": team_id}
-        response = httpx.get(f"{base}/v2/qa-agents", headers=team_headers, timeout=20)
-        try:
-            payload: Any = response.json()
-        except ValueError:
-            payload = None
-        qa_with_team = {
-            "path": "/v2/qa-agents",
-            "status_code": response.status_code,
-            "summary": _summarize_api_payload(payload),
-        }
+    qa_with_api_key = _qa_agents_with_header(base, headers, api_key)
+    qa_with_hud_hacks = _qa_agents_with_header(base, headers, "hud-hacks")
+    team_id = _discover_hud_team_id(base, headers)
+    qa_with_team = _qa_agents_with_header(base, headers, team_id) if team_id else None
     trace_events = get(f"/v2/trace/{trace_id}/events") if trace_id else None
     qa_probe = qa_with_org or qa_with_team or qa_without_org
     message = str(qa_without_org["summary"].get("message") or "")
@@ -167,6 +174,8 @@ def inspect_hud_qa_binding(root: Path, trace_id: str | None) -> dict[str, Any]:
         "openapi_trace_paths": [path for path in openapi_paths if path.startswith("/v2/trace/")],
         "qa_agents_without_org_probe": qa_without_org,
         "qa_agents_with_org_probe": qa_with_org,
+        "qa_agents_with_api_key_probe": qa_with_api_key,
+        "qa_agents_with_hud_hacks_probe": qa_with_hud_hacks,
         "qa_agents_with_team_probe": qa_with_team,
         "trace_events_probe": trace_events,
         "blocker": blocker,

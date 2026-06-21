@@ -151,6 +151,8 @@ def test_hud_qa_binding_probe_rejects_team_id_as_org_binding(monkeypatch, tmp_pa
         "source": "/v2/environments/usage",
         "accepted_as_organization_id": False,
     }
+    assert result["qa_agents_with_hud_hacks_probe"]["status_code"] == 401
+    assert result["qa_agents_with_api_key_probe"]["status_code"] == 401
     assert "team_id is discoverable but not accepted" in result["blocker"]
 
 

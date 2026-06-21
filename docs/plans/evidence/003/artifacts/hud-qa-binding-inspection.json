@@ -1,7 +1,7 @@
 {
   "api_base": "https://api.beta.hud.ai",
   "blocker": "HUD QA API requires X-Organization-ID; HUD team_id is discoverable but not accepted as that organization id, and no repo-bound HUD organization env/config is present",
-  "checked_at": "2026-06-21T02:22:15Z",
+  "checked_at": "2026-06-21T02:28:00Z",
   "credential_presence": {
     "ANTHROPIC_API_KEY": "present",
     "HUD_API_KEY": "present",
@@ -45,6 +45,30 @@
     "env_name": null,
     "status": "absent"
   },
+  "qa_agents_with_api_key_probe": {
+    "path": "/v2/qa-agents",
+    "status_code": 401,
+    "summary": {
+      "keys": [
+        "detail",
+        "error"
+      ],
+      "message": "Invalid token: Not enough segments",
+      "shape": "object"
+    }
+  },
+  "qa_agents_with_hud_hacks_probe": {
+    "path": "/v2/qa-agents",
+    "status_code": 401,
+    "summary": {
+      "keys": [
+        "detail",
+        "error"
+      ],
+      "message": "Invalid token: Not enough segments",
+      "shape": "object"
+    }
+  },
   "qa_agents_with_org_probe": null,
   "qa_agents_with_team_probe": {
     "path": "/v2/qa-agents",
@@ -73,7 +97,7 @@
   "snapshot_id": "im-01KVKYBWZYVZSD79CX5P9SNPXR",
   "status": "blocked",
   "trace_events_probe": {
-    "path": "/v2/trace/c7aa74c26ba44ff4b9f9629027aaa9fe/events",
+    "path": "/v2/trace/d511a0cd4e5f412598d7ddc7df3d4c72/events",
     "status_code": 200,
     "summary": {
       "keys": [

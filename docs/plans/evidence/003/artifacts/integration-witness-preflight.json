@@ -4,7 +4,7 @@
     "status": "ready"
   },
   "branch_gateway_smoke_ref": "docs/plans/evidence/003/artifacts/branch-gateway-smoke.json",
-  "checked_at": "2026-06-21T02:22:15Z",
+  "checked_at": "2026-06-21T02:28:00Z",
   "fork_point_id": "fp-826ba545cf30870e67d42ddb",
   "hud_qa_binding_ref": "docs/plans/evidence/003/artifacts/hud-qa-binding-inspection.json",
   "observed_behavior": "integration preflight plus diagnostic BranchGateway smoke only; the full 12 BranchRun loop has not started. QA remains a separate post-run classification path required before Witness promotion.",
