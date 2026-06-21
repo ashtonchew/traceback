@@ -5,7 +5,7 @@
   "wave": 4,
   "status": "complete",
   "started_at": "2026-06-21T06:52:20Z",
-  "updated_at": "2026-06-21T12:55:35Z",
+  "updated_at": "2026-06-21T18:30:00Z",
   "completed_at": "2026-06-21T12:55:35Z",
   "commit": null,
   "commands": [
@@ -92,6 +92,11 @@
       "name": "Immutable candidate identity",
       "status": "pass",
       "evidence": "releasecandidate-294df1726b8a5ed0 records harden run run-20260621T123033Z, source_ref/source_path, source_tree_digest c2ee704d5c4e653ea8de5da0fca96cfeaf6bf35d4322e551cafc76f21887cedc, environment_v2 mongodb-sales-aggregation-engine:c2ee704d5c4e653e, grader_v2_digest c0d86aebeb2ee774e5d39cd70537c70643ca190a0769270ceaf4b5e333d0e908, and candidate content digest 9047b5a60ae273cb9ae9b29c4e40801d1fd83f43083e45281dc43b9f9116144a."
+    },
+    {
+      "name": "Verifier-isolation in-process bypass fixed out-of-process (additive)",
+      "status": "pass",
+      "evidence": "The sealed v2 grader is an in-process pytest grader (imports the candidate into the verdict process) and is bypassable by a root candidate (conftest hack, atexit/os._exit exit-code hijack, in-process monkeypatch). The isolated grader (artifacts/forkproof/releases/isolated-grader/) adopts the harden-v0/Harbor out-of-process convention with randomised inputs. Proven in a real container by forkproof.releases.isolated_grader_proof (artifacts/forkproof/releases/isolated-grader-proof.json): controls_preserved=true (path-a/b/c reward 1.0), attacks_blocked=true (answer-hardcoding, exit-code hijack, in-process monkeypatch, broken solution all reward 0.0). tests/forkproof/releases/test_isolated_grader.py locks the randomisation invariants. Does NOT change the sealed ReleaseProof identity; it is the structural verifier-isolation fix for the env/publish surface to adopt. The only remaining surface is a candidate that fully reimplements the reference logic (a correct solution, not a hack)."
     }
   ],
   "artifacts": [
@@ -142,6 +147,22 @@
     {
       "ref": "docs/plans/repo-map/COMMANDS.json",
       "description": "Rescue exception command-row update: integration-release now uses cache-aware release-results generation/validation rather than rerunning Docker whenever candidate identity and proof fields are unchanged."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/isolated-grader/grade.py",
+      "description": "Out-of-process trusted grader with randomised inputs: runs candidate + reference in throwaway isolated subprocesses, compares outputs; verdict process never imports candidate code."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/isolated-grader/run_solution.py",
+      "description": "Runs ONE candidate SalesAnalyzer out-of-process and prints its JSON output (the only place a candidate is imported; a throwaway subprocess)."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/isolated-grader/reference_query.py",
+      "description": "Trusted reference solution used to compute the expected outputs at grade time on the randomised data."
+    },
+    {
+      "ref": "artifacts/forkproof/releases/isolated-grader-proof.json",
+      "description": "Real-container proof: three controls reward 1.0; exit-code hijack, monkeypatch, answer-hardcoding, and broken solution all reward 0.0; pass=true."
     }
   ],
   "screenshots": [],
@@ -171,6 +192,7 @@
     "2026-06-21T10:45:00Z added a canonical harden-v0 refusal-loop guard and turn cap: integration-release now passes --harden-hacker-max-turns 80, the adapter records generic hacker_refusal_loops from Harbor trajectory files, and harden_result_blocker reports harden_hacker_model_refusal_loop before release evidence can be mistaken for a gate attempt. Split harden output inspection into src/forkproof/releases/harden_inspection.py to satisfy the Plan 005 file-size gate.",
     "2026-06-21T12:20:00Z fixed harden_result_blocker classification so rejected replay-broken candidates are preserved as iteration history when a later terminal harden iteration is fixed. The latest compact harden run now records iteration 0 as rejected replay_broke_fix and iteration 1 as fixed; release-blockers/proofset-e497370b2c3d2a69.json blocks only on missing independent release-results evidence.",
     "2026-06-21T12:55:35Z \u2014 Plan 005 ReleaseProof sealed. The final mapped integration-release command validates existing release-results and ReleaseProof for proofset-e497370b2c3d2a69 plus releasecandidate-294df1726b8a5ed0 in the fast path; Docker-backed release-results generation remains the fallback only when candidate identity, release-results digest, or ReleaseProof stable fields drift.",
-    "2026-06-21T12:55:35Z \u2014 Release-results cache key includes generator_contract version 2 so replay-wrapper changes invalidate stale artifacts; after regenerating once, mapped integration-release returned to the fast cache path."
+    "2026-06-21T12:55:35Z \u2014 Release-results cache key includes generator_contract version 2 so replay-wrapper changes invalidate stale artifacts; after regenerating once, mapped integration-release returned to the fast cache path.",
+    "2026-06-21T18:30:00Z \u2014 Additive post-completion hardening (Plan 005 stays complete). Added the out-of-process isolated grader with randomised inputs under artifacts/forkproof/releases/isolated-grader/ + src/forkproof/releases/isolated_grader_proof.py + tests/forkproof/releases/test_isolated_grader.py, fixing the in-process verifier-isolation bypass (exit-code hijack + monkeypatch) and the answer-hardcoding residual. Real-container proof recorded. The sealed ReleaseProof identity is unchanged."
   ]
 }
