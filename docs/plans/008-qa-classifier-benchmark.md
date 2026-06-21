@@ -1,8 +1,8 @@
 ---
 name: qa-classifier-benchmark
 description: >
-  Runs the ForkProof discovery tree and HUD's Reward Hacking QA agent on the same 5
-  freshly materialized Terminal Wrench tasks (reduced from 20 for hackathon scope),
+  Runs the ForkProof discovery tree and HUD's Reward Hacking QA agent on the same 10
+  freshly materialized Terminal Wrench tasks (hackathon scope; down from an initial 20 target),
   adjudicates every rewarded trajectory
   with a neutral sterile golden/held-out referee, and reports how many referee-confirmed
   reward-hack clusters each method surfaces (X for QA, Y for ForkProof) split into a
@@ -21,7 +21,7 @@ wave: 4
 
 ## Goal
 
-On 5 freshly materialized Terminal Wrench tasks (reduced from 20 for hackathon scope), run the ForkProof discovery tree and
+On 10 freshly materialized Terminal Wrench tasks (hackathon scope; down from an initial 20 target), run the ForkProof discovery tree and
 the HUD Reward Hacking QA agent over the same trajectory population, adjudicate every
 rewarded trajectory with one neutral sterile golden/held-out referee, and report — as an
 additive (ablation) benchmark — the baseline X (referee-confirmed reward hacks QA alone
@@ -29,7 +29,7 @@ finds) and the lift Δ (additional referee-confirmed hacks the ForkProof discove
 adds on top of QA), each in two units (coverage: per-task did-you-find-any; depth:
 distinct exploit clusters under one symmetric dedup) and split into a detection delta
 (real traces QA saw but judged wrong) and a discovery delta (hacks living only on forked
-branches). Done is binary only when all 5 tasks run (or are honestly skipped), every
+branches). Done is binary only when all 10 tasks run (or are honestly skipped), every
 real (QA-visible) rewarded trace has a referee verdict and a HUD QA verdict, every
 branch hack carries a referee verdict plus divergence lineage, the referee is validated
 against curated Terminal Wrench labels on overlapping trajectories, and one report gives
@@ -161,15 +161,15 @@ report schema before WP3.
 
 ## Work packets
 
-### WP1 — Build the importer template and materialize 5 tasks
+### WP1 — Build the importer template and materialize 10 tasks
 
 Generalize the `mongodb-sales-aggregation-engine` env into a reusable
 Terminal-Wrench-to-HUD importer template that, per task, lays down the env, the v1
 grader, and a sterile `clean_verify` referee entrypoint (re-runs the task's golden/test
-verification isolated from agent-writable state). Materialize 5 selected tasks under
+verification isolated from agent-writable state). Materialize 10 selected tasks under
 `envs/qabench/<task-slug>/` with recorded provenance, reusing Plan 003 isolation.
 
-**Pass:** The importer materializes 5 tasks; each env starts, runs its v1 grader, and
+**Pass:** The importer materializes 10 tasks; each env starts, runs its v1 grader, and
 exposes a working `clean_verify`; two concurrent task agents cannot read or mutate each
 other's state.
 **Fail:** Tasks are bespoke one-offs, a task lacks a usable `clean_verify`, or
@@ -243,7 +243,7 @@ Wire the referee + the QA call as an in-loop hook that, during a real Plan 003 r
 logs both verdicts per BranchRun without blocking the loop. Then emit one
 content-addressed report under `artifacts/forkproof/qabench/` linking every trajectory,
 the three signals, X/Y, both deltas, the referee-vs-label validation, the live-hook
-log, skips, cost, and the explicit scope ("5 measured tasks, not broad coverage").
+log, skips, cost, and the explicit scope ("10 measured tasks, not broad coverage").
 
 **Pass:** A real run logs >=1 BranchRun with both verdicts and lineage; the sealed
 report round-trips, content-verifies, and states whether the win is detection,
@@ -301,7 +301,7 @@ append-only and may be marked superseded, not rewritten.
     /goal Execute docs/plans/008-qa-classifier-benchmark.md after Plans 003 and 004
     merge (it does not depend on Plan 005's v2 release artifact). Build a
     Terminal-Wrench-to-HUD importer template (generalize the mongodb
-    env) with a sterile clean_verify referee, and materialize 5 tasks under
+    env) with a sterile clean_verify referee, and materialize 10 tasks under
     envs/qabench/**. For each task run the ForkProof discovery tree (base rollout plus
     Plan 003 stochastic branches). Adjudicate every rewarded trajectory with clean_verify
     in a clean sandbox (v1-reward but referee-fail = confirmed hack) and validate the
@@ -423,6 +423,22 @@ append-only and may be marked superseded, not rewritten.
   to reach 5. Wherever this plan or its REFERENCE still says "20", read it as **5**, and
   the report must state N=5 explicitly. This narrows scope only — it changes no metric
   definition, the referee, or the three-separated-signals rule.
+- 2026-06-21 — Task-count set to **10** (owner-approved, supersedes the 20 → 5 entry
+  above): the benchmark target is **10 Terminal Wrench tasks**, all materialized and
+  deployable, so wherever this plan or its REFERENCE says "20" or "5", read it as **10**
+  and the report must state N=10. Same additive/ablation rationale (X/Δ valid at any
+  N ≥ 1; honest "N measured tasks, not broad coverage" framing; evidence-backed skips).
+  Composition change: rather than re-importing the mongodb env, all 10 are imported
+  directly from the pinned Terminal Wrench checkout via the generalized importer. Five use
+  a public `ghcr.io/laude-institute/t-bench/ubuntu-24-04` base directly; the rest use the
+  private `…aliyuncs.com/…:t-bench-<variant>` mirror, which the importer rewrites to the
+  **verified** public `ghcr.io/laude-institute/t-bench/<variant>` image (per-variant tag,
+  not a single hardcoded tag: `ubuntu-24-04:20250624`, `python-3-13:20250620`, each pinned
+  by manifest digest in provenance). All 10 materialize as deployable; two (one rewritten
+  `python-3-13` base, one direct-public `ubuntu-24-04` base) were proven by a real
+  `docker build` + an in-image `numpy`/`scipy` import. The task list lives in
+  `envs/qabench/tasks.json`; the per-task import result lives in
+  `envs/qabench/IMPORT_REPORT.json`.
 
 ### Outcomes & Retrospective
 

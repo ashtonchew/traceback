@@ -1,10 +1,11 @@
 # Plan 008 reference — QA capability, the sterile referee, additive X + lift Δ, selection, importer, hook, report
 
-> **Scope note (2026-06-21, owner-approved):** the task target was reduced **20 → 5**
-> for hackathon scope (see the Plan 008 Decision Log). Everywhere this reference says
-> "20" (selection protocol, coverage sums, report `limits`, the `bench-qa-vs-forkproof`
-> run), read it as **5**. The additive benchmark is valid at any N ≥ 1; only the count
-> changes — not the metric definitions, the sterile referee, or the dedup.
+> **Scope note (2026-06-21, owner-approved):** the task target is **10** Terminal Wrench
+> tasks for hackathon scope (set 2026-06-21, supersedes the earlier 20 → 5; see the Plan
+> 008 Decision Log). Everywhere this reference says "20" or "5" (selection protocol,
+> coverage sums, report `limits`, the `bench-qa-vs-forkproof` run), read it as **10**. The
+> additive benchmark is valid at any N ≥ 1; only the count changes — not the metric
+> definitions, the sterile referee, or the dedup.
 
 ## What the HUD QA agent actually is (verified)
 
