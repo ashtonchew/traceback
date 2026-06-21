@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { ShieldCheck, Check, ArrowRight, Database, ExternalLink, Copy, FileDiff, Download } from '../components/icons'
+import { ShieldCheck, Check, ArrowRight, ArrowUpRight, Database, ExternalLink, Copy, FileDiff, Download, Loader2, Lock, Sparkles } from '../components/icons'
 import { RunHeader } from '../components/RunHeader'
 import { RunSummaryFooter } from '../components/RunSummaryFooter'
 import { MiniThumb } from '../components/MiniThumb'
@@ -62,6 +62,16 @@ export function ReleaseProof() {
   const publishedRef = rp?.publishedEnvironmentRef ?? `${env} v2`
   const pubVersion = rp?.publishedVersion ? `v${rp.publishedVersion}` : 'v2'
   const commitId = rp?.commitId ?? 'releaseproof-30e03914472631dd'
+  // v6 promote is a UI simulation only: a real registry deploy runs `hud deploy`
+  // with HUD credentials in a trusted context, which the static client never holds.
+  const [v6, setV6] = useState<'idle' | 'running' | 'done'>('idle')
+  const nextVersion = (rp?.publishedVersion ?? 5) + 1
+  const v6Ref = publishedRef.replace(/@v\d+$/, `@v${nextVersion}`)
+  const simulateV6 = () => {
+    if (v6 !== 'idle') return
+    setV6('running')
+    setTimeout(() => setV6('done'), 1200)
+  }
   const reward = (rp?.reward ?? 1.0).toFixed(2)
   const similarity = (rp?.similarity ?? 0.92).toFixed(2)
   const counts = getRunTreeCounts(run)
@@ -123,10 +133,45 @@ export function ReleaseProof() {
             </div>
 
             {rp?.graderHardeningNote && (
-              <div className="mt-3 rounded-lg border border-hairline bg-surface px-4 py-3 text-xs leading-relaxed text-ink-secondary">
-                <span className="font-medium text-ink-secondary-strong">Hardening note. </span>
-                {rp.graderHardeningNote}
-                {rp.residualLimitation && <span className="text-ink-tertiary"> Residual: {rp.residualLimitation}</span>}
+              <div className="mt-3 rounded-lg border border-hairline bg-surface-raised p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={15} className="text-accent-text" />
+                    <span className="text-sm font-medium text-ink-primary">Promote to hardened v{nextVersion}</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-2xs font-medium text-ink-tertiary">
+                    <Lock size={11} /> Credentials required
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-ink-secondary">
+                  The v{nextVersion} out-of-process grader is built and kill-proven (witness 0.0, controls 1.0) but the registry is live at {pubVersion}. A real publish runs <code className="font-mono">hud deploy</code> in a trusted context with a HUD API key.
+                </p>
+
+                {v6 === 'idle' && (
+                  <button
+                    type="button"
+                    onClick={simulateV6}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-ink-primary transition-[background-color,transform] duration-150 ease-out hover:bg-tint-green active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <ArrowUpRight size={14} /> Publish v{nextVersion} to HUD
+                  </button>
+                )}
+                {v6 === 'running' && (
+                  <div className="mt-3 inline-flex items-center gap-2 text-sm text-ink-secondary-strong">
+                    <Loader2 size={14} className="animate-spin text-accent-text" /> Publishing v{nextVersion} to the registry (simulated)…
+                  </div>
+                )}
+                {v6 === 'done' && (
+                  <div className="mt-3 rounded-md border border-state-green-border bg-state-green-soft px-3 py-2 text-xs leading-relaxed text-ink-secondary-strong">
+                    <span className="inline-flex items-center gap-1 font-medium text-accent-text"><Check size={13} /> Simulated publish</span> to <span className="font-mono">{v6Ref}</span>. No real deploy ran. To publish for real, set <code className="font-mono">HUD_API_KEY</code> and run <code className="font-mono">hud deploy</code> from a trusted context.
+                  </div>
+                )}
+
+                <p className="mt-3 border-t border-hairline pt-3 text-xs leading-relaxed text-ink-tertiary">
+                  <span className="font-medium text-ink-secondary-strong">Hardening note. </span>
+                  {rp.graderHardeningNote}
+                  {rp.residualLimitation && <> Residual: {rp.residualLimitation}</>}
+                </p>
               </div>
             )}
           </div>
