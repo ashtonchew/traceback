@@ -77,10 +77,16 @@ class LiveDiscoveryDriver:
         summary = self.batch_runner(
             self.root, self.forkpoint, count=self.count, concurrency=self.concurrency
         )
-        if summary.get("status") == "blocked":
+        # A batch that produced a run_id wrote branch artifacts even if its status is
+        # "blocked" by the strict Witness-promotion gates (e.g. not every branch
+        # crossed the execution boundary, or provenance blockers). The benchmark scores
+        # whatever rewarded branches were discovered; only a TRUE pre-run block (missing
+        # creds / unapproved QA export, which returns no run_id) is fatal.
+        run_id = summary.get("run_id")
+        if not run_id:
             raise LiveDiscoveryBlocked(
-                summary.get("observed_behavior") or "live branch batch blocked", summary
+                summary.get("observed_behavior") or "live branch batch blocked before running",
+                summary,
             )
-        run_id = summary["run_id"]
         artifact_dir = self.artifact_resolver(self.root, run_id)
         return load_branches(artifact_dir, task_id=task_id)

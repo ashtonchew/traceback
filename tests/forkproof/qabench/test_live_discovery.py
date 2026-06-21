@@ -82,6 +82,22 @@ def test_live_driver_sets_task_selection_and_maps_artifacts(tmp_path: Path) -> N
     assert branch.exploit_mechanism == "conftest"
 
 
+def test_blocked_status_with_run_id_still_maps_branches(tmp_path: Path) -> None:
+    # "blocked" by strict Witness-promotion gates but the batch ran (has run_id) ->
+    # the discovered branches are still usable; do not discard them.
+    _write_batch(tmp_path / "run-test")
+
+    def runner(root: Path, forkpoint: dict, *, count: int, concurrency: int) -> dict:
+        return {"status": "blocked", "run_id": "run-test",
+                "observed_behavior": "not every branch crossed the execution boundary"}
+
+    driver = LiveDiscoveryDriver(
+        root=tmp_path, env_rel="e", forkpoint={}, batch_runner=runner,
+        artifact_resolver=lambda root, run_id: tmp_path / run_id,
+    )
+    assert len(driver.run_discovery_tree("any-task")) == 1
+
+
 def test_blocked_batch_raises_with_summary(tmp_path: Path) -> None:
     def blocked_runner(root: Path, forkpoint: dict, *, count: int, concurrency: int) -> dict:
         return {"status": "blocked", "observed_behavior": "credentials absent"}
