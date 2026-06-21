@@ -49,7 +49,7 @@
       "ref": "docs/plans/evidence/003/artifacts/branch-runs/run-20260621T031204/branch-run-batch.json"
     },
     {
-      "description": "Verified mappings for plan-003-tests, integration-witness, and security-branch.",
+      "description": "Verified mappings for plan-003-tests, integration-witness, and security-branch. integration-witness now has an 1800s live real-system timeout budget for the 12-branch plus external-QA path.",
       "ref": "docs/plans/repo-map/COMMANDS.json"
     },
     {
@@ -223,6 +223,11 @@
       "name": "Causal evidence and QA quality gates",
       "status": "pass",
       "evidence": "src/forkproof/witnesses/causal_evidence.py and tests/forkproof/witnesses/test_witness_contracts.py prove task-agnostic causal bundle construction, QA evidence_quality/task_identity_status fail-closed behavior, and Witness sealing blocked until causal_delta_status=minimized."
+    },
+    {
+      "name": "Live integration timeout budget",
+      "status": "pass",
+      "evidence": "docs/plans/repo-map/COMMANDS.json sets integration-witness timeout_seconds=1800. The prior 600s budget was too tight for the current live path: canonical batch run-20260621T060827 took 473s inside the branch batch window alone, before normal restore/smoke/QA preflight overhead and remote jitter."
     }
   ],
   "commands": [
@@ -363,6 +368,88 @@
       ],
       "exit_code": 130,
       "observed": "Interrupted non-canonical diagnostic rerun after it exceeded the prior live-run envelope and produced branch-agent SFTP tool errors without a branch-run-batch summary. Partial unreferenced artifact run-20260621T062316 was removed and canonical evidence remains run-20260621T060827."
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "json.tool",
+        "docs/plans/repo-map/COMMANDS.json"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: COMMANDS.json parses after raising integration-witness timeout_seconds to 1800."
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "json.tool",
+        "docs/plans/evidence/003/MANIFEST.json"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: Plan 003 MANIFEST.json parses after timeout-budget documentation update."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_evidence.py",
+        "--plan",
+        "003"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 1 evidence manifest(s) are present/structured."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_graph.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans, 8 dependencies, waves [1, 2, 3, 4, 5], acyclic."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_sections.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 7 plans have valid frontmatter, sections, packets, and goal blocks."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_ownership.py",
+        "--repo-bound"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: repo-bound ownership is collision-free for 7 plans."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_traceability.py"
+      ],
+      "exit_code": 0,
+      "observed": "PASS: 45 requirements map to all 7 plans."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/validate_file_sizes.py",
+        "--plan",
+        "003"
+      ],
+      "exit_code": 0,
+      "observed": "WARN: src/forkproof/witnesses/branch_runs.py: 530 lines > 500 target; PASS: 24 text file(s) are at most 550 lines; 1 file(s) exceed the 500-line target."
+    },
+    {
+      "argv": [
+        "python",
+        "docs/plans/scripts/run_mapped.py",
+        "plan-003-tests"
+      ],
+      "exit_code": 0,
+      "observed": "RUN: plan-003-tests: cwd=. argv=['uv', 'run', 'pytest', 'tests/forkproof/witnesses', '-q']; 42 passed in 0.53s."
     }
   ],
   "commit": null,
@@ -393,7 +480,8 @@
     "2026-06-21 causal evidence update: Plan 003 now uses task-agnostic causal evidence bundles and QA evidence_quality/task_identity_status fields instead of manual per-task surface declarations. QA remains the classifier, but insufficient or mismatched evidence becomes classification_unavailable rather than rewarded-non-hack.",
     "2026-06-21 latest live fanout run-20260621T060827 executed 12 BranchRuns with causal bundles: 11 reward successes, 4 candidates with sufficient QA evidence, 5 classifications failed closed as insufficient evidence, and no sealed Witness because causal deltas are not minimized/replayed.",
     "2026-06-21 final local regression after the live run: 42 witness tests passed and verify future insufficient-evidence QA results are summarized as incomplete-classification instead of noisy gate-error strings.",
-    "2026-06-21 attempted a fresh live integration rerun after local regression cleanup. The run was interrupted with exit 130 after exceeding the previous complete batch envelope and emitting branch-agent SFTP tool errors without a branch-run-batch summary. The partial unreferenced run-20260621T062316 artifact was removed; run-20260621T060827 remains the canonical live evidence batch for this commit."
+    "2026-06-21 attempted a fresh live integration rerun after local regression cleanup. The run was interrupted with exit 130 after exceeding the previous complete batch envelope and emitting branch-agent SFTP tool errors without a branch-run-batch summary. The partial unreferenced run-20260621T062316 artifact was removed; run-20260621T060827 remains the canonical live evidence batch for this commit.",
+    "2026-06-21 timeout follow-up: the 600s integration-witness mapped timeout was too tight for the current 60-step, 12-branch, external-QA, causal-evidence path. The canonical batch run-20260621T060827 spent 473s inside the branch batch window alone, so the mapped timeout was raised to 1800s for future validation. No live rerun was performed for this documentation/config-only update."
   ],
   "plan_id": "003",
   "plan_name": "stochastic-witness-loop",
@@ -402,6 +490,6 @@
   "skips": [],
   "started_at": "2026-06-21T01:21:47Z",
   "status": "blocked",
-  "updated_at": "2026-06-21T06:31:09Z",
+  "updated_at": "2026-06-21T06:37:49Z",
   "wave": 3
 }
