@@ -1,6 +1,6 @@
 # Environment and secret configuration
 
-ForkProof uses the repository-root `.env` file for local-only development
+Traceback uses the repository-root `.env` file for local-only development
 configuration. Real secrets are never committed. `.env.example` is the
 canonical committed contract for required and optional variables.
 
@@ -26,7 +26,7 @@ canonical committed contract for required and optional variables.
 | `H2F2H_ENV` | local scripts | no | Local profile label, default `local`. |
 | `H2F2H_LOG_LEVEL` | local scripts | no | Logging verbosity. |
 | `H2F2H_EXTERNAL_DIR` | dependency bootstrap | no | Where source-only dependencies are cloned. |
-| `H2F2H_ARTIFACT_DIR` | evidence/release work | no | Root for generated ForkProof artifacts. |
+| `H2F2H_ARTIFACT_DIR` | evidence/release work | no | Root for generated Traceback artifacts. |
 | `HUD_API_KEY` | HUD API calls | yes | HUD platform authentication. |
 | `MODAL_TOKEN_ID` | Modal CI/service use | yes | Modal token id. |
 | `MODAL_TOKEN_SECRET` | Modal CI/service use | yes | Modal token secret. |
@@ -40,10 +40,10 @@ canonical committed contract for required and optional variables.
 | `H2F2H_TERMINAL_WRENCH_TASK_ID` | controls work | no | Source task id. |
 | `H2F2H_TERMINAL_WRENCH_MODEL` | controls work | no | Source task/model folder. |
 | `H2F2H_BRANCH_COUNT` | witness search | no | Default stochastic branch count. |
-| `H2F2H_HACKER_MODEL` | harden-v0/ForkProof | no | Hacker model id. |
-| `H2F2H_FIXER_MODEL` | harden-v0/ForkProof | no | Fixer model id. |
-| `H2F2H_SOLVER_MODEL` | harden-v0/ForkProof | no | Solver model id. |
-| `H2F2H_SUMMARY_MODEL` | harden-v0/ForkProof | no | Summary model id. |
+| `H2F2H_HACKER_MODEL` | harden-v0/Traceback | no | Hacker model id. |
+| `H2F2H_FIXER_MODEL` | harden-v0/Traceback | no | Fixer model id. |
+| `H2F2H_SOLVER_MODEL` | harden-v0/Traceback | no | Solver model id. |
+| `H2F2H_SUMMARY_MODEL` | harden-v0/Traceback | no | Summary model id. |
 | `H2F2H_MODAL_APP_NAME` | Modal work | no | Modal app name/prefix. |
 | `H2F2H_MODAL_CORE_SNAPSHOT_MODE` | forkpoints | no | Core snapshot mode, default `directory`. |
 | `H2F2H_MODAL_SNAPSHOT_TTL_DAYS` | forkpoints | no | Snapshot retention target. |

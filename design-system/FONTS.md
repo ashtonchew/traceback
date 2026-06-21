@@ -5,24 +5,24 @@ Three **self-hosted, OFL 1.1** fonts — no CDN, no proprietary/licensed fonts:
 
 | Role | Font | Weights bundled | Source |
 | --- | --- | --- | --- |
-| Display / headings (`font-display`) | **Inria Serif** | 300 / 400 / 700 | [Google Fonts](https://fonts.google.com/specimen/Inria+Serif) · [BlackFoundry/InriaFonts](https://github.com/BlackFoundryCom/InriaFonts) |
+| Display / headings (`font-display`) | **EB Garamond** | 500 | [Google Fonts](https://fonts.google.com/specimen/EB+Garamond) · [georgd/EB-Garamond](https://github.com/georgd/EB-Garamond) |
 | Body / UI (`font-sans`) | **Geist** | 400 / 500 / 600 / 700 | [Google Fonts](https://fonts.google.com/specimen/Geist) · [vercel/geist-font](https://github.com/vercel/geist-font) |
 | Code (`font-mono`) | **Geist Mono** | 400 / 500 | [Google Fonts](https://fonts.google.com/specimen/Geist+Mono) · [vercel/geist-font](https://github.com/vercel/geist-font) |
 
-The `.woff2` files (latin subset) and the `OFL-*.txt` license files live in [`examples/fonts/`](./examples/fonts/) and are declared in [`examples/fonts/fonts.css`](./examples/fonts/fonts.css). `examples/index.html` loads that one stylesheet — **zero external font requests**. The family names (`"Inria Serif"`, `"Geist"`, `"Geist Mono"`) match the stacks in `tokens.css` / `tailwind-preset.js`.
+The `.woff2` files (latin subset) and the `OFL-*.txt` license files live in [`examples/fonts/`](./examples/fonts/) and are declared in [`examples/fonts/fonts.css`](./examples/fonts/fonts.css). `examples/index.html` loads that one stylesheet — **zero external font requests**. The family names (`"EB Garamond"`, `"Geist"`, `"Geist Mono"`) match the stacks in `tokens.css` / `tailwind-preset.js`.
 
-> Note: Inria Serif ships 300/400/700 only (no 500/600). Headings use weight 400, so this is fine; if you need a heavier display weight use 700.
+> Note: Display headings use EB Garamond at weight 500 (`--ds-font-display-weight`). The `.font-display` utility applies this weight automatically.
 
 ## How to (re)download / self-host
 ```bash
 # woff2 (latin) via google-webfonts-helper — into design-system/examples/fonts/
-curl -L "https://gwfh.mranftl.com/api/fonts/inria-serif?download=zip&subsets=latin&variants=300,regular,700&formats=woff2" -o inria-serif.zip
+curl -L "https://gwfh.mranftl.com/api/fonts/eb-garamond?download=zip&subsets=latin&variants=500&formats=woff2" -o eb-garamond.zip
 curl -L "https://gwfh.mranftl.com/api/fonts/geist?download=zip&subsets=latin&variants=regular,500,600,700&formats=woff2" -o geist.zip
 curl -L "https://gwfh.mranftl.com/api/fonts/geist-mono?download=zip&subsets=latin&variants=regular,500&formats=woff2" -o geist-mono.zip
-unzip -o inria-serif.zip -d examples/fonts && unzip -o geist.zip -d examples/fonts && unzip -o geist-mono.zip -d examples/fonts
+unzip -o eb-garamond.zip -d examples/fonts && unzip -o geist.zip -d examples/fonts && unzip -o geist-mono.zip -d examples/fonts
 
 # OFL licenses (ship these alongside the fonts)
-curl -L "https://raw.githubusercontent.com/google/fonts/main/ofl/inriaserif/OFL.txt" -o examples/fonts/OFL-InriaSerif.txt
+curl -L "https://raw.githubusercontent.com/google/fonts/main/ofl/ebgaramond/OFL.txt" -o examples/fonts/OFL-EBGaramond.txt
 curl -L "https://raw.githubusercontent.com/google/fonts/main/ofl/geist/OFL.txt"      -o examples/fonts/OFL-Geist.txt   # covers Geist + Geist Mono
 ```
 `@font-face` pattern (one rule per weight) — see `examples/fonts/fonts.css`:
@@ -48,4 +48,4 @@ For reference — this system deliberately does **not** use Granola's typefaces 
 - **Melange** (Granola's UI sans; KMR Melange Grotesk) — paid retail from Kimera. Licensable for a fee (price TBD; webfont license required to self-host), not free. ([Kimera](https://kimeracorp.eu/typefaces/melange-grotesk))
 - The "free download" sites for these are **pirated — do not use them.**
 
-Inria Serif + Geist keep the same *roles* (warm serif display + clean grotesque sans) while being free and self-hostable.
+EB Garamond + Geist keep the same *roles* (warm serif display + clean grotesque sans) while being free and self-hostable.

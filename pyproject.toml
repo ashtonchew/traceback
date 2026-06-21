@@ -1,7 +1,7 @@
 [project]
-name = "hack2fix2hack"
+name = "traceback"
 version = "0.1.0"
-description = "ForkProof planning and integration scaffold for Hack2Fix2Hack."
+description = "Traceback planning and integration scaffold."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

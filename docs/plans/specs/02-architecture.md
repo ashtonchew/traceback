@@ -2,7 +2,7 @@
 
 ## System boundary
 
-ForkProof is a feature-oriented orchestration layer between HUD's semantic/reward plane and Modal's executable-state plane. It reuses the repository's existing HUD, Modal, agent-gateway, grader, and harden-v0 integrations. It must not build parallel infrastructure when a verified integration already exists.
+Traceback is a feature-oriented orchestration layer between HUD's semantic/reward plane and Modal's executable-state plane. It reuses the repository's existing HUD, Modal, agent-gateway, grader, and harden-v0 integrations. It must not build parallel infrastructure when a verified integration already exists.
 
 ## Responsibility split
 

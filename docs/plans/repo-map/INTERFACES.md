@@ -2,7 +2,7 @@
 
 Status: **accepted for Gate 1**
 
-This repository currently contains the ForkProof planning bundle, dependency
+This repository currently contains the Traceback planning bundle, dependency
 bootstrap, source handoff, and the Plan-001-owned live HUD environment for
 `mongodb-sales-aggregation-engine`. Gate 1 is accepted because required surfaces
 are either verified-present with evidence or located-owned by a later plan in
