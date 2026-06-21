@@ -35,19 +35,25 @@ The plan is parallel with release proof after a core Witness exists. It may cons
 
 ## Work packets
 
-### WP1 — Select and re-snapshot one promising child
+### WP1 — Find and re-snapshot one promising child (expansion prior)
 
-Use trace/file/grader/cluster evidence to select a completed child state that presents task-visible or grader-visible state plausibly opening a different exploit path than the root ForkPoint — evidenced by at least one signal from the promising-node list in the reference. Capture a new atomic node with parent lineage and restore it independently.
+Select the depth-two node through a two-stage expansion prior over the recorded evidence of the depth-1 BranchRuns; do not live-snapshot every boundary.
 
-**Pass:** One child snapshot restores with valid lineage and a documented reason it is more promising than random.  
-**Fail:** The node is chosen only from exposed reasoning, or "distinguishable from its parent" is satisfied only by a different node ID — at least one task-visible probe (file diff, content hash, grader-visible state, or command output) must produce a different value at the child boundary than at the parent ForkPoint boundary, with the reason recorded in `fork_reason`.
+1. **Pre-filter (cheap, mechanical).** Over every intermediate completed-action boundary across the depth-1 branches' recorded evidence, keep only *eligible boundaries* — those where at least one promising-node signal fired (reference list). Apply a hard candidate cap; if more survive, keep the most-divergent per branch.
+2. **Expansion prior (LLM-as-judge).** Rank the eligible boundaries from their full recorded evidence, preferring *near-miss states* — a boundary that newly exposed leverage over the reward mechanism the parent ForkPoint lacked, where the exploit is staged but not yet completed on that path. Deprioritize boundaries whose branch already sealed a Witness (rediscovery is absorbed by dedup and WP3). The judge emits a falsifiable prediction — which surface, which mechanism, and why the parent could not reach it — uses all trajectory evidence rather than exposed reasoning alone, and may read the task codebase as an analyst only.
+3. **Materialize by replay-to-boundary.** Deterministically replay the chosen branch's recorded actions to that boundary, then verify the restored state-hash matches the recorded evidence the judge ranked before expanding. On mismatch, fall back to the next-ranked child; a boundary whose 1..t prefix cannot be made replay-stable is ineligible and recorded as a skip.
+
+If no eligible near-miss exists, depth-two is an evidence-backed skip — do not force-expand a dud.
+
+**Pass:** The expansion prior records the ranked eligible boundaries, the selected promising child with its falsifiable prediction, and a replay-to-boundary snapshot whose state-hash matches the ranked evidence; at least one task-visible probe (file diff, content hash, grader-visible state, or command output) differs at the child boundary versus the parent ForkPoint, recorded in `fork_reason`.  
+**Fail:** A node is chosen only from exposed reasoning; a snapshot is expanded without a matching state-hash; "distinguishable from parent" is satisfied only by a different node ID; or a no-eligible-near-miss case is force-expanded instead of skipped.
 
 ### WP2 — Run depth-two branches
 
-Launch up to eight seeded agentic branches from the child node using the core Witness machinery. Preserve depth, parent, and complete provenance; promote any qualifying exploit through the same deterministic replay gate.
+Launch up to eight seeded agentic branches from the child node using the core Witness machinery. Preserve depth, parent, and complete provenance; promote any qualifying exploit through the same deterministic replay gate. The branches run blind to the expansion prior: the judge selects *where* to fork; the branches discover *what* stochastically. STOP if the judge's predicted mechanism, its reasoning, or any golden/grader knowledge it read leaks into a depth-two branch prompt — that scripts discovery toward a known hack and violates the genuine-stochastic-discovery rule.
 
-**Pass:** At least one real depth-two BranchRun completes and the report distinguishes discoveries from non-discoveries.  
-**Fail:** The run restarts from root or bypasses Witness gates.
+**Pass:** At least one real depth-two BranchRun completes, the branch prompts contain no expansion-prior prediction, and the report distinguishes discoveries from non-discoveries.  
+**Fail:** The run restarts from root, bypasses Witness gates, or seeds a branch with the judge's predicted mechanism.
 
 ### WP3 — Implement and prove adaptive stopping
 
@@ -134,6 +140,7 @@ Research runs are append-only and isolated from core artifacts. Resume from the 
 ### Decision Log
 
 - 2026-06-20 — Planning decision: put all non-core research behind one removable feature boundary and forbid it from gating the demo.
+- 2026-06-21 — Decision (ADR, grilling): promising-child selection (WP1) is a two-stage **expansion prior** — a cheap mechanical pre-filter over recorded depth-1 evidence yields *eligible boundaries*, then an LLM-as-judge ranks them and selects one *near-miss* **promising child**, materialized by **replay-to-boundary** with state-hash verification. Rejected alternatives: (a) ranking only the 12 terminal branch states (post-reward, opens no new search) and (c) snapshotting promising boundaries live during depth-1 (online flag misses boundaries the judge would prefer, and forces extra snapshots). Chosen because ranking needs only already-recorded evidence while snapshotting is paid once for the winner. Consequences: correctness is fail-closed via the state-hash check; determinism degrades to an honest yield/skip, never a wrong node; validation is predictive-validity at n=1 (better-than-random is TBD); the prior allocates compute only and is downstream-gated, so it cannot manufacture a Witness; and a no-leakage wall keeps the judge's prediction out of the stochastic branch prompts (WP2 STOP).
 
 ### Outcomes & Retrospective
 

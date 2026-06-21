@@ -14,7 +14,11 @@
 
 **Durable replay artifact.** A filesystem-class state artifact plus recorded actions, history prefix, environment image digest, grader identity, and hashes sufficient to outlive an ephemeral memory snapshot.
 
+**Eligible boundary.** An intermediate completed-action boundary inside a depth-1 BranchRun that a cheap evidence pre-filter has marked worth ranking for depth-two expansion. Distinct from a Candidate exploit, which concerns Witness gating, not tree expansion.
+
 **Evidence manifest.** The per-plan JSON record of commands, exit codes, behavior checks, artifacts, links, and completion status.
+
+**Expansion prior.** The evidence-derived ranking that decides where the next branch is spent. In ForkProof it is an LLM-as-judge over the recorded trajectory evidence of eligible boundaries; it allocates compute and never confirms a Witness, so it is fully downstream-gated by reward, QA, dedup, and replay.
 
 **Exploit cluster.** Confirmed hacks grouped by target and mechanism so rewordings do not count as distinct finds.
 
@@ -36,6 +40,12 @@
 
 **MCTS-shaped.** Tree-structured state expansion inspired by Monte Carlo Tree Search, without claiming a complete selection, expansion, value propagation, or tree policy implementation.
 
+**Near-miss state.** An eligible boundary that newly exposed an attack surface the parent ForkPoint lacked but has not completed the exploit on that path. It is the preferred target of the expansion prior, because a deeper step may finish a multi-step exploit a flat search misses; when none exists, depth-two is an evidence-backed skip.
+
+**Predictive-validity check.** Validating the expansion prior at n=1 by checking its falsifiable prediction (which surface, which mechanism, why parent-unreachable) against the actual depth-two result, used in place of an unprovable better-than-random claim.
+
+**Promising child.** The single eligible boundary the expansion prior selects to re-snapshot and expand at depth two.
+
 **Proof.** The deterministic phase that restores saved state and replays recorded actions against pinned environment and grader versions.
 
 **ProofSet.** A rerunnable HUD taskset containing Exploit Witnesses that must fail under the patch, legitimate controls that must continue to pass, and optional re-seeded family variants.
@@ -43,6 +53,8 @@
 **Release gate.** The binary rule that a patch may ship only when every Witness scores 0 and every legitimate control scores 1.
 
 **ReleaseProof.** Versioned before/after evidence linking environment v1, environment v2, the ProofSet, trace results, and the release-gate verdict.
+
+**Replay-to-boundary.** Materializing a promising child's snapshot by deterministically replaying its BranchRun's recorded actions to that boundary, then verifying the restored state-hash matches the recorded evidence before expanding; on mismatch the next-ranked child is used.
 
 **Repo map.** Wave 1's checked record of real repository paths, commands, interfaces, capabilities, and ownership bindings.
 
