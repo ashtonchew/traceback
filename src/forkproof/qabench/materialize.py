@@ -16,6 +16,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from forkproof.qabench.hud_env import write_hud_env
 from forkproof.qabench.importer import discover_task, plan_env
 
 _DEFAULT_TASKS_DIR = Path(".external/terminal-wrench/tasks")
@@ -38,14 +39,21 @@ def materialize(
     task_ids: list[str],
     dest_root: Path | str,
     revision: str = "",
+    with_hud: bool = True,
 ) -> list[MaterializeResult]:
-    """Discover + plan + write each task; skip (don't write) non-deployable ones."""
+    """Discover + plan + write each task; skip (don't write) non-deployable ones.
+
+    When ``with_hud`` (default), also emit the per-task HUD serve artifacts
+    (``env.py``/``Dockerfile.hud``/``pyproject.toml``/``tasks.py``) for live deploy.
+    """
     results: list[MaterializeResult] = []
     for task_id in task_ids:
         task = discover_task(tasks_dir, task_id, revision=revision)
         env_dir = None
         if task.deployable:
             env_dir = str(plan_env(task, dest_root).write())
+            if with_hud:
+                write_hud_env(env_dir)
         results.append(
             MaterializeResult(
                 task_id=task_id,
