@@ -65,6 +65,13 @@ Keep context clean: summarize noisy research, long command output, and external-
 
 Parallel plans run in isolated worktrees. Do not start a later wave until `docs/plans/000-index.md` says its merge gate is satisfied. Before merging a wave, run ownership, graph, section, traceability, and evidence validation. Resolve ownership changes by updating the affected plan frontmatter and repo map before source edits.
 
+<important if="you are preparing a worktree that needs `.external/`">
+Read `docs/plans/repo-map/WORKTREES.md` before setup. Prefer linking the worktree
+to an already-verified shared `.external` cache when available, then run
+`scripts/verify_external_deps.sh`. Do not commit `.external/`, external source
+files, symlinks under `.external/`, `.env`, or secrets.
+</important>
+
 ## Claims and reporting
 
 Keep unmeasured values as `TBD`. Label prior-run demo artifacts honestly. Preserve the distinction between HUD reward and reward-hacking classification. Do not describe the search as full MCTS, complete exploit coverage, or general-purpose hardening.

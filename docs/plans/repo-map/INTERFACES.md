@@ -47,7 +47,7 @@ and mutable state outside the workspace before choosing the HUD
 | Repo-bound ownership validation | `docs/plans/scripts/validate_ownership.py` | CLI | `python -B docs/plans/scripts/validate_ownership.py --repo-bound` exits 0 with `STATUS.json` accepted and all owned non-doc globs bound. | verified |
 | Mapped command runner | `docs/plans/scripts/run_mapped.py` | CLI | `python docs/plans/scripts/run_mapped.py baseline` exits 0 using `COMMANDS.json`. | verified |
 | Dependency sync | `pyproject.toml`, `uv.lock` | CLI | `uv sync --all-extras --all-groups` exits 0. | verified |
-| External dependency checkout | `scripts/bootstrap_external_deps.sh` | CLI | Fetches harden-v0 and a sparse Terminal Wrench MongoDB-task checkout pinned under `.external/`. | verified |
+| External dependency checkout | `scripts/bootstrap_external_deps.sh`, `scripts/verify_external_deps.sh` | CLI | Fetches harden-v0, HUD Trace Explorer, and a sparse Terminal Wrench MongoDB-task checkout pinned under `.external/`; verifies required source paths. | verified |
 | Local environment config | `.env.example`, root `.env` | dotenv-compatible env file | `.env.example` is committed; `.env` is ignored and loaded by `scripts/bootstrap_external_deps.sh` when present. | verified |
 
 ## Required next inputs
