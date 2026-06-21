@@ -314,6 +314,25 @@ def test_run_depth_two_sequential_keeps_single_in_flight(monkeypatch):
     assert result["status"] == "completed"
 
 
+def test_depth_two_cli_fails_closed_on_unreadable_child_snapshot(tmp_path):
+    from forkproof.research.cli import depth_two as depth_two_cli
+
+    corrupt = tmp_path / "child.json"
+    corrupt.write_text("{ not valid json", encoding="utf-8")
+
+    exit_code = depth_two_cli(output_path=tmp_path / "out.json", child_snapshot_path=corrupt)
+    assert exit_code == 2
+
+
+def test_integration_cli_fails_closed_when_plan003_manifest_missing(tmp_path, monkeypatch):
+    from forkproof.research import cli as research_cli
+
+    monkeypatch.setattr(research_cli, "PLAN003_MANIFEST", tmp_path / "missing-manifest.json")
+
+    exit_code = research_cli.integration(output_path=tmp_path / "preflight.json")
+    assert exit_code == 2
+
+
 # --- Real committed-artifact contracts (skip until the live run has produced them) ---
 
 

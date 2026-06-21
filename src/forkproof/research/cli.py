@@ -42,6 +42,21 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _load_json_safe(path: Path) -> dict[str, Any] | None:
+    """Load JSON, returning None when the file is missing or unreadable.
+
+    Lets the CLI fail closed (a clean STOP / exit 2) instead of crashing on a
+    corrupt or absent evidence file.
+    """
+
+    if not path.exists():
+        return None
+    try:
+        return _load_json(path)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
@@ -68,8 +83,11 @@ def _existing_recorded_at(path: Path) -> str:
 def resnapshot(*, output_path: Path = DEFAULT_CHILD_SNAPSHOT) -> int:
     """Capture the depth-two child snapshot from the sealed Witness."""
 
-    witness = _load_json(SEALED_WITNESS)
-    causal_delta = _load_json(SEALED_CAUSAL_DELTA)
+    witness = _load_json_safe(SEALED_WITNESS)
+    causal_delta = _load_json_safe(SEALED_CAUSAL_DELTA)
+    if witness is None or causal_delta is None:
+        print("STOP: sealed Witness or causal delta is missing or unreadable")
+        return 2
     try:
         artifact = capture_child_snapshot(
             root=ROOT,
@@ -103,10 +121,10 @@ def depth_two(
 ) -> int:
     """Run the adaptive depth-two BranchRun batch from the child snapshot."""
 
-    if not child_snapshot_path.exists():
-        print(f"STOP: child snapshot artifact is missing: {_display_path(child_snapshot_path)}")
+    child_snapshot_artifact = _load_json_safe(child_snapshot_path)
+    if child_snapshot_artifact is None:
+        print(f"STOP: child snapshot artifact is missing or unreadable: {_display_path(child_snapshot_path)}")
         return 2
-    child_snapshot_artifact = _load_json(child_snapshot_path)
     artifact = asyncio.run(
         run_depth_two(
             root=ROOT,
@@ -143,9 +161,14 @@ def integration(
 ) -> int:
     """Verify depth-two evidence; exit 0 only when it is real and complete."""
 
-    manifest = _load_json(PLAN003_MANIFEST)
-    child_snapshot = _load_json(child_snapshot_path) if child_snapshot_path.exists() else None
-    depth_two_run = _load_json(depth_two_run_path) if depth_two_run_path.exists() else None
+    manifest = _load_json_safe(PLAN003_MANIFEST)
+    if manifest is None:
+        print("STOP: Plan 003 manifest is missing or unreadable; cannot verify depth-two evidence")
+        return 2
+    # A corrupt/absent child-snapshot or depth-two-run reads as None, which the
+    # verifier reports as a blocker (fail closed), never as a false "ready".
+    child_snapshot = _load_json_safe(child_snapshot_path)
+    depth_two_run = _load_json_safe(depth_two_run_path)
     artifact = build_depth_two_preflight_artifact(
         plan003_manifest=manifest,
         child_selection_ref=_display_path(child_selection_path),

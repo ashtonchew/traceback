@@ -10,6 +10,7 @@ provenance, or grader identity are missing. It never fabricates a snapshot.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 from pathlib import Path
 from typing import Any
@@ -213,7 +214,10 @@ def capture_child_snapshot(
     pre_attack, _grader, included, added = _validate_inputs(witness, causal_delta)
     base_image_id = pre_attack.removeprefix("modal-image://")
 
-    import modal
+    try:
+        import modal
+    except ImportError as exc:  # pragma: no cover - environment-dependent
+        raise ResnapshotError("runtime_unavailable", f"Modal SDK is unavailable: {exc}") from exc
 
     app = modal.App.lookup(APP_NAME, create_if_missing=True)
     sandbox = None
@@ -261,8 +265,11 @@ def capture_child_snapshot(
             "captured_at": recorded_at,
         }
     finally:
+        # Best-effort teardown: a terminate failure must not mask a successful
+        # capture or the real error. The sandbox also auto-expires at its timeout.
         if sandbox is not None:
-            sandbox.terminate()
+            with contextlib.suppress(Exception):
+                sandbox.terminate()
 
     if not child_snapshot_id:
         raise ResnapshotError("state_restore_failed", "Modal snapshot_filesystem returned no object_id")
