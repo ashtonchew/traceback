@@ -241,6 +241,12 @@ def test_metrics_reject_tbd_and_single_run_statistical_overclaims():
     with pytest.raises(DemoError, match="single-run"):
         validate_demo_report(report(claims=["success_rate"]))
 
+    with pytest.raises(DemoError, match="single-run"):
+        validate_demo_report(report(claims=["cost-savings"]))
+
+    with pytest.raises(DemoError, match="claims must be"):
+        validate_demo_report(report(claims="success_rate"))
+
 
 def test_metrics_require_core_metric_set():
     with pytest.raises(DemoError, match="missing required metric"):

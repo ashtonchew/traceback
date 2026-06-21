@@ -28,7 +28,9 @@ FORBIDDEN_SINGLE_RUN_CLAIMS = {
     "success_rate",
     "exploit_coverage",
     "reliability",
+    "coverage",
     "avoided_setup",
+    "setup_avoidance",
     "cost_savings",
 }
 
@@ -265,7 +267,10 @@ def _validate_acceptance(record: dict[str, Any]) -> None:
 
 
 def _reject_single_run_overclaims(record: dict[str, Any]) -> None:
-    claims = set(record.get("claims") or [])
+    raw_claims = record.get("claims") or []
+    if not isinstance(raw_claims, list) or not all(isinstance(claim, str) and claim for claim in raw_claims):
+        raise DemoError("statistical_overclaim", "claims must be a list of non-empty strings")
+    claims = {_normalize_claim(claim) for claim in raw_claims}
     forbidden = sorted(claims & FORBIDDEN_SINGLE_RUN_CLAIMS)
     if forbidden:
         raise DemoError("statistical_overclaim", f"single-run report cannot claim {forbidden}")
@@ -277,3 +282,7 @@ def _is_nonempty_string_list(value: Any) -> bool:
 
 def _is_string_list(value: Any) -> bool:
     return isinstance(value, list) and all(isinstance(item, str) and item for item in value)
+
+
+def _normalize_claim(value: str) -> str:
+    return value.strip().lower().replace("-", "_").replace(" ", "_")
