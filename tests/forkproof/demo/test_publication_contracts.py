@@ -74,6 +74,18 @@ def test_blocked_with_proof_requires_passing_proof_and_candidate():
         validate_publication_attempt(attempt(normalized_error_class=None))
 
 
+@pytest.mark.parametrize(
+    "candidate_ref",
+    [
+        "/tmp/releasecandidate.json",
+        "artifacts/forkproof/demo/preflight-blockers/releasecandidate.json",
+    ],
+)
+def test_proof_backed_outcomes_reject_untrusted_candidate_refs(candidate_ref):
+    with pytest.raises(DemoError, match="trusted release_candidate_ref"):
+        validate_publication_attempt(attempt(release_candidate_ref=candidate_ref))
+
+
 def test_preflight_fails_missing_or_bad_proof_instead_of_claiming_blocked_with_proof():
     record = publication_preflight(
         release_proof=release_proof(gate_status="reject"),

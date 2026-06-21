@@ -2,21 +2,26 @@
   "blockers": [
     {
       "evidence_refs": [
-        "docs/plans/evidence/005/MANIFEST.json"
+        "docs/plans/repo-map/INTERFACES.md",
+        "artifacts/forkproof/demo/preflight-blockers/plan-006-publication-attempt.json"
       ],
-      "reason": "Plan 005/Gate 4 is incomplete; no sealed ReleaseProof or real v1/v2 release results exist.",
-      "type": "DEPENDENCY_GATE"
+      "reason": "No repository-bound publish primitive or publisher capability is recorded for Plan 006.",
+      "type": "PUBLISH_BINDING"
     },
     {
       "evidence_refs": [
-        "docs/plans/repo-map/INTERFACES.md"
+        "docs/plans/006-demo-observability-and-publication.md",
+        "docs/plans/evidence/003/MANIFEST.json"
       ],
-      "reason": "No repository-bound publish primitive and authorized target are available for Plan 006.",
-      "type": "PUBLISH_BINDING"
+      "reason": "No Plan 006-owned noninteractive orchestration has launched a fresh full-budget Acceptance Demo Run on this branch.",
+      "type": "ACCEPTANCE_DEMO_ORCHESTRATION"
     }
   ],
-  "content_digest": "34f42b0cbb5f0553dfaac2c4b43638b8ba0b9ba7e050a596e78a0b96f8e25f08",
-  "observed_behavior": "Demo preflight refuses to claim an Acceptance Demo Run before ReleaseProof and publish binding exist.",
+  "content_digest": "3d6d9ece3285a13fc9df0a2bf37fac68b21425850a034b6eda1bc32e6e63263b",
+  "observed_behavior": "Demo preflight consumed the merged Plan 005 evidence where available, then refused to claim an Acceptance Demo Run or publication without a fresh full-budget branch launch and a repository-bound publish target/binding.",
+  "publication_attempt_ref": "artifacts/forkproof/demo/preflight-blockers/plan-006-publication-attempt.json",
+  "release_candidate_ref": "artifacts/forkproof/releases/candidates/releasecandidate-294df1726b8a5ed0.json",
+  "release_proof_ref": "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json",
   "schema_version": 1,
   "status": "blocked"
 }

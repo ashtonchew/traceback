@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 
+import forkproof.demo.cli as demo_cli
 from forkproof.demo.cli import (
+    demo_preflight,
     publication_preflight_command,
     report_replay,
     validate_publication,
@@ -168,11 +170,69 @@ def readiness_pack(**overrides):
 
 
 def write_json(path, record):
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_demo_preflight_uses_merged_plan_005_artifacts_without_dependency_blocker(monkeypatch, tmp_path):
+    manifest = tmp_path / "docs/plans/evidence/005/MANIFEST.json"
+    proof_dir = tmp_path / "artifacts/forkproof/releases/release-proofs"
+    candidate_dir = tmp_path / "artifacts/forkproof/releases/candidates"
+    interfaces = tmp_path / "docs/plans/repo-map/INTERFACES.md"
+    candidate = candidate_dir / "releasecandidate-294df1726b8a5ed0.json"
+    proof_path = proof_dir / "releaseproof-30e03914472631dd.json"
+    write_json(
+        manifest,
+        {
+            "schema_version": 1,
+            "status": "complete",
+            "artifacts": [
+                {"ref": "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json"},
+                {"ref": "artifacts/forkproof/releases/candidates/releasecandidate-294df1726b8a5ed0.json"},
+            ],
+        },
+    )
+    write_json(
+        candidate,
+        {
+            "schema_version": 1,
+            "release_candidate_id": "releasecandidate-294df1726b8a5ed0",
+            "environment_v2": "env-v2",
+            "grader_v2_digest": "grader-v2",
+        },
+    )
+    write_json(
+        proof_path,
+        release_proof(release_candidate_ref="/stale/plan-005/worktree/releasecandidate-294df1726b8a5ed0.json"),
+    )
+    interfaces.parent.mkdir(parents=True, exist_ok=True)
+    interfaces.write_text("HUD environment version publish/compare | Not present\n", encoding="utf-8")
+    monkeypatch.setattr(demo_cli, "ROOT", tmp_path)
+
+    assert demo_preflight() == 2
+
+    blocker = read_json(tmp_path / "artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json")
+    blocker_types = {item["type"] for item in blocker["blockers"]}
+    assert "DEPENDENCY_GATE" not in blocker_types
+    assert "PUBLISH_BINDING" in blocker_types
+    assert blocker["release_proof_ref"] == "artifacts/forkproof/releases/release-proofs/releaseproof-30e03914472631dd.json"
+    assert (
+        blocker["release_candidate_ref"]
+        == "artifacts/forkproof/releases/candidates/releasecandidate-294df1726b8a5ed0.json"
+    )
+
+    publication = read_json(
+        tmp_path / "artifacts/forkproof/demo/preflight-blockers/plan-006-publication-attempt.json"
+    )
+    assert publication["outcome"] == "blocked-with-proof"
+    assert publication["target_id"] == "env-v2"
+    assert publication["trusted_context_ref"] == "docs/plans/repo-map/COMMANDS.json:integration-publication"
+    assert publication["normalized_error_class"] == "publish_binding_missing"
+    assert publication["release_proof_gate_status"] == "pass"
 
 
 def test_validate_report_cli_writes_pass_artifact(tmp_path):

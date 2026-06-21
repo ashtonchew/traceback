@@ -207,12 +207,16 @@ def _validate_outcome(record: dict[str, Any]) -> None:
             raise DemoError("publication_attempt_invalid", "published outcome requires passing ReleaseProof")
         if not record.get("release_candidate_ref"):
             raise DemoError("publication_attempt_invalid", "published outcome needs release_candidate_ref")
+        if not _trusted_evidence_ref(record.get("release_candidate_ref")):
+            raise DemoError("publication_attempt_invalid", "published outcome needs trusted release_candidate_ref")
         if record.get("normalized_error_class"):
             raise DemoError("publication_attempt_invalid", "published outcome cannot carry an error class")
     if outcome in {"permission-blocked", "blocked-with-proof"}:
         _require_trusted_publication_context(record, require_publish_binding=outcome == "permission-blocked")
         if not record.get("release_candidate_ref"):
             raise DemoError("publication_attempt_invalid", f"{outcome} needs release_candidate_ref")
+        if not _trusted_evidence_ref(record.get("release_candidate_ref")):
+            raise DemoError("publication_attempt_invalid", f"{outcome} needs trusted release_candidate_ref")
         if record.get("release_proof_gate_status") != "pass":
             raise DemoError("publication_attempt_invalid", f"{outcome} requires passing ReleaseProof")
         expected_error = {

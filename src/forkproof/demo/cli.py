@@ -13,6 +13,10 @@ from .redaction import redact_record
 from .report import validate_demo_report
 
 ROOT = Path(__file__).resolve().parents[3]
+PLAN_005_MANIFEST = Path("docs/plans/evidence/005/MANIFEST.json")
+PUBLISH_INTERFACE_REF = Path("docs/plans/repo-map/INTERFACES.md")
+RELEASE_PROOFS = Path("artifacts/forkproof/releases/release-proofs")
+RELEASE_CANDIDATES = Path("artifacts/forkproof/releases/candidates")
 
 
 def _write_json(path: Path, record: dict) -> None:
@@ -40,26 +44,153 @@ def _print_failure(exc: DemoError) -> None:
     print(f"FAIL: {exc.error_class}: {_safe_observed_behavior(exc)}")
 
 
+def _manifest_artifact_path(manifest: dict, *, prefix: str, suffix: str) -> Path | None:
+    refs = [
+        artifact.get("ref")
+        for artifact in manifest.get("artifacts", [])
+        if isinstance(artifact, dict) and isinstance(artifact.get("ref"), str)
+    ]
+    matches = [Path(ref) for ref in refs if ref.startswith(prefix) and ref.endswith(suffix) and "*" not in ref]
+    if len(matches) == 1:
+        return ROOT / matches[0]
+    return None
+
+
+def _release_candidate_path(proof: dict) -> Path | None:
+    raw_ref = proof.get("release_candidate_ref")
+    if not isinstance(raw_ref, str) or not raw_ref:
+        return None
+    candidate = ROOT / RELEASE_CANDIDATES / Path(raw_ref).name
+    return candidate if candidate.is_file() else None
+
+
+def _validate_candidate_binding(proof: dict, candidate_path: Path) -> None:
+    candidate = _load_json(candidate_path)
+    mismatched = [
+        field
+        for field in ("environment_v2", "grader_v2_digest")
+        if candidate.get(field) != proof.get(field)
+    ]
+    if mismatched:
+        raise DemoError("missing_artifacts", f"release candidate does not match ReleaseProof fields {mismatched}")
+    proof_candidate_id = Path(str(proof.get("release_candidate_ref", ""))).stem
+    if proof_candidate_id and candidate.get("release_candidate_id") != proof_candidate_id:
+        raise DemoError("missing_artifacts", "release candidate id does not match ReleaseProof ref")
+
+
+def _plan_005_release_inputs() -> tuple[dict, Path, Path]:
+    manifest_path = ROOT / PLAN_005_MANIFEST
+    manifest = _load_json(manifest_path)
+    if manifest.get("status") != "complete":
+        raise DemoError("dependency_gate", "Plan 005 evidence manifest is not complete")
+    proof_path = _manifest_artifact_path(
+        manifest,
+        prefix=RELEASE_PROOFS.as_posix(),
+        suffix=".json",
+    )
+    if not proof_path or not proof_path.is_file():
+        raise DemoError("missing_artifacts", "Plan 005 ReleaseProof artifact is not present")
+    proof = _load_json(proof_path)
+    candidate_path = _release_candidate_path(proof)
+    manifest_candidate_path = _manifest_artifact_path(
+        manifest,
+        prefix=RELEASE_CANDIDATES.as_posix(),
+        suffix=".json",
+    )
+    if not candidate_path or not manifest_candidate_path or candidate_path != manifest_candidate_path:
+        raise DemoError("missing_artifacts", "Plan 005 release candidate artifact is not present")
+    _validate_candidate_binding(proof, candidate_path)
+    return proof, proof_path, candidate_path
+
+
 def demo_preflight() -> int:
-    """Record why the full demo cannot complete before Gate 4."""
+    """Record the current Plan 006 demo/publication readiness boundary."""
 
     path = ROOT / "artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json"
+    publication_path = ROOT / "artifacts/forkproof/demo/preflight-blockers/plan-006-publication-attempt.json"
+    blockers: list[dict] = []
+    release_proof_ref = None
+    release_candidate_ref = None
+    publication_attempt_ref = None
+    try:
+        proof, proof_path, candidate_path = _plan_005_release_inputs()
+        release_proof_ref = proof_path.relative_to(ROOT).as_posix()
+        release_candidate_ref = candidate_path.relative_to(ROOT).as_posix()
+        attempt = publication_preflight(
+            release_proof=proof,
+            target_id=proof.get("environment_v2"),
+            trusted_context_ref="docs/plans/repo-map/COMMANDS.json:integration-publication",
+            publish_binding_ref=None,
+            publisher_capability_label=None,
+            release_candidate_ref=release_candidate_ref,
+            evidence_refs=[
+                PLAN_005_MANIFEST.as_posix(),
+                release_proof_ref,
+                release_candidate_ref,
+                PUBLISH_INTERFACE_REF.as_posix(),
+            ],
+        )
+        validate_publication_attempt(attempt)
+        _write_json(publication_path, attempt)
+        publication_attempt_ref = publication_path.relative_to(ROOT).as_posix()
+        if attempt["outcome"] == "blocked-with-proof":
+            blockers.append(
+                {
+                    "type": "PUBLISH_BINDING",
+                    "reason": "No repository-bound publish primitive or publisher capability is recorded for Plan 006.",
+                    "evidence_refs": [PUBLISH_INTERFACE_REF.as_posix(), publication_attempt_ref],
+                }
+            )
+        else:
+            blockers.append(
+                {
+                    "type": "PUBLISH_TARGET",
+                    "reason": f"Publication preflight failed closed with {attempt['normalized_error_class']}.",
+                    "evidence_refs": [PUBLISH_INTERFACE_REF.as_posix(), publication_attempt_ref],
+                }
+            )
+    except DemoError as exc:
+        result = {
+            "schema_version": 1,
+            "status": "failed",
+            "error_class": exc.error_class,
+            "observed_behavior": _safe_observed_behavior(exc),
+            "release_proof_ref": release_proof_ref,
+            "release_candidate_ref": release_candidate_ref,
+            "created_at": utc_now(),
+        }
+        _write_json(publication_path, result)
+        publication_attempt_ref = publication_path.relative_to(ROOT).as_posix()
+        blocker_type = "DEPENDENCY_GATE" if exc.error_class == "dependency_gate" else "PUBLISH_TARGET"
+        blockers.append(
+            {
+                "type": blocker_type,
+                "reason": _safe_observed_behavior(exc),
+                "evidence_refs": [PLAN_005_MANIFEST.as_posix(), PUBLISH_INTERFACE_REF.as_posix(), publication_attempt_ref],
+            }
+        )
+    blockers.append(
+        {
+            "type": "ACCEPTANCE_DEMO_ORCHESTRATION",
+            "reason": "No Plan 006-owned noninteractive orchestration has launched a fresh full-budget Acceptance Demo Run on this branch.",
+            "evidence_refs": [
+                "docs/plans/006-demo-observability-and-publication.md",
+                "docs/plans/evidence/003/MANIFEST.json",
+            ],
+        }
+    )
     record = {
         "schema_version": 1,
         "status": "blocked",
-        "blockers": [
-            {
-                "type": "DEPENDENCY_GATE",
-                "reason": "Plan 005/Gate 4 is incomplete; no sealed ReleaseProof or real v1/v2 release results exist.",
-                "evidence_refs": ["docs/plans/evidence/005/MANIFEST.json"],
-            },
-            {
-                "type": "PUBLISH_BINDING",
-                "reason": "No repository-bound publish primitive and authorized target are available for Plan 006.",
-                "evidence_refs": ["docs/plans/repo-map/INTERFACES.md"],
-            },
-        ],
-        "observed_behavior": "Demo preflight refuses to claim an Acceptance Demo Run before ReleaseProof and publish binding exist.",
+        "release_proof_ref": release_proof_ref,
+        "release_candidate_ref": release_candidate_ref,
+        "publication_attempt_ref": publication_attempt_ref,
+        "blockers": blockers,
+        "observed_behavior": (
+            "Demo preflight consumed the merged Plan 005 evidence where available, then refused to claim "
+            "an Acceptance Demo Run or publication without a fresh full-budget branch launch and a "
+            "repository-bound publish target/binding."
+        ),
     }
     _write_json(path, record)
     print(f"WROTE {path}")
