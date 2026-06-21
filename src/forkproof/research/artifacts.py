@@ -174,6 +174,20 @@ def _depth_two_run_ok(depth_two_run: dict[str, Any] | None, root: Path | None = 
     return True
 
 
+def _snapshots_consistent(
+    child_snapshot: dict[str, Any] | None, depth_two_run: dict[str, Any] | None
+) -> bool:
+    """The depth-two run must have executed from the captured child snapshot.
+
+    Guards against a re-snapshot leaving the child-snapshot artifact and the
+    depth-two run referencing different child images.
+    """
+
+    child_ref = ((child_snapshot or {}).get("child_snapshot") or {}).get("snapshot_ref")
+    run_ref = (depth_two_run or {}).get("child_snapshot_ref")
+    return bool(child_ref) and child_ref == run_ref
+
+
 def build_depth_two_preflight_artifact(
     *,
     plan003_manifest: dict[str, Any],
@@ -221,6 +235,11 @@ def build_depth_two_preflight_artifact(
         blockers.append(
             "Plan 007 has no mapped live depth-two executor result with a completed depth-two "
             "BranchRun artifact, measured values, and an adaptive-stop event."
+        )
+    if child_snapshot_ok and depth_two_ok and not _snapshots_consistent(child_snapshot, depth_two_run):
+        blockers.append(
+            "Plan 007 child re-snapshot and depth-two run reference different child snapshots; "
+            "re-run depth-two from the captured child snapshot."
         )
 
     status = "ready" if not blockers else "blocked"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -141,7 +142,7 @@ class StopEvent:
             "scheduled_count": self.scheduled_count,
             "completed_count": self.completed_count,
             "reason": self.reason,
-            "decision_refs": list(self.decision_refs),
+            "decision_refs": copy.deepcopy(list(self.decision_refs)),
             "recorded_at": self.recorded_at,
         }
 
@@ -235,7 +236,7 @@ class DepthTwoRunRecord:
             "completed_branch_refs": list(self.completed_branch_refs),
             "stop_event_ref": self.stop_event_ref,
             "blocker": self.blocker,
-            "measured_values": self.measured_values,
+            "measured_values": copy.deepcopy(self.measured_values),
             "recorded_at": self.recorded_at,
         }
         record["content_digest"] = digest_json(record)
@@ -284,8 +285,8 @@ class FlatComparisonReport:
             "schema_version": 1,
             "status": self.status,
             "protocol_ref": self.protocol_ref,
-            "state_branch_observations": self.state_branch_observations,
-            "flat_restart_observations": self.flat_restart_observations,
+            "state_branch_observations": copy.deepcopy(self.state_branch_observations),
+            "flat_restart_observations": copy.deepcopy(self.flat_restart_observations),
             "limitation": self.limitation,
         }
         record["content_digest"] = digest_json(record)
@@ -310,7 +311,7 @@ class TransferTrainingReport:
             "training_filter_status": self.training_filter_status,
             "real_task_refs": list(self.real_task_refs),
             "trajectory_refs": list(self.trajectory_refs),
-            "raw_vs_hardened_filter": self.raw_vs_hardened_filter,
+            "raw_vs_hardened_filter": copy.deepcopy(self.raw_vs_hardened_filter),
             "limitation": self.limitation,
         }
         record["content_digest"] = digest_json(record)

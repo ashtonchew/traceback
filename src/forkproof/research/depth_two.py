@@ -79,7 +79,14 @@ def build_child_forkpoint(
                 {"child_snapshot_id": snapshot_id, "base": parent_forkpoint.get("snapshot_digest")}
             ),
             "task_state_roots": list(HUD_TASK_PROFILE["capture_roots"]),
-            "hud_task_profile": dict(HUD_TASK_PROFILE),
+            # Copy the nested lists too: a shallow dict() would alias the module
+            # constant's lists, so a downstream mutation could corrupt later runs.
+            "hud_task_profile": {
+                **HUD_TASK_PROFILE,
+                "capture_roots": list(HUD_TASK_PROFILE["capture_roots"]),
+                "pre_grader_command_argv": list(HUD_TASK_PROFILE["pre_grader_command_argv"]),
+                "grader_command_argv": list(HUD_TASK_PROFILE["grader_command_argv"]),
+            },
         }
     )
     return forkpoint
