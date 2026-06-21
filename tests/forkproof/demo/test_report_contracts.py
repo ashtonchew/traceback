@@ -52,6 +52,14 @@ def test_acceptance_report_requires_thirteen_evidence_backed_steps():
     validate_demo_report(report())
 
 
+def test_report_rejects_invalid_status_and_live_attempt_result():
+    with pytest.raises(DemoError, match="report status"):
+        validate_demo_report(report(status="skipped"))
+
+    with pytest.raises(DemoError, match="live_attempt_result"):
+        validate_demo_report(report(live_attempt_result="pretend-live"))
+
+
 def test_report_rejects_screenshot_only_step_evidence():
     steps = [step(i) for i in range(1, 14)]
     steps[0] = step(1, refs=["screenshots/trace.png"])
@@ -64,6 +72,12 @@ def test_acceptance_report_rejects_fake_live_branch_claims():
     with pytest.raises(DemoError, match="live discovery claims"):
         validate_demo_report(report(live_branch_refs=[]))
 
+    with pytest.raises(DemoError, match="live-new-witness"):
+        validate_demo_report(report(discovery_source="live-new-witness", live_attempt_result="branches-launched"))
+
+    with pytest.raises(DemoError, match="cannot claim a new Witness"):
+        validate_demo_report(report(discovery_source="live-no-witness", live_attempt_result="new-witness"))
+
 
 def test_prior_run_fallback_requires_visible_label_and_replay_refs():
     with pytest.raises(DemoError, match="prior-run replay requires"):
@@ -74,6 +88,7 @@ def test_prior_run_fallback_requires_visible_label_and_replay_refs():
     validate_demo_report(
         report(
             discovery_source="prior-run-replay",
+            live_attempt_result="timeout",
             steps=steps,
             prior_run_witness_ref="wit-001.json",
             new_replay_ref="replay-001.json",
@@ -97,6 +112,7 @@ def test_report_replay_is_audit_only():
         validate_demo_report(
             report(
                 demo_mode="report-replay",
+                live_attempt_result="audit-only",
                 source_invocation_id="demo-source",
                 new_publication_attempt_ref="pub-new.json",
             )
@@ -106,10 +122,14 @@ def test_report_replay_is_audit_only():
         validate_demo_report(
             report(
                 demo_mode="report-replay",
+                live_attempt_result="audit-only",
                 source_invocation_id="demo-source",
                 new_replay_ref="replay-new.json",
             )
         )
+
+    with pytest.raises(DemoError, match="audit-only"):
+        validate_demo_report(report(demo_mode="report-replay", source_invocation_id="demo-source"))
 
 
 def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
@@ -122,6 +142,7 @@ def test_presentation_mode_requires_bounded_live_attempt_before_fallback():
         report(
             demo_mode="presentation",
             discovery_source="prior-run-replay",
+            live_attempt_result="timeout",
             presentation_budget_seconds=30,
             fallback_reason="presentation timeout",
             prior_run_witness_ref="wit-001.json",

@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T09:55:24Z",
+  "updated_at": "2026-06-21T10:35:06Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -33,299 +33,6 @@
       ],
       "exit_code": 0,
       "observed": "Created fresh worktree on codex/plan-006-demo-stack at commit 2def782, stacked over origin/codex/plan-005-release-proof."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_graph.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_sections.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 8 plans have valid frontmatter, sections, packets, and goal blocks."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_ownership.py",
-        "--repo-bound"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: repo-bound ownership is collision-free for 8 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_traceability.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 47 requirements map to all 8 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "lint"
-      ],
-      "exit_code": 0,
-      "observed": "Escalated rerun: RUN lint via uv run ruff check docs/plans/scripts; All checks passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "build"
-      ],
-      "exit_code": 0,
-      "observed": "Escalated rerun: RUN build via uv lock --check; Resolved 155 packages in 4ms."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_file_sizes.py",
-        "--plan",
-        "006"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 3 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "006"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 1 evidence manifest(s) are present/structured."
-    },
-    {
-      "argv": [
-        "git",
-        "fetch",
-        "origin",
-        "main",
-        "pull/27/head:refs/remotes/origin/pr-27",
-        "codex/plan-005-release-proof",
-        "codex/plan-006-demo-stack"
-      ],
-      "exit_code": 0,
-      "observed": "Refreshed main, PR #27, Plan 005 base, and Plan 006 stack refs. origin/pr-27 and origin/codex/plan-005-release-proof still resolve to 2def782; current Plan 006 head is f6c2127."
-    },
-    {
-      "argv": [
-        "git",
-        "fetch",
-        "origin",
-        "main",
-        "pull/27/head:refs/remotes/origin/pr-27",
-        "codex/plan-005-release-proof",
-        "codex/plan-006-demo-stack"
-      ],
-      "exit_code": 0,
-      "observed": "Third blocker-audit fetch refreshed current refs. HEAD and origin/codex/plan-006-demo-stack are e2013fd; origin/pr-27 and origin/codex/plan-005-release-proof remain 2def782; origin/main is eb9fd19."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "plan-006-tests"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: plan-006-tests via uv run pytest tests/forkproof/demo -q; 24 passed in 0.04s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "integration-publication"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: integration-publication local preflight contract tests; 10 passed in 0.02s. No publish API was invoked."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "publication-idempotency"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: publication-idempotency; 1 passed in 0.01s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "publication-permission-denied"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: publication-permission-denied; 1 passed in 0.03s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "publication-trust-boundary"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: publication-trust-boundary; 5 passed in 0.01s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "publication-redaction"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: publication-redaction; 2 passed in 0.01s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "demo-report-replay"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: demo-report-replay; 1 passed in 0.01s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "demo-presentation-timeout"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: demo-presentation-timeout; 1 passed in 0.01s."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "demo"
-      ],
-      "exit_code": 2,
-      "observed": "Expected blocked preflight: wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and stopped on DEPENDENCY_GATE plus PUBLISH_BINDING."
-    },
-    {
-      "argv": [
-        "uv",
-        "run",
-        "ruff",
-        "check",
-        "src/forkproof/demo",
-        "tests/forkproof/demo"
-      ],
-      "exit_code": 0,
-      "observed": "All checks passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_graph.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_sections.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 8 plans have valid frontmatter, sections, packets, and goal blocks."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_ownership.py",
-        "--repo-bound"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: repo-bound ownership is collision-free for 8 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_traceability.py"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 47 requirements map to all 8 plans."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_file_sizes.py",
-        "--plan",
-        "006"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 13 text file(s) are at most 550 lines; 0 file(s) exceed the 500-line target."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "lint"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: lint via uv run ruff check docs/plans/scripts; All checks passed."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/run_mapped.py",
-        "build"
-      ],
-      "exit_code": 0,
-      "observed": "RUN: build via uv lock --check; Resolved 155 packages in 5ms."
-    },
-    {
-      "argv": [
-        "python",
-        "docs/plans/scripts/validate_evidence.py",
-        "--plan",
-        "006"
-      ],
-      "exit_code": 0,
-      "observed": "PASS: 1 evidence manifest(s) are present/structured."
-    },
-    {
-      "key": "plan-006-tests",
-      "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
-      "exit_code": 0,
-      "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after adding publication-preflight CLI: 31 passed.",
-      "recorded_at": "2026-06-21T10:17:43Z"
-    },
-    {
-      "key": "integration-publication",
-      "command": "python docs/plans/scripts/run_mapped.py integration-publication",
-      "exit_code": 0,
-      "status": "pass",
-      "observed_behavior": "Mapped publication contract integration tests passed after adding publication-preflight CLI: 13 passed.",
-      "recorded_at": "2026-06-21T10:17:43Z"
-    },
-    {
-      "key": "publication-redaction",
-      "command": "python docs/plans/scripts/run_mapped.py publication-redaction",
-      "exit_code": 0,
-      "status": "pass",
-      "observed_behavior": "Mapped publication redaction check passed: 2 passed.",
-      "recorded_at": "2026-06-21T10:21:09Z"
-    },
-    {
-      "key": "ruff-plan-006-demo",
-      "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
-      "exit_code": 0,
-      "status": "pass",
-      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after publication-preflight CLI changes.",
-      "recorded_at": "2026-06-21T10:17:43Z"
     },
     {
       "key": "validate-graph",
@@ -360,6 +67,22 @@
       "recorded_at": "2026-06-21T10:21:09Z"
     },
     {
+      "key": "plan-006-tests",
+      "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped Plan 006 tests passed after report status/source/live consistency hardening: 32 passed.",
+      "recorded_at": "2026-06-21T10:32:18Z"
+    },
+    {
+      "key": "integration-publication",
+      "command": "python docs/plans/scripts/run_mapped.py integration-publication",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped publication contract integration tests passed after adding publication-preflight CLI: 13 passed.",
+      "recorded_at": "2026-06-21T10:17:43Z"
+    },
+    {
       "key": "publication-idempotency",
       "command": "python docs/plans/scripts/run_mapped.py publication-idempotency",
       "exit_code": 0,
@@ -382,6 +105,38 @@
       "status": "pass",
       "observed_behavior": "Mapped publication trust-boundary check passed: 6 passed.",
       "recorded_at": "2026-06-21T10:21:09Z"
+    },
+    {
+      "key": "publication-redaction",
+      "command": "python docs/plans/scripts/run_mapped.py publication-redaction",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped publication redaction check passed: 2 passed.",
+      "recorded_at": "2026-06-21T10:21:09Z"
+    },
+    {
+      "key": "demo-report-replay",
+      "command": "python docs/plans/scripts/run_mapped.py demo-report-replay",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Mapped Demo Report Replay audit-only check passed after preserving source discovery mode: 1 passed.",
+      "recorded_at": "2026-06-21T10:32:18Z"
+    },
+    {
+      "key": "demo",
+      "command": "python docs/plans/scripts/run_mapped.py demo",
+      "exit_code": 2,
+      "status": "blocked",
+      "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and refused to claim an Acceptance Demo Run before ReleaseProof/publish binding exist.",
+      "recorded_at": "2026-06-21T10:21:09Z"
+    },
+    {
+      "key": "ruff-plan-006-demo",
+      "command": "uv run ruff check src/forkproof/demo tests/forkproof/demo",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Focused lint passed for Plan 006-owned demo source and tests after report validation hardening.",
+      "recorded_at": "2026-06-21T10:32:18Z"
     },
     {
       "key": "lint",
@@ -413,14 +168,6 @@
       "exit_code": 0,
       "status": "pass",
       "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured.",
-      "recorded_at": "2026-06-21T10:21:09Z"
-    },
-    {
-      "key": "demo",
-      "command": "python docs/plans/scripts/run_mapped.py demo",
-      "exit_code": 2,
-      "status": "blocked",
-      "observed_behavior": "Expected pre-Gate-4 blocker: demo-preflight wrote artifacts/forkproof/demo/preflight-blockers/plan-006-demo.json and refused to claim an Acceptance Demo Run before ReleaseProof/publish binding exist.",
       "recorded_at": "2026-06-21T10:21:09Z"
     }
   ],
@@ -521,6 +268,11 @@
       "name": "Publication preflight CLI",
       "status": "pass",
       "evidence": "Plan 006 CLI now exposes an independently runnable publication-preflight command by ReleaseProof path, target, trusted context, optional publish binding/capability, release candidate, permission denial state, and evidence refs. It writes a validated PublicationAttempt without invoking a publish API, returns nonzero for failed preflight outcomes, and normalizes malformed ReleaseProof input as proof_mismatch evidence."
+    },
+    {
+      "name": "Report status and live-source consistency",
+      "status": "pass",
+      "evidence": "Plan 006 report validation now rejects invalid top-level report status, invalid live_attempt_result values, live-new-witness without a new-witness result, live-no-witness that claims a new Witness, report replay that is not audit-only, and Prior-Run Witness Replay without a bounded live attempt result. Demo Report Replay remains audit-only and preserves the source report discovery mode rather than requiring new replay refs."
     }
   ],
   "artifacts": [
@@ -624,6 +376,8 @@
     "2026-06-21T10:04:12Z — Adversarial subagent hardening pass completed. Publication validation now rejects forged published outcomes, self-attested redaction, missing normalized blocker classes, mixed v1/v2 environment or grader identity, branch-writable evidence markers, and malformed validation input without an artifact. Mapped plan-006-tests passed with 28 tests; integration-publication passed with 12 tests; publication-redaction passed with 2 tests.",
     "2026-06-21T10:06:31Z — Tightened proof-backed PublicationAttempt validation again so published and permission-blocked outcomes reject missing trusted-context or publish-binding placeholders. Mapped plan-006-tests passed with 29 tests; integration-publication passed with 13 tests.",
     "2026-06-21T10:17:43Z — Added safe publication-preflight CLI for the independently runnable publish/display preflight path. It consumes a ReleaseProof JSON path, emits a validated PublicationAttempt artifact, returns nonzero for failed preflight outcomes, and still never invokes or invents a publish primitive. Mapped plan-006-tests passed with 31 tests; integration-publication passed with 13 tests.",
-    "2026-06-21T10:21:09Z — Ran feasible validators after publication-preflight CLI work. Graph, sections, repo-bound ownership, traceability, mapped publication idempotency/permission/trust/redaction, lint, build, file-size, and evidence validation passed. Mapped demo still exits 2 by design and refreshes the blocker artifact because Plan 005/Gate 4 and publish binding are missing."
+    "2026-06-21T10:21:09Z — Ran feasible validators after publication-preflight CLI work. Graph, sections, repo-bound ownership, traceability, mapped publication idempotency/permission/trust/redaction, lint, build, file-size, and evidence validation passed. Mapped demo still exits 2 by design and refreshes the blocker artifact because Plan 005/Gate 4 and publish binding are missing.",
+    "2026-06-21T10:32:18Z — Hardened report status/source/live consistency. The validator now rejects invalid report status and incoherent live discovery claims while preserving Demo Report Replay as audit-only revalidation of the source report mode. Mapped plan-006-tests passed with 32 tests; demo-report-replay passed with 1 test.",
+    "2026-06-21T10:35:06Z — Compacted superseded command rows in this evidence manifest after latest validation results made earlier duplicate command rows redundant; the Plan 006 living-doc log retains the chronological history."
   ]
 }

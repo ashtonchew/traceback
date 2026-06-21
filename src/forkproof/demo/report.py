@@ -8,6 +8,8 @@ from .models import DemoError, assert_content_digest, require_fields
 
 DEMO_MODES = {"acceptance", "presentation", "report-replay"}
 DISCOVERY_SOURCES = {"live-new-witness", "live-no-witness", "prior-run-replay"}
+REPORT_STATUSES = {"pass", "blocked", "failed"}
+LIVE_ATTEMPT_RESULTS = {"new-witness", "branches-launched", "timeout", "blocked", "failed", "audit-only"}
 STEP_STATUSES = {"passed", "displayed", "fallback", "blocked-with-proof", "failed"}
 METRIC_ABSENT_KEYS = {"not-measured", "not-applicable"}
 FORBIDDEN_SINGLE_RUN_CLAIMS = {
@@ -60,10 +62,15 @@ def validate_demo_report(record: dict[str, Any]) -> None:
     """Validate the Plan 006 report.json semantic contract."""
 
     require_fields(record, REQUIRED_REPORT_FIELDS, error_class="report_incomplete")
+    if record["status"] not in REPORT_STATUSES:
+        raise DemoError("report_invalid", "report status is invalid")
     if record["demo_mode"] not in DEMO_MODES:
         raise DemoError("report_invalid", "demo_mode is invalid")
     if record["discovery_source"] not in DISCOVERY_SOURCES:
         raise DemoError("report_invalid", "discovery_source is invalid")
+    if record["live_attempt_result"] not in LIVE_ATTEMPT_RESULTS:
+        raise DemoError("report_invalid", "live_attempt_result is invalid")
+    _validate_mode_source_consistency(record)
     if record["demo_mode"] == "report-replay":
         _validate_report_replay(record)
     if record["demo_mode"] == "presentation":
@@ -107,6 +114,21 @@ def _validate_steps(steps: list[dict[str, Any]], report: dict[str, Any]) -> None
             raise DemoError("fallback_unlabeled", "prior-run replay requires fallback step and replay refs")
     if report["live_attempt_result"] in {"new-witness", "branches-launched"} and not report.get("live_branch_refs"):
         raise DemoError("fake_live_branch", "live discovery claims require persisted branch refs")
+
+
+def _validate_mode_source_consistency(record: dict[str, Any]) -> None:
+    source = record["discovery_source"]
+    result = record["live_attempt_result"]
+    if record["demo_mode"] == "report-replay":
+        if result != "audit-only":
+            raise DemoError("report_replay_overclaim", "report replay must be audit-only")
+        return
+    if source == "live-new-witness" and result != "new-witness":
+        raise DemoError("fake_live_branch", "live-new-witness requires a new-witness live result")
+    if source == "live-no-witness" and result not in {"branches-launched", "timeout", "blocked", "failed"}:
+        raise DemoError("fake_live_branch", "live-no-witness cannot claim a new Witness")
+    if source == "prior-run-replay" and result not in {"timeout", "blocked", "failed"}:
+        raise DemoError("fallback_unlabeled", "prior-run replay requires a bounded live attempt result")
 
 
 def _require_non_screenshot_evidence(step: dict[str, Any]) -> None:
