@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "blocked",
   "started_at": "2026-06-21T09:34:39Z",
-  "updated_at": "2026-06-21T10:50:03Z",
+  "updated_at": "2026-06-21T11:02:44Z",
   "completed_at": null,
   "commit": null,
   "commands": [
@@ -39,8 +39,8 @@
       "command": "python docs/plans/scripts/validate_graph.py",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic",
-      "recorded_at": "2026-06-21T10:50:03Z"
+      "observed_behavior": "PASS: 8 plans, 11 dependencies, waves [1, 2, 3, 4, 5], acyclic.",
+      "recorded_at": "2026-06-21T11:02:44Z"
     },
     {
       "key": "validate-sections",
@@ -55,8 +55,8 @@
       "command": "python docs/plans/scripts/validate_ownership.py --repo-bound",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: repo-bound ownership is collision-free for 8 plans",
-      "recorded_at": "2026-06-21T10:50:03Z"
+      "observed_behavior": "PASS: repo-bound ownership is collision-free for 8 plans.",
+      "recorded_at": "2026-06-21T11:02:44Z"
     },
     {
       "key": "validate-traceability",
@@ -71,8 +71,8 @@
       "command": "python docs/plans/scripts/run_mapped.py plan-006-tests",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "Mapped Plan 006 tests passed after readiness pack validation: 38 passed.",
-      "recorded_at": "2026-06-21T10:50:03Z"
+      "observed_behavior": "Mapped Plan 006 tests passed after restacking over updated Plan 005 head: 38 passed.",
+      "recorded_at": "2026-06-21T11:02:44Z"
     },
     {
       "key": "integration-publication",
@@ -167,8 +167,16 @@
       "command": "python docs/plans/scripts/validate_evidence.py --plan 006",
       "exit_code": 0,
       "status": "pass",
-      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured.",
-      "recorded_at": "2026-06-21T10:50:03Z"
+      "observed_behavior": "PASS: Plan 006 evidence manifest is present and structured after restack.",
+      "recorded_at": "2026-06-21T11:02:44Z"
+    },
+    {
+      "key": "rebase-plan-006-over-plan-005",
+      "command": "git rebase origin/codex/plan-005-release-proof",
+      "exit_code": 0,
+      "status": "pass",
+      "observed_behavior": "Restacked Plan 006 over updated PR #27 / Plan 005 head 3105a444ddcc023329d5f96c2d6566922e5c15c9 after it moved from 2def782. Rebase completed without conflicts.",
+      "recorded_at": "2026-06-21T11:02:44Z"
     }
   ],
   "rechecks": [
@@ -322,14 +330,14 @@
     },
     {
       "type": "DEPENDENCY_GATE",
-      "recorded_at": "2026-06-21T09:34:39Z",
-      "reason": "Plan 006 depends on Gate 4. PR #27 / Plan 005 is expectedly blocked: there is no v2 patch, sealed ReleaseProof, real per-case v1/v2 release result set, release candidate ref, or complete Done-when evidence.",
+      "recorded_at": "2026-06-21T11:02:44Z",
+      "reason": "Plan 006 remains blocked after restacking onto updated PR #27 head 3105a44. Plan 005 evidence is still blocked: harden-v0 found the rewarded hack but the fixer path ended with harden_fixer_artifact_layout_drift/fix_failed, so no validated candidate patch, real per-case v1/v2 release results, release candidate, or sealed ReleaseProof exists.",
       "evidence_refs": [
-        "docs/plans/000-index.md",
         "docs/plans/evidence/005/MANIFEST.json",
+        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
         "artifacts/forkproof/releases/release-blockers/proofset-e497370b2c3d2a69.json"
       ],
-      "next_owner": "Plan 005 owner must resolve harden-v0/Harbor artifact-layout drift, produce a validated patch, run exact v1/v2 release evaluation over the ProofSet, and seal a passing ReleaseProof before Plan 006 can complete."
+      "next_owner": "Plan 005 owner must fix/configure the harden-v0/Harbor artifact extraction surface, rerun the bounded fixer loop, produce real v1/v2 release results, and seal ReleaseProof only if the binary gate passes."
     },
     {
       "type": "PUBLISH_BINDING",
@@ -385,6 +393,7 @@
     "2026-06-21T10:32:18Z — Hardened report status/source/live consistency. The validator now rejects invalid report status and incoherent live discovery claims while preserving Demo Report Replay as audit-only revalidation of the source report mode. Mapped plan-006-tests passed with 32 tests; demo-report-replay passed with 1 test.",
     "2026-06-21T10:35:06Z — Compacted superseded command rows in this evidence manifest after latest validation results made earlier duplicate command rows redundant; the Plan 006 living-doc log retains the chronological history.",
     "2026-06-21T10:47:12Z — Added demo readiness pack validation and CLI support. This validates a digest-checked readiness pack with evidence-backed auth/network/quota/artifact statuses without probing live systems or reading secrets. Mapped plan-006-tests passed with 38 tests.",
-    "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist."
+    "2026-06-21T10:50:03Z — Reran feasible validators after readiness pack validation. Graph, sections, repo-bound ownership, traceability, mapped Plan 006 tests, lint, build, file-size, and evidence validation passed. Mapped demo remains the expected blocker-producing preflight until Plan 005/Gate 4 and publish binding exist.",
+    "2026-06-21T11:02:44Z — Restacked Plan 006 over updated PR #27 head 3105a44. The rebase completed cleanly and mapped Plan 006 tests still pass with 38 tests. Plan 005 remains blocked on harden_fixer_artifact_layout_drift/fix_failed, with no sealed ReleaseProof or release candidate."
   ]
 }
