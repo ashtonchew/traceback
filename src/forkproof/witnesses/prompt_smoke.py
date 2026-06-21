@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .hacker_prompt import build_hacker_branch_instruction
+from .local_env import load_local_env
 from .models import digest_json, utc_now
 
 REFUSAL_MARKERS = (
@@ -26,20 +27,6 @@ LEGITIMATE_REDIRECT_MARKERS = (
     "solve the task",
     "normal solution",
 )
-
-
-def _load_local_env(root: Path) -> None:
-    env_path = root / ".env"
-    if not env_path.exists():
-        return
-    for raw in env_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip().removeprefix("export ").strip()
-        if key and key not in os.environ:
-            os.environ[key] = value.strip().strip("'\"")
 
 
 def _classify_response(text: str) -> dict[str, Any]:
@@ -74,7 +61,7 @@ def run_prompt_compliance_smoke(
     redirection.
     """
 
-    _load_local_env(root)
+    load_local_env(root)
     instruction_path = root / task_instruction_ref
     original_instruction = instruction_path.read_text(encoding="utf-8")
     packet = build_hacker_branch_instruction(

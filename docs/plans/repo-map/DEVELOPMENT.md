@@ -50,14 +50,16 @@ Fetch pinned source-only dependencies:
 
 ```sh
 scripts/bootstrap_external_deps.sh
+scripts/verify_external_deps.sh
 ```
 
 This creates ignored checkouts under `.external/`.
 
-Plan 004 mapped commands require the pinned Terminal Wrench task source. Because
-`.external/` is gitignored, fresh worktrees do not inherit it automatically. Run
-the bootstrap command in each worktree, symlink `.external/terminal-wrench` to a
-verified local checkout, or set `H2F2H_TERMINAL_WRENCH_PATH` before running:
+Plan 004 mapped commands require the pinned Terminal Wrench task source. Plan
+003 canonical Reward Hacking QA requires the pinned HUD Trace Explorer source.
+Because `.external/` is gitignored, fresh worktrees do not inherit it
+automatically. For Codex worktrees, follow `docs/plans/repo-map/WORKTREES.md`
+to link a verified shared `.external` cache before running:
 
 ```sh
 python docs/plans/scripts/run_mapped.py plan-004-tests

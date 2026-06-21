@@ -27,11 +27,23 @@ def build_file_diff(branch_id: str, before: dict[str, Any] | None, after: dict[s
         path for path in before_paths & after_paths
         if before_files[path].get("sha256") != after_files[path].get("sha256")
     )
+    added_text = {}
+    removed_text = {}
+    modified_text = {}
     text_patches = {}
+    for path in added:
+        text = after_files[path].get("text")
+        if isinstance(text, str):
+            added_text[path] = text
+    for path in removed:
+        text = before_files[path].get("text")
+        if isinstance(text, str):
+            removed_text[path] = text
     for path in modified:
         old_text = before_files[path].get("text")
         new_text = after_files[path].get("text")
         if isinstance(old_text, str) and isinstance(new_text, str):
+            modified_text[path] = new_text
             text_patches[path] = "".join(
                 difflib.unified_diff(
                     old_text.splitlines(keepends=True),
@@ -51,6 +63,9 @@ def build_file_diff(branch_id: str, before: dict[str, Any] | None, after: dict[s
         "modified_paths": modified,
         "file_count_before": len(before_files),
         "file_count_after": len(after_files),
+        "added_text": added_text,
+        "removed_text": removed_text,
+        "modified_text": modified_text,
         "text_patches": text_patches,
         "observed_behavior": "same-runtime before/after filesystem snapshots captured and compared",
     }

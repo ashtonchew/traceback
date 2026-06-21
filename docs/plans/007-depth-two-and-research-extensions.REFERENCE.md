@@ -85,7 +85,7 @@ Modal capability facts as of this plan's wave. Verify against the live SDK befor
 
 ## Transfer gate
 
-Cross-task transfer requires at least one additional real task compatible with the existing shared defense pool. Report baseline and transferred-defense behavior separately. Do not claim ForkProof invented transfer.
+Cross-task transfer requires at least one additional real task compatible with the existing shared defense pool. Report baseline and transferred-defense behavior separately. Do not claim Traceback invented transfer.
 
 ## Training-data analysis sequence
 

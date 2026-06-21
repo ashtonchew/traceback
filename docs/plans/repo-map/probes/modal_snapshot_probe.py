@@ -1,7 +1,7 @@
 """Modal core-capability probe for Gate 1 (Plan 001).
 
 Verifies the non-Alpha snapshot path the core design depends on (A-005). It does
-not implement a ForkProof adapter; that is Plan 002. It only proves the account
+not implement a Traceback adapter; that is Plan 002. It only proves the account
 capability exists, and proves it the way the design actually uses each mode:
 
 - Filesystem Snapshot (GA): the durable Witness format. Snapshot the whole

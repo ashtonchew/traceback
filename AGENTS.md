@@ -2,7 +2,7 @@
 
 ## Source priority
 
-Treat the checked-in repository, this bundle, and the supplied Hack2Fix2Hack handoff as the only project sources of truth. Do not infer an API signature, existing file path, runtime behavior, or command from familiarity with HUD, Modal, harden-v0, or another repository. Read `docs/plans/ASSUMPTIONS.md` before implementation. Anything tagged `verify-against-repo` remains unverified until Wave 1 records evidence.
+Treat the checked-in repository, this bundle, and the supplied Traceback handoff as the only project sources of truth. Do not infer an API signature, existing file path, runtime behavior, or command from familiarity with HUD, Modal, harden-v0, or another repository. Read `docs/plans/ASSUMPTIONS.md` before implementation. Anything tagged `verify-against-repo` remains unverified until Wave 1 records evidence.
 
 If `AGENTS.md`, plan frontmatter, repo-map files, evidence manifests, or status files disagree, stop before implementation and record the inconsistency in the active plan's living-doc log or evidence manifest.
 
@@ -64,6 +64,13 @@ Keep context clean: summarize noisy research, long command output, and external-
 ## Merge discipline
 
 Parallel plans run in isolated worktrees. Do not start a later wave until `docs/plans/000-index.md` says its merge gate is satisfied. Before merging a wave, run ownership, graph, section, traceability, and evidence validation. Resolve ownership changes by updating the affected plan frontmatter and repo map before source edits.
+
+<important if="you are preparing a worktree that needs `.external/`">
+Read `docs/plans/repo-map/WORKTREES.md` before setup. Prefer linking the worktree
+to an already-verified shared `.external` cache when available, then run
+`scripts/verify_external_deps.sh`. Do not commit `.external/`, external source
+files, symlinks under `.external/`, `.env`, or secrets.
+</important>
 
 ## Claims and reporting
 

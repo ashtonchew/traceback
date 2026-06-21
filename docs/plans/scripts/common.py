@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for ForkProof plan validators."""
+"""Shared helpers for Traceback plan validators."""
 
 from __future__ import annotations
 

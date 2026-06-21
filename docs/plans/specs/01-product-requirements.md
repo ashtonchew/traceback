@@ -2,7 +2,7 @@
 
 ## Outcome
 
-ForkProof lets an environment author turn one suspicious, rewarded HUD trace into an executable regression asset and a defended verifier release. The author can reopen the exact task state, search alternate attacks from it, save confirmed attacks as Exploit Witnesses, patch the verifier through the existing harden-v0 loop, and ship only when attacks fail and legitimate solutions still pass.
+Traceback lets an environment author turn one suspicious, rewarded HUD trace into an executable regression asset and a defended verifier release. The author can reopen the exact task state, search alternate attacks from it, save confirmed attacks as Exploit Witnesses, patch the verifier through the existing harden-v0 loop, and ship only when attacks fail and legitimate solutions still pass.
 
 ## Primary user
 
@@ -17,7 +17,7 @@ The workflow begins with a real HUD trace that:
 3. exposes step-level evidence needed to select an action boundary,
 4. has a HUD Reward Hacking QA result that warrants investigation.
 
-The QA result is evidence, not proof. ForkProof must execute alternate continuations and deterministic replay.
+The QA result is evidence, not proof. Traceback must execute alternate continuations and deterministic replay.
 
 ## Core lifecycle
 

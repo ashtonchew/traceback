@@ -27,6 +27,9 @@ def test_forkpoint_dict_has_fields_branch_runs_consumes() -> None:
     assert fp["task_id"] == "solve-ode-with-sympy"
     assert fp["task_state_roots"] == ["/app", "/data"]
     assert fp["fork_point_id"].startswith("fp-")
+    # branch_runs selects its task from the embedded, self-describing hud_task_profile.
+    assert fp["hud_task_profile"]["env_module_path"] == "envs/qabench/solve-ode-with-sympy/env.py"
+    assert fp["hud_task_profile"]["task_factory"] == "build_task"
 
 
 def test_forkpoint_dict_is_deterministic() -> None:

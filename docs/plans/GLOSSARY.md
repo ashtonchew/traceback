@@ -1,4 +1,4 @@
-# ForkProof shared glossary
+# Traceback shared glossary
 
 **Action boundary.** The quiescent point after one agent action has fully affected the executable environment and before the next action begins.
 
@@ -56,7 +56,7 @@
 
 **Snapshot mode.** The chosen executable-state capture profile: Directory, Filesystem, Memory, or VM-backed filesystem, selected according to where task state truly lives.
 
-**Source trace.** The baseline reward-1 HUD trace that triggers ForkProof and supplies evidence for ForkPoint selection.
+**Source trace.** The baseline reward-1 HUD trace that triggers Traceback and supplies evidence for ForkPoint selection.
 
 **State fidelity.** The property that restoring a ForkPoint produces the same task-relevant state observable at the original action boundary.
 

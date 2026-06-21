@@ -2,7 +2,7 @@
 
 ## Threat model
 
-ForkProof deliberately runs attacker-authored code and prompts inside branches. A branch may try to read secrets, exfiltrate data, mutate the host or sibling branches, persist beyond its lifetime, consume excessive resources, influence grading, or tamper with evidence. Treat every branch as untrusted.
+Traceback deliberately runs attacker-authored code and prompts inside branches. A branch may try to read secrets, exfiltrate data, mutate the host or sibling branches, persist beyond its lifetime, consume excessive resources, influence grading, or tamper with evidence. Treat every branch as untrusted.
 
 ## Isolation requirements
 

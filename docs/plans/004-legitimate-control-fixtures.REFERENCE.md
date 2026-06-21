@@ -2,7 +2,7 @@
 
 ## Environment identity field taxonomy
 
-Three distinct fields are used across ForkProof records. They are not interchangeable:
+Three distinct fields are used across Traceback records. They are not interchangeable:
 
 | Field | What it is | Source | When available |
 |---|---|---|---|
@@ -36,7 +36,7 @@ The task is fetched by `scripts/bootstrap_external_deps.sh` (sparse checkout). A
 | Task container definition | `original_task/environment/Dockerfile` |
 | Reward signal | `/logs/verifier/reward.txt` — `1` (pass) or `0` (fail) |
 
-The v1 grader identity for all ForkProof records is the grader digest plus the pinned terminal-wrench revision. A lightweight evidence manifest entry may record these values by reference rather than duplicating file contents.
+The v1 grader identity for all Traceback records is the grader digest plus the pinned terminal-wrench revision. A lightweight evidence manifest entry may record these values by reference rather than duplicating file contents.
 
 ## Legitimate generation rules
 

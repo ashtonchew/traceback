@@ -2,6 +2,7 @@
 
 import json
 import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -34,9 +35,12 @@ def _write_batch(batch_dir: Path) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _isolate_task_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    for var in ("FORKPROOF_TASK_ENV", "FORKPROOF_TASK_FACTORY", "FORKPROOF_BRANCH_STATE_ROOTS"):
-        monkeypatch.setenv(var, "")
+def _isolate_state_roots() -> Iterator[None]:
+    # The driver writes FORKPROOF_BRANCH_STATE_ROOTS to os.environ directly (real
+    # behavior), so guarantee it never leaks into or out of these tests.
+    os.environ.pop("FORKPROOF_BRANCH_STATE_ROOTS", None)
+    yield
+    os.environ.pop("FORKPROOF_BRANCH_STATE_ROOTS", None)
 
 
 def test_driver_satisfies_seam_protocol(tmp_path: Path) -> None:
@@ -44,13 +48,16 @@ def test_driver_satisfies_seam_protocol(tmp_path: Path) -> None:
     assert isinstance(driver, DiscoveryDriver)
 
 
-def test_live_driver_sets_task_selection_and_maps_artifacts(tmp_path: Path) -> None:
+def test_live_driver_selects_task_via_forkpoint_profile_and_maps_artifacts(tmp_path: Path) -> None:
+    # branch_runs reads its task from the ForkPoint's hud_task_profile (main's contract),
+    # not an env var; the driver backfills the profile + keeps the state-roots override.
     _write_batch(tmp_path / "run-test")
     captured: dict[str, object] = {}
 
     def fake_runner(root: Path, forkpoint: dict, *, count: int, concurrency: int) -> dict:
-        captured["env"] = os.environ.get("FORKPROOF_TASK_ENV")
-        captured["factory"] = os.environ.get("FORKPROOF_TASK_FACTORY")
+        profile = forkpoint.get("hud_task_profile", {})
+        captured["env"] = profile.get("env_module_path")
+        captured["factory"] = profile.get("task_factory")
         captured["roots"] = os.environ.get("FORKPROOF_BRANCH_STATE_ROOTS")
         captured["count"] = count
         captured["snapshot"] = forkpoint.get("snapshot_id")

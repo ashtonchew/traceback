@@ -34,10 +34,13 @@ The exact transitive set is in `uv.lock`.
 
 harden-v0 is not a normal Python package at the verified revision: the upstream
 has `requirements.txt` but no `pyproject.toml`. Terminal Wrench is a sparse
-dataset source checkout. Both are fetched as pinned external source checkouts:
+dataset source checkout. HUD Trace Explorer provides the canonical Reward
+Hacking QA scenario required by Plan 003. These are fetched as pinned external
+source checkouts:
 
 ```sh
 scripts/bootstrap_external_deps.sh
+scripts/verify_external_deps.sh
 ```
 
 The script writes ignored checkouts under `.external/`.
@@ -52,6 +55,7 @@ remedy before running pytest or Docker baselines.
 |---|---|---:|---|---|
 | harden-v0 | `https://github.com/few-sh/harden-v0.git` | `b9dd28c732e7e5435da4a2ac90ae92ac6ea65007` | `.external/harden-v0` | `env PYTHONPATH=.external/harden-v0 uv run python -m harden --help` exits 0 |
 | Terminal Wrench | `https://github.com/few-sh/terminal-wrench.git` | `d8a29613235a0ef56a8b70b3142626a533da28c2` | `.external/terminal-wrench` sparse checkout | `tasks/mongodb-sales-aggregation-engine` exists |
+| HUD Trace Explorer | `https://github.com/hud-evals/hud-trace-explorer.git` | `96a72fb4ca579921a0b83ffe4ca3d68bc85dd9eb` | `.external/hud-trace-explorer` | `qa_reward_hacking.py` exists |
 
 ## Authentication and system prerequisites
 

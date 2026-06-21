@@ -5,7 +5,7 @@
   "wave": 5,
   "status": "not-started",
   "started_at": null,
-  "updated_at": "2026-06-20T17:37:36.163973+00:00",
+  "updated_at": "2026-06-21T00:00:00-07:00",
   "completed_at": null,
   "commit": null,
   "commands": [],
@@ -13,8 +13,15 @@
   "artifacts": [],
   "screenshots": [],
   "skips": [],
-  "blockers": [],
+  "blockers": [
+    "Plan 006 implementation remains blocked until repo-map/STATUS.json is accepted, Gate 4 has merged, and Plan 006 mapped commands are verified with non-empty argv.",
+    "Wave 1 must bind the real publish primitive and authorized target before the thin trusted publisher wrapper can publish; absence must be recorded as blocked-with-proof."
+  ],
   "notes": [
-    "Planning template only; no implementation evidence is claimed."
+    "Planning template only; no implementation evidence is claimed.",
+    "2026-06-20 planning hardening pass added deterministic self-validation, machine-readable report requirements, thin trusted publisher ownership, and publication-specific negative checks.",
+    "2026-06-20 planning hardening pass added Acceptance Demo Run, Presentation Demo Run, Prior-Run Witness Replay, and audit-only Demo Report Replay semantics.",
+    "2026-06-21 grill-with-docs decision limited blocked-with-proof to valid proof plus missing publish binding/authority; proof mismatch, unauthorized target, mixed identity, missing artifacts, and unavailable trusted context are failures.",
+    "2026-06-21 parallel risk review added demo-day preflight, sealed readiness pack, presentation timeout behavior, statistical overclaim rejection, and publisher redaction guardrails."
   ]
 }

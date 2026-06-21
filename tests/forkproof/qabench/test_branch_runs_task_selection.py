@@ -1,36 +1,40 @@
-"""The discovery-loop task-selection contract Plan 008 depends on (Plan 003 seam).
+"""The task-selection contract Plan 008 depends on (Plan 003 ForkPoint seam).
 
-Plan 008's live discovery driver points Plan 003's branch_runs loop at a
-materialized qabench env via FORKPROOF_TASK_ENV / FORKPROOF_TASK_FACTORY, without
-disturbing the mongodb default. This pins that contract.
+Plan 003's ``branch_runs`` loads its task entirely from the ForkPoint's
+``hud_task_profile`` (env module, factory, prompt, grader surface). Plan 008 makes the
+qabench ForkPoint self-describing so a materialized qabench env forks without any
+out-of-band env contract. This pins that the qabench-captured profile satisfies the
+canonical Plan 003 validator and points at the env's real serve/grade surface.
 """
 
-from pathlib import Path
-
-import pytest
-
-from forkproof.witnesses.branch_runs import _resolve_task_env
-
-
-def test_defaults_to_mongodb(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("FORKPROOF_TASK_ENV", raising=False)
-    monkeypatch.delenv("FORKPROOF_TASK_FACTORY", raising=False)
-    path, factory = _resolve_task_env(Path("/repo"))
-    assert path == Path("/repo/envs/mongodb-sales-aggregation-engine/env.py")
-    assert factory == "implement_sales_analyzer"
+from forkproof.qabench.modal_runtime import forkpoint_dict, qabench_task_profile
+from forkproof.witnesses.branch_task_profile import (
+    REQUIRED_HUD_TASK_PROFILE_FIELDS,
+    hud_task_profile,
+)
 
 
-def test_env_vars_redirect_to_qabench(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("FORKPROOF_TASK_ENV", "envs/qabench/solve-ode-with-sympy/env.py")
-    monkeypatch.setenv("FORKPROOF_TASK_FACTORY", "build_task")
-    path, factory = _resolve_task_env(Path("/repo"))
-    assert path == Path("/repo/envs/qabench/solve-ode-with-sympy/env.py")
-    assert factory == "build_task"
+def test_qabench_profile_satisfies_canonical_validator() -> None:
+    profile = qabench_task_profile("envs/qabench/solve-ode-with-sympy/env.py")
+    # No missing required fields, and the grader argv are non-empty str lists.
+    assert REQUIRED_HUD_TASK_PROFILE_FIELDS <= set(profile)
+    validated = hud_task_profile({"hud_task_profile": profile})
+    assert validated["env_module_path"] == "envs/qabench/solve-ode-with-sympy/env.py"
+    assert validated["task_factory"] == "build_task"
+    assert validated["prompt_factory"] == "_prompt"
+    assert validated["trusted_entrypoint_ref"] == "env:env"
+    assert validated["grader_command_argv"][0] in ("python", "python3")
 
 
-def test_absolute_env_path_is_used_verbatim(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("FORKPROOF_TASK_ENV", "/abs/path/env.py")
-    monkeypatch.delenv("FORKPROOF_TASK_FACTORY", raising=False)
-    path, factory = _resolve_task_env(Path("/repo"))
-    assert path == Path("/abs/path/env.py")
-    assert factory == "implement_sales_analyzer"  # factory still defaults independently
+def test_forkpoint_carries_loadable_profile() -> None:
+    # The captured ForkPoint embeds the profile, so branch_runs can resolve the env
+    # module + factory from the ForkPoint alone (no FORKPROOF_TASK_ENV env var needed).
+    fp = forkpoint_dict("envs/qabench/implement-2d-convolution", "im-1", state_roots=("/app",))
+    profile = hud_task_profile(fp)  # raises if the embedded profile is incomplete
+    assert profile["env_module_path"] == "envs/qabench/implement-2d-convolution/env.py"
+    assert profile["task_factory"] == "build_task"
+
+
+def test_factory_override_is_honored() -> None:
+    profile = qabench_task_profile("envs/qabench/x/env.py", factory="custom_task")
+    assert profile["task_factory"] == "custom_task"

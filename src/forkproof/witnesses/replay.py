@@ -35,6 +35,7 @@ def require_three_replays(candidate: dict[str, Any], replay_fn: ReplayFn) -> lis
         checks.append(
             {
                 "attempt": attempt,
+                "reward": result["reward"],
                 "restore_ref": restore_ref,
                 "verifier_output_digest": result["verifier_output_digest"],
                 "file_diff_digest": result["file_diff_digest"],

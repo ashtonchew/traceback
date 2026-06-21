@@ -1,9 +1,10 @@
 """Live in-loop discovery driver (Plan 008 WP6).
 
 Wires the benchmark's ``DiscoveryDriver`` seam to Plan 003's real branch loop for a
-materialized qabench env: it points ``branch_runs`` at the env (via the
-``FORKPROOF_TASK_ENV`` / ``FORKPROOF_TASK_FACTORY`` / ``FORKPROOF_BRANCH_STATE_ROOTS``
-contract), runs a live seeded BranchRun batch from a captured ForkPoint, then maps
+materialized qabench env: ``branch_runs`` selects its task entirely from the ForkPoint's
+``hud_task_profile`` (env module, factory, prompt, grader surface), so the driver ensures
+the captured ForkPoint carries that profile, sets the still-honored
+``FORKPROOF_BRANCH_STATE_ROOTS`` override, runs a live seeded BranchRun batch, then maps
 the batch's recorded artifacts to ``DiscoveredBranch`` records using the SAME,
 already-validated offline mapper (``witness_loop_adapter.load_branches``) — so the
 live and recorded paths produce identical records, with NO referee verdict (the 008
@@ -24,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from forkproof.qabench.models import DiscoveredBranch
+from forkproof.qabench.modal_runtime import qabench_task_profile
 from forkproof.qabench.witness_loop_adapter import load_branches
 from forkproof.witnesses.branch_runs import _artifact_root, run_live_branch_batch
 
@@ -66,16 +68,33 @@ class LiveDiscoveryDriver:
     batch_runner: BatchRunner = _default_batch_runner
     artifact_resolver: ArtifactResolver = _artifact_root
 
-    def _apply_task_selection(self) -> None:
-        os.environ["FORKPROOF_TASK_ENV"] = self.env_rel
-        os.environ["FORKPROOF_TASK_FACTORY"] = self.factory
+    def _task_forkpoint(self) -> dict[str, Any]:
+        """The ForkPoint branch_runs forks from, guaranteed to carry hud_task_profile.
+
+        New captures embed the profile already (``forkpoint_dict``); an older or hand-built
+        ForkPoint is backfilled from the driver's env path + factory so the live path stays
+        correct regardless of capture vintage.
+        """
+        forkpoint = dict(self.forkpoint)
+        if "hud_task_profile" not in forkpoint:
+            forkpoint["hud_task_profile"] = qabench_task_profile(self.env_rel, factory=self.factory)
+        return forkpoint
+
+    def _apply_state_roots(self) -> None:
+        # branch_runs no longer reads a task-selection env contract (that comes from the
+        # ForkPoint's hud_task_profile); FORKPROOF_BRANCH_STATE_ROOTS is still honored as
+        # the writable-root override. Set it for a task that needs non-/app roots, and
+        # clear it otherwise so a previous task's roots never leak into this one (the
+        # ForkPoint's own task_state_roots stay authoritative when there is no override).
         if self.state_roots:
             os.environ["FORKPROOF_BRANCH_STATE_ROOTS"] = ",".join(self.state_roots)
+        else:
+            os.environ.pop("FORKPROOF_BRANCH_STATE_ROOTS", None)
 
     def run_discovery_tree(self, task_id: str) -> Sequence[DiscoveredBranch]:
-        self._apply_task_selection()
+        self._apply_state_roots()
         summary = self.batch_runner(
-            self.root, self.forkpoint, count=self.count, concurrency=self.concurrency
+            self.root, self._task_forkpoint(), count=self.count, concurrency=self.concurrency
         )
         # A batch that produced a run_id wrote branch artifacts even if its status is
         # "blocked" by the strict Witness-promotion gates (e.g. not every branch

@@ -5,7 +5,7 @@ a bash workspace at /app and must implement a `SalesAnalyzer` class in
 `/app/query.py` using MongoDB aggregation pipelines. Reward is the task's own
 pytest suite, run by a BashGrader over the agent's files — so the recorded
 reward hack (planting a conftest/pytest plugin that force-passes the suite)
-reproduces here, which is the whole point: this env is the substrate ForkProof
+reproduces here, which is the whole point: this env is the substrate Traceback
 forks, classifies, patches, and publishes.
 
 Owned by Plan 001 as the single live HUD environment the bundle otherwise has no

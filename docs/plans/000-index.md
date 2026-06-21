@@ -1,17 +1,51 @@
 ---
 name: index
 description: >
-  Routes ForkProof implementation work through an acyclic, collision-free dependency graph and evidence-based merge gates. Use when assigning plans, opening parallel worktrees, checking ownership, or deciding whether a later wave may begin.
+  Routes Traceback implementation work through an acyclic, collision-free dependency graph and evidence-based merge gates. Use when assigning plans, opening parallel worktrees, checking ownership, or deciding whether a later wave may begin.
 owns: ["docs/plans/000-index.md"]
 depends_on: []
 wave: 0
 ---
 
-# ForkProof plan index
+# Traceback plan index
 
 ## Execution rule
 
 Wave 1 grounds the real repository. No source implementation begins while `docs/plans/repo-map/STATUS.json` is `unverified`. Each later plan may update only its own plan/reference/evidence files and its declared feature paths. Proposed source globs become effective only after the repo map accepts or remaps them.
+
+### Rescue exception — 2026-06-21 Plan 003/005 release unblock
+
+The repository owner explicitly authorized one rescue PR to finish the upstream
+Witness seal needed by Plan 005 and then run Plan 005 in the same isolated
+worktree. This is a narrow exception to the normal one-plan-per-PR sequencing,
+not a general merge-gate weakening.
+
+Allowed rescue writes:
+
+- Plan 003 owned paths: `docs/plans/003*`,
+  `docs/plans/evidence/003/**`, `src/forkproof/witnesses/**`,
+  `tests/forkproof/witnesses/**`, and `fixtures/forkproof/witnesses/**`.
+- Plan 005 owned paths: `docs/plans/005*`,
+  `docs/plans/evidence/005/**`, `src/forkproof/releases/**`,
+  `tests/forkproof/releases/**`, and `artifacts/forkproof/releases/**`.
+- Plan 001 command-registry custody exception limited to
+  `docs/plans/repo-map/COMMANDS.json` rows `plan-005-tests` and
+  `integration-release`.
+
+The rescue PR must preserve the full Gate 3 and Gate 4 evidence standards:
+Plan 003 must still seal at least one task-agnostic Exploit Witness with reward,
+HUD QA join, target/mechanism deduplication, complete provenance, durable
+filesystem-class state, minimized causal evidence, and three deterministic v1
+replays before Plan 005 can consume it. Plan 005 must still build a non-empty
+ProofSet, run per-case v1/v2 release evaluation, preserve every sealed control,
+run the mandatory evaluator-subversion checks, and pass its complete Done-when
+gate without counting skipped commands as passing.
+
+The Witness sealing path must remain terminal-bench-style/task-agnostic. It may
+use candidate artifact ids as operator-selected inputs or test fixtures, but
+production code must not hard-code the MongoDB task id, branch id, file names, or
+pytest mechanism as the promotion rule. Task-specific facts may appear only in
+evidence records describing a concrete run.
 
 ## Dependency graph
 
@@ -109,7 +143,7 @@ Plan 008 depends on Plans 003 and 004 only (the Plan 005 edge was relaxed 2026-0
 | 003 | `src/forkproof/witnesses/**`, `tests/forkproof/witnesses/**`, `fixtures/forkproof/witnesses/**`, its plan/reference, `evidence/003/**` |
 | 004 | `src/forkproof/controls/**`, `tests/forkproof/controls/**`, `fixtures/forkproof/mongodb-sales-aggregation-engine/**`, its plan/reference, `evidence/004/**` |
 | 005 | `src/forkproof/releases/**`, `tests/forkproof/releases/**`, `artifacts/forkproof/releases/**`, its plan/reference, `evidence/005/**` |
-| 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**` |
+| 006 | `src/forkproof/demo/**`, `tests/forkproof/demo/**`, `scripts/forkproof-demo*`, `artifacts/forkproof/demo/**`, its plan/reference, `evidence/006/**`; narrow exception for `docs/plans/repo-map/COMMANDS.json` entries `plan-006-tests`, `integration-publication`, `publication-idempotency`, `publication-permission-denied`, `publication-trust-boundary`, `publication-redaction`, `demo`, `demo-report-replay`, and `demo-presentation-timeout` only |
 | 007 | `src/forkproof/research/**`, `tests/forkproof/research/**`, `artifacts/forkproof/research/**`, its plan/reference, `evidence/007/**` |
 | 008 | `src/forkproof/qabench/**`, `tests/forkproof/qabench/**`, `fixtures/forkproof/qabench/**`, `artifacts/forkproof/qabench/**`, `envs/qabench/**`, its plan/reference, `evidence/008/**` |
 

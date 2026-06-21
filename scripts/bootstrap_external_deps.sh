@@ -38,6 +38,9 @@ harden_rev="b9dd28c732e7e5435da4a2ac90ae92ac6ea65007"
 terminal_wrench_repo="https://github.com/few-sh/terminal-wrench.git"
 terminal_wrench_rev="d8a29613235a0ef56a8b70b3142626a533da28c2"
 
+hud_trace_explorer_repo="https://github.com/hud-evals/hud-trace-explorer.git"
+hud_trace_explorer_rev="96a72fb4ca579921a0b83ffe4ca3d68bc85dd9eb"
+
 checkout_repo() {
   local name="$1"
   local repo="$2"
@@ -45,7 +48,7 @@ checkout_repo() {
   local target="${external_dir}/${name}"
 
   mkdir -p "${external_dir}"
-  if [[ ! -d "${target}/.git" ]]; then
+  if ! git -C "${target}" rev-parse --git-dir >/dev/null 2>&1; then
     git clone "${repo}" "${target}"
   fi
 
@@ -61,7 +64,7 @@ checkout_sparse_repo() {
   local target="${external_dir}/${name}"
 
   mkdir -p "${external_dir}"
-  if [[ ! -d "${target}/.git" ]]; then
+  if ! git -C "${target}" rev-parse --git-dir >/dev/null 2>&1; then
     git clone --filter=blob:none --sparse "${repo}" "${target}"
   fi
 
@@ -71,6 +74,9 @@ checkout_sparse_repo() {
 }
 
 checkout_repo "harden-v0" "${harden_repo}" "${harden_rev}"
+checkout_repo "hud-trace-explorer" "${hud_trace_explorer_repo}" "${hud_trace_explorer_rev}"
 checkout_sparse_repo "terminal-wrench" "${terminal_wrench_repo}" "${terminal_wrench_rev}" "tasks/mongodb-sales-aggregation-engine"
+
+"${root}/scripts/verify_external_deps.sh"
 
 printf 'External dependencies are pinned under %s\n' "${external_dir}"

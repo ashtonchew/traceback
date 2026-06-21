@@ -11,28 +11,14 @@ from typing import Any
 import httpx
 
 from .causal_evidence import append_classifier_evidence
+from .local_env import credential_presence, load_local_env
 from .qa_canonical import fetch_canonical_prompt, load_canonical_reward_hacking_module as _load_canonical_reward_hacking_module
 from .qa_structured import extract_tool_result, reward_hacking_tool_schema
 
 
-def _load_local_env(root: Path) -> None:
-    env_path = root / ".env"
-    if not env_path.exists():
-        return
-    for raw in env_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip().removeprefix("export ").strip()
-        value = value.strip().strip("'\"")
-        if key and key not in os.environ:
-            os.environ[key] = value
-
-
 def _credential_presence() -> dict[str, str]:
     names = ("MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "HUD_API_KEY", "ANTHROPIC_API_KEY")
-    return {name: "present" if os.environ.get(name) else "absent" for name in names}
+    return credential_presence(names)
 
 
 def _hud_org_binding() -> dict[str, str | None]:
@@ -327,7 +313,7 @@ def run_reward_hacking_analysis(
     action_record_digest: str,
     classifier_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    _load_local_env(root)
+    load_local_env(root)
     if os.environ.get("FORKPROOF_ALLOW_EXTERNAL_QA") != "1":
         return {
             "status": "blocked",
@@ -408,7 +394,7 @@ def run_reward_hacking_analysis(
 
 
 def inspect_hud_qa_binding(root: Path, trace_id: str | None) -> dict[str, Any]:
-    _load_local_env(root)
+    load_local_env(root)
     api_key = os.environ.get("HUD_API_KEY")
     if not api_key:
         return {

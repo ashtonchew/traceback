@@ -1,6 +1,6 @@
-# Hack2Fix2Hack implementation-plan bundle
+# Traceback implementation-plan bundle
 
-This bundle converts the supplied Hack2Fix2Hack / ForkProof handoff into repository-executable plans without claiming access to the repository.
+This bundle converts the supplied Traceback handoff into repository-executable plans without claiming access to the repository.
 
 Start with `docs/plans/000-index.md`. Wave 1 is mandatory: it grounds real paths, interfaces, commands, and baseline behavior in `docs/plans/repo-map/`. No implementation plan may edit source code until that gate is accepted.
 
