@@ -157,20 +157,48 @@
       "reason": "Materializes pinned task digests, verifies three sealed controls, runs nine HUD Docker baselines, and confirms the corrupt-control negative check."
     },
     "plan-005-tests": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "tests/forkproof/releases",
+        "-q"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked until release source/test paths exist after prior waves."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 120,
+      "reason": "Rescue exception 2026-06-21: runs Plan 005 release contract tests for ProofSet membership, release gate decisions, artifact immutability, and harden-v0 config inspection."
     },
     "integration-release": {
-      "status": "not-applicable",
-      "argv": [],
+      "status": "verified",
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "forkproof.releases.cli",
+        "integration",
+        "--controls-manifest",
+        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
+        "--taskset-or-suite-ref",
+        "fixtures/forkproof/mongodb-sales-aggregation-engine/controls.json",
+        "--selection-query-ref",
+        "docs/plans/evidence/003/artifacts/sealed",
+        "--generate-release-results",
+        "--harden-run-ref",
+        "artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json",
+        "--control-solution-target",
+        "query.py"
+      ],
       "cwd": ".",
-      "env": {},
-      "timeout_seconds": null,
-      "reason": "Blocked because harden-v0 is fetched and executable, but there is no v1/v2 grader, ProofSet runner, adapter, or publication target."
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "timeout_seconds": 1800,
+      "reason": "Rescue exception 2026-06-21: binds harden-v0 schema, closes ProofSet membership, treats artifacts/forkproof/releases/harden-runs/proofset-e497370b2c3d2a69.json as the immutable harden-v0 candidate producer, generates real per-case v1/v2 release-results through Docker-backed verifier executions, checks the sealed Witness plus all three controls per case, runs the mandatory pytest-subversion probes, and seals ReleaseProof only if the binary gate passes."
     },
     "plan-006-tests": {
       "status": "not-applicable",

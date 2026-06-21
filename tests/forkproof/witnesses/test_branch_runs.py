@@ -9,6 +9,17 @@ from forkproof.witnesses.hacker_prompt import build_hacker_branch_instruction
 
 
 def forkpoint(**overrides):
+    profile = {
+        "env_module_path": "envs/example/env.py",
+        "task_factory": "example_task",
+        "prompt_factory": "example_prompt",
+        "runtime_workdir": "/workspace/task",
+        "instruction_path": "/workspace/task/instruction.md",
+        "trusted_entrypoint_ref": "example_env:task",
+        "capture_roots": ["/workspace/task", "/workspace/state"],
+        "pre_grader_command_argv": ["setup", "grader"],
+        "grader_command_argv": ["custom", "grade"],
+    }
     base = {
         "fork_point_id": "fp-001",
         "parent_node_id": "node-001",
@@ -28,8 +39,14 @@ def forkpoint(**overrides):
         "resource_policy": "cpu=0.5,memory=1024,timeout=900",
         "snapshot_retention": "modal-default-ttl",
         "source_evidence_refs": ["status.json"],
+        "hud_task_profile": profile,
     }
+    profile_overrides = overrides.pop("hud_task_profile", None)
     base.update(overrides)
+    if profile_overrides is not None:
+        merged_profile = dict(profile)
+        merged_profile.update(profile_overrides)
+        base["hud_task_profile"] = merged_profile
     return base
 
 
@@ -131,6 +148,18 @@ def test_branch_runtime_setup_failure_is_not_counted_as_executed(monkeypatch, tm
     assert record["status"] == "agent-error"
 
 
+def test_branch_execution_requires_explicit_task_profile():
+    source = forkpoint()
+    source.pop("hud_task_profile")
+
+    try:
+        branch_runs._branch_state_roots(source)
+    except ValueError as exc:
+        assert "hud_task_profile" in str(exc)
+    else:  # pragma: no cover - defensive assertion.
+        raise AssertionError("BranchRun accepted a ForkPoint without task profile data")
+
+
 def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     install_fake_hud_modules(monkeypatch)
     monkeypatch.setattr(
@@ -174,7 +203,17 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
                 pass
             return Job()
 
-    source = forkpoint(environment_image_digest="image-real", grader_digest="grader-real")
+    source = forkpoint(
+        environment_image_digest="image-real",
+        grader_digest="grader-real",
+        hud_task_profile={
+            "runtime_workdir": "/workspace/task",
+            "instruction_path": "/workspace/task/instruction.md",
+            "trusted_entrypoint_ref": "custom_env:task",
+            "pre_grader_command_argv": ["setup", "grader"],
+            "grader_command_argv": ["custom", "grade"],
+        },
+    )
     result = asyncio.run(
         branch_runs._run_one_branch(
             root=tmp_path,
@@ -196,6 +235,13 @@ def test_branch_records_preserve_forkpoint_identity(monkeypatch, tmp_path):
     assert record["provenance_status"] == "complete"
     assert record["file_diff_ref"].endswith(".json")
     assert record["security_probe_ref"].endswith(".json")
+    assert record["replay_surface"]["cwd"] == "/workspace/task"
+    assert record["replay_surface"]["trusted_entrypoint_ref"] == "custom_env:task"
+    assert record["replay_surface"]["pre_grader_command_argv"] == ["setup", "grader"]
+    assert record["replay_surface"]["grader_command_argv"] == ["custom", "grade"]
+    assert record["replay_surface"]["environment_version"] == "env-v1"
+    assert record["replay_surface"]["grader_digest"] == "grader-real"
+    assert record["replay_surface"]["state_restore_ref"] == "modal-image://im-1"
 
 
 def test_branch_records_label_insufficient_qa_as_incomplete_classification(monkeypatch, tmp_path):
@@ -259,7 +305,7 @@ def test_branch_batch_status_blocks_on_incomplete_provenance(monkeypatch, tmp_pa
     monkeypatch.setenv("HUD_API_KEY", "present")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "present")
     monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
-    monkeypatch.setattr(branch_runs, "_load_hud_task", lambda root: (object(), prompt_packet()))
+    monkeypatch.setattr(branch_runs, "load_hud_task", lambda root, forkpoint: (object(), prompt_packet()))
 
     async def fake_run_one_branch(**kwargs):
         branch = {
@@ -296,15 +342,17 @@ def test_feedback_retry_is_tagged_separately_from_core_branch_count(monkeypatch,
     monkeypatch.setenv("ANTHROPIC_API_KEY", "present")
     monkeypatch.setenv("FORKPROOF_ALLOW_EXTERNAL_QA", "1")
     monkeypatch.setenv("FORKPROOF_HACKER_FEEDBACK_RETRIES", "1")
-    monkeypatch.setattr(branch_runs, "_load_hud_task", lambda root: (object(), prompt_packet()))
+    monkeypatch.setattr(branch_runs, "load_hud_task", lambda root, forkpoint: (object(), prompt_packet()))
     feedback_packets = []
 
-    def fake_load_with_feedback(root, feedback_attempts):  # noqa: ARG001
+    def fake_load_with_feedback(root, forkpoint, *, feedback_attempts=None):  # noqa: ARG001
+        if feedback_attempts is None:
+            return object(), prompt_packet()
         packet = build_hacker_branch_instruction("## Your Goal\nTest prompt.", feedback_attempts=feedback_attempts)
         feedback_packets.append(packet)
         return object(), packet
 
-    monkeypatch.setattr(branch_runs, "_load_hud_task_with_feedback", fake_load_with_feedback)
+    monkeypatch.setattr(branch_runs, "load_hud_task", fake_load_with_feedback)
 
     async def fake_run_one_branch(**kwargs):
         prompt = kwargs["prompt_packet"]

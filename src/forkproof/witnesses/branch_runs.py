@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -14,8 +12,9 @@ import httpx
 
 from .branch_artifacts import build_file_diff, build_security_evidence
 from .branch_runtime import BranchRuntimeEvidence, EvidenceModalRuntime
+from .branch_task_profile import hud_task_profile, load_hud_task, runtime_command
 from .causal_evidence import build_causal_evidence_bundle, build_classifier_evidence_context
-from .hacker_prompt import build_hacker_branch_instruction
+from .local_env import credential_presence, load_local_env
 from .models import digest_json, utc_now
 from .promotion import branch_signal_status
 from .qa_binding import run_reward_hacking_analysis
@@ -25,24 +24,9 @@ DEFAULT_BRANCH_MAX_STEPS = 60
 DEFAULT_BRANCH_MAX_TOKENS = 8192
 
 
-def _load_local_env(root: Path) -> None:
-    env_path = root / ".env"
-    if not env_path.exists():
-        return
-    for raw in env_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip().removeprefix("export ").strip()
-        value = value.strip().strip("'\"")
-        if key and key not in os.environ:
-            os.environ[key] = value
-
-
 def _credential_presence() -> dict[str, str]:
     names = ("MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "HUD_API_KEY", "ANTHROPIC_API_KEY")
-    return {name: "present" if os.environ.get(name) else "absent" for name in names}
+    return credential_presence(names)
 
 
 def _artifact_root(root: Path, run_id: str) -> Path:
@@ -65,48 +49,6 @@ def _relative(root: Path, path: Path) -> str:
     return str(path.relative_to(root))
 
 
-def _load_hud_task(root: Path) -> tuple[Any, dict[str, Any]]:
-    env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
-    spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load HUD env from {env_path}")
-    env_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(env_module)
-    prompt_packet = build_hacker_branch_instruction(env_module._prompt())  # noqa: SLF001 - task prompt boundary.
-
-    return env_module.implement_sales_analyzer(), prompt_packet
-
-
-def _load_hud_task_with_feedback(
-    root: Path,
-    feedback_attempts: list[dict[str, Any]],
-) -> tuple[Any, dict[str, Any]]:
-    env_path = root / "envs" / "mongodb-sales-aggregation-engine" / "env.py"
-    spec = importlib.util.spec_from_file_location("mongodb_hud_env", env_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load HUD env from {env_path}")
-    env_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(env_module)
-    prompt_packet = build_hacker_branch_instruction(
-        env_module._prompt(),  # noqa: SLF001 - task prompt boundary.
-        feedback_attempts=feedback_attempts,
-    )
-    return env_module.implement_sales_analyzer(), prompt_packet
-
-def _runtime_command(prompt_packet: dict[str, Any]) -> tuple[str, str, str]:
-    encoded = base64.b64encode(prompt_packet["instruction"].encode()).decode()
-    script = "\n".join(
-        [
-            "python3 - <<'PY'",
-            "import base64",
-            "from pathlib import Path",
-            f"Path('/app/task_assets/instruction.md').write_bytes(base64.b64decode('{encoded}'))",
-            "PY",
-            "exec uv run hud serve env:env --host 0.0.0.0 --port 8765",
-        ]
-    )
-    return ("bash", "-lc", script)
-
 
 def _trace_readback(trace_id: str) -> dict[str, Any]:
     api_key = os.environ["HUD_API_KEY"]
@@ -126,12 +68,16 @@ def _branch_state_roots(forkpoint: dict[str, Any]) -> tuple[list[str], str]:
     roots = forkpoint.get("task_state_roots")
     if isinstance(roots, list) and roots and all(isinstance(item, str) for item in roots):
         return roots, "forkpoint.task_state_roots"
+    profile = forkpoint.get("hud_task_profile")
+    profile_roots = profile.get("capture_roots") if isinstance(profile, dict) else None
+    if isinstance(profile_roots, list) and profile_roots and all(isinstance(item, str) for item in profile_roots):
+        return profile_roots, "forkpoint.hud_task_profile.capture_roots"
     root = forkpoint.get("task_state_root") or forkpoint.get("isolated_writable_root_identity")
     if isinstance(root, str) and root.startswith("/"):
         return [root], "forkpoint.task_state_root"
-    if forkpoint.get("task_id") in {"mongodb-sales-aggregation-engine", "implement_sales_analyzer"}:
-        return ["/app", "/data/db", "/var/log/mongodb.log"], "fallback-current-task"
-    return ["/app"], "fallback-workspace"
+    if isinstance(profile, dict) and isinstance(profile.get("runtime_workdir"), str):
+        return [str(profile["runtime_workdir"])], "forkpoint.hud_task_profile.runtime_workdir"
+    raise ValueError("forkpoint must include task_state_roots, task_state_root, or hud_task_profile capture roots")
 
 
 def _action_record(branch_id: str, job_id: str, trace_id: str, reward: Any) -> dict[str, Any]:
@@ -186,12 +132,15 @@ async def _run_one_branch(
         capture_roots=capture_roots,
         capture_root_source=capture_root_source,
     )
+    task_profile = hud_task_profile(forkpoint)
+    runtime_command_argv = runtime_command(prompt_packet, task_profile)
+    snapshot_restore_ref = forkpoint.get("snapshot_restore_ref") or f"modal-image://{forkpoint.get('snapshot_id')}"
     try:
         runtime = EvidenceModalRuntime(
             image=modal.Image.from_id(forkpoint["snapshot_id"]),
             app_name="forkproof-plan-003",
-            workdir="/app",
-            command=_runtime_command(prompt_packet),
+            workdir=str(task_profile["runtime_workdir"]),
+            command=runtime_command_argv,
             evidence=runtime_evidence,
         )
         agent = ClaudeAgent(
@@ -314,7 +263,7 @@ async def _run_one_branch(
             "snapshot_id": forkpoint.get("snapshot_id"),
             "branch_index": branch_index,
         },
-        "snapshot_restore_ref": forkpoint.get("snapshot_restore_ref") or f"modal-image://{forkpoint.get('snapshot_id')}",
+        "snapshot_restore_ref": snapshot_restore_ref,
         "snapshot_id": forkpoint.get("snapshot_id"),
         "snapshot_mode": forkpoint.get("snapshot_mode"),
         "snapshot_digest": forkpoint.get("snapshot_digest"),
@@ -326,6 +275,19 @@ async def _run_one_branch(
         "resource_policy": forkpoint.get("resource_policy"),
         "snapshot_retention": forkpoint.get("snapshot_retention"),
         "source_evidence_refs": forkpoint.get("source_evidence_refs"),
+        "replay_surface": {
+            "schema_version": 1,
+            "replay_surface_id": f"{branch_id}-replay-surface",
+            "environment_version": forkpoint.get("environment_version"),
+            "grader_digest": forkpoint.get("grader_digest"),
+            "command_argv": list(runtime_command_argv),
+            "cwd": str(task_profile["runtime_workdir"]),
+            "pre_grader_command_argv": list(task_profile.get("pre_grader_command_argv") or []),
+            "grader_command_argv": list(task_profile["grader_command_argv"]),
+            "state_restore_ref": snapshot_restore_ref,
+            "trusted_entrypoint_ref": str(task_profile["trusted_entrypoint_ref"]),
+            "captured_at": started_at,
+        },
         "action_record_ref": action_ref,
         "action_record_digest": action_record_digest,
         "file_diff_ref": file_diff_ref,
@@ -400,7 +362,7 @@ async def run_live_branch_batch(
     count: int = 12,
     concurrency: int = 12,
 ) -> dict[str, Any]:
-    _load_local_env(root)
+    load_local_env(root)
     presence = _credential_presence()
     if any(value != "present" for value in presence.values()):
         return {
@@ -417,7 +379,7 @@ async def run_live_branch_batch(
 
     run_id = "run-" + utc_now().replace("-", "").replace(":", "").removesuffix("Z")
     artifact_root = _artifact_root(root, run_id)
-    task, prompt_packet = _load_hud_task(root)
+    task, prompt_packet = load_hud_task(root, forkpoint)
     sem = asyncio.Semaphore(concurrency)
 
     async def guarded(index: int) -> dict[str, Any]:
@@ -445,7 +407,11 @@ async def run_live_branch_batch(
             for item in results
             if item["branch"].get("promotion_signal_status") != "candidate"
         ][:12]
-        feedback_task, feedback_prompt_packet = _load_hud_task_with_feedback(root, feedback_attempts)
+        feedback_task, feedback_prompt_packet = load_hud_task(
+            root,
+            forkpoint,
+            feedback_attempts=feedback_attempts,
+        )
         for retry_index in range(feedback_retry_budget):
             feedback_result = await _run_one_branch(
                 root=root,

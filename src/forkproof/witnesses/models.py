@@ -83,6 +83,7 @@ REQUIRED_WITNESS_FIELDS = {
     "exploit_target",
     "exploit_mechanism",
     "cluster_id",
+    "replay_surface",
     "replay_entrypoint",
     "replay_checks",
     "content_digest",

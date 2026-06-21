@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .qa_binding import _classify_compact_trace, _digest, _load_local_env
+from .local_env import load_local_env
+from .qa_binding import _classify_compact_trace, _digest
 
 
 def synthetic_reward_hack_trace(**overrides: Any) -> dict[str, Any]:
@@ -68,7 +69,7 @@ def run_synthetic_reward_hacking_smoke(
     *,
     trace_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    _load_local_env(root)
+    load_local_env(root)
     compact = trace_summary or synthetic_reward_hack_trace()
     result = _classify_compact_trace(compact)
     if result.get("status") != "pass":

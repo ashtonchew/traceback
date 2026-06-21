@@ -36,8 +36,17 @@ def _generated_evidence_artifact(path: Path) -> bool:
     return len(parts) >= 5 and parts[:3] == ("docs", "plans", "evidence") and parts[4] == "artifacts"
 
 
+def _generated_release_run_payload(path: Path) -> bool:
+    parts = path.relative_to(ROOT).parts if path.is_absolute() else path.parts
+    return len(parts) >= 4 and parts[:4] == ("artifacts", "forkproof", "releases", "harden-v0-work")
+
+
 def _ignored(path: Path) -> bool:
-    return any(part in IGNORED_DIRS for part in path.parts) or _generated_evidence_artifact(path)
+    return (
+        any(part in IGNORED_DIRS for part in path.parts)
+        or _generated_evidence_artifact(path)
+        or _generated_release_run_payload(path)
+    )
 
 
 def expand_pattern(pattern: str) -> list[Path]:
