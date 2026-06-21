@@ -223,6 +223,15 @@ def test_depth_two_run_record_distinguishes_blocked_from_completed_runs():
             status="completed",
             branch_budget=8,
         )
+    with pytest.raises(ValueError, match="must have been scheduled"):
+        DepthTwoRunRecord(
+            run_id="research-run-004",
+            child_node_id="node-child",
+            status="completed",
+            branch_budget=8,
+            scheduled_branch_refs=("branch-00.json",),
+            completed_branch_refs=("branch-01.json",),
+        )
 
 
 def test_committed_child_selection_artifact_matches_public_contracts():

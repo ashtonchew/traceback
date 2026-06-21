@@ -210,6 +210,9 @@ class DepthTwoRunRecord:
             raise ValueError("Plan 007 depth-two branch budget must be between 1 and 8")
         if len(self.scheduled_branch_refs) > self.branch_budget:
             raise ValueError("scheduled branch refs exceed branch budget")
+        unscheduled_completed = set(self.completed_branch_refs).difference(self.scheduled_branch_refs)
+        if unscheduled_completed:
+            raise ValueError("completed depth-two branch refs must have been scheduled")
         if self.status == "completed" and not self.completed_branch_refs:
             raise ValueError("completed depth-two run requires completed branch refs")
         if self.status == "blocked" and not self.blocker:
